@@ -1,0 +1,34 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - name: Unit tests
+        if: ${{ hashFiles('src/**/*.test.ts', 'src/**/*.test.tsx', 'scripts/**/*.test.ts') != '' }}
+        run: npm test
+      - run: npm run build
+      - name: Browser smoke tests
+        if: ${{ hashFiles('playwright.config.*') != '' }}
+        run: |
+          npx playwright install --with-deps chromium
+          npm run e2e

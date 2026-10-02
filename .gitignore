@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.cache/
+public/data/
+src/generated/
+.playwright-mcp/
+test-results/
+playwright-report/
+.wrangler/
+.env
+.env.*
+*.log
+.DS_Store

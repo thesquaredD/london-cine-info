@@ -1,0 +1,10 @@
+{
+  "name": "London Ciné Info",
+  "short_name": "London Ciné",
+  "description": "Every cinema screening in London, one table.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#eaeaea",
+  "theme_color": "#000000",
+  "icons": [{ "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }]
+}

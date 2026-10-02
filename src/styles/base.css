@@ -1,0 +1,24 @@
+:root {
+  color-scheme: light dark;
+  --bg: #eaeaea;
+  --fg: #000;
+  --header-bg: #000;
+  --header-fg: #fff;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #121820;
+    --fg: #e5e7eb;
+  }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 14px;
+  background: var(--bg);
+  color: var(--fg);
+}
+.placeholder { min-height: 100vh; display: grid; place-content: center; text-align: center; padding: 16px; }
+.placeholder h1 { font-size: 40px; font-weight: 700; letter-spacing: 0.02em; margin: 0 0 12px; }
+.placeholder .thin { font-weight: 200; }
