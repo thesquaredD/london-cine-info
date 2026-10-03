@@ -28,11 +28,13 @@ asset's release tag, ID, modification time and size determine cache reuse.
 Verification:
 
 ```sh
+npm run build-data -- --fixture
 npm run typecheck
 npm run lint
 npm test
-npm run build-data -- --fixture
 npm run build
+npx playwright install chromium
+npm run e2e
 ```
 
 ## Data output
@@ -49,7 +51,7 @@ Generated files are excluded from git:
   with booking URLs, format and accessibility flags, plus actor/overview details.
   UTC timestamps remain available even when DST repeats a local hour.
 - `src/generated/manifest.json`: URLs of the current film, metadata and showtime
-  assets. The future UI imports this manifest at build time.
+  assets. The UI imports this manifest at build time; generate data before typechecking.
 
 The shared contract is in `src/shared/data.ts`. Film facet bitsets are base64,
 least significant bit first; option order comes from `meta.facets`. Screening
@@ -63,10 +65,9 @@ so Cloudflare can cache it as immutable. A failed Actions build does not deploy.
 Known source limits:
 
 - `releaseDate` is TMDB's original release date, not a verified UK release date.
-  New/classic/upcoming flags use that date; the later UI must describe this clearly.
+  New/classic/upcoming flags use that date; the UI describes this limitation.
 - Invalid booking URLs fall back to the validated showing-details URL and carry
-  `bookingFallback: true`. The UI should label those links as screening details,
-  rather than direct booking links. The affected movie/showing IDs are in diagnostics.
+  `bookingFallback: true`. The UI labels those links as screening details. The affected movie/showing IDs are in diagnostics.
 - Membership mapping is venue eligibility, not a guarantee of coverage for a
   specific format or special event.
 
@@ -92,5 +93,23 @@ Wrangler Direct Upload. It runs on pushes to `main`, manually, and at 06:45 and
 secrets. Local preview deployments use:
 
 ```sh
-npx wrangler pages deploy dist --project-name london-cine-info --branch codex-data-pipeline
+npx wrangler pages deploy dist --project-name london-cine-info --branch codex-core-ui
 ```
+
+## Core UI
+
+The table sorts all seven columns, shows 200 films per page, and loads a film's
+showtimes only when expanded. Search matches titles, original titles and directors;
+original language and director filters are encoded in the URL. Only one film opens
+at a time. Screening groups use London dates and include format, accessibility,
+sold-out and booking-detail badges.
+
+The sidebar becomes a keyboard-accessible drawer below 800px; the table shows
+Title and Director at phone widths. The theme follows the system with an override
+for this visit. No cookies or browser storage are used.
+
+All page links currently select their dataset flags. Retrospective director
+grouping, release-date calendar grouping, the nine screening filters and Display
+controls remain in the next phases. Browser tests use the synthetic fixture, at
+1200px and 390px, covering pagination, sort, filters, navigation, lazy loading,
+retries, drawer keyboard behavior, theme and overflow.
