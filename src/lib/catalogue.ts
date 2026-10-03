@@ -20,6 +20,7 @@ export type ViewState = {
   path: string;
   search: string;
   filters: Partial<Record<FacetKey, string[]>>;
+  excluded: Partial<Record<FacetKey, string[]>>;
   from: string;
   to: string;
   available: boolean;
@@ -52,7 +53,31 @@ export function readView(url: URL): ViewState {
         "genre",
         "language",
       ]
-        .map((key) => [key, [...new Set(url.searchParams.getAll(key).filter(Boolean))]])
+        .map((key) => [
+          key,
+          [
+            ...new Set(
+              url.searchParams
+                .getAll(key)
+                .filter((value) => value && !url.searchParams.getAll(`not_${key}`).includes(value)),
+            ),
+          ],
+        ])
+        .filter(([, values]) => values?.length ?? 0),
+    ),
+    excluded: Object.fromEntries(
+      [
+        "day",
+        "time",
+        "venue",
+        "borough",
+        "membership",
+        "accessibility",
+        "format",
+        "genre",
+        "language",
+      ]
+        .map((key) => [key, [...new Set(url.searchParams.getAll(`not_${key}`).filter(Boolean))]])
         .filter(([, values]) => values?.length ?? 0),
     ),
     from: /^([01]\d|2[0-3]):[0-5]\d$/.test(url.searchParams.get("from") ?? "")
@@ -73,6 +98,8 @@ export function viewUrl(state: ViewState): string {
   if (state.search) query.set("q", state.search);
   for (const [key, values] of Object.entries(state.filters))
     for (const value of values ?? []) query.append(key, value);
+  for (const [key, values] of Object.entries(state.excluded))
+    for (const value of values ?? []) query.append(`not_${key}`, value);
   if (state.from) query.set("from", state.from);
   if (state.to) query.set("to", state.to);
   if (state.available) query.set("available", "1");

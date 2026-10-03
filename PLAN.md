@@ -307,9 +307,13 @@ Follow-up implementation (`codex/friendly-filters` in the same feature worktree)
   the same filters. URLs support repeated values and legacy language query links.
   Decoded screenings are cached in memory; count updates measured around 22ms
   after initial load on the verification machine.
-- 24 unit tests and 12 browser tests cover grouping, pagination, OR/AND semantics,
+- 25 unit tests and 16 browser tests cover grouping, pagination, OR/AND semantics,
   correlated matching/counts, date/DST/overnight handling, drawer/chips/reset and
   the original core UI flows at 1200px and 390px.
+
+Additional follow-up: tri-state include/exclude checkboxes across all nine pickers,
+NOT chips and shareable exclusion parameters; Today/Tomorrow quick buttons above
+the table. Quick buttons replace day choices while preserving other filters.
 
 Next: remaining Display controls (title mode/rating column reorder); remaining
 phase 4 calendar release grouping, event column and TMDB logo; final theme/mobile

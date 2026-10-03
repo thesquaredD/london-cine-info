@@ -200,3 +200,65 @@ test("multiple choices, correlated screening filters, chips and reset", async ({
   await expect(page.locator(".active-filters button")).toHaveCount(0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
+
+test("filter options cycle include, exclude and any with keyboard and shareable state", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await expect(page.locator(".film-row")).toHaveCount(6);
+  const menu = await sidebar(page);
+  await menu
+    .locator("summary")
+    .filter({ hasText: /^Original language/ })
+    .click();
+  const french = menu.getByRole("checkbox", { name: /French/ });
+  await french.click();
+  await expect(french).toBeChecked();
+  await expect(page.locator(".film-row")).toHaveCount(1);
+  await french.press("Space");
+  await expect(french).toHaveAttribute("aria-checked", "mixed");
+  await expect(page.locator(".film-row")).toHaveCount(5);
+  await expect(page).toHaveURL(/not_language=fr/);
+  await closeSidebar(page);
+  await expect(
+    page.getByRole("button", { name: "Remove excluded original language filter: French" }),
+  ).toBeVisible();
+  await page.reload();
+  await expect(page.locator(".film-row")).toHaveCount(5);
+  const secondMenu = await sidebar(page);
+  await secondMenu
+    .locator("summary")
+    .filter({ hasText: /^Original language/ })
+    .click();
+  const excluded = secondMenu.getByRole("checkbox", { name: /NOT French/ });
+  await excluded.click();
+  await expect(secondMenu.getByRole("checkbox", { name: /French/ })).not.toBeChecked();
+  await expect(secondMenu.getByRole("checkbox", { name: /French/ })).toHaveAttribute(
+    "aria-checked",
+    "false",
+  );
+  await expect(page.locator(".film-row")).toHaveCount(6);
+  await closeSidebar(page);
+});
+
+test("Today and Tomorrow shortcuts replace day filters while preserving other choices", async ({
+  page,
+}) => {
+  await page.clock.setFixedTime(new Date("2026-10-03T09:00:00Z"));
+  await page.goto("/?day=beyond&not_day=today&language=fr");
+  const today = page.locator(".quick-days").getByRole("button", { name: /^Today/ });
+  const tomorrow = page.locator(".quick-days").getByRole("button", { name: /^Tomorrow/ });
+  await today.click();
+  await expect(today).toHaveAttribute("aria-pressed", "true");
+  await expect(page).toHaveURL(/day=today/);
+  expect(new URL(page.url()).searchParams.get("not_day")).toBeNull();
+  expect(new URL(page.url()).searchParams.get("language")).toBe("fr");
+  await tomorrow.click();
+  await expect(tomorrow).toHaveAttribute("aria-pressed", "true");
+  await expect(today).toHaveAttribute("aria-pressed", "false");
+  expect(new URL(page.url()).searchParams.getAll("day")).toEqual(["tomorrow"]);
+  await tomorrow.click();
+  expect(new URL(page.url()).searchParams.getAll("day")).toEqual([]);
+  await expect(page.locator(".film-row")).toHaveCount(1);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});

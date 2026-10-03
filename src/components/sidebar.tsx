@@ -56,7 +56,9 @@ export function Sidebar({
           value={state.search}
           onInput={(event) => onChange({ search: event.currentTarget.value, page: 1 })}
         />
-        <p class="filter-hint">Choose any values within a filter. Counts show matching films.</p>
+        <p class="filter-hint">
+          Click once to include, again to exclude, again to clear. Counts show matching films.
+        </p>
         {meta &&
           FILTERS.map(({ key, label }) => (
             <FilterPicker
@@ -64,6 +66,7 @@ export function Sidebar({
               filterKey={key}
               label={label}
               selected={state.filters[key] ?? []}
+              excluded={state.excluded[key] ?? []}
               meta={meta}
               counts={counts?.[key] ?? new Map()}
               idPrefix={idPrefix}
@@ -72,8 +75,12 @@ export function Sidebar({
                   ? `Starts ${state.from || "00:00"}–${state.to || "23:59"}`
                   : undefined
               }
-              onChange={(values) =>
-                onChange({ filters: { ...state.filters, [key]: values }, page: 1 })
+              onChange={(values, excluded) =>
+                onChange({
+                  filters: { ...state.filters, [key]: values },
+                  excluded: { ...state.excluded, [key]: excluded },
+                  page: 1,
+                })
               }
             >
               {key === "time" && (

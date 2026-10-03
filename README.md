@@ -127,9 +127,16 @@ Selections match **any** value within a filter and **all** selected filters toge
 Screening filters must match the same screening: a film cannot borrow a day from
 one cinema and an accessibility flag from another. The expanded programme applies
 the same selections. Counts show distinct films matching the other filters, ignoring
-choices within the picker being counted; zero-result options are disabled unless
-already selected. Chips above the table remove individual choices; Clear all resets
+choices within the picker being counted; zero-result options remain available so they can also be excluded. Chips above the table remove individual choices; Clear all resets
 the complete selection. Query parameters preserve filters in shared links.
 
 In the mobile drawer, Show results closes the menu. A currently expanded film stays
 open when changing filters if it still matches. No preference is persisted.
+
+Filter options cycle through Any → Include → Exclude → Any with a click or Space.
+Excluded options show a minus checkbox and NOT label; chips use the same label.
+Positive choices still match any value; every excluded value is rejected. Screening
+exclusions apply to individual screenings, so a film can remain when it has another
+matching screening. Exclusions are shared using repeated `not_<filter>` parameters.
+Today and Tomorrow buttons above the table replace day selections/exclusions and
+keep all other filters; clicking the active shortcut clears the day filter.

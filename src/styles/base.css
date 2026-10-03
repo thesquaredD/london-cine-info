@@ -1034,3 +1034,33 @@ h3 {
   font: inherit;
   margin: 0;
 }
+.quick-days {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.quick-days button {
+  padding: 8px 14px;
+  border-radius: 4px;
+}
+.quick-days button[aria-pressed="true"] {
+  background: var(--active-bg);
+  color: var(--active-fg);
+  border-color: var(--active-bg);
+}
+.quick-days small {
+  margin-left: 6px;
+  opacity: 0.8;
+}
+.not-label {
+  font-weight: 500;
+  color: var(--sold-out);
+  font-size: 11px;
+}
+.excluded-option input {
+  accent-color: var(--sold-out);
+}
+.active-filters .excluded-chip {
+  border-color: var(--sold-out);
+  color: var(--sold-out);
+}
