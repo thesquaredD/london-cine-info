@@ -257,7 +257,7 @@ only possible spend (~£15–25/year for `.info`).
 Total ≈ 6 working days of agent time, shippable after phase 2 (a usable table) and
 complete after phase 6.
 
-## 8. State at handoff (2026-10-03, phase 2 implementation)
+## 8. State at handoff (2026-10-03, filters and retrospective grouping)
 
 Phases 0 and 1 are committed, merged and deployed. GitHub CLI uses the personal
 `thesquaredD` keyring account with workflow scope; prefix project gh commands with
@@ -291,10 +291,30 @@ dates), memberships describe venue eligibility, and malformed booking links fall
 back to validated screening details. All 33 boroughs and membership mappings are
 already implemented. Data is ignored, generated and versioned for immutable caching.
 
-Next: phase 3, all nine filters with correlated screening matching and live facet
-counts, query-string state, title display and rating column reorder. Then complete
-phase 4 grouped views/attribution (including TMDB logo), audit the early phase 5
-mobile/theme work, and phase 6 performance/final visual verification.
+Follow-up implementation (`codex/friendly-filters` in the same feature worktree):
+
+- User preference: every filter shown in the sidebar; OR within each multi-select
+  picker, AND across different filters.
+- Retrospectives now have director headings and counts, alphabetical director
+  groups, sorts within groups, distinct row identities for co-directed films and
+  continued headings on pagination. The source qualification remains at least
+  three films in the programme; filtering can narrow a group to fewer films.
+- All nine searchable/counting pickers: day, time, cinema, borough, membership,
+  accessibility, format, genre and original language. Date shortcuts, custom
+  overnight time ranges, hide-sold-out, active chips, per-picker clear and full
+  reset. Cinemas grouped by borough, boroughs by inner/outer London.
+- Correlated screening matching and distinct-film counts; expanded showtimes use
+  the same filters. URLs support repeated values and legacy language query links.
+  Decoded screenings are cached in memory; count updates measured around 22ms
+  after initial load on the verification machine.
+- 24 unit tests and 12 browser tests cover grouping, pagination, OR/AND semantics,
+  correlated matching/counts, date/DST/overnight handling, drawer/chips/reset and
+  the original core UI flows at 1200px and 390px.
+
+Next: remaining Display controls (title mode/rating column reorder); remaining
+phase 4 calendar release grouping, event column and TMDB logo; final theme/mobile
+and performance audit. Retrospective grouping and the screening filters are now
+implemented. See README for behavior and replay commands.
 
 ## 9. Open points (I will take the recommended default unless you say otherwise)
 

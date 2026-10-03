@@ -1,4 +1,4 @@
-import type { Film, RatingKey } from "../shared/data";
+import type { Film, RatingKey, FacetKey } from "../shared/data";
 
 export const PAGE_SIZE = 200;
 export const PAGES = [
@@ -19,7 +19,10 @@ export type SortKey = "title" | "director" | "year" | RatingKey;
 export type ViewState = {
   path: string;
   search: string;
-  language: string;
+  filters: Partial<Record<FacetKey, string[]>>;
+  from: string;
+  to: string;
+  available: boolean;
   director: string;
   sort: SortKey;
   direction: "asc" | "desc";
@@ -37,7 +40,28 @@ export function readView(url: URL): ViewState {
   return {
     path,
     search: url.searchParams.get("q") ?? "",
-    language: url.searchParams.get("language") ?? "",
+    filters: Object.fromEntries(
+      [
+        "day",
+        "time",
+        "venue",
+        "borough",
+        "membership",
+        "accessibility",
+        "format",
+        "genre",
+        "language",
+      ]
+        .map((key) => [key, [...new Set(url.searchParams.getAll(key).filter(Boolean))]])
+        .filter(([, values]) => values?.length ?? 0),
+    ),
+    from: /^([01]\d|2[0-3]):[0-5]\d$/.test(url.searchParams.get("from") ?? "")
+      ? url.searchParams.get("from")!
+      : "",
+    to: /^([01]\d|2[0-3]):[0-5]\d$/.test(url.searchParams.get("to") ?? "")
+      ? url.searchParams.get("to")!
+      : "",
+    available: url.searchParams.get("available") === "1",
     director: url.searchParams.get("director") ?? "",
     sort: sortKeys.includes(sort ?? "") ? (sort as SortKey) : path === "/calendar" ? "year" : "lb",
     direction: url.searchParams.get("order") === "asc" ? "asc" : "desc",
@@ -47,7 +71,11 @@ export function readView(url: URL): ViewState {
 export function viewUrl(state: ViewState): string {
   const query = new URLSearchParams();
   if (state.search) query.set("q", state.search);
-  if (state.language) query.set("language", state.language);
+  for (const [key, values] of Object.entries(state.filters))
+    for (const value of values ?? []) query.append(key, value);
+  if (state.from) query.set("from", state.from);
+  if (state.to) query.set("to", state.to);
+  if (state.available) query.set("available", "1");
   if (state.director) query.set("director", state.director);
   if (state.sort !== (state.path === "/calendar" ? "year" : "lb")) query.set("sort", state.sort);
   if (state.direction !== "desc") query.set("order", state.direction);
@@ -62,7 +90,7 @@ export function selectFilms(films: Film[], state: ViewState): Film[] {
     if (state.path === "/retrospectives" && !film.retro.length) return false;
     if (state.path === "/events" && !film.event) return false;
     if (state.path === "/calendar" && !film.upcoming) return false;
-    if (state.language && film.la !== state.language) return false;
+    if (state.filters.language?.length && !state.filters.language.includes(film.la)) return false;
     if (state.director && !film.di.some((director) => director.id === state.director)) return false;
     const text = normalize(
       [film.ti, film.o_ti ?? "", ...film.di.map((director) => director.name)].join(" "),
@@ -108,4 +136,38 @@ export function formatDate(date: string): string {
 export function runtime(minutes: number | null): string {
   if (minutes === null) return "Runtime unknown";
   return `${Math.floor(minutes / 60) ? `${Math.floor(minutes / 60)}h ` : ""}${minutes % 60}m`;
+}
+
+export type TableRow = {
+  film: Film;
+  group: { id: string; name: string; count: number } | null;
+  key: string;
+};
+export function tableRows(films: Film[], state: ViewState): TableRow[] {
+  if (state.path !== "/retrospectives")
+    return films.map((film) => ({ film, group: null, key: film.id }));
+  const groups = new Map<string, { name: string; films: Film[] }>();
+  for (const film of films) {
+    for (const director of film.di.filter(
+      (director) =>
+        film.retro.includes(director.id) && (!state.director || director.id === state.director),
+    )) {
+      const group = groups.get(director.id) ?? { name: director.name, films: [] };
+      group.films.push(film);
+      groups.set(director.id, group);
+    }
+  }
+  return [...groups]
+    .sort(
+      (a, b) =>
+        collator.compare(a[1].name, b[1].name) *
+        (state.sort === "director" && state.direction === "desc" ? -1 : 1),
+    )
+    .flatMap(([id, group]) =>
+      group.films.map((film) => ({
+        film,
+        group: { id, name: group.name, count: group.films.length },
+        key: `${id}:${film.id}`,
+      })),
+    );
 }

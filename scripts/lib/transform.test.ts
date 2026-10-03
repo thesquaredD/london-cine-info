@@ -1,3 +1,11 @@
+import {
+  filterFilms,
+  facetCounts,
+  screeningMatcher,
+  londonDate,
+  dayMatches,
+} from "../../src/lib/filters";
+import { readView, viewUrl } from "../../src/lib/catalogue";
 import { readFile } from "node:fs/promises";
 import { beforeAll, describe, expect, it } from "vitest";
 import { loadBoroughs, polygonContains, type BoroughIndex } from "./boroughs";
@@ -240,5 +248,98 @@ describe("London geography and time", () => {
     expect(rows[1]!.time - rows[0]!.time).toBe(3_600_000);
     expect(londonTime(Date.parse("2026-03-29T00:30:00Z")).time).toBe("00:30");
     expect(londonTime(Date.parse("2026-03-29T01:30:00Z")).time).toBe("02:30");
+  });
+});
+
+describe("screening filters", () => {
+  it("matches one screening across day, cinema, format and accessibility rather than mixing screenings", () => {
+    const { films, meta } = build();
+    const state = {
+      ...readView(new URL("https://example.com")),
+      filters: { day: ["2026-10-03"], venue: ["bfi.org.uk-southbank"] },
+    };
+    expect(
+      filterFilms(films, meta, state, new Date(fixture.now)).some(
+        (film) => film.id === "classic-a",
+      ),
+    ).toBe(false);
+    state.filters.day = ["2026-10-04"];
+    expect(
+      filterFilms(films, meta, state, new Date(fixture.now)).some(
+        (film) => film.id === "classic-a",
+      ),
+    ).toBe(true);
+    const wrong = { ...state, filters: { ...state.filters, format: ["35mm"] } };
+    expect(
+      filterFilms(films, meta, wrong, new Date(fixture.now)).some(
+        (film) => film.id === "classic-a",
+      ),
+    ).toBe(false);
+    const matching = { ...state, filters: { ...state.filters, accessibility: ["subtitled"] } };
+    expect(
+      filterFilms(films, meta, matching, new Date(fixture.now)).some(
+        (film) => film.id === "classic-a",
+      ),
+    ).toBe(true);
+  });
+  it("uses OR within a filter, AND across filters and shareable repeated query parameters", () => {
+    const { films, meta } = build();
+    const state = readView(
+      new URL(
+        "https://example.com/?day=2026-10-03&day=2026-10-04&venue=bfi.org.uk-southbank&venue=princecharlescinema.com",
+      ),
+    );
+    expect(state.filters.day).toHaveLength(2);
+    expect(
+      filterFilms(films, meta, state, new Date(fixture.now)).some(
+        (film) => film.id === "classic-a",
+      ),
+    ).toBe(true);
+    expect(readView(new URL(viewUrl(state), "https://example.com"))).toEqual(state);
+  });
+  it("counts distinct films using matching screenings and ignores the facet being counted", () => {
+    const { films, meta } = build();
+    const state = {
+      ...readView(new URL("https://example.com")),
+      filters: { day: ["2026-10-03"], venue: ["bfi.org.uk-southbank"] },
+    };
+    const counts = facetCounts(films, meta, state, new Date(fixture.now));
+    expect(counts.venue.get("princecharlescinema.com")).toBeGreaterThan(0);
+    expect(counts.day.get("2026-10-04")).toBeGreaterThan(0);
+    const onlyA = films.filter((film) => film.id === "classic-a");
+    expect(
+      facetCounts(
+        onlyA,
+        meta,
+        readView(new URL("https://example.com")),
+        new Date(fixture.now),
+      ).day.get("2026-10-25"),
+    ).toBe(1);
+  });
+  it("filters the expanded showtimes consistently, including sold-out and midnight ranges", () => {
+    const { films, meta, showtimes } = build();
+    const state = {
+      ...readView(new URL("https://example.com")),
+      filters: { day: ["2026-10-03"] },
+      available: true,
+    };
+    expect(
+      filterFilms(films, meta, state, new Date(fixture.now)).some(
+        (film) => film.id === "classic-a",
+      ),
+    ).toBe(false);
+    const late = { ...state, filters: { day: ["2026-10-25"] }, from: "23:00", to: "02:00" };
+    const matcher = screeningMatcher(meta, late, new Date(fixture.now));
+    expect(
+      showtimes
+        .find((film) => film.id === "classic-a")!
+        .days["2026-10-25"]!.filter((row) => matcher.showtime("2026-10-25", row)),
+    ).toHaveLength(2);
+  });
+  it("uses London dates and resolves weekend quick choices across month and DST boundaries", () => {
+    expect(londonDate(new Date("2026-10-03T23:30:00Z"))).toBe("2026-10-04");
+    expect(dayMatches("2026-10-04", ["weekend"], "2026-10-04")).toBe(true);
+    expect(dayMatches("2026-10-10", ["weekend"], "2026-10-04")).toBe(false);
+    expect(dayMatches("2026-11-01", ["week"], "2026-10-26")).toBe(true);
   });
 });
