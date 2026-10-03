@@ -63,6 +63,15 @@ export function FilterPicker({
     grouped.set(group, [...(grouped.get(group) ?? []), option]);
   }
   const id = `${idPrefix}-${filterKey}`;
+  const summary =
+    excluded.length > 0
+      ? `${selected.length} included · ${excluded.length} excluded`
+      : (summaryValue ??
+        (selected.length
+          ? selected.length === 1
+            ? filterLabel(filterKey, selected[0]!, meta)
+            : `${selected.length} selected`
+          : `Any ${filterKey === "venue" ? "cinema" : filterKey === "language" ? "language" : label.toLowerCase()}`));
   return (
     <details
       name={`${idPrefix}-filters`}
@@ -70,16 +79,7 @@ export function FilterPicker({
     >
       <summary>
         <span>{label}</span>
-        <small>
-          {excluded.length > 0
-            ? `${selected.length} included · ${excluded.length} excluded`
-            : (summaryValue ??
-              (selected.length
-                ? selected.length === 1
-                  ? filterLabel(filterKey, selected[0]!, meta)
-                  : `${selected.length} selected`
-                : `Any ${filterKey === "venue" ? "cinema" : filterKey === "language" ? "language" : label.toLowerCase()}`))}
-        </small>
+        <small title={summary}>{summary} </small>
       </summary>
       <div class="picker-content">
         {options.length > 8 && (
@@ -98,11 +98,13 @@ export function FilterPicker({
         )}
         <div class="picker-actions">
           <span>Click: include → exclude → clear</span>
-          {(selected.length > 0 || excluded.length > 0) && (
-            <button type="button" onClick={() => onChange([], [])}>
-              Clear {label.toLowerCase()}
-            </button>
-          )}
+          <button
+            type="button"
+            disabled={!selected.length && !excluded.length}
+            onClick={() => onChange([], [])}
+          >
+            Clear {label.toLowerCase()}
+          </button>
         </div>
         <fieldset class="filter-options">
           <legend class="sr-only">{label}</legend>
@@ -145,9 +147,11 @@ export function FilterPicker({
                         else onChange([...selected, option.id], excluded);
                       }}
                     />
-                    <span>
-                      {excluded.includes(option.id) && <b class="not-label">NOT </b>}
-                      {option.label}
+                    <span class="option-label">
+                      <b class={`not-label ${excluded.includes(option.id) ? "" : "inactive"}`}>
+                        NOT
+                      </b>
+                      <span>{option.label}</span>
                     </span>
                     <small>{counts.get(option.id) ?? 0}</small>
                   </label>
