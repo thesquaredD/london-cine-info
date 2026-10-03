@@ -246,31 +246,42 @@ only possible spend (~£15–25/year for `.info`).
 Total ≈ 6 working days of agent time, shippable after phase 2 (a usable table) and
 complete after phase 6.
 
-## 8. State at handoff (2026-10-02, planning session)
+## 8. State at handoff (2026-10-03, phase 0 bootstrap)
 
 Done:
 
 - GitHub: personal account `thesquaredD` is the active gh keyring account. `GITHUB_TOKEN`
   in the shell pins the work account, so prefix every project `gh` call with
-  `env -u GITHUB_TOKEN`. Public repo `thesquaredD/london-cine-info` exists and is empty.
+  `env -u GITHUB_TOKEN`. Public repo `thesquaredD/london-cine-info` now contains the
+  scaffold on `main`. The personal gh token has the `workflow` scope.
 - Repo secrets set: `CLOUDFLARE_API_TOKEN` (Pages Edit + User Details Read, verified
   active) and `CLOUDFLARE_ACCOUNT_ID` = `5d3189d7982be9522311dada6bf49ecc`.
 - Cloudflare: `wrangler` logged in locally with the personal account
   (diogo.seabra.diogo@gmail.com).
-- Local: `git init` on `main`, `.gitignore`, scaffold files written (package.json,
-  tsconfig.json, scripts/tsconfig.json, vite.config.ts, index.html, eslint/prettier
-  config, placeholder `src/app.tsx`, `public/_headers`, `public/_redirects`, manifest,
-  favicon). Nothing committed, `npm install` not run.
+- Cloudflare Pages project `london-cine-info` exists with production branch `main`.
+  The placeholder is live at `https://london-cine-info.pages.dev`; the home page and
+  SPA fallback return HTTP 200. Both local Direct Upload and GitHub Actions deployment
+  have succeeded.
+- Local scaffold, dependencies and lockfile are committed and pushed. Vite 6 and
+  Preact 10 follow the plan; Vitest was upgraded to 5 to resolve a dependency advisory.
+  Local typecheck, lint, production build and dependency audit passed.
+- Three Actions workflows are installed: CI, production deploy (push, manual, and
+  `06:45`/`11:45` UTC daily schedule), and zizmor. All external actions use commit pins.
+  The first CI and deployment runs passed; zizmor required the action pins added here.
+- `origin` uses `https://github.com/thesquaredD/london-cine-info.git` through gh's
+  credential helper. The machine's SSH key belongs to `infinitdiogo`, so the originally
+  planned SSH remote could not push to the personal repo.
 
-Still to do in phase 0:
+Next: phase 1 (data pipeline).
 
-- Create the Cloudflare Pages project `london-cine-info` (production branch `main`).
-  `wrangler pages project create` failed here with a spurious "detected framework
-  (Hydrogen)" error; use the REST API
-  (`POST /accounts/<id>/pages/projects`) or the dashboard instead.
-- `npm install`, GitHub Actions workflows (`ci.yml`, `deploy.yml`, `zizmor.yml`),
-  `git remote add origin git@github.com:thesquaredD/london-cine-info.git`, first commit,
-  push, first deploy to `https://london-cine-info.pages.dev`.
+- `scripts/build-data.ts`, schemas, borough boundaries, membership mapping, generated
+  data and fixtures do not exist yet. Deploy conditionally runs `build-data` once the
+  script exists, with the GitHub token provided as `GH_TOKEN`; until then it deploys
+  the placeholder.
+- CI currently verifies typecheck, lint and the scaffold build. Unit tests run once
+  matching test files exist; browser smoke tests run once a Playwright config exists.
+  Add the fixture data build to CI in phase 1, and browser coverage with the UI phases.
+- Phase 0 bootstrap commit: `e56bf55`.
 
 ## 9. Open points (I will take the recommended default unless you say otherwise)
 
