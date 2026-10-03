@@ -286,8 +286,8 @@ Done:
 Phase 1 implementation:
 
 - Branch `codex/data-pipeline` in `/Users/dio/Development/london-cine-info-data-pipeline`.
-  The base checkout remains on `main`; production still shows the phase 0 placeholder
-  until the branch is merged and the UI phases are implemented.
+  The base checkout remains on `main`; the visible site retains the phase 0
+  placeholder until the UI phases are implemented.
 - `scripts/build-data.ts` resolves releases, caches public assets, validates schemas
   and references, then writes films, metadata, per-film details/showtimes and the
   generated manifest. Output is staged; failed validation leaves previous output
@@ -309,7 +309,12 @@ Phase 1 implementation:
   data build using `GH_TOKEN` before upload. Browser smoke remains conditional until
   a Playwright config is added with the UI phases.
 
-Next: review/merge phase 1, then phase 2 (core UI). Import the generated manifest,
+Phase 1 review: https://github.com/thesquaredD/london-cine-info/pull/1. CI and zizmor
+passed. The hosted preview at https://codex-data-pipeline.london-cine-info.pages.dev
+serves the verified live data with immutable cache headers; sampled hosted files
+match local output byte for byte.
+
+Next: phase 2 (core UI). Import the generated manifest,
 load films/metadata, and lazy-fetch versioned showtime files. See README.md for
 commands and source limitations. Phase 0 CI, deployment and zizmor passed on `main`.
 - Phase 0 bootstrap commit: `e56bf55`.
