@@ -6,15 +6,15 @@ site on Cloudflare Pages for £0/month.
 
 Decisions already taken (interview, 2026-10-02):
 
-| Decision | Choice |
-| --- | --- |
-| Data posture | Pragmatic: Clusterflick `combined-data.json` + `matched-data` ratings (unlicensed build artifacts, personal non-commercial use), with CC BY 4.0 per-venue files as the documented fallback |
-| Accounts / persistence | None in v1. No login, no localStorage, no cookies. Bookmark column stays visual-only or is dropped (see Open points) |
-| Hosting | Cloudflare Pages, free `*.pages.dev` subdomain, custom domain later |
-| Repo | Public, personal GitHub (`github.com/thesquaredD/london-cine-info`) |
-| Scope | All six pages + inline showtimes + dark mode + mobile |
-| Filters | Card → UK memberships, Place → London boroughs, Languages → Accessibility, Format kept |
-| Stack | My call: Vite + TypeScript + Preact, no jQuery/DataTables/FullCalendar (see §3) |
+| Decision               | Choice                                                                                                                                                                                     |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Data posture           | Pragmatic: Clusterflick `combined-data.json` + `matched-data` ratings (unlicensed build artifacts, personal non-commercial use), with CC BY 4.0 per-venue files as the documented fallback |
+| Accounts / persistence | None in v1. No login, no localStorage, no cookies. Bookmark column stays visual-only or is dropped (see Open points)                                                                       |
+| Hosting                | Cloudflare Pages, free `*.pages.dev` subdomain, custom domain later                                                                                                                        |
+| Repo                   | Public, personal GitHub (`github.com/thesquaredD/london-cine-info`)                                                                                                                        |
+| Scope                  | All six pages + inline showtimes + dark mode + mobile                                                                                                                                      |
+| Filters                | Card → UK memberships, Place → London boroughs, Languages → Accessibility, Format kept                                                                                                     |
+| Stack                  | My call: Vite + TypeScript + Preact, no jQuery/DataTables/FullCalendar (see §3)                                                                                                            |
 
 ---
 
@@ -81,14 +81,14 @@ Screenshots of every state are in `.playwright-mcp/` (ignored by git).
 Refreshed every morning by Clusterflick's pipeline (combine release ≈ 06:20 UTC, match
 release ≈ 11:20 UTC). Everything is a GitHub Release asset; fetched with the public API.
 
-| Asset | Repo | Size | Licence | We use |
-| --- | --- | --- | --- | --- |
-| `combined-data.json` | data-combined | 22 MB | none (internal artifact) | yes — movies, venues, people, genres, collections |
-| `departed-movies.json` | data-combined | 2.4 MB | none | no |
-| `imdb.json`, `letterboxd.json`, `metacritic.json`, `rottentomatoes.json`, `moviedb.json` | data-matched | 0.2–1 MB each | none; IMDb non-commercial terms | yes — four rating columns + links |
-| `bechdel.json` | data-matched | 0.1 MB | CC BY-NC 3.0 | no (v1) |
-| 452 per-venue JSON | data-transformed | 19 MB total | CC BY 4.0 | fallback only |
-| 452 per-venue ICS | data-calendar | — | CC BY 4.0 | no |
+| Asset                                                                                    | Repo             | Size          | Licence                         | We use                                            |
+| ---------------------------------------------------------------------------------------- | ---------------- | ------------- | ------------------------------- | ------------------------------------------------- |
+| `combined-data.json`                                                                     | data-combined    | 22 MB         | none (internal artifact)        | yes — movies, venues, people, genres, collections |
+| `departed-movies.json`                                                                   | data-combined    | 2.4 MB        | none                            | no                                                |
+| `imdb.json`, `letterboxd.json`, `metacritic.json`, `rottentomatoes.json`, `moviedb.json` | data-matched     | 0.2–1 MB each | none; IMDb non-commercial terms | yes — four rating columns + links                 |
+| `bechdel.json`                                                                           | data-matched     | 0.1 MB        | CC BY-NC 3.0                    | no (v1)                                           |
+| 452 per-venue JSON                                                                       | data-transformed | 19 MB total   | CC BY 4.0                       | fallback only                                     |
+| 452 per-venue ICS                                                                        | data-calendar    | —             | CC BY 4.0                       | no                                                |
 
 Volume today: 2,153 movies, 32,967 performances, 452 venues, 13,754 people. 1,602 movies
 have a TMDB match (poster, year, overview, genres, trailer). Ratings cover 1,549 (IMDb),
@@ -141,18 +141,18 @@ Risks and mitigations:
 Paris ships jQuery + DataTables + FullCalendar + fancybox + virtual-select, roughly 500 KB
 of JS, to render one table. For ~2,000 rows we need none of that:
 
-| Concern | Choice | Why |
-| --- | --- | --- |
-| Build | Vite 6 + TypeScript | zero-config static output, hashed assets |
-| UI | Preact 10 (+ `@preact/signals`) | 4 KB runtime, JSX, enough for one view tree |
-| Table | hand-rolled: sort, filter, paginate over an in-memory array | 2k rows sorts in < 5 ms; no DataTables |
-| Showtimes list | hand-rolled day-grouped list | FullCalendar list view is a styled table |
-| Sidebar selects | `virtual-select-plugin` (MIT, no jQuery, 40 KB) | same component Paris uses: grouped options, search, counts |
-| Styling | plain CSS with custom properties, light + night-mode | mirrors Paris; no Tailwind |
-| Data build | Node 24 script in `scripts/build-data.ts` (tsx) | runs in CI, writes `public/data/` |
-| Validation | zod | fail fast on upstream schema drift |
-| Tests | Vitest (data transforms) + Playwright (smoke + visual, desktop and 390px) | |
-| Hosting | Cloudflare Pages via `wrangler pages deploy` (Direct Upload) | daily deploy without a commit |
+| Concern         | Choice                                                                    | Why                                                        |
+| --------------- | ------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| Build           | Vite 6 + TypeScript                                                       | zero-config static output, hashed assets                   |
+| UI              | Preact 10 (+ `@preact/signals`)                                           | 4 KB runtime, JSX, enough for one view tree                |
+| Table           | hand-rolled: sort, filter, paginate over an in-memory array               | 2k rows sorts in < 5 ms; no DataTables                     |
+| Showtimes list  | hand-rolled day-grouped list                                              | FullCalendar list view is a styled table                   |
+| Sidebar selects | `virtual-select-plugin` (MIT, no jQuery, 40 KB)                           | same component Paris uses: grouped options, search, counts |
+| Styling         | plain CSS with custom properties, light + night-mode                      | mirrors Paris; no Tailwind                                 |
+| Data build      | Node 24 script in `scripts/build-data.ts` (tsx)                           | runs in CI, writes `public/data/`                          |
+| Validation      | zod                                                                       | fail fast on upstream schema drift                         |
+| Tests           | Vitest (data transforms) + Playwright (smoke + visual, desktop and 390px) |                                                            |
+| Hosting         | Cloudflare Pages via `wrangler pages deploy` (Direct Upload)              | daily deploy without a commit                              |
 
 Budget: < 120 KB JS gzipped, first paint < 1 s on 4G, film list JSON ≈ 350–450 KB gzipped.
 
@@ -244,80 +244,57 @@ only possible spend (~£15–25/year for `.info`).
 
 ## 7. Phases
 
-| # | Phase | Deliverable | Est. |
-| --- | --- | --- | --- |
-| 0 | Bootstrap | `git init`, `env -u GITHUB_TOKEN gh repo create thesquaredD/london-cine-info --public`, Vite+Preact+TS scaffold, ESLint/Prettier, `.gitignore` (`.playwright-mcp/`, `.cache/`, `public/data/`), CI workflow, Cloudflare Pages project, first empty deploy to `*.pages.dev` | ½ day |
-| 1 | Data pipeline | `build-data.ts` with zod schemas, borough assignment, membership map, films/showtimes/meta outputs, fixture dataset for tests, unit tests | 1 day |
-| 2 | Core UI | Layout, sidebar, All films table with sort/paginate, expanded row with showtimes, light theme, desktop | 1½ days |
-| 3 | Filters | All nine filters with live counts, query-string state, title display mode, rating column reorder | 1 day |
-| 4 | Pages | New releases, Classics, Retrospectives, Events, Calendar, About (attribution, data status, source release tags) | 1 day |
-| 5 | Theme + mobile | Night mode, 800px drawer layout, 390px table collapse, sticky footer, no overflow | ½ day |
-| 6 | Verify + ship | Playwright smoke + visual pass at 1200px and 390px, Lighthouse, scheduled deploy live, side-by-side check against paris-cine.info, handoff for your ✅ | ½ day |
+| #   | Phase          | Deliverable                                                                                                                                                                                                                                                                | Est.    |
+| --- | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| 0   | Bootstrap      | `git init`, `env -u GITHUB_TOKEN gh repo create thesquaredD/london-cine-info --public`, Vite+Preact+TS scaffold, ESLint/Prettier, `.gitignore` (`.playwright-mcp/`, `.cache/`, `public/data/`), CI workflow, Cloudflare Pages project, first empty deploy to `*.pages.dev` | ½ day   |
+| 1   | Data pipeline  | `build-data.ts` with zod schemas, borough assignment, membership map, films/showtimes/meta outputs, fixture dataset for tests, unit tests                                                                                                                                  | 1 day   |
+| 2   | Core UI        | Layout, sidebar, All films table with sort/paginate, expanded row with showtimes, light theme, desktop                                                                                                                                                                     | 1½ days |
+| 3   | Filters        | All nine filters with live counts, query-string state, title display mode, rating column reorder                                                                                                                                                                           | 1 day   |
+| 4   | Pages          | New releases, Classics, Retrospectives, Events, Calendar, About (attribution, data status, source release tags)                                                                                                                                                            | 1 day   |
+| 5   | Theme + mobile | Night mode, 800px drawer layout, 390px table collapse, sticky footer, no overflow                                                                                                                                                                                          | ½ day   |
+| 6   | Verify + ship  | Playwright smoke + visual pass at 1200px and 390px, Lighthouse, scheduled deploy live, side-by-side check against paris-cine.info, handoff for your ✅                                                                                                                     | ½ day   |
 
 Total ≈ 6 working days of agent time, shippable after phase 2 (a usable table) and
 complete after phase 6.
 
-## 8. State at handoff (2026-10-03, phase 1 implementation)
+## 8. State at handoff (2026-10-03, phase 2 implementation)
 
-Done:
+Phases 0 and 1 are committed, merged and deployed. GitHub CLI uses the personal
+`thesquaredD` keyring account with workflow scope; prefix project gh commands with
+`env -u GITHUB_TOKEN` because the shell token belongs to the work account. Origin
+uses HTTPS through gh's credential helper. Cloudflare Pages project
+`london-cine-info` uses production branch `main`; both repository Cloudflare secrets
+are set and Wrangler is logged in locally. No credentials need to be pasted.
 
-- GitHub: personal account `thesquaredD` is the active gh keyring account. `GITHUB_TOKEN`
-  in the shell pins the work account, so prefix every project `gh` call with
-  `env -u GITHUB_TOKEN`. Public repo `thesquaredD/london-cine-info` now contains the
-  scaffold on `main`. The personal gh token has the `workflow` scope.
-- Repo secrets set: `CLOUDFLARE_API_TOKEN` (Pages Edit + User Details Read, verified
-  active) and `CLOUDFLARE_ACCOUNT_ID` = `5d3189d7982be9522311dada6bf49ecc`.
-- Cloudflare: `wrangler` logged in locally with the personal account
-  (diogo.seabra.diogo@gmail.com).
-- Cloudflare Pages project `london-cine-info` exists with production branch `main`.
-  The placeholder is live at `https://london-cine-info.pages.dev`; the home page and
-  SPA fallback return HTTP 200. Both local Direct Upload and GitHub Actions deployment
-  have succeeded.
-- Local scaffold, dependencies and lockfile are committed and pushed. Vite 6 and
-  Preact 10 follow the plan; Vitest was upgraded to 5 to resolve a dependency advisory.
-  Local typecheck, lint, production build and dependency audit passed.
-- Three Actions workflows are installed: CI, production deploy (push, manual, and
-  `06:45`/`11:45` UTC daily schedule), and zizmor. All external actions use commit pins.
-  The first CI and deployment runs passed; zizmor required the action pins added here.
-- `origin` uses `https://github.com/thesquaredD/london-cine-info.git` through gh's
-  credential helper. The machine's SSH key belongs to `infinitdiogo`, so the originally
-  planned SSH remote could not push to the personal repo.
+Phase 2 is implemented on `codex/core-ui` in the feature worktree
+`/Users/dio/Development/london-cine-info-data-pipeline`; the base checkout remains
+on `main`. It adds:
 
-Phase 1 implementation:
+- Paris-style sidebar, masthead and seven-column film table, sortable on every
+  column, default Letterboxd descending, 200 rows/page and missing values last.
+- Manifest loading, error/retry states, shareable search/language/director filters
+  and browser history navigation.
+- One inline expanded row, lazy cached showtimes, poster/metadata hover card,
+  source-linked ratings, trailer, London day groups, cinema booking links,
+  format/accessibility/sold-out badges and clearly labelled booking fallbacks.
+- Basic flag views for all six pages plus sources/data status About page. Full
+  retrospective/calendar grouping and the event-specific column remain phase 4.
+- System theme plus an in-memory toggle, desktop sidebar collapse, native modal
+  phone drawer, two-column phone table and sticky pagination, implemented early
+  so the core table is usable at 390px. No cookies or persistent browser storage.
+- Four additional catalogue unit tests and eight desktop/mobile browser smoke
+  tests. CI now builds fixture data before typechecking the generated manifest.
+  Deployment checks fixture data, then builds fresh live data for publication.
 
-- Branch `codex/data-pipeline` in `/Users/dio/Development/london-cine-info-data-pipeline`.
-  The base checkout remains on `main`; the visible site retains the phase 0
-  placeholder until the UI phases are implemented.
-- `scripts/build-data.ts` resolves releases, caches public assets, validates schemas
-  and references, then writes films, metadata, per-film details/showtimes and the
-  generated manifest. Output is staged; failed validation leaves previous output
-  untouched. Showtime paths are versioned for immutable caching.
-- Borough polygons for all 33 authorities are vendored from London Datastore with OGL
-  attribution and a reproducible conversion script. Membership rules, page/event
-  rules, shared output types and compact screening tuples/bitsets are implemented.
-- Synthetic fixture and 14 tests cover critic rating joins, missing metadata,
-  schema/reference failures, cache invalidation, credential isolation, atomic
-  output, geography, page flags, filtering correlations and London DST.
-- Local typecheck, lint, tests, fixture build, live build and Vite builds passed.
-  The fixed verification time `2026-10-03T09:00:00Z` produced 2,178 films, 30,541
-  future screenings and 294 active venues (all 452 source venues classified).
-  The film list is 416,735 bytes gzipped.
-- Two upstream booking URLs are malformed. They fall back to validated showing
-  details, carry `bookingFallback: true`, and are reported in metadata. The future
-  UI must label them as screening details instead of direct booking links.
-- CI always runs the tests and fixture data build. Deployment runs checks and a live
-  data build using `GH_TOKEN` before upload. Browser smoke remains conditional until
-  a Playwright config is added with the UI phases.
+Pipeline source limits remain: release dates are TMDB originals (not verified UK
+dates), memberships describe venue eligibility, and malformed booking links fall
+back to validated screening details. All 33 boroughs and membership mappings are
+already implemented. Data is ignored, generated and versioned for immutable caching.
 
-Phase 1 review: https://github.com/thesquaredD/london-cine-info/pull/1. CI and zizmor
-passed. The hosted preview at https://codex-data-pipeline.london-cine-info.pages.dev
-serves the verified live data with immutable cache headers; sampled hosted files
-match local output byte for byte.
-
-Next: phase 2 (core UI). Import the generated manifest,
-load films/metadata, and lazy-fetch versioned showtime files. See README.md for
-commands and source limitations. Phase 0 CI, deployment and zizmor passed on `main`.
-- Phase 0 bootstrap commit: `e56bf55`.
+Next: phase 3, all nine filters with correlated screening matching and live facet
+counts, query-string state, title display and rating column reorder. Then complete
+phase 4 grouped views/attribution (including TMDB logo), audit the early phase 5
+mobile/theme work, and phase 6 performance/final visual verification.
 
 ## 9. Open points (I will take the recommended default unless you say otherwise)
 

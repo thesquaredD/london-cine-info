@@ -21,12 +21,12 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
+      - name: Build fixture screening data
+        run: npm run build-data -- --fixture
       - run: npm run typecheck
       - run: npm run lint
       - name: Unit tests
         run: npm test
-      - name: Build fixture screening data
-        run: npm run build-data -- --fixture
       - run: npm run build
       - name: Browser smoke tests
         if: ${{ hashFiles('playwright.config.*') != '' }}
