@@ -151,6 +151,7 @@ export function App() {
       state.search,
       state.director,
       state.filters,
+      state.excluded,
       state.from,
       state.to,
       state.available,
@@ -311,6 +312,32 @@ export function App() {
             )}
             {catalogue && (
               <div class="filter-summary">
+                <div class="quick-days" aria-label="Quick day filters">
+                  {[
+                    { id: "today", label: "Today" },
+                    { id: "tomorrow", label: "Tomorrow" },
+                  ].map(({ id, label }) => {
+                    const active =
+                      state.filters.day?.length === 1 &&
+                      state.filters.day[0] === id &&
+                      !state.excluded.day?.length;
+                    return (
+                      <button
+                        key={id}
+                        aria-pressed={active}
+                        onClick={() =>
+                          change({
+                            filters: { ...state.filters, day: active ? [] : [id] },
+                            excluded: { ...state.excluded, day: [] },
+                            page: 1,
+                          })
+                        }
+                      >
+                        {label} <small>{counts?.day.get(id) ?? 0}</small>
+                      </button>
+                    );
+                  })}
+                </div>
                 <p role="status" aria-live="polite">
                   <strong>
                     {selected.length.toLocaleString("en-GB")}{" "}
@@ -351,14 +378,34 @@ export function App() {
                       Starts {state.from || "00:00"}–{state.to || "23:59"} ×
                     </button>
                   )}
+                  {FILTERS.flatMap(({ key, label }) =>
+                    (state.excluded[key] ?? []).map((id) => (
+                      <button
+                        class="excluded-chip"
+                        key={`not-${key}-${id}`}
+                        aria-label={`Remove excluded ${label.toLowerCase()} filter: ${filterLabel(key, id, catalogue.meta)}`}
+                        onClick={() =>
+                          change({
+                            excluded: {
+                              ...state.excluded,
+                              [key]: state.excluded[key]?.filter((value) => value !== id),
+                            },
+                            page: 1,
+                          })
+                        }
+                      >
+                        NOT {filterLabel(key, id, catalogue.meta)} ×
+                      </button>
+                    )),
+                  )}
                   {(state.search ||
                     state.director ||
                     state.from ||
                     state.to ||
                     state.available ||
-                    FILTERS.some(({ key }) => state.filters[key]?.length)) && (
-                    <button onClick={() => change(CLEAR_FILTERS)}>Clear all</button>
-                  )}
+                    FILTERS.some(
+                      ({ key }) => state.filters[key]?.length || state.excluded[key]?.length,
+                    )) && <button onClick={() => change(CLEAR_FILTERS)}>Clear all</button>}
                   {state.available && (
                     <button onClick={() => change({ available: false, page: 1 })}>
                       Not sold out ×

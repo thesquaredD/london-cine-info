@@ -15,6 +15,7 @@ export const CLEAR_FILTERS = {
   search: "",
   director: "",
   filters: {},
+  excluded: {},
   from: "",
   to: "",
   available: false,
@@ -53,6 +54,9 @@ export function dayMatches(date: string, selected: string[], today: string): boo
 const minuteOf = (value: string) => Number(value.slice(0, 2)) * 60 + Number(value.slice(3));
 const any = (selected: string[], values: string[]) =>
   !selected.length || selected.some((id) => values.includes(id));
+const accepts = (state: ViewState, key: FacetKey, values: string[]) =>
+  any(state.filters[key] ?? [], values) &&
+  !(state.excluded[key] ?? []).some((id) => values.includes(id));
 type ScreeningView = {
   date: string;
   minute: number;
@@ -100,6 +104,13 @@ export function screeningMatcher(meta: DataMeta, state: ViewState, now = new Dat
           .map((option) => option.id),
       )
     : null;
+  const forbiddenDays = new Set(
+    meta.facets.day
+      .filter(
+        (option) => state.excluded.day?.length && dayMatches(option.id, state.excluded.day, today),
+      )
+      .map((option) => option.id),
+  );
   function match(
     date: string,
     minute: number,
@@ -109,9 +120,9 @@ export function screeningMatcher(meta: DataMeta, state: ViewState, now = new Dat
     soldOut: boolean,
   ) {
     const venue = venues.get(venueId);
-    if (allowedDays && !allowedDays.has(date)) return false;
+    if ((allowedDays && !allowedDays.has(date)) || forbiddenDays.has(date)) return false;
     if (
-      !any(picks.time ?? [], [minute < 720 ? "morning" : minute < 1020 ? "afternoon" : "evening"])
+      !accepts(state, "time", [minute < 720 ? "morning" : minute < 1020 ? "afternoon" : "evening"])
     )
       return false;
     if (state.from && state.to && state.from > state.to) {
@@ -122,11 +133,11 @@ export function screeningMatcher(meta: DataMeta, state: ViewState, now = new Dat
     )
       return false;
     return (
-      any(picks.venue ?? [], [venueId]) &&
-      any(picks.borough ?? [], venue ? [venue.borough] : []) &&
-      any(picks.membership ?? [], venue?.memberships ?? []) &&
-      any(picks.format ?? [], formats) &&
-      any(picks.accessibility ?? [], accessibility) &&
+      accepts(state, "venue", [venueId]) &&
+      accepts(state, "borough", venue ? [venue.borough] : []) &&
+      accepts(state, "membership", venue?.memberships ?? []) &&
+      accepts(state, "format", formats) &&
+      accepts(state, "accessibility", accessibility) &&
       (!state.available || !soldOut)
     );
   }
@@ -134,8 +145,8 @@ export function screeningMatcher(meta: DataMeta, state: ViewState, now = new Dat
     row: (row: ScreeningView) =>
       match(row.date, row.minute, row.venue?.id ?? "", row.formats, row.accessibility, row.soldOut),
     film: (film: Film) =>
-      any(picks.genre ?? [], film.ge) &&
-      any(picks.language ?? [], [film.la]) &&
+      accepts(state, "genre", film.ge) &&
+      accepts(state, "language", [film.la]) &&
       decodedScreenings(film, meta).some((row) =>
         match(
           row.date,
@@ -155,14 +166,18 @@ export function hasScreeningFilters(state: ViewState) {
     state.available ||
     state.from ||
     state.to ||
-    FILTERS.some(({ key }) => key !== "genre" && key !== "language" && state.filters[key]?.length),
+    FILTERS.some(
+      ({ key }) =>
+        key !== "genre" &&
+        key !== "language" &&
+        (state.filters[key]?.length || state.excluded[key]?.length),
+    ),
   );
 }
 export function filterFilms(films: Film[], meta: DataMeta, state: ViewState, now = new Date()) {
   const matcher = screeningMatcher(meta, state, now);
   return films.filter((film) => {
-    if (!any(state.filters.genre ?? [], film.ge) || !any(state.filters.language ?? [], [film.la]))
-      return false;
+    if (!accepts(state, "genre", film.ge) || !accepts(state, "language", [film.la])) return false;
     return !hasScreeningFilters(state) || matcher.film(film);
   });
 }
@@ -183,15 +198,15 @@ export function facetCounts(
     ]),
   );
   for (const { key } of FILTERS) {
-    const without = { ...state, filters: { ...state.filters, [key]: [] } };
+    const without = {
+      ...state,
+      filters: { ...state.filters, [key]: [] },
+      excluded: { ...state.excluded, [key]: [] },
+    };
     const matcher = screeningMatcher(meta, without, now);
     const counts = new Map<string, number>();
     for (const film of films) {
-      if (
-        !any(without.filters.genre ?? [], film.ge) ||
-        !any(without.filters.language ?? [], [film.la])
-      )
-        continue;
+      if (!accepts(without, "genre", film.ge) || !accepts(without, "language", [film.la])) continue;
       const ids = new Set<string>();
       if (key === "genre" || key === "language") {
         if (hasScreeningFilters(without) && !matcher.film(film)) continue;

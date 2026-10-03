@@ -343,3 +343,39 @@ describe("screening filters", () => {
     expect(dayMatches("2026-11-01", ["week"], "2026-10-26")).toBe(true);
   });
 });
+
+it("applies exclusions to films and individual screenings, preserving positive OR choices", () => {
+  const { films, meta, showtimes } = build();
+  const state = {
+    ...readView(new URL("https://example.com")),
+    filters: { day: ["2026-10-03", "2026-10-04"] },
+    excluded: { venue: ["princecharlescinema.com"], language: ["fr"] },
+  };
+  const selected = filterFilms(films, meta, state, new Date(fixture.now));
+  expect(selected.some((film) => film.id === "classic-a")).toBe(true);
+  expect(selected.some((film) => film.id === "classic-b")).toBe(false);
+  const matcher = screeningMatcher(meta, state, new Date(fixture.now));
+  const details = showtimes.find((film) => film.id === "classic-a")!;
+  expect(
+    details.days["2026-10-03"]!.filter((row) => matcher.showtime("2026-10-03", row)),
+  ).toHaveLength(0);
+  expect(
+    details.days["2026-10-04"]!.filter((row) => matcher.showtime("2026-10-04", row)),
+  ).toHaveLength(1);
+  expect(readView(new URL(viewUrl(state), "https://example.com"))).toEqual(state);
+  expect(
+    facetCounts(films, meta, state, new Date(fixture.now)).venue.get("princecharlescinema.com"),
+  ).toBeGreaterThan(0);
+  const excludedDay = { ...state, excluded: { day: ["tomorrow"] } };
+  expect(
+    filterFilms(films, meta, excludedDay, new Date(fixture.now)).some(
+      (film) => film.id === "classic-a",
+    ),
+  ).toBe(true);
+  expect(
+    screeningMatcher(meta, excludedDay, new Date(fixture.now)).showtime(
+      "2026-10-04",
+      details.days["2026-10-04"]![0]!,
+    ),
+  ).toBe(false);
+});

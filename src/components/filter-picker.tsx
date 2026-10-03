@@ -6,9 +6,10 @@ type Props = {
   filterKey: FacetKey;
   label: string;
   selected: string[];
+  excluded: string[];
   meta: DataMeta;
   counts: Map<string, number>;
-  onChange: (values: string[]) => void;
+  onChange: (values: string[], excluded: string[]) => void;
   idPrefix: string;
   children?: ComponentChildren;
   summaryValue?: string;
@@ -17,6 +18,7 @@ export function FilterPicker({
   filterKey,
   label,
   selected,
+  excluded,
   meta,
   counts,
   onChange,
@@ -64,17 +66,19 @@ export function FilterPicker({
   return (
     <details
       name={`${idPrefix}-filters`}
-      class={`filter-picker ${selected.length || summaryValue ? "has-selection" : ""}`}
+      class={`filter-picker ${selected.length || excluded.length || summaryValue ? "has-selection" : ""}`}
     >
       <summary>
         <span>{label}</span>
         <small>
-          {summaryValue ??
-            (selected.length
-              ? selected.length === 1
-                ? filterLabel(filterKey, selected[0]!, meta)
-                : `${selected.length} selected`
-              : `Any ${filterKey === "venue" ? "cinema" : filterKey === "language" ? "language" : label.toLowerCase()}`)}
+          {excluded.length > 0
+            ? `${selected.length} included · ${excluded.length} excluded`
+            : (summaryValue ??
+              (selected.length
+                ? selected.length === 1
+                  ? filterLabel(filterKey, selected[0]!, meta)
+                  : `${selected.length} selected`
+                : `Any ${filterKey === "venue" ? "cinema" : filterKey === "language" ? "language" : label.toLowerCase()}`))}
         </small>
       </summary>
       <div class="picker-content">
@@ -93,9 +97,9 @@ export function FilterPicker({
           </>
         )}
         <div class="picker-actions">
-          <span>Select one or more</span>
-          {selected.length > 0 && (
-            <button type="button" onClick={() => onChange([])}>
+          <span>Click: include → exclude → clear</span>
+          {(selected.length > 0 || excluded.length > 0) && (
+            <button type="button" onClick={() => onChange([], [])}>
               Clear {label.toLowerCase()}
             </button>
           )}
@@ -110,21 +114,41 @@ export function FilterPicker({
                 {items.map((option) => (
                   <label
                     key={option.id}
-                    class={(counts.get(option.id) ?? 0) === 0 ? "zero-count" : ""}
+                    class={
+                      excluded.includes(option.id)
+                        ? "excluded-option"
+                        : (counts.get(option.id) ?? 0) === 0
+                          ? "zero-count"
+                          : ""
+                    }
                   >
                     <input
                       type="checkbox"
                       checked={selected.includes(option.id)}
-                      disabled={!selected.includes(option.id) && !(counts.get(option.id) ?? 0)}
-                      onChange={() =>
-                        onChange(
-                          selected.includes(option.id)
-                            ? selected.filter((id) => id !== option.id)
-                            : [...selected, option.id],
-                        )
+                      aria-checked={
+                        excluded.includes(option.id) ? "mixed" : selected.includes(option.id)
                       }
+                      ref={(input) => {
+                        if (input) input.indeterminate = excluded.includes(option.id);
+                      }}
+                      onChange={() => {
+                        if (selected.includes(option.id))
+                          onChange(
+                            selected.filter((id) => id !== option.id),
+                            [...excluded, option.id],
+                          );
+                        else if (excluded.includes(option.id))
+                          onChange(
+                            selected,
+                            excluded.filter((id) => id !== option.id),
+                          );
+                        else onChange([...selected, option.id], excluded);
+                      }}
                     />
-                    <span>{option.label}</span>
+                    <span>
+                      {excluded.includes(option.id) && <b class="not-label">NOT </b>}
+                      {option.label}
+                    </span>
                     <small>{counts.get(option.id) ?? 0}</small>
                   </label>
                 ))}
