@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Film } from "../shared/data";
-import { readView, viewUrl, selectFilms, sortFilms } from "./catalogue";
+import { readView, viewUrl, selectFilms, sortFilms, tableRows } from "./catalogue";
 function film(id: string, overrides: Partial<Film> = {}): Film {
   return {
     id,
@@ -76,7 +76,7 @@ describe("catalogue", () => {
         ...view,
         path: "/classics",
         search: "cinema varDA",
-        language: "fr",
+        filters: { language: ["fr"] },
         director: "d",
       }).map((f) => f.id),
     ).toEqual(["a"]);
@@ -88,7 +88,7 @@ describe("catalogue", () => {
       ...view,
       path: "/classics",
       search: "A & B",
-      language: "fr",
+      filters: { language: ["fr"] },
       director: "d",
       sort: "title" as const,
       direction: "asc" as const,
@@ -98,4 +98,25 @@ describe("catalogue", () => {
     const calendar = { ...view, path: "/calendar" };
     expect(readView(new URL(viewUrl(calendar), "https://example.com"))).toEqual(calendar);
   });
+});
+
+it("groups retrospective films alphabetically by director, keeping each film's co-directors", () => {
+  const a = { id: "a", name: "Alice" },
+    z = { id: "z", name: "Zoe" };
+  const films = [
+    film("high", { di: [z, a], retro: ["z", "a"] }),
+    film("low", { di: [a], retro: ["a"] }),
+  ];
+  const rows = tableRows(films, { ...view, path: "/retrospectives" });
+  expect(rows.map((row) => [row.group?.name, row.film.id])).toEqual([
+    ["Alice", "high"],
+    ["Alice", "low"],
+    ["Zoe", "high"],
+  ]);
+  expect(new Set(rows.map((row) => row.key)).size).toBe(3);
+  expect(
+    tableRows(films, { ...view, path: "/retrospectives", sort: "director", direction: "desc" })[0]
+      ?.group?.name,
+  ).toBe("Zoe");
+  expect(tableRows(films, { ...view, path: "/retrospectives", director: "z" })).toHaveLength(1);
 });

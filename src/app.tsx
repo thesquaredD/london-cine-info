@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { Sidebar } from "./components/sidebar";
 import { FilmTable } from "./components/film-table";
+import { CLEAR_FILTERS, filterFilms, facetCounts, FILTERS, filterLabel } from "./lib/filters";
 import { loadCatalogue } from "./lib/data";
 import {
   PAGE_SIZE,
@@ -8,6 +9,7 @@ import {
   readView,
   selectFilms,
   sortFilms,
+  tableRows,
   viewUrl,
   type ViewState,
 } from "./lib/catalogue";
@@ -125,8 +127,34 @@ export function App() {
   const pageTitle = PAGES.find((page) => page.path === state.path)?.name ?? "About";
   const selected = useMemo(
     () =>
-      catalogue ? sortFilms(selectFilms(catalogue.films, state), state.sort, state.direction) : [],
+      catalogue
+        ? sortFilms(
+            filterFilms(selectFilms(catalogue.films, state), catalogue.meta, state),
+            state.sort,
+            state.direction,
+          )
+        : [],
     [catalogue, state],
+  );
+  const counts = useMemo(
+    () =>
+      catalogue
+        ? facetCounts(
+            selectFilms(catalogue.films, { ...state, filters: {} }),
+            catalogue.meta,
+            state,
+          )
+        : null,
+    [
+      catalogue,
+      state.path,
+      state.search,
+      state.director,
+      state.filters,
+      state.from,
+      state.to,
+      state.available,
+    ],
   );
   function change(changes: Partial<ViewState>, push = false) {
     const next = { ...state, ...changes };
@@ -136,7 +164,8 @@ export function App() {
       else window.history.replaceState(null, "", url);
     }
     setState(next);
-    setExpanded(null);
+    if (push || changes.sort || (changes.page !== undefined && changes.page !== 1))
+      setExpanded(null);
     if (push) {
       setDrawerOpen(false);
       window.scrollTo({ top: 0 });
@@ -179,19 +208,26 @@ export function App() {
   }, [drawerOpen]);
   useEffect(() => {
     if (!catalogue) return;
-    const maximum = Math.max(1, Math.ceil(selected.length / PAGE_SIZE));
+    const maximum = Math.max(1, Math.ceil(tableRows(selected, state).length / PAGE_SIZE));
     if (state.page > maximum) {
       const next = { ...state, page: maximum };
       setState(next);
       window.history.replaceState(null, "", viewUrl(next));
     }
   }, [catalogue, selected.length, state]);
+  useEffect(() => {
+    if (expanded && !tableRows(selected, state).some((row) => row.key === expanded))
+      setExpanded(null);
+  }, [expanded, selected, state]);
   const sidebarProps = {
     state,
     meta,
     onChange: change,
     dark,
     onTheme: () => setThemeOverride(!dark),
+    counts,
+    resultCount: selected.length,
+    onDone: () => setDrawerOpen(false),
   };
   return (
     <div class={`app-layout ${collapsed ? "sidebar-collapsed" : ""}`}>
@@ -249,7 +285,7 @@ export function App() {
                 )
                   return;
                 event.preventDefault();
-                change({ path: "/", search: "", language: "", director: "", page: 1 }, true);
+                change({ ...CLEAR_FILTERS, path: "/" }, true);
               }}
             >
               <span>LONDON CINÉ</span> INFO
@@ -262,10 +298,74 @@ export function App() {
           <About meta={meta} />
         ) : (
           <>
+            {state.path === "/retrospectives" && (
+              <p class="view-note">
+                Directors with at least three films in the programme. Sorts apply within each
+                director’s group.
+              </p>
+            )}
             {["/new", "/calendar"].includes(state.path) && (
               <p class="view-note">
                 Release dates are TMDB originals and may differ from UK dates.
               </p>
+            )}
+            {catalogue && (
+              <div class="filter-summary">
+                <p role="status" aria-live="polite">
+                  <strong>
+                    {selected.length.toLocaleString("en-GB")}{" "}
+                    {selected.length === 1 ? "film" : "films"}
+                  </strong>{" "}
+                  matching your choices
+                </p>
+                <div class="active-filters">
+                  {state.search && (
+                    <button
+                      onClick={() => change({ search: "", page: 1 })}
+                      aria-label="Remove search filter"
+                    >
+                      Search: {state.search} ×
+                    </button>
+                  )}
+                  {FILTERS.flatMap(({ key, label }) =>
+                    (state.filters[key] ?? []).map((id) => (
+                      <button
+                        key={`${key}-${id}`}
+                        aria-label={`Remove ${label.toLowerCase()} filter: ${filterLabel(key, id, catalogue.meta)}`}
+                        onClick={() =>
+                          change({
+                            filters: {
+                              ...state.filters,
+                              [key]: state.filters[key]?.filter((value) => value !== id),
+                            },
+                            page: 1,
+                          })
+                        }
+                      >
+                        {filterLabel(key, id, catalogue.meta)} ×
+                      </button>
+                    )),
+                  )}
+                  {(state.from || state.to) && (
+                    <button onClick={() => change({ from: "", to: "", page: 1 })}>
+                      Starts {state.from || "00:00"}–{state.to || "23:59"} ×
+                    </button>
+                  )}
+                  {(state.search ||
+                    state.director ||
+                    state.from ||
+                    state.to ||
+                    state.available ||
+                    FILTERS.some(({ key }) => state.filters[key]?.length)) && (
+                    <button onClick={() => change(CLEAR_FILTERS)}>Clear all</button>
+                  )}
+                  {state.available && (
+                    <button onClick={() => change({ available: false, page: 1 })}>
+                      Not sold out ×
+                    </button>
+                  )}
+                </div>
+              </div>
             )}
             {state.director && (
               <div class="active-director">

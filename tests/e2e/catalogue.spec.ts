@@ -29,11 +29,15 @@ test("search, language, director links and navigation share URL state", async ({
   await expect(page.getByRole("button", { name: /Fixture Classic B/ })).toBeVisible();
   const secondMenu = await sidebar(page);
   await secondMenu.getByLabel("Search", { exact: true }).fill("");
-  await secondMenu.getByLabel("Original language").selectOption("fr");
+  await secondMenu
+    .locator("summary")
+    .filter({ hasText: /^Original language/ })
+    .click();
+  await secondMenu.getByRole("checkbox", { name: /French/ }).check();
   await closeSidebar(page);
   await expect(page.locator(".film-row")).toHaveCount(1);
   const thirdMenu = await sidebar(page);
-  await thirdMenu.getByLabel("Original language").selectOption("");
+  await thirdMenu.getByRole("button", { name: "Clear original language", exact: true }).click();
   await closeSidebar(page);
   await page.locator(".director-column a").first().click();
   await expect(page.locator(".film-row")).toHaveCount(3);
@@ -126,5 +130,73 @@ test("load retries, system theme, drawer keyboard and no persistent storage", as
   }
   expect(await page.evaluate(() => [localStorage.length, sessionStorage.length])).toEqual([0, 0]);
   expect(await context.cookies()).toEqual([]);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
+
+test("retrospectives stay grouped, sorted within directors and labelled across pages", async ({
+  page,
+}) => {
+  await page.route("**/films.*.json", async (route) => {
+    const response = await route.fetch();
+    const data = await response.json();
+    const extras = Array.from({ length: 201 }, (_, i) => ({
+      ...data.find((f: { id: string }) => f.id === "classic-a"),
+      id: `extra-${i}`,
+      ti: `Extra ${i}`,
+      di: [
+        { id: "director-a", name: "Fixture Director" },
+        { id: "director-b", name: "Zoe Director" },
+      ],
+      retro: ["director-a", "director-b"],
+    }));
+    await route.fulfill({ response, json: [...data, ...extras] });
+  });
+  await page.route("**/meta.*.json", async (route) => {
+    const response = await route.fetch();
+    const data = await response.json();
+    data.counts.films = 207;
+    await route.fulfill({ response, json: data });
+  });
+  await page.goto("/retrospectives");
+  await expect(page.locator(".film-row")).toHaveCount(200);
+  await expect(page.locator(".director-group").first()).toContainText("Fixture Director");
+  await page.getByRole("button", { name: "Sort by Title", exact: true }).click();
+  await expect(page.locator(".film-title").first()).toContainText("Extra 0");
+  await page.getByRole("button", { name: "Next page" }).click();
+  await expect(page.locator(".director-group").first()).toContainText("continued");
+  await expect(page.locator(".director-group")).toHaveCount(2);
+  await expect(page.locator(".director-group").last()).toContainText("Zoe Director");
+  await page.getByRole("button", { name: "Next page" }).click();
+  await expect(page.getByRole("combobox", { name: "Page", exact: true })).toHaveValue("3");
+  await expect(page.locator(".director-group").first()).toContainText("Zoe Director");
+});
+
+test("multiple choices, correlated screening filters, chips and reset", async ({ page }) => {
+  await page.clock.setFixedTime(new Date("2026-10-03T09:00:00Z"));
+  await page.goto("/");
+  await expect(page.locator(".film-row")).toHaveCount(6);
+  const menu = await sidebar(page);
+  await expect(menu.locator(".filter-picker")).toHaveCount(9);
+  await menu.locator("summary").filter({ hasText: /^Day/ }).click();
+  await menu.getByRole("checkbox", { name: /^Tomorrow/ }).check();
+  await menu.getByRole("checkbox", { name: /^Today/ }).check();
+  await menu
+    .locator("summary")
+    .filter({ hasText: /^Cinema/ })
+    .click();
+  await menu.getByRole("checkbox", { name: /BFI Southbank/ }).check();
+  await closeSidebar(page);
+  await expect(page).toHaveURL(/day=tomorrow&day=today&venue=/);
+  await page.getByRole("button", { name: "Fixture Classic A", exact: true }).click();
+  await expect(page.locator(".showtime-day")).toHaveCount(1);
+  await expect(page.locator(".showtime-day")).toContainText("4 October");
+  await expect(page.locator(".showtime-day a")).toHaveCount(1);
+  await page.getByRole("button", { name: "Remove day filter: Tomorrow", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Fixture Classic A", exact: true })).toHaveCount(0);
+  const menu2 = await sidebar(page);
+  await menu2.getByRole("button", { name: "Reset all filters" }).click();
+  await closeSidebar(page);
+  await expect(page.locator(".film-row")).toHaveCount(6);
+  await expect(page.locator(".active-filters button")).toHaveCount(0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });

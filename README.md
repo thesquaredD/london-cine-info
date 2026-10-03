@@ -108,8 +108,28 @@ The sidebar becomes a keyboard-accessible drawer below 800px; the table shows
 Title and Director at phone widths. The theme follows the system with an override
 for this visit. No cookies or browser storage are used.
 
-All page links currently select their dataset flags. Retrospective director
-grouping, release-date calendar grouping, the nine screening filters and Display
-controls remain in the next phases. Browser tests use the synthetic fixture, at
+All page links currently select their dataset flags. Retrospectives are grouped alphabetically by director, with sorting inside each
+group and continued headings across page boundaries. Co-directed films appear in
+each qualifying director’s group. Release-date calendar grouping, the event-specific
+column and Display controls remain in the next phases. Browser tests use the synthetic fixture, at
 1200px and 390px, covering pagination, sort, filters, navigation, lazy loading,
 retries, drawer keyboard behavior, theme and overflow.
+
+## Filters
+
+All nine filters are visible in the sidebar. Each picker supports multiple choices;
+cinemas are grouped by borough and boroughs by inner/outer London. Long lists can
+be searched. Day offers Today, Tomorrow, This weekend, Next 7 days, Later and exact
+dates. Time offers bands and a custom start-time range, including overnight ranges.
+A separate checkbox hides sold-out screenings.
+
+Selections match **any** value within a filter and **all** selected filters together.
+Screening filters must match the same screening: a film cannot borrow a day from
+one cinema and an accessibility flag from another. The expanded programme applies
+the same selections. Counts show distinct films matching the other filters, ignoring
+choices within the picker being counted; zero-result options are disabled unless
+already selected. Chips above the table remove individual choices; Clear all resets
+the complete selection. Query parameters preserve filters in shared links.
+
+In the mobile drawer, Show results closes the menu. A currently expanded film stays
+open when changing filters if it still matches. No preference is persisted.

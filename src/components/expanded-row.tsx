@@ -1,9 +1,21 @@
+import { screeningMatcher } from "../lib/filters";
+import type { ViewState } from "../lib/catalogue";
 import { useEffect, useState } from "preact/hooks";
 import type { DataMeta, Film, FilmShowtimes } from "../shared/data";
 import { RATINGS, formatDate, runtime } from "../lib/catalogue";
 import { loadShowtimes } from "../lib/data";
 
-export function ExpandedRow({ film, meta }: { film: Film; meta: DataMeta }) {
+export function ExpandedRow({
+  film,
+  meta,
+  detailId,
+  state,
+}: {
+  film: Film;
+  meta: DataMeta;
+  detailId: string;
+  state: ViewState;
+}) {
   const [data, setData] = useState<FilmShowtimes | null>(null);
   const [error, setError] = useState(false);
   const [attempt, setAttempt] = useState(0);
@@ -23,6 +35,12 @@ export function ExpandedRow({ film, meta }: { film: Film; meta: DataMeta }) {
       active = false;
     };
   }, [film.id, attempt]);
+  const matcher = screeningMatcher(meta, state);
+  const days = data
+    ? Object.entries(data.days)
+        .map(([date, rows]) => [date, rows.filter((row) => matcher.showtime(date, row))] as const)
+        .filter(([, rows]) => rows.length)
+    : [];
   const venues = new Map(meta.venues.map((venue) => [venue.id, venue]));
   const genres = film.ge.map(
     (id) => meta.facets.genre.find((genre) => genre.id === id)?.label ?? id,
@@ -30,11 +48,7 @@ export function ExpandedRow({ film, meta }: { film: Film; meta: DataMeta }) {
   return (
     <tr class="expanded-row">
       <td colSpan={7}>
-        <section
-          id={`details-${film.id}`}
-          class="film-expanded"
-          aria-label={`Screenings for ${film.ti}`}
-        >
+        <section id={detailId} class="film-expanded" aria-label={`Screenings for ${film.ti}`}>
           <div class="film-info">
             <figure class="poster" tabIndex={0} aria-label={`Film information for ${film.ti}`}>
               {film.po && !posterFailed ? (
@@ -121,11 +135,11 @@ export function ExpandedRow({ film, meta }: { film: Film; meta: DataMeta }) {
                 <button onClick={() => setAttempt((value) => value + 1)}>Try again</button>
               </div>
             )}
-            {data && !Object.keys(data.days).length && (
-              <p class="details-status">No scheduled screenings yet.</p>
+            {data && !days.length && (
+              <p class="details-status">No screenings match these filters.</p>
             )}
             {data &&
-              Object.entries(data.days).map(([date, rows]) => (
+              days.map(([date, rows]) => (
                 <section class="showtime-day" key={date} aria-label={formatDate(date)}>
                   <h3>
                     {new Intl.DateTimeFormat("en-GB", {

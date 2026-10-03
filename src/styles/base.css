@@ -817,3 +817,220 @@ h3 {
     transition: background-color 0.1s;
   }
 }
+
+.director-group td {
+  padding: 16px 12px;
+  text-align: left;
+  background: var(--shade);
+  color: var(--fg);
+  border-block: 1px solid var(--strong-line);
+  font-size: 18px;
+  font-weight: 500;
+}
+.director-group small {
+  margin-left: 8px;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--muted);
+}
+.filter-hint {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--muted);
+  margin: 0 0 10px;
+}
+.filter-picker {
+  margin: 0 0 8px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+}
+.filter-picker summary {
+  cursor: pointer;
+  padding: 9px 10px;
+  list-style: none;
+  position: relative;
+}
+.filter-picker summary::-webkit-details-marker {
+  display: none;
+}
+.filter-picker summary::after {
+  content: "▾";
+  position: absolute;
+  right: 10px;
+  top: 12px;
+  color: var(--muted);
+}
+.filter-picker[open] summary::after {
+  content: "▴";
+}
+.filter-picker summary > span {
+  display: block;
+  font-weight: 500;
+  padding-right: 18px;
+}
+.filter-picker summary > small {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  margin-top: 4px;
+  overflow-wrap: anywhere;
+  padding-right: 10px;
+}
+.filter-picker.has-selection {
+  border-color: var(--link);
+}
+.picker-content {
+  padding: 8px;
+  border-top: 1px solid var(--line);
+}
+.picker-content input[type="search"] {
+  width: 100%;
+  margin-bottom: 8px;
+}
+.picker-actions {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.picker-actions button {
+  font-size: 11px;
+  padding: 4px;
+}
+.filter-options {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  max-height: 240px;
+  overflow: auto;
+}
+.filter-options label {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 2px;
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1.4;
+}
+.filter-options input {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  margin: 1px 0;
+  accent-color: var(--link);
+}
+.filter-options label > span {
+  flex: 1;
+  overflow-wrap: anywhere;
+}
+.filter-options small {
+  font-size: 11px;
+  color: var(--muted);
+  padding-top: 2px;
+}
+.option-group {
+  font-weight: 500;
+  font-size: 12px;
+  border-top: 1px solid var(--line);
+  padding: 8px 0 0;
+  margin: 6px 0;
+}
+.zero-count {
+  color: var(--muted);
+}
+.time-range {
+  border: 1px solid var(--line);
+  margin: 12px 0;
+  padding: 8px;
+  display: grid;
+  grid-template-columns: 35px minmax(0, 1fr);
+  gap: 8px;
+  align-items: center;
+}
+.time-range legend {
+  font-size: 12px;
+  padding: 0 4px;
+}
+.time-range input {
+  min-width: 0;
+  width: 100%;
+  padding: 5px;
+}
+.sidebar-fields .availability-filter {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 12px;
+  line-height: 1.4;
+  margin: 12px 0;
+}
+.availability-filter input {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+.view-results {
+  display: none;
+}
+.filter-summary {
+  padding: 10px 12px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+}
+.filter-summary > p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+.filter-summary strong {
+  font-weight: 500;
+  color: var(--fg);
+}
+.active-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.active-filters:has(button) {
+  margin-top: 8px;
+}
+.active-filters button {
+  font-size: 12px;
+  padding: 5px 8px;
+  border-radius: 4px;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  text-align: left;
+  background: var(--shade);
+}
+@media (max-width: 799px) {
+  .view-results {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    margin-top: 10px;
+    background: var(--active-bg);
+    color: var(--active-fg);
+  }
+}
+
+.sidebar-fields .filter-options label {
+  margin: 0;
+  font-weight: 400;
+}
+.sidebar-fields input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  padding: 0;
+}
+
+.director-group h3 {
+  display: inline;
+  font: inherit;
+  margin: 0;
+}

@@ -1,6 +1,7 @@
+import { CLEAR_FILTERS } from "../lib/filters";
 import { Fragment } from "preact";
 import type { DataMeta, Film } from "../shared/data";
-import { PAGE_SIZE, RATINGS, type SortKey, type ViewState } from "../lib/catalogue";
+import { PAGE_SIZE, RATINGS, tableRows, type SortKey, type ViewState } from "../lib/catalogue";
 import { ExpandedRow } from "./expanded-row";
 
 type Props = {
@@ -12,7 +13,8 @@ type Props = {
   onChange: (changes: Partial<ViewState>, push?: boolean) => void;
 };
 export function FilmTable({ films, meta, state, expanded, onExpand, onChange }: Props) {
-  const pageCount = Math.max(1, Math.ceil(films.length / PAGE_SIZE));
+  const rows = tableRows(films, state);
+  const pageCount = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
   const page = Math.min(state.page, pageCount);
   const start = (page - 1) * PAGE_SIZE;
   function heading(key: SortKey, label: string, compact = false) {
@@ -61,18 +63,31 @@ export function FilmTable({ films, meta, state, expanded, onExpand, onChange }: 
             </tr>
           </thead>
           <tbody>
-            {films.slice(start, start + PAGE_SIZE).map((film) => (
-              <Fragment key={film.id}>
-                <tr class={`film-row ${expanded === film.id ? "is-expanded" : ""}`}>
+            {rows.slice(start, start + PAGE_SIZE).map(({ film, group, key }, index) => (
+              <Fragment key={key}>
+                {group && (index === 0 || group.id !== rows[start + index - 1]?.group?.id) && (
+                  <tr class="director-group">
+                    <td colSpan={7}>
+                      <h3>{group.name}</h3>{" "}
+                      <small>
+                        {group.count} {group.count === 1 ? "film" : "films"}
+                        {index === 0 && start > 0 && rows[start - 1]?.group?.id === group.id
+                          ? " · continued"
+                          : ""}
+                      </small>
+                    </td>
+                  </tr>
+                )}
+                <tr class={`film-row ${expanded === key ? "is-expanded" : ""}`}>
                   <td class="title-column">
                     <button
                       class="film-title"
-                      aria-expanded={expanded === film.id}
-                      aria-controls={`details-${film.id}`}
-                      onClick={() => onExpand(expanded === film.id ? null : film.id)}
+                      aria-expanded={expanded === key}
+                      aria-controls={`details-${key}`}
+                      onClick={() => onExpand(expanded === key ? null : key)}
                     >
                       <span class="expansion-icon" aria-hidden="true">
-                        {expanded === film.id ? "▾" : "▸"}
+                        {expanded === key ? "▾" : "▸"}
                       </span>
                       <span>
                         {film.ti}
@@ -135,8 +150,14 @@ export function FilmTable({ films, meta, state, expanded, onExpand, onChange }: 
                     {film.ye ?? <span class="missing">?</span>}
                   </td>
                 </tr>
-                {expanded === film.id && (
-                  <ExpandedRow key={`details-${film.id}`} film={film} meta={meta} />
+                {expanded === key && (
+                  <ExpandedRow
+                    key={`details-${key}`}
+                    detailId={`details-${key}`}
+                    film={film}
+                    meta={meta}
+                    state={state}
+                  />
                 )}
               </Fragment>
             ))}
@@ -145,19 +166,20 @@ export function FilmTable({ films, meta, state, expanded, onExpand, onChange }: 
       ) : (
         <div class="empty-state">
           <h2>No films match these filters</h2>
-          <p>Try another title, director or language.</p>
-          <button onClick={() => onChange({ search: "", language: "", director: "", page: 1 })}>
-            Clear filters
-          </button>
+          <p>Try removing a filter or choosing another day or cinema.</p>
+          <button onClick={() => onChange(CLEAR_FILTERS)}>Clear filters</button>
         </div>
       )}
       <footer class="pagination" aria-label="Film pagination">
         <div>
-          <strong>{films.length.toLocaleString("en-GB")} films</strong>
+          <strong>
+            {films.length.toLocaleString("en-GB")} {films.length === 1 ? "film" : "films"}
+          </strong>
           {films.length > 0 && (
             <span class="result-range">
               {" "}
-              · {start + 1}–{Math.min(start + PAGE_SIZE, films.length)}
+              · {state.path === "/retrospectives" ? "rows " : ""}
+              {start + 1}–{Math.min(start + PAGE_SIZE, rows.length)}
             </span>
           )}
         </div>
