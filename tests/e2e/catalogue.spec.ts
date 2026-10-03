@@ -197,7 +197,10 @@ test("multiple choices, correlated screening filters, chips and reset", async ({
   await menu2.getByRole("button", { name: "Reset all filters" }).click();
   await closeSidebar(page);
   await expect(page.locator(".film-row")).toHaveCount(6);
-  await expect(page.locator(".active-filters button")).toHaveCount(0);
+  await expect(page.locator(".active-filters button")).toHaveCount(1);
+  await expect(
+    page.locator(".active-filters").getByRole("button", { name: "Clear all", exact: true }),
+  ).toBeDisabled();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
 
@@ -260,5 +263,102 @@ test("Today and Tomorrow shortcuts replace day filters while preserving other ch
   await tomorrow.click();
   expect(new URL(page.url()).searchParams.getAll("day")).toEqual([]);
   await expect(page.locator(".film-row")).toHaveCount(1);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
+
+test("filter controls stay stationary through include, exclude, clear and changing counts", async ({
+  page,
+}) => {
+  await page.route("**/meta.*.json", async (route) => {
+    const response = await route.fetch();
+    const meta = await response.json();
+    meta.facets.venue.push(
+      ...Array.from({ length: 10 }, (_, i) => ({
+        id: `extra-venue-${i}`,
+        label: `Extra cinema ${i}`,
+        count: 0,
+      })),
+    );
+    for (const option of meta.facets.venue)
+      option.label = "A deliberately long cinema name with several words " + option.label;
+    await route.fulfill({ response, json: meta });
+  });
+  await page.goto("/");
+  await expect(page.locator(".film-row")).toHaveCount(6);
+  const summary = page.locator(".filter-summary");
+  const baselineHeight = (await summary.boundingBox())!.height;
+  const quick = page.locator(".quick-days").getByRole("button", { name: /^Tomorrow/ });
+  const quickX = (await quick.boundingBox())!.x;
+  const menu = await sidebar(page);
+  for (const name of [
+    "Day",
+    "Time",
+    "Cinema",
+    "Borough",
+    "Membership",
+    "Accessibility",
+    "Format",
+    "Genre",
+    "Original language",
+  ]) {
+    const picker = menu
+      .locator(".filter-picker")
+      .filter({ has: page.locator("summary>span").filter({ hasText: new RegExp(`^${name}$`) }) });
+    await picker.locator("summary").click();
+    const option = picker.getByRole("checkbox").first();
+    await option.scrollIntoViewIfNeeded();
+    const frame = await picker.boundingBox();
+    const control = await option.boundingBox();
+    const clear = picker.getByRole("button", { name: `Clear ${name.toLowerCase()}`, exact: true });
+    await expect(clear).toBeDisabled();
+    for (let cycle = 0; cycle < 3; cycle++) {
+      await option.press("Space");
+      await expect(option).toHaveAttribute(
+        "aria-checked",
+        cycle === 0 ? "true" : cycle === 1 ? "mixed" : "false",
+      );
+      const changed = await option.boundingBox();
+      const changedFrame = await picker.boundingBox();
+      expect(Math.abs(changed!.y - control!.y), name + " option vertical position").toBeLessThan(1);
+      expect(Math.abs(changed!.x - control!.x), name + " option horizontal position").toBeLessThan(
+        1,
+      );
+      expect(Math.abs(changedFrame!.height - frame!.height), name + " picker height").toBeLessThan(
+        1,
+      );
+      expect(
+        Math.abs((await summary.boundingBox())!.height - baselineHeight),
+        "table toolbar height",
+      ).toBeLessThan(1);
+      expect(
+        Math.abs((await quick.boundingBox())!.x - quickX),
+        "Tomorrow button position",
+      ).toBeLessThan(1);
+    }
+    await expect(clear).toBeDisabled();
+  }
+  const cinema = menu
+    .locator(".filter-picker")
+    .filter({ has: page.locator("summary>span").filter({ hasText: /^Cinema$/ }) });
+  await cinema.locator("summary").click();
+  const search = menu.getByLabel("Find cinema", { exact: true });
+  await search.scrollIntoViewIfNeeded();
+  const cinemaHeight = (await cinema.boundingBox())!.height;
+  const searchY = (await search.boundingBox())!.y;
+  await search.fill("no matching cinema");
+  await expect(cinema.getByText(/No options match/)).toBeVisible();
+  expect(Math.abs((await cinema.boundingBox())!.height - cinemaHeight)).toBeLessThan(1);
+  expect(Math.abs((await search.boundingBox())!.y - searchY)).toBeLessThan(1);
+  await search.fill("");
+  const time = menu
+    .locator(".filter-picker")
+    .filter({ has: page.locator("summary>span").filter({ hasText: /^Time$/ }) });
+  await time.locator("summary").click();
+  await menu.getByLabel("From", { exact: true }).scrollIntoViewIfNeeded();
+  const timeHeight = (await time.boundingBox())!.height;
+  await menu.getByLabel("From", { exact: true }).fill("23:00");
+  await menu.getByLabel("Until", { exact: true }).fill("02:00");
+  expect(Math.abs((await time.boundingBox())!.height - timeHeight)).toBeLessThan(1);
+  await closeSidebar(page);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });

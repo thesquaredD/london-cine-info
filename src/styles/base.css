@@ -874,7 +874,11 @@ h3 {
   color: var(--muted);
   font-size: 12px;
   margin-top: 4px;
-  overflow-wrap: anywhere;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 17px;
+  height: 17px;
   padding-right: 10px;
 }
 .filter-picker.has-selection {
@@ -889,7 +893,8 @@ h3 {
   margin-bottom: 8px;
 }
 .picker-actions {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 5px;
   align-items: center;
   justify-content: space-between;
@@ -909,7 +914,8 @@ h3 {
   overflow: auto;
 }
 .filter-options label {
-  display: flex;
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr) 4ch;
   align-items: flex-start;
   gap: 8px;
   padding: 8px 2px;
@@ -993,18 +999,22 @@ h3 {
 }
 .active-filters {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  height: 42px;
+  overflow-x: auto;
+  align-items: flex-start;
   gap: 6px;
-}
-.active-filters:has(button) {
   margin-top: 8px;
 }
 .active-filters button {
   font-size: 12px;
   padding: 5px 8px;
   border-radius: 4px;
-  max-width: 100%;
-  overflow-wrap: anywhere;
+  max-width: min(360px, 80vw);
+  flex-shrink: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   text-align: left;
   background: var(--shade);
 }
@@ -1063,4 +1073,31 @@ h3 {
 .active-filters .excluded-chip {
   border-color: var(--sold-out);
   color: var(--sold-out);
+}
+
+.filter-options .option-label {
+  display: grid;
+  grid-template-columns: 27px minmax(0, 1fr);
+  gap: 2px;
+}
+.not-label.inactive {
+  visibility: hidden;
+}
+.filter-options small,
+.quick-days small {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.quick-days small {
+  display: inline-block;
+  width: 5ch;
+}
+.filter-summary strong {
+  display: inline-block;
+  min-width: 12ch;
+  font-variant-numeric: tabular-nums;
+}
+
+.filter-options.searchable {
+  height: 240px;
 }

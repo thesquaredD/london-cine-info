@@ -105,10 +105,16 @@ export function Sidebar({
                       onInput={(event) => onChange({ to: event.currentTarget.value, page: 1 })}
                     />
                   </fieldset>
-                  {state.from && state.to && state.from > state.to && (
-                    <p class="filter-hint">Includes screenings after midnight.</p>
-                  )}
+                  <p class="filter-hint">
+                    Times use London time. An end earlier than the start includes screenings after
+                    midnight.
+                  </p>
                 </>
+              )}
+              {key === "membership" && (
+                <p class="filter-hint">
+                  Memberships show eligible venues. Check exclusions with the cinema.
+                </p>
               )}
             </FilterPicker>
           ))}
@@ -120,11 +126,6 @@ export function Sidebar({
           />{" "}
           Hide sold-out screenings
         </label>
-        {Boolean(state.filters.membership?.length) && (
-          <p class="filter-hint">
-            Memberships show eligible venues. Check exclusions with the cinema.
-          </p>
-        )}
         <button class="reset-button" onClick={() => onChange(CLEAR_FILTERS)}>
           Reset all filters
         </button>

@@ -140,3 +140,12 @@ exclusions apply to individual screenings, so a film can remain when it has anot
 matching screening. Exclusions are shared using repeated `not_<filter>` parameters.
 Today and Tomorrow buttons above the table replace day selections/exclusions and
 keep all other filters; clicking the active shortcut clears the day filter.
+
+Picker Clear buttons remain in place and are disabled when empty. Summaries keep
+a single line, NOT indicators and counts have reserved space, and helper text does
+not appear/disappear on selection. Active chips use a reserved horizontal strip
+that can scroll, keeping the table toolbar height stable. The geometry regression
+checks every picker through include/exclude/clear at desktop and phone widths,
+including long cinema labels and overnight time ranges.
+
+Searchable picker lists retain their height when a search has few or no matches.

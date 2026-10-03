@@ -312,7 +312,7 @@ export function App() {
             )}
             {catalogue && (
               <div class="filter-summary">
-                <div class="quick-days" aria-label="Quick day filters">
+                <div class="quick-days" role="group" aria-label="Quick day filters">
                   {[
                     { id: "today", label: "Today" },
                     { id: "tomorrow", label: "Tomorrow" },
@@ -345,7 +345,38 @@ export function App() {
                   </strong>{" "}
                   matching your choices
                 </p>
-                <div class="active-filters">
+                <div class="active-filters" role="group" aria-label="Active filters">
+                  <button
+                    disabled={
+                      !(
+                        state.search ||
+                        state.director ||
+                        state.from ||
+                        state.to ||
+                        state.available ||
+                        FILTERS.some(
+                          ({ key }) => state.filters[key]?.length || state.excluded[key]?.length,
+                        )
+                      )
+                    }
+                    onClick={() => change(CLEAR_FILTERS)}
+                  >
+                    Clear all
+                  </button>
+
+                  {state.director && (
+                    <button
+                      onClick={() => change({ director: "", page: 1 })}
+                      aria-label="Clear director"
+                    >
+                      Director:{" "}
+                      {catalogue.films
+                        .flatMap((film) => film.di)
+                        .find((director) => director.id === state.director)?.name ??
+                        state.director}{" "}
+                      ×
+                    </button>
+                  )}
                   {state.search && (
                     <button
                       onClick={() => change({ search: "", page: 1 })}
@@ -398,31 +429,12 @@ export function App() {
                       </button>
                     )),
                   )}
-                  {(state.search ||
-                    state.director ||
-                    state.from ||
-                    state.to ||
-                    state.available ||
-                    FILTERS.some(
-                      ({ key }) => state.filters[key]?.length || state.excluded[key]?.length,
-                    )) && <button onClick={() => change(CLEAR_FILTERS)}>Clear all</button>}
                   {state.available && (
                     <button onClick={() => change({ available: false, page: 1 })}>
                       Not sold out ×
                     </button>
                   )}
                 </div>
-              </div>
-            )}
-            {state.director && (
-              <div class="active-director">
-                <span>
-                  Director:{" "}
-                  {catalogue?.films
-                    .flatMap((film) => film.di)
-                    .find((director) => director.id === state.director)?.name ?? state.director}
-                </span>
-                <button onClick={() => change({ director: "", page: 1 })}>Clear director</button>
               </div>
             )}
             {!catalogue && !error && (
