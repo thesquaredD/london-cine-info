@@ -113,7 +113,14 @@ genres[id]        name
 matched/*.json    { [movieId]: { rating, reviews, url, … } }
 ```
 
-Showing `category` is one of `movie | multiple-movies | quiz | shorts | talk | tv`.
+Showing categories currently include `movie`, `multiple-movies`, `quiz`, `shorts`,
+`talk`, `tv`, `event`, `music`, `comedy` and `workshop`; the pipeline supports other
+non-empty category names as events.
+
+Verified during phase 1: Metacritic uses `critics.rating`; Rotten Tomatoes uses
+`critics.all.score`. `releaseDate` is TMDB's original release date, not a verified
+UK date. The new/classic/upcoming flags use that source date and the UI must make
+the limitation clear.
 
 Risks and mitigations:
 
@@ -121,8 +128,10 @@ Risks and mitigations:
   never deploys, so the previous day's site stays live. The CC BY per-venue files are a
   second source we can switch the build script to if `combined-data.json` disappears
   (we would lose the cross-venue merge and ratings join, not the listings).
-- **Attribution.** Footer and About page carry: "Screening data from Clusterflick
-  (CC BY 4.0)", the TMDB logo + "This product uses the TMDB API but is not endorsed or
+- **Attribution.** Footer and About page carry: "Screening data from Clusterflick",
+  link to the actual combined/matched sources, and describe their licence limits.
+  Add CC BY 4.0 attribution only if the pipeline switches to the per-venue fallback.
+  Also include the TMDB logo + "This product uses the TMDB API but is not endorsed or
   certified by TMDB", and every rating chip links to its source page (that is how
   Clusterflick itself meets IMDb/Letterboxd/Metacritic/RT attribution).
 - **GitHub API rate limit** in Actions is fine with `GITHUB_TOKEN`.
@@ -161,7 +170,7 @@ Budget: < 120 KB JS gzipped, first paint < 1 s on 4G, film list JSON ≈ 350–4
    - Facets, computed from performances: `days` (set of ISO dates), `timeBands`
      (morning/afternoon/evening + raw times), `venueIds`, `boroughs`, `formats`,
      `accessibility` flags, `memberships`, `soldOut`.
-   - Page flags: `isNewRelease` (UK `releaseDate` within the last 8 weeks),
+   - Page flags: `isNewRelease` (source `releaseDate` within the last 8 weeks),
      `isClassic` (released > 5 years ago), `isUpcoming` (`releaseDate` > today, no
      performances yet or preview only), `isEvent` (any showing with category ≠ `movie`,
      or `multiple-movies`, or notes matching Q&A / intro / 35mm presentation etc.),
@@ -176,8 +185,10 @@ Budget: < 120 KB JS gzipped, first paint < 1 s on 4G, film list JSON ≈ 350–4
 5. Write:
    - `public/data/films.<hash>.json` — compact array, short keys like Paris
      (`ti`, `o_ti`, `di`, `ye`, `lb_r`, `im_r`, …) plus facet bitsets.
-   - `public/data/showtimes/<movieId>.json` — performances for one film grouped by
-     ISO date, with venue id, time, format, accessibility, booking URL, sold-out.
+   - `public/data/showtimes.<hash>/<movieId>.json` — performances for one film grouped
+     by London date, with venue id, UTC time, local time, format, accessibility,
+     booking URL and sold-out. Actor/overview details are fetched with this file;
+     their removal from the initial film list keeps the payload within budget.
    - `public/data/meta.<hash>.json` — venues (with borough and memberships), boroughs,
      genres, formats, counts for every facet option, `generatedAt`, source release tags.
    - `src/generated/manifest.json` — hashed filenames, imported by the app.
@@ -200,7 +211,7 @@ Components:
 - `FilmTable` — header with sort indicators, body rows, `FilmRow`, `ExpandedRow`,
   pagination footer with `N films`.
 - `ExpandedRow` — `PosterCard` (poster, date • runtime, actors + genre pills overlay),
-  `RatingCards`, `ShowtimesList` (lazy-fetches `/data/showtimes/<id>.json`, groups by
+  `RatingCards`, `ShowtimesList` (lazy-fetches `<manifest.showtimes><id>.json`, groups by
   day, applies current Day/Time/Cinema/Place/Format/Accessibility filters so the list
   matches the filters, badges for format and accessibility, sold-out styling, booking link).
 - Views: `AllFilms`, `NewReleases`, `Classics`, `Retrospectives` (group headers by
@@ -246,7 +257,7 @@ only possible spend (~£15–25/year for `.info`).
 Total ≈ 6 working days of agent time, shippable after phase 2 (a usable table) and
 complete after phase 6.
 
-## 8. State at handoff (2026-10-03, phase 0 bootstrap)
+## 8. State at handoff (2026-10-03, phase 1 implementation)
 
 Done:
 
@@ -272,15 +283,40 @@ Done:
   credential helper. The machine's SSH key belongs to `infinitdiogo`, so the originally
   planned SSH remote could not push to the personal repo.
 
-Next: phase 1 (data pipeline).
+Phase 1 implementation:
 
-- `scripts/build-data.ts`, schemas, borough boundaries, membership mapping, generated
-  data and fixtures do not exist yet. Deploy conditionally runs `build-data` once the
-  script exists, with the GitHub token provided as `GH_TOKEN`; until then it deploys
-  the placeholder.
-- CI currently verifies typecheck, lint and the scaffold build. Unit tests run once
-  matching test files exist; browser smoke tests run once a Playwright config exists.
-  Add the fixture data build to CI in phase 1, and browser coverage with the UI phases.
+- Branch `codex/data-pipeline` in `/Users/dio/Development/london-cine-info-data-pipeline`.
+  The base checkout remains on `main`; the visible site retains the phase 0
+  placeholder until the UI phases are implemented.
+- `scripts/build-data.ts` resolves releases, caches public assets, validates schemas
+  and references, then writes films, metadata, per-film details/showtimes and the
+  generated manifest. Output is staged; failed validation leaves previous output
+  untouched. Showtime paths are versioned for immutable caching.
+- Borough polygons for all 33 authorities are vendored from London Datastore with OGL
+  attribution and a reproducible conversion script. Membership rules, page/event
+  rules, shared output types and compact screening tuples/bitsets are implemented.
+- Synthetic fixture and 14 tests cover critic rating joins, missing metadata,
+  schema/reference failures, cache invalidation, credential isolation, atomic
+  output, geography, page flags, filtering correlations and London DST.
+- Local typecheck, lint, tests, fixture build, live build and Vite builds passed.
+  The fixed verification time `2026-10-03T09:00:00Z` produced 2,178 films, 30,541
+  future screenings and 294 active venues (all 452 source venues classified).
+  The film list is 416,735 bytes gzipped.
+- Two upstream booking URLs are malformed. They fall back to validated showing
+  details, carry `bookingFallback: true`, and are reported in metadata. The future
+  UI must label them as screening details instead of direct booking links.
+- CI always runs the tests and fixture data build. Deployment runs checks and a live
+  data build using `GH_TOKEN` before upload. Browser smoke remains conditional until
+  a Playwright config is added with the UI phases.
+
+Phase 1 review: https://github.com/thesquaredD/london-cine-info/pull/1. CI and zizmor
+passed. The hosted preview at https://codex-data-pipeline.london-cine-info.pages.dev
+serves the verified live data with immutable cache headers; sampled hosted files
+match local output byte for byte.
+
+Next: phase 2 (core UI). Import the generated manifest,
+load films/metadata, and lazy-fetch versioned showtime files. See README.md for
+commands and source limitations. Phase 0 CI, deployment and zizmor passed on `main`.
 - Phase 0 bootstrap commit: `e56bf55`.
 
 ## 9. Open points (I will take the recommended default unless you say otherwise)

@@ -1,0 +1,361 @@
+{
+  "now": "2026-10-03T09:00:00Z",
+  "combined": {
+    "generatedAt": "2026-10-03T08:00:00Z",
+    "people": {
+      "director-a": {
+        "id": "director-a",
+        "name": "director a"
+      },
+      "actor-a": {
+        "id": "actor-a",
+        "name": "actor a"
+      },
+      "actor-b": {
+        "id": "actor-b",
+        "name": "actor b"
+      },
+      "actor-c": {
+        "id": "actor-c",
+        "name": "actor c"
+      },
+      "actor-d": {
+        "id": "actor-d",
+        "name": "actor d"
+      }
+    },
+    "genres": {
+      "drama": {
+        "id": "drama",
+        "name": "Drama"
+      },
+      "comedy": {
+        "id": "comedy",
+        "name": "Comedy"
+      }
+    },
+    "venues": {
+      "princecharlescinema.com": {
+        "id": "princecharlescinema.com",
+        "name": "Prince Charles Cinema",
+        "address": "Leicester Square",
+        "url": "https://princecharlescinema.com",
+        "geo": {
+          "lat": 51.5118,
+          "lon": -0.1307
+        }
+      },
+      "bfi.org.uk-southbank": {
+        "id": "bfi.org.uk-southbank",
+        "name": "BFI Southbank",
+        "groupName": "BFI",
+        "address": "South Bank",
+        "url": "https://www.bfi.org.uk",
+        "geo": {
+          "lat": 51.5067,
+          "lon": -0.115
+        }
+      },
+      "picturehouses.com-central": {
+        "id": "picturehouses.com-central",
+        "name": "Picturehouse Central",
+        "groupName": "Picturehouse",
+        "address": "Piccadilly",
+        "url": "https://www.picturehouses.com",
+        "geo": {
+          "lat": 51.5106,
+          "lon": -0.1342
+        }
+      },
+      "outside.example": {
+        "id": "outside.example",
+        "name": "Outside festival",
+        "address": "Outside London",
+        "url": "https://example.com",
+        "geo": {
+          "lat": 52,
+          "lon": -0.1
+        }
+      }
+    },
+    "movies": {
+      "classic-a": {
+        "id": "classic-a",
+        "title": "Fixture Classic A",
+        "year": "1977",
+        "releaseDate": "1977-05-25",
+        "genres": ["drama"],
+        "directors": ["director-a"],
+        "actors": ["actor-a", "actor-b", "actor-c", "actor-d"],
+        "duration": 7200000,
+        "showings": {
+          "pcc": {
+            "venueId": "princecharlescinema.com",
+            "category": "movie",
+            "url": "https://example.com/princecharlescinema.com"
+          },
+          "bfi": {
+            "venueId": "bfi.org.uk-southbank",
+            "category": "movie",
+            "url": "https://example.com/bfi.org.uk-southbank"
+          }
+        },
+        "performances": [
+          {
+            "showingId": "pcc",
+            "time": 1791032400000,
+            "bookingUrl": "https://example.com/book/pcc/1791032400000",
+            "format": {
+              "source": "35mm"
+            },
+            "notes": "Live score",
+            "status": {
+              "soldOut": true
+            }
+          },
+          {
+            "showingId": "bfi",
+            "time": 1791108000000,
+            "bookingUrl": "https://example.com/book/bfi/1791108000000",
+            "accessibility": {
+              "subtitled": true,
+              "audioDescription": false
+            }
+          },
+          {
+            "showingId": "pcc",
+            "time": 1792888200000,
+            "bookingUrl": "https://example.com/book/pcc/1792888200000"
+          },
+          {
+            "showingId": "pcc",
+            "time": 1792891800000,
+            "bookingUrl": "https://example.com/book/pcc/1792891800000"
+          }
+        ],
+        "posterPath": "/fixture.jpg",
+        "youtubeTrailer": "fixture123",
+        "classification": "PG",
+        "overview": "Synthetic fixture film."
+      },
+      "classic-b": {
+        "id": "classic-b",
+        "title": "Fixture Classic B",
+        "year": "1980",
+        "releaseDate": "1980-01-01",
+        "genres": ["drama"],
+        "directors": ["director-a"],
+        "actors": ["actor-a", "actor-b", "actor-c", "actor-d"],
+        "duration": 7200000,
+        "showings": {
+          "bfi": {
+            "venueId": "bfi.org.uk-southbank",
+            "category": "movie",
+            "url": "https://example.com/bfi.org.uk-southbank"
+          }
+        },
+        "performances": [
+          {
+            "showingId": "bfi",
+            "time": 1791043200000,
+            "bookingUrl": "https://example.com/book/bfi/1791043200000"
+          }
+        ],
+        "originalTitle": "Titre B",
+        "originalLanguage": "fr"
+      },
+      "classic-c": {
+        "id": "classic-c",
+        "title": "Fixture Classic C",
+        "year": "1990",
+        "releaseDate": "1990-01-01",
+        "genres": ["drama"],
+        "directors": ["director-a"],
+        "actors": ["actor-a", "actor-b", "actor-c", "actor-d"],
+        "duration": 7200000,
+        "showings": {
+          "ph": {
+            "venueId": "picturehouses.com-central",
+            "category": "movie",
+            "url": "https://example.com/picturehouses.com-central"
+          }
+        },
+        "performances": [
+          {
+            "showingId": "ph",
+            "time": 1791066600000,
+            "bookingUrl": "https://example.com/book/ph/1791066600000"
+          },
+          {
+            "showingId": "ph",
+            "time": 1791066600000,
+            "bookingUrl": "https://example.com/book/ph/1791066600000"
+          }
+        ]
+      },
+      "recent": {
+        "id": "recent",
+        "title": "Fixture New Release",
+        "year": "2026",
+        "releaseDate": "2026-09-15",
+        "genres": ["comedy"],
+        "directors": [],
+        "actors": [],
+        "duration": 0,
+        "showings": {
+          "ph": {
+            "venueId": "picturehouses.com-central",
+            "category": "movie",
+            "url": "https://example.com/picturehouses.com-central"
+          }
+        },
+        "performances": [
+          {
+            "showingId": "ph",
+            "time": 1791028800000,
+            "bookingUrl": "https://example.com/book/ph/1791028800000"
+          },
+          {
+            "showingId": "ph",
+            "time": 1790942400000,
+            "bookingUrl": "https://example.com/book/ph/1790942400000"
+          }
+        ]
+      },
+      "upcoming": {
+        "id": "upcoming",
+        "title": "Fixture Upcoming",
+        "year": "2027",
+        "releaseDate": "2027-01-01",
+        "genres": ["drama"],
+        "directors": [],
+        "actors": [],
+        "duration": 7200000,
+        "showings": {
+          "pcc": {
+            "venueId": "princecharlescinema.com",
+            "category": "movie",
+            "url": "https://example.com/princecharlescinema.com"
+          }
+        },
+        "performances": [
+          {
+            "showingId": "pcc",
+            "time": 1791036000000,
+            "bookingUrl": "https://example.com/book/pcc/1791036000000",
+            "notes": "Preview"
+          }
+        ],
+        "posterPath": null
+      },
+      "event": {
+        "id": "event",
+        "title": "Fixture Q&A",
+        "genres": [],
+        "isUnmatched": true,
+        "showings": {
+          "outside": {
+            "venueId": "outside.example",
+            "category": "workshop",
+            "url": "https://example.com/outside.example"
+          }
+        },
+        "performances": [
+          {
+            "showingId": "outside",
+            "time": 1791073800000,
+            "bookingUrl": "https://example.com/book/outside/1791073800000",
+            "accessibility": {
+              "relaxed": true,
+              "babyFriendly": true
+            }
+          }
+        ]
+      },
+      "expired": {
+        "id": "expired",
+        "title": "Expired Movie",
+        "year": "2020",
+        "releaseDate": "2020-01-01",
+        "genres": ["drama"],
+        "directors": ["director-a"],
+        "actors": ["actor-a", "actor-b", "actor-c", "actor-d"],
+        "duration": 7200000,
+        "showings": {
+          "pcc": {
+            "venueId": "princecharlescinema.com",
+            "category": "movie",
+            "url": "https://example.com/princecharlescinema.com"
+          }
+        },
+        "performances": [
+          {
+            "showingId": "pcc",
+            "time": 1790942400000,
+            "bookingUrl": "https://example.com/book/pcc/1790942400000"
+          }
+        ]
+      }
+    }
+  },
+  "matched": {
+    "letterboxd": {
+      "classic-a": {
+        "url": "https://letterboxd.com/film/fixture/",
+        "rating": 4.25
+      },
+      "classic-b": {
+        "url": "https://letterboxd.com/film/fixture-b/",
+        "rating": null
+      }
+    },
+    "imdb": {
+      "classic-a": {
+        "url": "https://www.imdb.com/title/tt0000001/",
+        "rating": 8.5
+      }
+    },
+    "metacritic": {
+      "classic-a": {
+        "url": "https://www.metacritic.com/movie/fixture/",
+        "critics": {
+          "rating": 72
+        },
+        "audience": {
+          "rating": 9.9
+        }
+      }
+    },
+    "rottentomatoes": {
+      "classic-a": {
+        "url": "https://www.rottentomatoes.com/m/fixture",
+        "critics": {
+          "all": {
+            "score": 88,
+            "rating": 6.2
+          },
+          "top": {
+            "score": 90
+          }
+        },
+        "audience": {
+          "all": {
+            "score": 99
+          }
+        }
+      }
+    }
+  },
+  "sources": {
+    "combined": {
+      "repository": "clusterflick/data-combined",
+      "tag": "fixture-v1",
+      "publishedAt": "2026-10-03T08:00:00Z"
+    },
+    "matched": {
+      "repository": "clusterflick/data-matched",
+      "tag": "fixture-v1",
+      "publishedAt": "2026-10-03T08:00:00Z"
+    }
+  }
+}
