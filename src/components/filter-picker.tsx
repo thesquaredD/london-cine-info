@@ -106,7 +106,7 @@ export function FilterPicker({
             Clear {label.toLowerCase()}
           </button>
         </div>
-        <fieldset class="filter-options">
+        <fieldset class={`filter-options ${options.length > 8 ? "searchable" : ""}`}>
           <legend class="sr-only">{label}</legend>
           {[...grouped]
             .sort(([a], [b]) => a.localeCompare(b))

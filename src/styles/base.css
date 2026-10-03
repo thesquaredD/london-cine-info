@@ -1097,3 +1097,7 @@ h3 {
   min-width: 12ch;
   font-variant-numeric: tabular-nums;
 }
+
+.filter-options.searchable {
+  height: 240px;
+}
