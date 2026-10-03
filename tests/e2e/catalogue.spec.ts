@@ -272,6 +272,13 @@ test("filter controls stay stationary through include, exclude, clear and changi
   await page.route("**/meta.*.json", async (route) => {
     const response = await route.fetch();
     const meta = await response.json();
+    meta.facets.venue.push(
+      ...Array.from({ length: 10 }, (_, i) => ({
+        id: `extra-venue-${i}`,
+        label: `Extra cinema ${i}`,
+        count: 0,
+      })),
+    );
     for (const option of meta.facets.venue)
       option.label = "A deliberately long cinema name with several words " + option.label;
     await route.fulfill({ response, json: meta });
@@ -330,6 +337,19 @@ test("filter controls stay stationary through include, exclude, clear and changi
     }
     await expect(clear).toBeDisabled();
   }
+  const cinema = menu
+    .locator(".filter-picker")
+    .filter({ has: page.locator("summary>span").filter({ hasText: /^Cinema$/ }) });
+  await cinema.locator("summary").click();
+  const search = menu.getByLabel("Find cinema", { exact: true });
+  await search.scrollIntoViewIfNeeded();
+  const cinemaHeight = (await cinema.boundingBox())!.height;
+  const searchY = (await search.boundingBox())!.y;
+  await search.fill("no matching cinema");
+  await expect(cinema.getByText(/No options match/)).toBeVisible();
+  expect(Math.abs((await cinema.boundingBox())!.height - cinemaHeight)).toBeLessThan(1);
+  expect(Math.abs((await search.boundingBox())!.y - searchY)).toBeLessThan(1);
+  await search.fill("");
   const time = menu
     .locator(".filter-picker")
     .filter({ has: page.locator("summary>span").filter({ hasText: /^Time$/ }) });

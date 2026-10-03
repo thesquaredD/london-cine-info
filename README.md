@@ -147,3 +147,5 @@ not appear/disappear on selection. Active chips use a reserved horizontal strip
 that can scroll, keeping the table toolbar height stable. The geometry regression
 checks every picker through include/exclude/clear at desktop and phone widths,
 including long cinema labels and overnight time ranges.
+
+Searchable picker lists retain their height when a search has few or no matches.
