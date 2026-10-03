@@ -1,0 +1,96 @@
+# London Ciné Info
+
+A static London cinema listings site powered by Clusterflick, using Vite,
+TypeScript and Preact. [PLAN.md](PLAN.md) describes the remaining UI phases.
+
+Requires Node 24 or later.
+
+```sh
+npm ci
+npm run build-data -- --fixture
+npm run dev
+```
+
+The fixture build is deterministic and needs no network access. To use the live
+feed instead:
+
+```sh
+npm run build-data
+npm run build
+```
+
+`GH_TOKEN` is optional locally and increases the GitHub API rate limit. The script
+uses the latest public releases of `clusterflick/data-combined` and
+`clusterflick/data-matched`. Downloads are cached in `.cache/clusterflick`; an
+asset's release tag, ID, modification time and size determine cache reuse.
+`--now <ISO timestamp>` can fix the time for investigation or replay.
+
+Verification:
+
+```sh
+npm run typecheck
+npm run lint
+npm test
+npm run build-data -- --fixture
+npm run build
+```
+
+## Data output
+
+Generated files are excluded from git:
+
+- `public/data/films.<hash>.json`: film metadata, ratings, facet bitsets and compact
+  screening tuples. Each tuple keeps day, local minute, venue, format, accessibility
+  and availability together, so later filters can match a single screening.
+- `public/data/meta.<hash>.json`: venues, boroughs, memberships, facet dictionaries
+  and counts, build time, upstream release tags and diagnostics. Facet counts refer
+  to distinct films, not the number of screenings.
+- `public/data/showtimes.<hash>/<movieId>.json`: showtimes grouped by London date,
+  with booking URLs, format and accessibility flags, plus actor/overview details.
+  UTC timestamps remain available even when DST repeats a local hour.
+- `src/generated/manifest.json`: URLs of the current film, metadata and showtime
+  assets. The future UI imports this manifest at build time.
+
+The shared contract is in `src/shared/data.ts`. Film facet bitsets are base64,
+least significant bit first; option order comes from `meta.facets`. Screening
+format/accessibility masks use those same dictionaries. Formats without upstream
+metadata are marked `standard` (unspecified), rather than inferred as digital/2D.
+
+Validation and reference checks complete before publication. Output is staged and
+replaces the previous generated set only on success. Every data URL is versioned,
+so Cloudflare can cache it as immutable. A failed Actions build does not deploy.
+
+Known source limits:
+
+- `releaseDate` is TMDB's original release date, not a verified UK release date.
+  New/classic/upcoming flags use that date; the later UI must describe this clearly.
+- Invalid booking URLs fall back to the validated showing-details URL and carry
+  `bookingFallback: true`. The UI should label those links as screening details,
+  rather than direct booking links. The affected movie/showing IDs are in diagnostics.
+- Membership mapping is venue eligibility, not a guarantee of coverage for a
+  specific format or special event.
+
+## Sources and licences
+
+Screenings and movie metadata come from Clusterflick's public combined release;
+ratings come from its matched release. These build artifacts have no explicit
+licence and are used under the personal, non-commercial posture recorded in the
+plan. Per-venue transformed data is the documented CC BY 4.0 fallback, not a source
+currently used by this pipeline. The public UI's attribution must reflect that
+distinction. Rating URLs retain links to their original providers.
+
+Borough boundaries and their OGL attribution are documented in
+[`src/data/README.md`](src/data/README.md). The synthetic fixture has no upstream
+movie descriptions or rating data.
+
+## Deployment
+
+CI runs typecheck, lint, tests and a fixture-backed build for pull requests and
+`main`. The production workflow repeats checks, builds live data, then uses
+Wrangler Direct Upload. It runs on pushes to `main`, manually, and at 06:45 and
+11:45 UTC daily. `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` are repository
+secrets. Local preview deployments use:
+
+```sh
+npx wrangler pages deploy dist --project-name london-cine-info --branch codex-data-pipeline
+```

@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
   schedule:
-    - cron: '45 6,11 * * *'
+    - cron: "45 6,11 * * *"
   workflow_dispatch:
 
 permissions:
@@ -26,8 +26,10 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
       - name: Build screening data
-        if: ${{ hashFiles('scripts/build-data.ts') != '' }}
         env:
           GH_TOKEN: ${{ github.token }}
         run: npm run build-data

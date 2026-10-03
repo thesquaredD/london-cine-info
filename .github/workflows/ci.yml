@@ -24,8 +24,9 @@ jobs:
       - run: npm run typecheck
       - run: npm run lint
       - name: Unit tests
-        if: ${{ hashFiles('src/**/*.test.ts', 'src/**/*.test.tsx', 'scripts/**/*.test.ts') != '' }}
         run: npm test
+      - name: Build fixture screening data
+        run: npm run build-data -- --fixture
       - run: npm run build
       - name: Browser smoke tests
         if: ${{ hashFiles('playwright.config.*') != '' }}
