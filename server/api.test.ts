@@ -1,3 +1,5 @@
+import { digestAlertQuery } from "../scripts/lib/digest-store";
+import type { DigestFilm } from "../scripts/lib/digest";
 import { syncQueries, failedSyncQueries } from "../scripts/lib/watchlist-store";
 import { beforeAll, afterAll, it, expect } from "vitest";
 import { readdir, readFile } from "node:fs/promises";
@@ -289,4 +291,52 @@ it("reports the import lifecycle: queued, importing, completed, failed codes, st
   await request("/api/me", "PUT", { username: "synthetic-other" }, cookie);
   expect((await me()).sync?.state).toBe("idle");
   expect((await list()).slugs).toEqual([]);
+});
+
+it("digest alerts store each film's announced epoch and cannot recreate a deleted account", async () => {
+  const { cookie } = await signIn("digest-store@example.com");
+  const { user } = (await (await request("/api/me", "GET", undefined, cookie)).json()) as {
+    user: { id: string };
+  };
+  const apply = (entries: Pick<DigestFilm, "slug" | "lastScreeningAt">[], now: number) => {
+    const query = digestAlertQuery(user.id, entries as DigestFilm[], now);
+    return env.DB.prepare(query.sql)
+      .bind(...query.params!)
+      .run();
+  };
+  await apply(
+    [
+      { slug: "first", lastScreeningAt: 200 },
+      { slug: "second", lastScreeningAt: 300 },
+    ],
+    100,
+  );
+  expect(
+    (
+      await env.DB.prepare(
+        "SELECT slug,sent_at,last_screening_at FROM alerts_sent WHERE user_id=? ORDER BY slug",
+      )
+        .bind(user.id)
+        .all()
+    ).results,
+  ).toEqual([
+    { slug: "first", sent_at: 100, last_screening_at: 200 },
+    { slug: "second", sent_at: 100, last_screening_at: 300 },
+  ]);
+  await env.DB.prepare("UPDATE alerts_sent SET absent_since=1 WHERE user_id=?").bind(user.id).run();
+  await apply([{ slug: "first", lastScreeningAt: 400 }], 150);
+  expect(
+    await env.DB.prepare(
+      "SELECT sent_at,last_screening_at,absent_since FROM alerts_sent WHERE user_id=? AND slug='first'",
+    )
+      .bind(user.id)
+      .first(),
+  ).toEqual({ sent_at: 150, last_screening_at: 400, absent_since: null });
+  await request("/api/me", "DELETE", undefined, cookie);
+  await apply([{ slug: "late", lastScreeningAt: 500 }], 160);
+  expect(
+    await env.DB.prepare("SELECT COUNT(*) AS count FROM alerts_sent WHERE user_id=?")
+      .bind(user.id)
+      .first("count"),
+  ).toBe(0);
 });

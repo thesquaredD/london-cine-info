@@ -469,8 +469,9 @@ repo) in Pages; `CLOUDFLARE_API_TOKEN` gains D1 edit for the Actions scripts.
 
 ### 10.7 Open points (defaults I will take unless told otherwise)
 
-- Digest default weekday Wednesday; a film is alerted once per user and not again unless it
-  leaves the programme for 30+ days.
+- Digest defaults off for consent, with Wednesday suggested when enabled. Include
+  future screenings through London date +10 and re-announce when that window has
+  a screening newer than the last announced epoch (updated 4 October 2026).
 - Session lifetime 90 days, sliding. Magic link 15 minutes, single use.
 - Keep Pages rather than migrating to Workers with Static Assets (which would allow a cron
   trigger). Revisit only if Actions-driven scheduling proves awkward.
