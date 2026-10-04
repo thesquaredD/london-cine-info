@@ -85,6 +85,41 @@ POST `/api/auth/request` with an email and matching Origin header. The JSON retu
 a test sign-in link **only on localhost**. The website never exposes test links on
 public preview or production hosts, even if the flag is accidentally set there.
 
+## Account dialogs and import status
+
+Account actions live in one modal dialog opened from the compact **Sign in** /
+**Account** button in the sidebar (or the phone Pages drawer, which closes first so
+dialogs never nest). The dialog holds sign-in, Letterboxd username, weekly email
+weekday, import, sign out and a separate **Delete account** confirmation view.
+Entered values survive failures; conflicting actions are disabled while a request
+is in flight. Notices move to the top of the page when the dialog closes.
+
+Migration `0003_import_status.sql` adds `started_at` and `attempt_id` to
+`watchlist_sync`. The API derives one of five states from the row: `idle`,
+`queued` (manual request recorded, importer not yet running), `importing`
+(Actions claimed the job), `completed` and `failed`. A job with no completion
+within 30 minutes is reported as failed ("stalled") and can be re-queued; the
+daily run also reclaims it. Failure causes are stored as short codes
+(`not_found`, `inaccessible`, `unavailable`, `incomplete`, `dispatch`,
+`stalled`, `internal`) and translated to fixed user-facing messages; raw
+upstream or provider text never reaches the client. A failed GitHub dispatch
+refunds the hourly manual-refresh reservation. The Watchlist page shows the same
+status, the last successful import time, the imported count versus London
+matches, and distinguishes an empty public list from a list with no current
+screenings. The client polls every 15 seconds only while an import is pending
+and refreshes on window focus.
+
+Preview deployments use the separate `london-cine-info-preview` database; apply
+new migrations there manually before testing accounts on a preview:
+
+```sh
+npx wrangler d1 migrations apply london-cine-info-preview --remote
+```
+
+`tests/auth/import-states.spec.ts` drives every state with controlled API
+responses (no real sign-in, email, dispatch or Letterboxd request) at both
+widths; `tests/auth/accounts.spec.ts` records the real local Functions flow.
+
 ## Import and digest behavior
 
 Public watchlists match exact Letterboxd slugs from Clusterflick ratings. Every page

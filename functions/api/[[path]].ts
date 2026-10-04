@@ -8,7 +8,12 @@ import {
   SESSION_SECONDS,
 } from "../../server/security";
 import { sendEmail } from "../../server/email";
-import type { Account } from "../../src/shared/account";
+import {
+  IMPORT_TIMEOUT,
+  safeImportError,
+  type Account,
+  type SyncStatus,
+} from "../../src/shared/account";
 const now = () => Math.floor(Date.now() / 1000);
 const json = (body: unknown, status = 200, headers: Record<string, string> = {}) =>
   new Response(JSON.stringify(body), {
@@ -21,7 +26,34 @@ const json = (body: unknown, status = 200, headers: Record<string, string> = {})
       ...headers,
     },
   });
+function syncStatus(user: User): SyncStatus {
+  const activity = Math.max(user.requested_at ?? 0, user.started_at ?? 0);
+  const pending = activity > (user.completed_at ?? 0);
+  const stalled = pending && activity < now() - IMPORT_TIMEOUT;
+  return {
+    state:
+      stalled || (!pending && user.error)
+        ? "failed"
+        : pending
+          ? user.started_at
+            ? "importing"
+            : "queued"
+          : user.fetched_at
+            ? "completed"
+            : "idle",
+    requestedAt: user.requested_at,
+    startedAt: user.started_at,
+    completedAt: user.completed_at,
+    // A failed dispatch refunds the hourly manual-refresh reservation.
+    retryAt:
+      user.requested_at && !(!pending && user.error === "dispatch")
+        ? user.requested_at + 3600
+        : null,
+    error: stalled ? safeImportError("stalled") : pending ? null : safeImportError(user.error),
+  };
+}
 function account(user: User): Account {
+  const sync = syncStatus(user);
   return {
     id: user.id,
     email: user.email,
@@ -29,19 +61,27 @@ function account(user: User): Account {
     digestWeekday: user.digest_weekday,
     fetchedAt: user.fetched_at,
     count: user.count_parsed ?? 0,
-    stale: !!user.error || (!!user.fetched_at && user.fetched_at < now() - 2 * 86400),
-    pending: !!user.requested_at && user.requested_at > (user.completed_at ?? 0),
+    stale: sync.state === "failed" || (!!user.fetched_at && user.fetched_at < now() - 2 * 86400),
+    pending: sync.state === "queued" || sync.state === "importing",
+    sync,
   };
+}
+class RateLimit extends Error {
+  constructor(public seconds: number) {
+    super("Too many requests. Please try again when the cooldown ends.");
+  }
 }
 async function quota(env: Env, key: string, limit: number, seconds: number) {
   const row = await env.DB.prepare(
     `INSERT INTO rate_limits(key,count,expires_at) VALUES (?,1,?)
  ON CONFLICT(key) DO UPDATE SET count=CASE WHEN expires_at<=? THEN 1 ELSE count+1 END,
- expires_at=CASE WHEN expires_at<=? THEN excluded.expires_at ELSE expires_at END RETURNING count`,
+ expires_at=CASE WHEN expires_at<=? THEN excluded.expires_at ELSE expires_at END RETURNING count,expires_at`,
   )
     .bind(await hash(key), now() + seconds, now(), now())
-    .first<{ count: number }>();
-  return !!row && row.count <= limit;
+    .first<{ count: number; expires_at: number }>();
+  if (!row || row.count > limit)
+    throw new RateLimit(Math.max(1, (row?.expires_at ?? now() + seconds) - now()));
+  return true;
 }
 async function userFor(
   request: Request,
@@ -53,7 +93,7 @@ async function userFor(
   if (!value) return null;
   const sessionHash = await hash(value);
   const user = await env.DB.prepare(
-    `SELECT u.*,w.fetched_at,w.count_parsed,w.error,w.requested_at,w.completed_at
+    `SELECT u.*,w.fetched_at,w.count_parsed,w.error,w.requested_at,w.completed_at,w.started_at,w.attempt_id
  FROM sessions s JOIN users u ON s.user_id=u.id LEFT JOIN watchlist_sync w ON w.user_id=u.id
  WHERE s.hash=? AND s.expires_at>?`,
   )
@@ -234,6 +274,8 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
         .bind(user.id)
         .all<{ slug: string }>();
       return json({
+        username: user.letterboxd_username,
+        sync: syncStatus(user),
         slugs: items.results.map((item) => item.slug),
         fetchedAt: user.fetched_at,
         count: user.count_parsed ?? 0,
@@ -247,25 +289,57 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
           { error: "Manual refresh is not configured yet; daily sync will run automatically" },
           503,
         );
+      if (account(user).pending)
+        return json(
+          { error: "An import is already queued or running. Please wait for it to finish." },
+          409,
+        );
       if (!(await quota(env, `refresh:${user.id}`, 1, 3600)))
         return json({ error: "Refresh is available once per hour" }, 429);
-      await env.DB.prepare(
-        "INSERT INTO watchlist_sync(user_id,requested_at) VALUES (?,?) ON CONFLICT(user_id) DO UPDATE SET requested_at=excluded.requested_at",
+      const attempt = crypto.randomUUID();
+      // Reserve the job atomically, guarding against settings changes and another importer.
+      const reserved = await env.DB.prepare(
+        `INSERT INTO watchlist_sync(user_id,requested_at,started_at,error,attempt_id)
+         SELECT id,?,NULL,NULL,? FROM users WHERE id=? AND letterboxd_username=?
+         ON CONFLICT(user_id) DO UPDATE SET requested_at=excluded.requested_at,started_at=NULL,error=NULL,attempt_id=excluded.attempt_id
+         WHERE MAX(COALESCE(watchlist_sync.requested_at,0),COALESCE(watchlist_sync.started_at,0))<=COALESCE(watchlist_sync.completed_at,0)
+         OR COALESCE(watchlist_sync.started_at,watchlist_sync.requested_at,0)<?`,
       )
-        .bind(user.id, now())
+        .bind(now(), attempt, user.id, user.letterboxd_username, now() - IMPORT_TIMEOUT)
         .run();
+      if (!reserved.meta.changes)
+        return json(
+          {
+            error:
+              "Account settings changed or an import is already running. Reload and try again.",
+          },
+          409,
+        );
       try {
         if (!localDevelopment(request, env.DEV_MAGIC_LINK)) await dispatch(env, user);
       } catch {
-        await env.DB.prepare("UPDATE watchlist_sync SET completed_at=?,error=? WHERE user_id=?")
-          .bind(now(), "Refresh could not be scheduled", user.id)
-          .run();
-        return json({ error: "Refresh could not be scheduled. Daily sync will try again." }, 503);
+        await env.DB.batch([
+          env.DB.prepare(
+            "UPDATE watchlist_sync SET completed_at=?,error=? WHERE user_id=? AND attempt_id=?",
+          ).bind(now(), "dispatch", user.id, attempt),
+          env.DB.prepare("DELETE FROM rate_limits WHERE key=?").bind(
+            await hash(`refresh:${user.id}`),
+          ),
+        ]);
+        return json(
+          {
+            error:
+              "The import could not be queued. You can retry now; daily sync will also try again.",
+          },
+          503,
+        );
       }
       return json({ ok: true }, 202);
     }
     return json({ error: "Not found" }, 404);
-  } catch {
-    return json({ error: "The request could not be completed" }, 500);
+  } catch (error) {
+    if (error instanceof RateLimit)
+      return json({ error: error.message }, 429, { "Retry-After": String(error.seconds) });
+    return json({ error: "The request could not be completed. Please try again later." }, 500);
   }
 };
