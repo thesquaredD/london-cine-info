@@ -60,7 +60,9 @@ test("Events show special-screening labels and only matching event dates", async
   await expect(page.locator(".showtime-day")).toHaveCount(1);
   await expect(page.locator(".showtimes")).toContainText("Live score");
   await page.goto("/events?day=2026-10-04");
-  await expect(page.locator(".film-row")).toHaveCount(0);
+  await expect(page.locator(".film-row")).toHaveCount(1);
+  await expect(page.locator(".film-row")).toContainText("Fixture Q&A");
+  await expect(page.locator(".film-row").filter({ hasText: "Fixture Classic A" })).toHaveCount(0);
   await page.goto("/events?day=2026-10-03");
   await expect(page.locator(".film-row").filter({ hasText: "Fixture Classic A" })).toHaveCount(1);
   await page.screenshot({ path: test.info().outputPath("events.png") });
