@@ -5,6 +5,8 @@ import type { DataMeta, Film, FilmShowtimes, RatingKey } from "../shared/data";
 import { RATINGS, formatDate, runtime } from "../lib/catalogue";
 import { loadShowtimes } from "../lib/data";
 
+import type { CalendarInput } from "../shared/calendar";
+import type { CalendarState } from "../lib/calendar";
 export function ExpandedRow({
   film,
   meta,
@@ -13,7 +15,11 @@ export function ExpandedRow({
   state,
   ratingOrder,
   now,
+  calendar,
+  onCalendar,
 }: {
+  calendar?: CalendarState;
+  onCalendar?: (event: CalendarInput) => void;
   now?: Date;
   film: Film;
   meta: DataMeta;
@@ -160,6 +166,20 @@ export function ExpandedRow({
                   <ul>
                     {rows.map((row, index) => {
                       const venue = venues.get(row.venue);
+                      const event: CalendarInput = {
+                        filmId: film.id,
+                        title: film.ti,
+                        venueId: row.venue,
+                        venueName: venue?.name ?? row.venue,
+                        address: venue?.address ?? "",
+                        start: row.time,
+                        end: film.ru && film.ru > 0 ? Math.round(row.time + film.ru * 60000) : null,
+                        bookingUrl: row.bookingUrl,
+                        screen: row.screen,
+                        notes: row.notes,
+                        formats: row.formats,
+                      };
+                      const saved = calendar?.find(event);
                       return (
                         <li
                           key={`${row.time}-${row.venue}-${index}`}
@@ -192,6 +212,16 @@ export function ExpandedRow({
                                   ?.label ?? flag}
                               </span>
                             ))}
+                            {onCalendar && (
+                              <button
+                                class="add-calendar"
+                                aria-haspopup="dialog"
+                                aria-label={`${saved ? "View saved screening" : "Add to calendar"}: ${film.ti} at ${venue?.name ?? row.venue} ${date} ${row.localTime}`}
+                                onClick={() => onCalendar(event)}
+                              >
+                                {saved ? "In my calendar" : "Add to calendar"}
+                              </button>
+                            )}
                             {(row.notes || row.screen) && (
                               <small>
                                 {[row.screen && `Screen ${row.screen}`, row.notes]

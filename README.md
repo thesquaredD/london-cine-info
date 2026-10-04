@@ -232,3 +232,21 @@ under `~/.Codex/london-cine-info/discovery/verification/` locally (ignored brows
 output on CI). `tests/auth/cinemas.spec.ts` records real local Functions/D1 account
 sync and failure recovery without sending email or scraping Letterboxd. Interactive
 production verification remains pending, respecting PLAN §11.5.
+
+On phones, quick filters are collapsed into one button opening a bottom sheet.
+Selected dates invert their colours; excluded dates use strikethrough rather than
+a minus before the day number. The existing `/calendar` page is labelled Release
+calendar to distinguish it from the new personal calendar.
+
+Each expanded screening has **Add to calendar**. Anyone can download that
+screening as `.ics`. Signed-in users can save screenings to `/my-calendar`, remove
+them, and export an individual screening or the whole saved list. Saved details
+are snapshots; exports do not subscribe to changes or book tickets. Start times
+are exact UTC instants displayed in London time; ends are runtime estimates and
+are omitted when runtime is unknown. Migration `0006_saved_screenings.sql` stores
+account-specific plans and removes them with account deletion. Deploy applies it
+automatically; an isolated preview needs its pending migrations first.
+
+Replay calendar account verification with
+`npm run e2e:accounts -- tests/auth/calendar.spec.ts` after the fixture build.
+The code/flow UX review and remaining decisions are in [docs/UX_REVIEW.md](docs/UX_REVIEW.md).

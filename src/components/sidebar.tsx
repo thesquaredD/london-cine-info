@@ -3,7 +3,7 @@ import type { DisplayState } from "../lib/display";
 import { AccountPanel } from "./account";
 import type { AccountState } from "../lib/account";
 import type { DataMeta } from "../shared/data";
-import { PAGES, defaultSort, hasCustomSort, type ViewState } from "../lib/catalogue";
+import { PAGES, defaultSort, viewUrl, hasCustomSort, type ViewState } from "../lib/catalogue";
 
 type Props = {
   display: DisplayState;
@@ -34,7 +34,13 @@ export function Sidebar({
         {PAGES.map((page) => (
           <a
             key={page.path}
-            href={page.path}
+            href={viewUrl({
+              ...state,
+              path: page.path,
+              page: 1,
+              director: "",
+              ...(!hasCustomSort(state) ? defaultSort(page.path) : {}),
+            })}
             aria-current={state.path === page.path ? "page" : undefined}
             onClick={(event) => {
               if (event.button || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)

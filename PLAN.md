@@ -804,3 +804,36 @@ Radar section. Local screenshots/recordings live under
 `~/.Codex/london-cine-info/discovery/verification/` and the existing account
 verification directory; browser output is excluded from Git. A draft PR carries
 this implementation for review before merge/deployment.
+
+### 13.7 Mobile UX and saved calendar follow-up — 4 October 2026
+
+User requirement: selected dates invert their colours, mobile quick filters use a
+single button/bottom sheet, review the remaining UX, and add a calendar action to
+every screening. Confirmed scope: **saved screenings plus calendar export**.
+
+- [x] Plain date numbers without minus prefixes; inverted selected colours and
+      strikethrough exclusions, preserving accessible labels and explicit modes.
+- [x] Phone Quick filters button, two-column bottom sheet, result action and focus
+      restoration; management/sign-in closes the preceding sheet.
+- [x] Code/flow UX review in `docs/UX_REVIEW.md`; simplify Radar copy, duplicate
+      empty states, navigation destinations and cinema reload recovery.
+- [x] Add to calendar on each expanded screening, including Radar. Guests can
+      download one ICS; accounts can save/remove and revisit `/my-calendar`.
+      Separate Release calendar navigation from My calendar.
+- [x] Account-scoped saved rows, duplicate-safe identities, atomic 1,000-event
+      limit, persistence, account isolation and deletion cascade (migration 0006).
+      Individual and full calendar exports use exact UTC starts and stable IDs,
+      escaped/folded text and estimated runtime ends; unknown runtime omits end.
+- [x] Automated verification: 80 unit/API tests, 47 catalogue browser checks
+      (one phone-only test skipped on desktop), and 14 account browser checks.
+      Includes mobile sheet/focus, inverted dates, calendar persistence/export,
+      failed-save retry, account isolation, cap/upsert behaviour and deletion.
+      Typecheck, lint and build pass. Application JavaScript is ~33.3 KiB gzip.
+- [ ] Dio's visual review, manual Apple/Google calendar import and interactive
+      production verification (follow §11.5). No deployment performed.
+
+Saved details are snapshots, not subscriptions or automatic change alerts. Ends
+are estimates and saving does not book a ticket. The UX review records the
+remaining first-save sign-in return and programme-density decisions. Production
+deployment applies migration 0006; isolated previews need pending migrations.
+Replay/evidence details are in README and ACCOUNT_SETUP.md.

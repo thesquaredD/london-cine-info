@@ -1,4 +1,8 @@
+import { useCalendar } from "./lib/calendar";
+import { MyCalendar, ScreeningCalendarDialog } from "./components/screening-calendar";
+import type { CalendarInput } from "./shared/calendar";
 import { useCinemas } from "./lib/cinemas";
+import { QuickFilters } from "./components/quick-filters";
 import { MyCinemas } from "./components/my-cinemas";
 import { Radar } from "./components/radar";
 import { recoverySuggestions } from "./lib/recovery";
@@ -146,7 +150,10 @@ function About({ meta }: { meta: DataMeta | null }) {
 
 export function App() {
   const account = useAccount();
+  const calendar = useCalendar(account);
+  const [calendarEvent, setCalendarEvent] = useState<CalendarInput | null>(null);
   const cinemas = useCinemas(account);
+  const [quickOpen, setQuickOpen] = useState(false);
   const [cinemasOpen, setCinemasOpen] = useState(false);
   const [myCinemasActive, setMyCinemasActive] = useState(false);
   const [now, setNow] = useState(() => new Date());
@@ -372,7 +379,25 @@ export function App() {
       (account.user && account.watchlist?.fetchedAt && !account.error))
       ? recoverySuggestions(baseFilms, catalogue.meta, state, now)
       : [];
+  function closeQuickFilters() {
+    document.querySelector<HTMLDialogElement>(".quick-filter-dialog")?.close();
+    setQuickOpen(false);
+  }
+  function openCinemas() {
+    closeQuickFilters();
+    setCinemasOpen(true);
+  }
+  function openScreeningCalendar(event: CalendarInput) {
+    calendar.dismiss();
+    setCalendarEvent(event);
+  }
+  function closeScreeningCalendar() {
+    document.querySelector<HTMLDialogElement>(".screening-calendar-dialog")?.close();
+    setCalendarEvent(null);
+  }
   function openAccount() {
+    closeScreeningCalendar();
+    closeQuickFilters();
     // The phone drawer is itself a modal dialog; close it first so dialogs never nest.
     if (drawer.current?.open) drawer.current.close();
     setDrawerOpen(false);
@@ -484,11 +509,26 @@ export function App() {
             onClose={() => setCinemasOpen(false)}
           />
         )}
+        <ScreeningCalendarDialog
+          event={calendarEvent}
+          calendar={calendar}
+          account={account}
+          onClose={() => setCalendarEvent(null)}
+          onAccount={openAccount}
+          onNavigate={() => {
+            closeScreeningCalendar();
+            change({ path: "/my-calendar", page: 1 }, true);
+          }}
+        />
         {!accountOpen && (
           <div class="page-notices">
             <AccountFeedback
               account={account}
-              showError={state.path === "/watchlist" || !!state.watchlist}
+              showError={
+                ["/watchlist", "/my-calendar"].includes(state.path) ||
+                !!state.watchlist ||
+                !!calendarEvent
+              }
             />
           </div>
         )}
@@ -498,6 +538,8 @@ export function App() {
           <TokenPage kind="verify" onSignedIn={account.reload} />
         ) : state.path === "/unsubscribe" ? (
           <TokenPage kind="unsubscribe" onSignedIn={account.reload} />
+        ) : state.path === "/my-calendar" ? (
+          <MyCalendar calendar={calendar} account={account} onAccount={openAccount} now={now} />
         ) : state.path === "/about" ? (
           <About meta={meta} />
         ) : (
@@ -564,76 +606,89 @@ export function App() {
             {catalogue && <FilterBar {...filterProps} />}
             {catalogue && (
               <div class="filter-summary">
-                <div class="quick-days" role="group" aria-label="Quick day filters">
-                  {[
-                    { id: "today", label: "Today" },
-                    { id: "tomorrow", label: "Tomorrow" },
-                    { id: "tonight", label: "Tonight" },
-                    { id: "weekend", label: "This weekend" },
-                    { id: "this-week", label: "This week" },
-                    { id: "next-week", label: "Next week" },
-                  ].map(({ id, label }) => {
-                    const active =
-                      id === "tonight"
-                        ? !!state.tonight
-                        : !state.tonight &&
-                          state.filters.day?.length === 1 &&
-                          state.filters.day[0] === id &&
-                          !state.excluded.day?.length;
-                    return (
-                      <button
-                        key={id}
-                        aria-pressed={active}
-                        onClick={() => change(dateShortcut(state, id))}
-                      >
-                        {label}
-                        {id !== "tonight" && <small> {counts?.day.get(id) ?? 0}</small>}
-                      </button>
-                    );
-                  })}
-                  <button
-                    aria-pressed={!!state.watchlist}
-                    onClick={() => {
-                      change({ watchlist: !state.watchlist, page: 1 });
-                      if (!state.watchlist && (!account.user || !account.watchlist?.fetchedAt))
-                        openAccount();
-                    }}
-                  >
-                    My watchlist
-                  </button>
-                  <button
-                    aria-pressed={myCinemasActive}
-                    disabled={cinemas.loading}
-                    onClick={() => {
-                      if (cinemas.error || !cinemas.venues.length) {
-                        setCinemasOpen(true);
-                        return;
-                      }
-                      myCinemasUpdating.current = true;
-                      change({
-                        filters: {
-                          ...state.filters,
-                          venue: myCinemasActive ? [] : [...cinemas.venues],
-                        },
-                        excluded: { ...state.excluded, venue: [] },
-                        page: 1,
-                      });
-                      myCinemasUpdating.current = false;
-                      setMyCinemasActive(!myCinemasActive);
-                    }}
-                  >
-                    My cinemas
-                  </button>
-                  <button aria-haspopup="dialog" onClick={() => setCinemasOpen(true)}>
-                    Manage my cinemas
-                  </button>
-                  <button
-                    aria-pressed={!!state.short}
-                    onClick={() => change({ short: !state.short, page: 1 })}
-                  >
-                    Under 2 hours
-                  </button>
-                </div>
+                <QuickFilters
+                  open={quickOpen}
+                  onOpen={() => setQuickOpen(true)}
+                  onClose={() => setQuickOpen(false)}
+                  resultCount={selected.length}
+                  activeCount={
+                    Number(!!state.filters.day?.length) +
+                    Number(!!state.watchlist) +
+                    Number(myCinemasActive) +
+                    Number(!!state.short)
+                  }
+                >
+                  <div class="quick-days" role="group" aria-label="Quick filters">
+                    {[
+                      { id: "today", label: "Today" },
+                      { id: "tomorrow", label: "Tomorrow" },
+                      { id: "tonight", label: "Tonight" },
+                      { id: "weekend", label: "This weekend" },
+                      { id: "this-week", label: "This week" },
+                      { id: "next-week", label: "Next week" },
+                    ].map(({ id, label }) => {
+                      const active =
+                        id === "tonight"
+                          ? !!state.tonight
+                          : !state.tonight &&
+                            state.filters.day?.length === 1 &&
+                            state.filters.day[0] === id &&
+                            !state.excluded.day?.length;
+                      return (
+                        <button
+                          key={id}
+                          aria-pressed={active}
+                          onClick={() => change(dateShortcut(state, id))}
+                        >
+                          {label}
+                          {id !== "tonight" && <small> {counts?.day.get(id) ?? 0}</small>}
+                        </button>
+                      );
+                    })}
+                    <button
+                      aria-pressed={!!state.watchlist}
+                      onClick={() => {
+                        change({ watchlist: !state.watchlist, page: 1 });
+                        if (!state.watchlist && (!account.user || !account.watchlist?.fetchedAt))
+                          openAccount();
+                      }}
+                    >
+                      My watchlist
+                    </button>
+                    <button
+                      aria-pressed={myCinemasActive}
+                      disabled={cinemas.loading}
+                      onClick={() => {
+                        if (cinemas.error || !cinemas.venues.length) {
+                          openCinemas();
+                          return;
+                        }
+                        myCinemasUpdating.current = true;
+                        change({
+                          filters: {
+                            ...state.filters,
+                            venue: myCinemasActive ? [] : [...cinemas.venues],
+                          },
+                          excluded: { ...state.excluded, venue: [] },
+                          page: 1,
+                        });
+                        myCinemasUpdating.current = false;
+                        setMyCinemasActive(!myCinemasActive);
+                      }}
+                    >
+                      My cinemas
+                    </button>
+                    <button aria-haspopup="dialog" onClick={openCinemas}>
+                      Manage my cinemas
+                    </button>
+                    <button
+                      aria-pressed={!!state.short}
+                      onClick={() => change({ short: !state.short, page: 1 })}
+                    >
+                      Under 2 hours
+                    </button>
+                  </div>
+                </QuickFilters>
                 {cinemas.storageError && !cinemasOpen && (
                   <p role="status">{cinemas.storageError}</p>
                 )}
@@ -775,7 +830,8 @@ export function App() {
                 role="group"
                 aria-label="Suggested filter adjustments"
               >
-                <p>No films match. Try one of these adjustments:</p>
+                <h2>No films match these filters</h2>
+                <p>Try one adjustment below. Your other choices stay selected.</p>
                 {suggestions.map((suggestion) => (
                   <button key={suggestion.label} onClick={() => change(suggestion.changes)}>
                     {suggestion.label} · {suggestion.count}{" "}
@@ -793,6 +849,8 @@ export function App() {
                   now={now}
                   display={display}
                   watched={account.user ? watched : undefined}
+                  calendar={calendar}
+                  onCalendar={openScreeningCalendar}
                   expanded={expanded}
                   onExpand={setExpanded}
                   onChange={change}
@@ -800,6 +858,9 @@ export function App() {
               ) : (
                 <FilmTable
                   films={selected}
+                  showEmpty={!suggestions.length}
+                  calendar={calendar}
+                  onCalendar={openScreeningCalendar}
                   now={now}
                   display={display}
                   watched={account.user ? watched : undefined}

@@ -142,15 +142,15 @@ export function DateCalendar({
               }
             }}
           >
-            {excluded.includes(date) ? "−" : ""}
             {Number(date.slice(8))}
           </button>
         ))}
       </div>
       <p class="filter-hint">
         Listed dates: {meta.facets.day[0]?.id ?? "unknown"}–
-        {meta.facets.day.at(-1)?.id ?? "unknown"}. Faded dates have no matching listed screenings;
-        cinema programmes may be incomplete. Use Exclude options to omit dates.
+        {meta.facets.day.at(-1)?.id ?? "unknown"}. Selected dates use inverted colours. Crossed-out
+        dates are excluded. Faded dates have no matching listed screenings; cinema programmes may be
+        incomplete. Use Exclude options to omit dates.
       </p>
     </div>
   );

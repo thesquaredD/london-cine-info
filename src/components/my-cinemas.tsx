@@ -37,7 +37,13 @@ export function MyCinemas({
   }
   const missing = draft.filter((id) => !meta.venues.some((venue) => venue.id === id));
   return (
-    <Dialog className="cinema-dialog" open={open} title="Manage my cinemas" onClose={onClose}>
+    <Dialog
+      className="cinema-dialog"
+      open={open}
+      title="Manage my cinemas"
+      onClose={onClose}
+      restoreTo={() => document.querySelector<HTMLElement>(".quick-filters-mobile")}
+    >
       <p>
         {cinemas.signedIn
           ? "Saved to your account and synced across devices."
@@ -48,17 +54,17 @@ export function MyCinemas({
       {cinemas.error && (
         <div role="alert">
           <p>{cinemas.error}</p>
+          <p class="filter-hint">Reloading replaces the unsaved choices below.</p>
           <button
             disabled={cinemas.busy}
             onClick={async () => {
               const loaded = await cinemas.reload();
-              if (!loaded) return;
-              setNotice(
-                "Cinemas reloaded. Close and reopen to use the saved selection; your unsaved choices are still here.",
-              );
+              if (!loaded || typeof loaded === "boolean") return;
+              setDraft([...loaded.venues]);
+              setNotice("Saved choices reloaded.");
             }}
           >
-            Reload saved cinemas
+            Reload saved choices
           </button>
         </div>
       )}

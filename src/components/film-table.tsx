@@ -13,7 +13,12 @@ import {
 } from "../lib/catalogue";
 import { ExpandedRow } from "./expanded-row";
 
+import type { CalendarInput } from "../shared/calendar";
+import type { CalendarState } from "../lib/calendar";
 type Props = {
+  calendar?: CalendarState;
+  onCalendar?: (event: CalendarInput) => void;
+  showEmpty?: boolean;
   films: Film[];
   display: DisplayState;
   now?: Date;
@@ -36,6 +41,9 @@ export function FilmTable({
   display,
   now,
   labels,
+  calendar,
+  onCalendar,
+  showEmpty = true,
 }: Props) {
   const marked = (film: Film) => !!watched?.has(letterboxdSlug(film.ra.lb?.url) ?? "");
   const ratings = display.ratingOrder.map((key) => RATINGS.find((rating) => rating.key === key)!);
@@ -214,6 +222,8 @@ export function FilmTable({
                     key={`details-${key}`}
                     detailId={`details-${state.radarSection ?? ""}${key}`}
                     now={now}
+                    calendar={calendar}
+                    onCalendar={onCalendar}
                     columns={watched ? 8 : 7}
                     film={film}
                     ratingOrder={display.ratingOrder}
@@ -225,70 +235,72 @@ export function FilmTable({
             ))}
           </tbody>
         </table>
-      ) : (
+      ) : showEmpty ? (
         <div class="empty-state">
           <h2>No films match these filters</h2>
           <p>Try removing a filter or choosing another day or cinema.</p>
           <button onClick={() => onChange(clearFilters(state.path))}>Clear filters</button>
         </div>
-      )}
-      <footer class="pagination" aria-label="Film pagination">
-        <div>
-          <strong>
-            {films.length.toLocaleString("en-GB")} {films.length === 1 ? "film" : "films"}
-          </strong>
-          {films.length > 0 && (
-            <span class="result-range">
-              {" "}
-              · {state.path === "/retrospectives" ? "rows " : ""}
-              {start + 1}–{Math.min(start + PAGE_SIZE, rows.length)}
-            </span>
-          )}
-        </div>
-        <div class="page-controls">
-          <button
-            disabled={page <= 1}
-            aria-label="Previous page"
-            onClick={() => {
-              onExpand(null);
-              onChange({ page: page - 1 });
-              window.scrollTo({ top: 0 });
-            }}
-          >
-            ‹
-          </button>
-          <label>
-            Page{" "}
-            <select
-              aria-label="Page"
-              value={page}
-              onChange={(event) => {
+      ) : null}
+      {films.length > 0 && (
+        <footer class="pagination" aria-label="Film pagination">
+          <div>
+            <strong>
+              {films.length.toLocaleString("en-GB")} {films.length === 1 ? "film" : "films"}
+            </strong>
+            {films.length > 0 && (
+              <span class="result-range">
+                {" "}
+                · {state.path === "/retrospectives" ? "rows " : ""}
+                {start + 1}–{Math.min(start + PAGE_SIZE, rows.length)}
+              </span>
+            )}
+          </div>
+          <div class="page-controls">
+            <button
+              disabled={page <= 1}
+              aria-label="Previous page"
+              onClick={() => {
                 onExpand(null);
-                onChange({ page: Number(event.currentTarget.value) });
+                onChange({ page: page - 1 });
                 window.scrollTo({ top: 0 });
               }}
             >
-              {Array.from({ length: pageCount }, (_, index) => (
-                <option key={index} value={index + 1}>
-                  {index + 1}
-                </option>
-              ))}
-            </select>
-            <span> of {pageCount}</span>
-          </label>
-          <button
-            disabled={page >= pageCount}
-            aria-label="Next page"
-            onClick={() => {
-              onExpand(null);
-              onChange({ page: page + 1 });
-              window.scrollTo({ top: 0 });
-            }}
-          >
-            ›
-          </button>
-        </div>
-      </footer>
+              ‹
+            </button>
+            <label>
+              Page{" "}
+              <select
+                aria-label="Page"
+                value={page}
+                onChange={(event) => {
+                  onExpand(null);
+                  onChange({ page: Number(event.currentTarget.value) });
+                  window.scrollTo({ top: 0 });
+                }}
+              >
+                {Array.from({ length: pageCount }, (_, index) => (
+                  <option key={index} value={index + 1}>
+                    {index + 1}
+                  </option>
+                ))}
+              </select>
+              <span> of {pageCount}</span>
+            </label>
+            <button
+              disabled={page >= pageCount}
+              aria-label="Next page"
+              onClick={() => {
+                onExpand(null);
+                onChange({ page: page + 1 });
+                window.scrollTo({ top: 0 });
+              }}
+            >
+              ›
+            </button>
+          </div>
+        </footer>
+      )}
     </>
   );
 }

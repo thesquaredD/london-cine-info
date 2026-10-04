@@ -13,6 +13,8 @@ async function login(page: Page, email: string) {
   expect(response.ok()).toBe(true);
 }
 async function manage(page: Page) {
+  if (page.viewportSize()!.width < 800)
+    await page.getByRole("button", { name: /^Quick filters/ }).click();
   await page
     .locator(".quick-days")
     .getByRole("button", { name: "Manage my cinemas", exact: true })

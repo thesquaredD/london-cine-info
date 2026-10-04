@@ -65,7 +65,7 @@ export function useCinemas(account: AccountState) {
       if (current !== generation.current || identity.current !== id) return;
       setRemote({ ...result, userId: id });
       setError("");
-      return true;
+      return result;
     } catch (failure) {
       if (current === generation.current && identity.current === id)
         setError(failure instanceof Error ? failure.message : "Your cinemas could not be loaded.");

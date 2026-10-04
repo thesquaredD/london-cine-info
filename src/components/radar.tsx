@@ -3,6 +3,8 @@ import type { DataMeta, Film } from "../shared/data";
 import type { ViewState } from "../lib/catalogue";
 import type { DisplayState } from "../lib/display";
 import { radarEntries, radarFilms } from "../lib/radar";
+import type { CalendarInput } from "../shared/calendar";
+import type { CalendarState } from "../lib/calendar";
 export function Radar({
   films,
   meta,
@@ -13,7 +15,11 @@ export function Radar({
   expanded,
   onExpand,
   onChange,
+  calendar,
+  onCalendar,
 }: {
+  calendar?: CalendarState;
+  onCalendar?: (event: CalendarInput) => void;
   films: Film[];
   meta: DataMeta;
   state: ViewState;
@@ -27,20 +33,26 @@ export function Radar({
   const entries = radarEntries(films, meta, now);
   return (
     <div class="radar-page">
-      <p class="view-note">
-        Explore the current listings snapshot. Counts cover all listed cinemas before your filters,
-        include sold-out screenings, and exclude starts that have passed. Programmes may be
-        incomplete or change; a small count does not mean a definitive last chance.
-      </p>
-      <p class="view-note">
-        Updated{" "}
-        {new Intl.DateTimeFormat("en-GB", {
-          dateStyle: "medium",
-          timeStyle: "short",
-          timeZone: "Europe/London",
-        }).format(new Date(meta.generatedAt))}
-        . Listing horizon: {meta.facets.day[0]?.id}–{meta.facets.day.at(-1)?.id}.
-      </p>
+      <div class="radar-intro">
+        <p>Find films with few screenings left, or screenings in 35mm, 70mm and IMAX.</p>
+        <details>
+          <summary>How Radar works · listing coverage</summary>
+          <p>
+            Counts cover all listed cinemas before your filters, include sold-out screenings and
+            exclude starts that have passed. Programmes may be incomplete or change; few listings do
+            not mean a definitive last chance. Generic IMAX does not identify digital versus film.
+          </p>
+          <p>
+            Updated{" "}
+            {new Intl.DateTimeFormat("en-GB", {
+              dateStyle: "medium",
+              timeStyle: "short",
+              timeZone: "Europe/London",
+            }).format(new Date(meta.generatedAt))}
+            . Listing horizon: {meta.facets.day[0]?.id}–{meta.facets.day.at(-1)?.id}.
+          </p>
+        </details>
+      </div>
       {(["limited", "formats"] as const).map((section) => {
         const visible = radarFilms(entries, meta, state, section, now, watched, display.titleMode);
         const labels = new Map(
@@ -59,11 +71,13 @@ export function Radar({
             <h2>{section === "limited" ? "Limited opportunity" : "Special formats"}</h2>
             <p class="view-note">
               {section === "limited"
-                ? "One to three distinct upcoming screenings across the full listing horizon."
-                : "Explicitly listed 35mm, 70mm and IMAX screenings. Generic IMAX does not identify digital versus film; unspecified formats are excluded."}
+                ? "1–3 upcoming screenings listed across all cinemas."
+                : "Explicit 35mm, 70mm and IMAX screenings."}
             </p>
             <FilmTable
               films={visible}
+              calendar={calendar}
+              onCalendar={onCalendar}
               meta={meta}
               state={{ ...state, radarSection: section }}
               now={now}

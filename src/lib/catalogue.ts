@@ -9,8 +9,9 @@ export const PAGES = [
   { path: "/classics", name: "Classics" },
   { path: "/retrospectives", name: "Retrospectives" },
   { path: "/events", name: "Events" },
-  { path: "/calendar", name: "Calendar" },
+  { path: "/calendar", name: "Release calendar" },
   { path: "/watchlist", name: "Watchlist" },
+  { path: "/my-calendar", name: "My calendar" },
   { path: "/radar", name: "Radar" },
 ] as const;
 export const RATINGS: { key: RatingKey; name: string; short: string; scale: string }[] = [

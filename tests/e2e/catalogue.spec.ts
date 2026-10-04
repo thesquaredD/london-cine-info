@@ -295,6 +295,8 @@ test("Today and Tomorrow shortcuts replace day filters while preserving other ch
 }) => {
   await page.clock.setFixedTime(new Date("2026-10-03T09:00:00Z"));
   await page.goto("/?day=beyond&not_day=today&language=fr");
+  if (page.viewportSize()!.width < 800)
+    await page.getByRole("button", { name: /^Quick filters/ }).click();
   const today = page.locator(".quick-days").getByRole("button", { name: /^Today/ });
   const tomorrow = page.locator(".quick-days").getByRole("button", { name: /^Tomorrow/ });
   await today.click();
@@ -333,7 +335,10 @@ test("filter controls stay stationary through selection, clearing and changing c
   await expect(page.locator(".film-row")).toHaveCount(6);
   const summary = page.locator(".filter-summary");
   const baselineHeight = (await summary.boundingBox())!.height;
-  const quick = page.locator(".quick-days").getByRole("button", { name: /^Tomorrow/ });
+  const quick =
+    page.viewportSize()!.width < 800
+      ? page.getByRole("button", { name: /^Quick filters/ })
+      : page.locator(".quick-days").getByRole("button", { name: /^Tomorrow/ });
   const quickX = (await quick.boundingBox())!.x;
   const menu = await openFilters(page);
   for (const name of [

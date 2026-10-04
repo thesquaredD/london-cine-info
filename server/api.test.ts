@@ -523,3 +523,109 @@ it("cinema preferences reconcile once, sync removals, guard concurrent edits and
       .first("n"),
   ).toBe(0);
 });
+
+it("saves deduplicated screenings per account, exports owned events and cascades deletion", async () => {
+  const input = {
+    filmId: "fixture",
+    title: "Fixture film",
+    venueId: "bfi.org.uk",
+    venueName: "BFI Southbank",
+    address: "London",
+    start: Date.parse("2026-10-25T00:30:00Z"),
+    end: null,
+    bookingUrl: "https://cinema.example/booking",
+    screen: null,
+    notes: "Intro, Q&A",
+    formats: ["35mm"],
+  };
+  expect((await request("/api/calendar", "POST", { screening: input })).status).toBe(401);
+  const first = await signIn("calendar@example.com");
+  const second = await signIn("calendar-other@example.com");
+  const sent = await request("/api/calendar", "POST", { screening: input }, first.cookie);
+  expect(sent.status).toBe(200);
+  const { screening } = (await sent.json()) as { screening: { id: string } };
+  expect((await request("/api/calendar", "POST", { screening: input }, first.cookie)).status).toBe(
+    200,
+  );
+  expect(
+    (
+      (await (await request("/api/calendar", "GET", undefined, first.cookie)).json()) as {
+        screenings: unknown[];
+      }
+    ).screenings,
+  ).toHaveLength(1);
+  expect(
+    (
+      (await (await request("/api/calendar", "GET", undefined, second.cookie)).json()) as {
+        screenings: unknown[];
+      }
+    ).screenings,
+  ).toHaveLength(0);
+  const exported = await request("/api/calendar/export", "GET", undefined, first.cookie);
+  expect(exported.headers.get("Content-Type")).toContain("text/calendar");
+  expect(exported.headers.get("Cache-Control")).toContain("no-store");
+  expect(await exported.text()).toContain("DTSTART:20261025T003000Z");
+  expect(
+    (await request(`/api/calendar/export?id=${screening.id}`, "GET", undefined, second.cookie))
+      .status,
+  ).toBe(404);
+  expect(
+    (await request("/api/calendar", "DELETE", { id: screening.id }, second.cookie)).status,
+  ).toBe(200);
+  expect(
+    (
+      (await (await request("/api/calendar", "GET", undefined, first.cookie)).json()) as {
+        screenings: unknown[];
+      }
+    ).screenings,
+  ).toHaveLength(1);
+  expect(
+    (
+      await request(
+        "/api/calendar",
+        "POST",
+        { screening: { ...input, bookingUrl: "javascript:evil()" } },
+        first.cookie,
+      )
+    ).status,
+  ).toBe(400);
+  expect(
+    (await request("/api/calendar", "DELETE", { id: screening.id }, first.cookie)).status,
+  ).toBe(200);
+  expect(
+    (
+      (await (await request("/api/calendar", "GET", undefined, first.cookie)).json()) as {
+        screenings: unknown[];
+      }
+    ).screenings,
+  ).toHaveLength(0);
+  await request("/api/calendar", "POST", { screening: input }, first.cookie);
+  const { user } = (await (await request("/api/me", "GET", undefined, first.cookie)).json()) as {
+    user: Account;
+  };
+  await env.DB.prepare(
+    "WITH RECURSIVE n(x) AS (SELECT 1 UNION ALL SELECT x+1 FROM n WHERE x<999) INSERT INTO saved_screenings(user_id,id,start_at,payload) SELECT ?, printf('%064d',x), ?, ? FROM n",
+  )
+    .bind(user.id, input.start, JSON.stringify(input))
+    .run();
+  expect(
+    (
+      await request(
+        "/api/calendar",
+        "POST",
+        { screening: { ...input, start: input.start + 60000 } },
+        first.cookie,
+      )
+    ).status,
+  ).toBe(400);
+  // Existing screenings can still be updated when the list is at its limit.
+  expect((await request("/api/calendar", "POST", { screening: input }, first.cookie)).status).toBe(
+    200,
+  );
+  expect((await request("/api/me", "DELETE", {}, first.cookie)).status).toBe(200);
+  expect(
+    await env.DB.prepare("SELECT COUNT(*) AS n FROM saved_screenings WHERE user_id=?")
+      .bind(user.id)
+      .first("n"),
+  ).toBe(0);
+});

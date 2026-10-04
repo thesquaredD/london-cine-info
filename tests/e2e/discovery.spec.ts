@@ -37,6 +37,19 @@ test("calendar keyboard, separate dates and exclusion preserve shared URLs", asy
   await picker.getByRole("button", { name: "Exclude options", exact: true }).click();
   await picker.locator('.calendar-grid [data-date="2026-10-05"]').click();
   expect(new URL(page.url()).searchParams.getAll("not_day")).toEqual(["2026-10-05"]);
+  const excluded = picker.locator('.calendar-grid [data-date="2026-10-05"]');
+  await expect(excluded).toHaveText("5");
+  const colours = await next.evaluate((node) => {
+    const selected = getComputedStyle(node);
+    const unselected = getComputedStyle(document.body);
+    return {
+      background: selected.backgroundColor,
+      foreground: selected.color,
+      normalForeground: unselected.color,
+    };
+  });
+  expect(colours.background).toBe(colours.normalForeground);
+  expect(colours.background).not.toBe(colours.foreground);
   await picker.getByRole("button", { name: "Next month", exact: true }).click();
   await expect(picker.locator(".calendar-heading")).toContainText("November 2026");
   await picker.getByRole("button", { name: "Previous month", exact: true }).click();
@@ -49,6 +62,8 @@ test("Tonight leaves no hidden time constraint, runtime recovery has an accurate
   page,
 }) => {
   await page.goto("/?genre=drama");
+  if (page.viewportSize()!.width < 800)
+    await page.getByRole("button", { name: /^Quick filters/ }).click();
   const quick = page.locator(".quick-days");
   await quick.getByRole("button", { name: "Tonight", exact: true }).click();
   expect(new URL(page.url()).searchParams.get("from")).toBe("18:00");
@@ -71,6 +86,8 @@ test("guest favourites survive reload, filter concrete venues and stay separate 
 }) => {
   await page.goto("/");
   await expect(page.locator(".film-row")).toHaveCount(6);
+  if (page.viewportSize()!.width < 800)
+    await page.getByRole("button", { name: /^Quick filters/ }).click();
   const quick = page.locator(".quick-days");
   await quick.getByRole("button", { name: "My cinemas", exact: true }).click();
   const dialog = page.getByRole("dialog", { name: "Manage my cinemas", exact: true });
@@ -78,14 +95,27 @@ test("guest favourites survive reload, filter concrete venues and stay separate 
   await dialog.getByRole("checkbox", { name: "BFI Southbank", exact: true }).check();
   await dialog.getByRole("button", { name: "Save my cinemas", exact: true }).click();
   await expect(page.locator(".film-row")).toHaveCount(6);
+  if (page.viewportSize()!.width < 800)
+    await page.getByRole("button", { name: /^Quick filters/ }).click();
   await quick.getByRole("button", { name: "My cinemas", exact: true }).click();
+  if (page.viewportSize()!.width < 800)
+    await page
+      .getByRole("dialog", { name: "Quick filters", exact: true })
+      .getByRole("button", { name: /^Show/ })
+      .click();
   expect(new URL(page.url()).searchParams.getAll("venue")).toEqual(["bfi.org.uk-southbank"]);
   await expect(page.locator(".film-row")).toHaveCount(2);
   await page.reload();
+  if (page.viewportSize()!.width < 800)
+    await page.getByRole("button", { name: /^Quick filters/ }).click();
   await quick.getByRole("button", { name: "Manage my cinemas", exact: true }).click();
   await expect(dialog.getByRole("checkbox", { name: "BFI Southbank", exact: true })).toBeChecked();
   await dialog.getByRole("button", { name: "Close manage my cinemas", exact: true }).click();
-  await expect(quick.getByRole("button", { name: "Manage my cinemas", exact: true })).toBeFocused();
+  await expect(
+    page.viewportSize()!.width < 800
+      ? page.getByRole("button", { name: /^Quick filters/ })
+      : quick.getByRole("button", { name: "Manage my cinemas", exact: true }),
+  ).toBeFocused();
 });
 test("Radar shows explicit formats and global counts, themes fit 390px", async ({
   page,
@@ -154,4 +184,30 @@ test("Radar expires screenings and relative Today moves at London midnight witho
     "Only 1 screening listed · 2026-10-04",
   );
   await expect(page).toHaveURL(/radar\?day=today/);
+});
+
+test("mobile quick filters collapse into one button and sheet restores keyboard focus", async ({
+  page,
+}, info) => {
+  test.skip(info.project.name !== "mobile");
+  await page.goto("/");
+  const opener = page.getByRole("button", { name: /^Quick filters/ });
+  await expect(opener).toBeVisible();
+  await expect(page.getByRole("button", { name: "Tonight", exact: true })).toBeHidden();
+  await opener.click();
+  const sheet = page.getByRole("dialog", { name: "Quick filters", exact: true });
+  await expect(sheet).toBeVisible();
+  expect(await page.locator("dialog[open]").count()).toBe(1);
+  await page.screenshot({ path: join(evidenceDirectory, "quick-filters-mobile-sheet.png") });
+  await sheet.getByRole("button", { name: "Tonight", exact: true }).click();
+  await sheet.getByRole("button", { name: /^Show/ }).click();
+  await expect(sheet).toBeHidden();
+  await expect(opener).toBeFocused();
+  await opener.click();
+  await expect(sheet).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(sheet).toBeHidden();
+  await expect(opener).toBeFocused();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
+  await page.screenshot({ path: join(evidenceDirectory, "quick-filters-mobile-collapsed.png") });
 });
