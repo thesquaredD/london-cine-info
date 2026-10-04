@@ -1,7 +1,7 @@
 import { screeningMatcher } from "../lib/filters";
 import type { ViewState } from "../lib/catalogue";
 import { useEffect, useState } from "preact/hooks";
-import type { DataMeta, Film, FilmShowtimes } from "../shared/data";
+import type { DataMeta, Film, FilmShowtimes, RatingKey } from "../shared/data";
 import { RATINGS, formatDate, runtime } from "../lib/catalogue";
 import { loadShowtimes } from "../lib/data";
 
@@ -11,12 +11,14 @@ export function ExpandedRow({
   detailId,
   columns = 7,
   state,
+  ratingOrder,
 }: {
   film: Film;
   meta: DataMeta;
   detailId: string;
   columns?: number;
   state: ViewState;
+  ratingOrder: RatingKey[];
 }) {
   const [data, setData] = useState<FilmShowtimes | null>(null);
   const [error, setError] = useState(false);
@@ -88,7 +90,8 @@ export function ExpandedRow({
               </div>
             </figure>
             <div class="rating-cards">
-              {RATINGS.map((source) => {
+              {ratingOrder.map((key) => {
+                const source = RATINGS.find((rating) => rating.key === key)!;
                 const rating = film.ra[source.key];
                 const content = (
                   <>

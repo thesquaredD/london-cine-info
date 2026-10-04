@@ -1,3 +1,4 @@
+import { displayTitle, type DisplayState } from "../lib/display";
 import { letterboxdSlug } from "../shared/account";
 import { clearFilters } from "../lib/filters";
 import { Fragment } from "preact";
@@ -14,6 +15,7 @@ import { ExpandedRow } from "./expanded-row";
 
 type Props = {
   films: Film[];
+  display: DisplayState;
   watched?: Set<string>;
   meta: DataMeta;
   state: ViewState;
@@ -21,8 +23,18 @@ type Props = {
   onExpand: (id: string | null) => void;
   onChange: (changes: Partial<ViewState>, push?: boolean) => void;
 };
-export function FilmTable({ films, meta, state, expanded, onExpand, onChange, watched }: Props) {
+export function FilmTable({
+  films,
+  meta,
+  state,
+  expanded,
+  onExpand,
+  onChange,
+  watched,
+  display,
+}: Props) {
   const marked = (film: Film) => !!watched?.has(letterboxdSlug(film.ra.lb?.url) ?? "");
+  const ratings = display.ratingOrder.map((key) => RATINGS.find((rating) => rating.key === key)!);
   const rows = tableRows(films, state);
   const pageCount = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
   const page = Math.min(state.page, pageCount);
@@ -69,15 +81,17 @@ export function FilmTable({ films, meta, state, expanded, onExpand, onChange, wa
               {watched && heading("watchlist", "▣")}
               {heading("title", "Title")}
               {heading("director", "Director")}
-              {RATINGS.map((rating) => heading(rating.key, rating.short, true))}
-              {heading("year", "Year", true)}
+              {ratings.map((rating) => heading(rating.key, rating.short, true))}
+              {state.path === "/events"
+                ? heading("event", "Event", true)
+                : heading("year", "Year", true)}
             </tr>
           </thead>
           <tbody>
             {rows.slice(start, start + PAGE_SIZE).map(({ film, group, key }, index) => (
               <Fragment key={key}>
                 {group && (index === 0 || group.id !== rows[start + index - 1]?.group?.id) && (
-                  <tr class="director-group">
+                  <tr class={state.path === "/calendar" ? "release-group" : "director-group"}>
                     <td colSpan={watched ? 8 : 7}>
                       <h3>{group.name}</h3>{" "}
                       <small>
@@ -115,10 +129,15 @@ export function FilmTable({ films, meta, state, expanded, onExpand, onChange, wa
                         {expanded === key ? "▾" : "▸"}
                       </span>
                       <span>
-                        {film.ti}
-                        {film.o_ti && <i>{film.o_ti}</i>}
+                        {displayTitle(film, display.titleMode)}
+                        {display.titleMode === "both" && film.o_ti && <i>{film.o_ti}</i>}
                       </span>
                     </button>
+                    {state.path === "/events" && (
+                      <div class="mobile-event-labels">
+                        {(film.ev?.length ? film.ev : ["Special screening"]).join(" · ")}
+                      </div>
+                    )}
                   </td>
                   <td class="director-column">
                     {film.di.length ? (
@@ -149,7 +168,7 @@ export function FilmTable({ films, meta, state, expanded, onExpand, onChange, wa
                       <span class="missing">Unknown</span>
                     )}
                   </td>
-                  {RATINGS.map((source) => {
+                  {ratings.map((source) => {
                     const rating = film.ra[source.key];
                     return (
                       <td key={source.key} class="rating-column mobile-hidden">
@@ -171,9 +190,19 @@ export function FilmTable({ films, meta, state, expanded, onExpand, onChange, wa
                       </td>
                     );
                   })}
-                  <td class="year-column mobile-hidden">
-                    {film.ye ?? <span class="missing">?</span>}
-                  </td>
+                  {state.path === "/events" ? (
+                    <td class="event-column mobile-hidden">
+                      {(film.ev?.length ? film.ev : ["Special screening"]).map((label) => (
+                        <span key={label} class="badge">
+                          {label}
+                        </span>
+                      ))}
+                    </td>
+                  ) : (
+                    <td class="year-column mobile-hidden">
+                      {film.ye ?? <span class="missing">?</span>}
+                    </td>
+                  )}
                 </tr>
                 {expanded === key && (
                   <ExpandedRow
@@ -181,6 +210,7 @@ export function FilmTable({ films, meta, state, expanded, onExpand, onChange, wa
                     detailId={`details-${key}`}
                     columns={watched ? 8 : 7}
                     film={film}
+                    ratingOrder={display.ratingOrder}
                     meta={meta}
                     state={state}
                   />

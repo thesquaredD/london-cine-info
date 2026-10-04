@@ -1,9 +1,13 @@
+import { DisplayControls } from "./display-controls";
+import type { DisplayState } from "../lib/display";
 import { AccountPanel } from "./account";
 import type { AccountState } from "../lib/account";
 import type { DataMeta } from "../shared/data";
-import { PAGES, type ViewState } from "../lib/catalogue";
+import { PAGES, defaultSort, hasCustomSort, type ViewState } from "../lib/catalogue";
 
 type Props = {
+  display: DisplayState;
+  onDisplay: (value: DisplayState) => void;
   account: AccountState;
   onAccount: () => void;
   state: ViewState;
@@ -12,7 +16,17 @@ type Props = {
   dark: boolean;
   onTheme: () => void;
 };
-export function Sidebar({ state, meta, onChange, dark, onTheme, account, onAccount }: Props) {
+export function Sidebar({
+  state,
+  meta,
+  onChange,
+  dark,
+  onTheme,
+  account,
+  onAccount,
+  display,
+  onDisplay,
+}: Props) {
   return (
     <div class="sidebar-content">
       <h2 class="section-label">Pages</h2>
@@ -26,7 +40,15 @@ export function Sidebar({ state, meta, onChange, dark, onTheme, account, onAccou
               if (event.button || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)
                 return;
               event.preventDefault();
-              onChange({ path: page.path, page: 1, director: "" }, true);
+              onChange(
+                {
+                  path: page.path,
+                  page: 1,
+                  director: "",
+                  ...(!hasCustomSort(state) ? defaultSort(page.path) : {}),
+                },
+                true,
+              );
             }}
           >
             {page.name}
@@ -34,6 +56,7 @@ export function Sidebar({ state, meta, onChange, dark, onTheme, account, onAccou
         ))}
       </nav>
       <AccountPanel account={account} onOpen={onAccount} />
+      <DisplayControls value={display} onChange={onDisplay} />
       <div class="sidebar-bottom">
         <button class="theme-button" onClick={onTheme}>
           {dark ? "☀" : "☾"} <span>{dark ? "Light mode" : "Dark mode"}</span>

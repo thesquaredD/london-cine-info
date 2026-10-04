@@ -1,7 +1,7 @@
 # London Ciné Info
 
 A static London cinema listings site powered by Clusterflick, using Vite,
-TypeScript and Preact. [PLAN.md](PLAN.md) describes the remaining UI phases.
+TypeScript and Preact. [PLAN.md](PLAN.md) records the implementation and source limits.
 
 Requires Node 24 or later.
 
@@ -43,7 +43,8 @@ Generated files are excluded from git:
 
 - `public/data/films.<hash>.json`: film metadata, ratings, facet bitsets and compact
   screening tuples. Each tuple keeps day, local minute, venue, format, accessibility
-  and availability together, so later filters can match a single screening.
+  availability and event status together, so filters can match a single screening.
+  The seventh event flag is optional for compatibility with earlier catalogues.
 - `public/data/meta.<hash>.json`: venues, boroughs, memberships, facet dictionaries
   and counts, build time, upstream release tags and diagnostics. Facet counts refer
   to distinct films, not the number of screenings.
@@ -66,6 +67,7 @@ Known source limits:
 
 - `releaseDate` is TMDB's original release date, not a verified UK release date.
   New/classic/upcoming flags use that date; the UI describes this limitation.
+  Films with a future year but no date appear under Calendar's date-unknown group.
 - Invalid booking URLs fall back to the validated showing-details URL and carry
   `bookingFallback: true`. The UI labels those links as screening details. The affected movie/showing IDs are in diagnostics.
 - Membership mapping is venue eligibility, not a guarantee of coverage for a
@@ -83,6 +85,10 @@ distinction. Rating URLs retain links to their original providers.
 Borough boundaries and their OGL attribution are documented in
 [`src/data/README.md`](src/data/README.md). The synthetic fixture has no upstream
 movie descriptions or rating data.
+
+`public/tmdb-logo.svg` is TMDB's approved blue/green long logo, downloaded from
+its [branding page](https://www.themoviedb.org/about/logos-attribution). About
+includes the required non-endorsement notice; the logo retains its original colours.
 
 ## Deployment
 
@@ -112,8 +118,16 @@ for this visit. No cookies or browser storage are used.
 
 All page links currently select their dataset flags. Retrospectives are grouped alphabetically by director, with sorting inside each
 group and continued headings across page boundaries. Co-directed films appear in
-each qualifying director’s group. Release-date calendar grouping, the event-specific
-column and Display controls remain in the next phases. Browser tests use the synthetic fixture, at
+each qualifying director’s group. Calendar groups release dates earliest first,
+with unknown dates last; column sorts apply inside each group and headings repeat
+across page boundaries. Events replaces Year with special-screening labels and
+matches filters and expanded programmes against event screenings only.
+
+Display offers Title & original, Title only and Original title (falling back to
+the title when missing). Title sorting follows the displayed title. Rating columns
+can be dragged or moved with accessible arrow buttons; expanded ratings follow
+the same order. These choices survive navigation and reset on reload.
+Browser tests use the synthetic fixture, at
 1200px and 390px, covering pagination, sort, filters, navigation, lazy loading,
 retries, filter sheet keyboard behavior, theme and overflow.
 
@@ -130,7 +144,9 @@ Screening filters must match the same screening: a film cannot borrow a day from
 one cinema and an accessibility flag from another. The expanded programme applies
 the same selections. Counts show distinct films matching the other filters, ignoring
 choices within the picker being counted; zero-result options remain available so they can also be excluded. Chips above the table remove individual choices; Clear all resets
-the complete selection. Query parameters preserve filters in shared links.
+the complete selection, including custom sorting. The chip row appears only when
+there is something to clear and reserves no empty space after reset.
+Query parameters preserve filters in shared links.
 
 In the filter sheet, a sticky Show results button closes the sheet. Cinema and When
 shortcuts open directly to their category. Escape closes choosers and sheets without

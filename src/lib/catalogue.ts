@@ -1,3 +1,4 @@
+import { displayTitle, type TitleMode } from "./display";
 import { letterboxdSlug } from "../shared/account";
 import type { Film, RatingKey, FacetKey } from "../shared/data";
 
@@ -17,7 +18,7 @@ export const RATINGS: { key: RatingKey; name: string; short: string; scale: stri
   { key: "mc", name: "Metacritic", short: "MC", scale: "/100" },
   { key: "rt", name: "Rotten Tomatoes", short: "RT", scale: "%" },
 ];
-export type SortKey = "title" | "director" | "year" | "watchlist" | RatingKey;
+export type SortKey = "title" | "director" | "year" | "watchlist" | "event" | RatingKey;
 export type ViewState = {
   path: string;
   search: string;
@@ -32,7 +33,14 @@ export type ViewState = {
   direction: "asc" | "desc";
   page: number;
 };
-const sortKeys = ["title", "director", "year", "watchlist", ...RATINGS.map((rating) => rating.key)];
+const sortKeys = [
+  "title",
+  "director",
+  "year",
+  "watchlist",
+  "event",
+  ...RATINGS.map((rating) => rating.key),
+];
 const collator = new Intl.Collator("en", { sensitivity: "base", numeric: true });
 const normalize = (value: string) => value.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
 
@@ -44,7 +52,7 @@ export function hasCustomSort(state: ViewState): boolean {
   return state.sort !== defaults.sort || state.direction !== defaults.direction;
 }
 export function nextSort(state: ViewState, key: SortKey): Pick<ViewState, "sort" | "direction"> {
-  const first = key === "title" || key === "director" ? "asc" : "desc";
+  const first = key === "title" || key === "director" || key === "event" ? "asc" : "desc";
   if (state.sort !== key) return { sort: key, direction: first };
   if (state.direction === first) return { sort: key, direction: first === "asc" ? "desc" : "asc" };
   return defaultSort(state.path);
@@ -52,9 +60,15 @@ export function nextSort(state: ViewState, key: SortKey): Pick<ViewState, "sort"
 export function sortLabel(key: SortKey): string {
   return (
     RATINGS.find((rating) => rating.key === key)?.name ??
-    ({ title: "Title", director: "Director", year: "Year", watchlist: "Watchlist" } as const)[
-      key as "title" | "director" | "year" | "watchlist"
-    ]
+    (
+      {
+        title: "Title",
+        director: "Director",
+        year: "Year",
+        watchlist: "Watchlist",
+        event: "Event",
+      } as const
+    )[key as "title" | "director" | "year" | "watchlist" | "event"]
   );
 }
 
@@ -158,9 +172,15 @@ export function selectFilms(films: Film[], state: ViewState): Film[] {
     return terms.every((term) => text.includes(term));
   });
 }
-function value(film: Film, key: SortKey, watched?: ReadonlySet<string>): string | number | null {
+function value(
+  film: Film,
+  key: SortKey,
+  watched?: ReadonlySet<string>,
+  mode: TitleMode = "both",
+): string | number | null {
   if (key === "watchlist") return Number(watched?.has(letterboxdSlug(film.ra.lb?.url) ?? ""));
-  if (key === "title") return film.ti;
+  if (key === "title") return displayTitle(film, mode);
+  if (key === "event") return film.ev?.join(", ") || (film.event ? "Special screening" : null);
   if (key === "director")
     return film.di.length ? film.di.map((director) => director.name).join(", ") : null;
   if (key === "year") return film.ye;
@@ -171,10 +191,11 @@ export function sortFilms(
   key: SortKey,
   direction: ViewState["direction"],
   watched?: ReadonlySet<string>,
+  mode: TitleMode = "both",
 ): Film[] {
   return [...films].sort((a, b) => {
-    const av = value(a, key, watched),
-      bv = value(b, key, watched);
+    const av = value(a, key, watched, mode),
+      bv = value(b, key, watched, mode);
     // Missing values always follow rated/dated films, in either direction.
     if (av === null && bv !== null) return 1;
     if (bv === null && av !== null) return -1;
@@ -186,7 +207,7 @@ export function sortFilms(
           : collator.compare(String(av), String(bv));
     return (
       compared * (direction === "asc" ? 1 : -1) ||
-      collator.compare(a.ti, b.ti) ||
+      collator.compare(displayTitle(a, mode), displayTitle(b, mode)) ||
       a.id.localeCompare(b.id)
     );
   });
@@ -210,6 +231,29 @@ export type TableRow = {
   key: string;
 };
 export function tableRows(films: Film[], state: ViewState): TableRow[] {
+  if (state.path === "/calendar") {
+    const groups = new Map<string, Film[]>();
+    for (const film of films) {
+      const date = film.rd || "later";
+      groups.set(date, [...(groups.get(date) ?? []), film]);
+    }
+    return [...groups]
+      .sort(([a], [b]) => (a === "later" ? 1 : b === "later" ? -1 : a.localeCompare(b)))
+      .flatMap(([date, entries]) =>
+        entries.map((film) => ({
+          film,
+          key: film.id,
+          group: {
+            id: `release-${date}`,
+            name:
+              date === "later"
+                ? "Released later · date unknown"
+                : `Released on ${formatDate(date)}`,
+            count: entries.length,
+          },
+        })),
+      );
+  }
   if (state.path !== "/retrospectives")
     return films.map((film) => ({ film, group: null, key: film.id }));
   const groups = new Map<string, { name: string; films: Film[] }>();

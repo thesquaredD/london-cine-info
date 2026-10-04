@@ -379,3 +379,35 @@ it("applies exclusions to films and individual screenings, preserving positive O
     ),
   ).toBe(false);
 });
+
+it("retains future-year films without a release date for Calendar's later group", () => {
+  const input = structuredClone(fixture);
+  input.combined.movies.upcoming!.year = "2027";
+  input.combined.movies.upcoming!.releaseDate = undefined;
+  input.combined.movies.upcoming!.performances = [];
+  const film = build(input).films.find((film) => film.id === "upcoming")!;
+  expect(film).toMatchObject({ upcoming: true, rd: null });
+  expect(film.sc).toHaveLength(0);
+});
+it("Events filters and counts match special screenings, without borrowing a normal screening's day", () => {
+  const { films, meta, showtimes } = build();
+  const film = films.find((film) => film.id === "classic-a")!;
+  expect(film.ev).toContain("Live score");
+  const state = {
+    ...readView(new URL("https://example.com/events")),
+    filters: { day: ["2026-10-04"] },
+  };
+  expect(filterFilms([film], meta, state, new Date(fixture.now))).toHaveLength(0);
+  const matcher = screeningMatcher(meta, state, new Date(fixture.now));
+  expect(
+    matcher.showtime(
+      "2026-10-04",
+      showtimes.find((f) => f.id === film.id)!.days["2026-10-04"]![0]!,
+    ),
+  ).toBe(false);
+  state.filters.day = ["2026-10-03"];
+  expect(filterFilms([film], meta, state, new Date(fixture.now))).toHaveLength(1);
+  expect(
+    facetCounts([film], meta, state, new Date(fixture.now)).day.get("2026-10-04"),
+  ).toBeUndefined();
+});

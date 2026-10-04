@@ -317,13 +317,12 @@ the table. Quick buttons replace day choices while preserving other filters.
 
 Layout audit: picker Clear controls are always present (disabled when empty);
 summary lines, NOT indicators and count widths are reserved; help text is static;
-active chips occupy a fixed-height horizontal strip. Geometry regression covers
+active chips use a compact horizontal strip only while choices are active. Geometry regression covers
 all nine pickers at desktop/phone widths, including long labels and overnight ranges.
 
-Next: remaining Display controls (title mode/rating column reorder); remaining
-phase 4 calendar release grouping, event column and TMDB logo; final theme/mobile
-and performance audit. Retrospective grouping and the screening filters are now
-implemented. See README for behavior and replay commands.
+The remaining Display controls, Calendar grouping, Events column, TMDB logo and
+local theme/mobile/performance audit are completed in §12. See README for behavior
+and replay commands.
 
 ## 9. Open points (I will take the recommended default unless you say otherwise)
 
@@ -613,3 +612,32 @@ Do not replace its filter redesign as part of account UX work.
   job, empty list, zero matches, focus and overflow). Interactive browser
   verification on the live site is not started, per the constraint in 11.5;
   it waits for dio.
+
+## 12. Catalogue polish — 4 October 2026
+
+- Calendar groups upcoming films by original release date, earliest first, with
+  unknown dates last. Future-year films without a date are retained. Sorts apply
+  within groups, and continued headings cross pagination boundaries. The source
+  date caveat remains visible.
+- Events replaces Year with category/note labels. The compact screening tuple
+  adds an optional event bit; matching filters, facet counts and expanded
+  programmes require an event screening, so a regular screening cannot satisfy
+  the selected event date or venue.
+- Display title modes and rating order work on desktop and phone, with drag,
+  keyboard arrow controls and live announcements. Titles sort as displayed;
+  choices remain in memory for the visit. About includes TMDB's approved logo.
+- Clear all and active chips appear only with active choices. The fixed-height
+  empty strip is removed; resetting restores the compact summary immediately.
+- Verification: 62 unit/API tests, 36 catalogue browser tests and 10 account
+  browser tests. Local recordings cover Calendar pagination, event correlation,
+  Display/reload, logo loading and Clear all geometry. All nine routes fit 390,
+  768 and 1200px in both themes, without overflow or console errors. No interactive
+  production browser actions were performed.
+- Real-catalogue performance audit: 2,060 films / 26,022 screenings; film JSON
+  388,949 bytes gzip and application JavaScript approximately 24.4 KiB gzip.
+  Cold local Chromium with gzip, 150ms latency, 1.6Mbps download and 4x CPU
+  throttling measured FCP 568–636ms, results ready 3.45–3.88s, and search
+  round trips 145–148ms. Long tasks reached 470ms during initial loading.
+  These are synthetic local measurements, not a physical phone or production
+  CDN benchmark. First paint and payload budgets pass; initial processing remains
+  the main performance improvement opportunity.
