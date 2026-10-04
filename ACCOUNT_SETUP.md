@@ -45,8 +45,10 @@ POST, rather than a signed token. It can only switch off emails, without login.
 
 4. Give the existing Actions `CLOUDFLARE_API_TOKEN` D1: Edit in addition to Pages:
    Edit. The OAuth used for local setup has D1 access, but the existing Actions
-   token failed the remote D1 preflight with Cloudflare code 7403. Its current
-   scope is Pages only; add D1 access before activating account jobs. The configured account is
+   token failed the remote D1 preflight with Cloudflare code 7403. The named
+   Cloudflare token now has D1: Edit and is restricted to this account; the
+   Actions credential still fails after resetting the account ID. Reinstall a
+   matching Cloudflare token and rerun the manual CI platform job before activation. The configured account is
    `5d3189d7982be9522311dada6bf49ecc`.
 5. Merge the implementation, deploy, then enable the repository variable
    `WATCHLIST_ENABLED=true`. Both the daily account job and manual refresh workflow
