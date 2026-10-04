@@ -2,7 +2,18 @@ import js from "@eslint/js";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
-  { ignores: ["dist", "public/data", "src/generated", ".cache", "node_modules"] },
+  {
+    ignores: [
+      "dist",
+      "public/data",
+      "src/generated",
+      ".cache",
+      "node_modules",
+      ".wrangler",
+      "test-results",
+      "playwright-report",
+    ],
+  },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {

@@ -1,3 +1,4 @@
+import { letterboxdSlug } from "../shared/account";
 import { CLEAR_FILTERS } from "../lib/filters";
 import { Fragment } from "preact";
 import type { DataMeta, Film } from "../shared/data";
@@ -6,13 +7,15 @@ import { ExpandedRow } from "./expanded-row";
 
 type Props = {
   films: Film[];
+  watched?: Set<string>;
   meta: DataMeta;
   state: ViewState;
   expanded: string | null;
   onExpand: (id: string | null) => void;
   onChange: (changes: Partial<ViewState>, push?: boolean) => void;
 };
-export function FilmTable({ films, meta, state, expanded, onExpand, onChange }: Props) {
+export function FilmTable({ films, meta, state, expanded, onExpand, onChange, watched }: Props) {
+  const marked = (film: Film) => !!watched?.has(letterboxdSlug(film.ra.lb?.url) ?? "");
   const rows = tableRows(films, state);
   const pageCount = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
   const page = Math.min(state.page, pageCount);
@@ -40,9 +43,17 @@ export function FilmTable({ films, meta, state, expanded, onExpand, onChange }: 
               page: 1,
             })
           }
-          aria-label={`Sort by ${label}`}
+          aria-label={key === "watchlist" ? "Sort watchlist first" : `Sort by ${label}`}
         >
-          <span title={RATINGS.find((rating) => rating.key === key)?.name}>{label}</span>
+          <span
+            title={
+              key === "watchlist"
+                ? "Letterboxd watchlist"
+                : RATINGS.find((rating) => rating.key === key)?.name
+            }
+          >
+            {label}
+          </span>
           <span class={`sort-arrow ${selected ? "selected" : ""}`} aria-hidden="true">
             {selected && state.direction === "desc" ? "▾" : "▴"}
           </span>
@@ -56,6 +67,7 @@ export function FilmTable({ films, meta, state, expanded, onExpand, onChange }: 
         <table class="film-table" aria-label="Films">
           <thead>
             <tr>
+              {watched && heading("watchlist", "▣")}
               {heading("title", "Title")}
               {heading("director", "Director")}
               {RATINGS.map((rating) => heading(rating.key, rating.short, true))}
@@ -67,7 +79,7 @@ export function FilmTable({ films, meta, state, expanded, onExpand, onChange }: 
               <Fragment key={key}>
                 {group && (index === 0 || group.id !== rows[start + index - 1]?.group?.id) && (
                   <tr class="director-group">
-                    <td colSpan={7}>
+                    <td colSpan={watched ? 8 : 7}>
                       <h3>{group.name}</h3>{" "}
                       <small>
                         {group.count} {group.count === 1 ? "film" : "films"}
@@ -79,6 +91,20 @@ export function FilmTable({ films, meta, state, expanded, onExpand, onChange }: 
                   </tr>
                 )}
                 <tr class={`film-row ${expanded === key ? "is-expanded" : ""}`}>
+                  {watched && (
+                    <td class="watchlist-column">
+                      {marked(film) && (
+                        <a
+                          href={film.ra.lb!.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label={`${film.ti} is on your Letterboxd watchlist`}
+                        >
+                          ▣
+                        </a>
+                      )}
+                    </td>
+                  )}
                   <td class="title-column">
                     <button
                       class="film-title"
@@ -154,6 +180,7 @@ export function FilmTable({ films, meta, state, expanded, onExpand, onChange }: 
                   <ExpandedRow
                     key={`details-${key}`}
                     detailId={`details-${key}`}
+                    columns={watched ? 8 : 7}
                     film={film}
                     meta={meta}
                     state={state}

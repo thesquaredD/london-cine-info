@@ -1,3 +1,4 @@
+import { letterboxdSlug } from "../shared/account";
 import type { Film, RatingKey, FacetKey } from "../shared/data";
 
 export const PAGE_SIZE = 200;
@@ -8,6 +9,7 @@ export const PAGES = [
   { path: "/retrospectives", name: "Retrospectives" },
   { path: "/events", name: "Events" },
   { path: "/calendar", name: "Calendar" },
+  { path: "/watchlist", name: "Watchlist" },
 ] as const;
 export const RATINGS: { key: RatingKey; name: string; short: string; scale: string }[] = [
   { key: "lb", name: "Letterboxd", short: "LB", scale: "/5" },
@@ -15,7 +17,7 @@ export const RATINGS: { key: RatingKey; name: string; short: string; scale: stri
   { key: "mc", name: "Metacritic", short: "MC", scale: "/100" },
   { key: "rt", name: "Rotten Tomatoes", short: "RT", scale: "%" },
 ];
-export type SortKey = "title" | "director" | "year" | RatingKey;
+export type SortKey = "title" | "director" | "year" | "watchlist" | RatingKey;
 export type ViewState = {
   path: string;
   search: string;
@@ -24,18 +26,25 @@ export type ViewState = {
   from: string;
   to: string;
   available: boolean;
+  watchlist?: boolean;
   director: string;
   sort: SortKey;
   direction: "asc" | "desc";
   page: number;
 };
-const sortKeys = ["title", "director", "year", ...RATINGS.map((rating) => rating.key)];
+const sortKeys = ["title", "director", "year", "watchlist", ...RATINGS.map((rating) => rating.key)];
 const collator = new Intl.Collator("en", { sensitivity: "base", numeric: true });
 const normalize = (value: string) => value.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
 
 export function readView(url: URL): ViewState {
   const sort = url.searchParams.get("sort");
-  const path = [...PAGES.map((page) => page.path), "/about"].includes(url.pathname)
+  const path = [
+    ...PAGES.map((page) => page.path),
+    "/about",
+    "/privacy",
+    "/auth/verify",
+    "/unsubscribe",
+  ].includes(url.pathname)
     ? url.pathname
     : "/";
   return {
@@ -87,6 +96,7 @@ export function readView(url: URL): ViewState {
       ? url.searchParams.get("to")!
       : "",
     available: url.searchParams.get("available") === "1",
+    ...(url.searchParams.get("watchlist") === "1" ? { watchlist: true } : {}),
     director: url.searchParams.get("director") ?? "",
     sort: sortKeys.includes(sort ?? "") ? (sort as SortKey) : path === "/calendar" ? "year" : "lb",
     direction: url.searchParams.get("order") === "asc" ? "asc" : "desc",
@@ -103,6 +113,7 @@ export function viewUrl(state: ViewState): string {
   if (state.from) query.set("from", state.from);
   if (state.to) query.set("to", state.to);
   if (state.available) query.set("available", "1");
+  if (state.watchlist) query.set("watchlist", "1");
   if (state.director) query.set("director", state.director);
   if (state.sort !== (state.path === "/calendar" ? "year" : "lb")) query.set("sort", state.sort);
   if (state.direction !== "desc") query.set("order", state.direction);
@@ -125,17 +136,23 @@ export function selectFilms(films: Film[], state: ViewState): Film[] {
     return terms.every((term) => text.includes(term));
   });
 }
-function value(film: Film, key: SortKey): string | number | null {
+function value(film: Film, key: SortKey, watched?: ReadonlySet<string>): string | number | null {
+  if (key === "watchlist") return Number(watched?.has(letterboxdSlug(film.ra.lb?.url) ?? ""));
   if (key === "title") return film.ti;
   if (key === "director")
     return film.di.length ? film.di.map((director) => director.name).join(", ") : null;
   if (key === "year") return film.ye;
   return film.ra[key]?.value ?? null;
 }
-export function sortFilms(films: Film[], key: SortKey, direction: ViewState["direction"]): Film[] {
+export function sortFilms(
+  films: Film[],
+  key: SortKey,
+  direction: ViewState["direction"],
+  watched?: ReadonlySet<string>,
+): Film[] {
   return [...films].sort((a, b) => {
-    const av = value(a, key),
-      bv = value(b, key);
+    const av = value(a, key, watched),
+      bv = value(b, key, watched);
     // Missing values always follow rated/dated films, in either direction.
     if (av === null && bv !== null) return 1;
     if (bv === null && av !== null) return -1;

@@ -12,6 +12,7 @@ export const FILTERS: { key: FacetKey; label: string }[] = [
   { key: "language", label: "Original language" },
 ];
 export const CLEAR_FILTERS = {
+  watchlist: false,
   search: "",
   director: "",
   filters: {},

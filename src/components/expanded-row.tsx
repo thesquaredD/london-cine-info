@@ -9,11 +9,13 @@ export function ExpandedRow({
   film,
   meta,
   detailId,
+  columns = 7,
   state,
 }: {
   film: Film;
   meta: DataMeta;
   detailId: string;
+  columns?: number;
   state: ViewState;
 }) {
   const [data, setData] = useState<FilmShowtimes | null>(null);
@@ -47,7 +49,7 @@ export function ExpandedRow({
   );
   return (
     <tr class="expanded-row">
-      <td colSpan={7}>
+      <td colSpan={columns}>
         <section id={detailId} class="film-expanded" aria-label={`Screenings for ${film.ti}`}>
           <div class="film-info">
             <figure class="poster" tabIndex={0} aria-label={`Film information for ${film.ti}`}>
