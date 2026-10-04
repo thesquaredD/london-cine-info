@@ -134,14 +134,20 @@ username changes or account deletion during a fetch. Public logs contain counts,
 not account emails/usernames. Scheduled maintenance removes expired tokens,
 sessions and request-limit records.
 
-Daily screening reconciliation tracks absent films. The weekly email includes
-watchlist films with screenings that were never alerted, or have been absent for
-more than 30 days. Failed/stale imports are excluded from mail delivery. Combined
+The weekly email includes future screenings through the London date ten days
+ahead. A film is included when its latest screening in that window is newer than
+its last announced screening, so later programmes appear in the week they screen.
+An empty digest is skipped. Eight available film cards are followed by a compact
+list for sold-out films and overflow, with later dates mentioned in the footer. Failed/stale imports are excluded from mail delivery. Combined
 movie IDs sharing a Letterboxd slug are deduplicated. Resend idempotency keys are
 stable per account/day, and a shared atomic quota keeps combined sign-in/digest
 requests under 90 emails in a 24-hour window. Users beyond that cap wait for the
 next weekly run. Unsubscribe works without signing in; deletion cascades through
 all account data.
 
-Email templates currently use plain text. The remaining v1 visual polish stays
+Digests include inline-styled HTML plus a plain-text alternative; sign-in emails
+remain plain text. Generate a sample without reading accounts or sending email:
+`npx tsx scripts/preview-digest.ts .cache/digest-sample.html [ISO-date]`.
+The sample uses a small selection from the currently built catalogue.
+ The remaining v1 visual polish stays
 deferred as agreed in PLAN.md.
