@@ -42,13 +42,17 @@ export function MyCinemas({
       open={open}
       title="Manage my cinemas"
       onClose={onClose}
-      restoreTo={() => document.querySelector<HTMLElement>(".quick-filters-mobile")}
+      restoreTo={() =>
+        document.querySelector<HTMLElement>(".empty-state button") ??
+        document.querySelector<HTMLElement>(".desktop-sidebar .account-panel button") ??
+        document.querySelector<HTMLElement>(".menu-button")
+      }
     >
       <p>
         {cinemas.signedIn
           ? "Saved to your account and synced across devices."
           : "Saved in this browser. Sign in to sync across devices."}{" "}
-        Choosing favourites does not change your screening filters.
+        Use My cinemas to filter screenings to these choices.
       </p>
       {cinemas.loading && <p role="status">Loading saved cinemas…</p>}
       {cinemas.error && (
@@ -70,6 +74,31 @@ export function MyCinemas({
       )}
       {cinemas.storageError && <p role="status">{cinemas.storageError}</p>}
       {notice && <p role="status">{notice}</p>}
+      <section class="selected-cinemas" aria-label="Selected cinemas">
+        <h3>Selected cinemas · {draft.length}</h3>
+        {draft.length ? (
+          <ul>
+            {draft.map((id) => {
+              const venue = meta.venues.find((value) => value.id === id);
+              const name = venue?.name ?? `${id} · not in current listings`;
+              return (
+                <li key={id}>
+                  <button
+                    type="button"
+                    disabled={cinemas.loading || cinemas.busy}
+                    aria-label={`Remove ${name}`}
+                    onClick={() => setDraft((value) => value.filter((selected) => selected !== id))}
+                  >
+                    {name} <span aria-hidden="true">×</span>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        ) : (
+          <p>No cinemas selected yet.</p>
+        )}
+      </section>
       <label for="my-cinema-search">Find cinemas</label>
       <input
         data-initial-focus
@@ -79,7 +108,7 @@ export function MyCinemas({
         onInput={(event) => setSearch(event.currentTarget.value)}
       />
       <fieldset class="favourite-options" disabled={cinemas.loading || cinemas.busy}>
-        <legend>{draft.length} favourite cinemas</legend>
+        <legend>All cinemas</legend>
         {[...groups]
           .sort(([a], [b]) => a.localeCompare(b))
           .map(([borough, venues]) => (
@@ -100,7 +129,7 @@ export function MyCinemas({
                         )
                       }
                     />{" "}
-                    {venue.name}
+                    <span>{venue.name}</span>
                   </label>
                 ))}
             </div>
@@ -112,7 +141,7 @@ export function MyCinemas({
               checked
               onChange={() => setDraft(draft.filter((value) => value !== id))}
             />{" "}
-            {id} · not in current listings
+            <span>{id} · not in current listings</span>
           </label>
         ))}
         {!groups.size && <p>No listed cinemas match this search.</p>}

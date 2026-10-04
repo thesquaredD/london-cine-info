@@ -49,10 +49,8 @@ export function dayMatches(date: string, selected: string[], today: string): boo
       if (id === "tomorrow") return date === addDays(today, 1);
       if (id === "week") return date >= today && date <= addDays(today, 6);
       if (id === "this-week" || id === "next-week") {
-        const weekday = (new Date(`${today}T12:00:00Z`).getUTCDay() + 6) % 7;
-        const monday = addDays(today, -weekday);
-        const start = id === "this-week" ? today : addDays(monday, 7);
-        const end = addDays(monday, id === "this-week" ? 6 : 13);
+        const start = addDays(today, id === "this-week" ? 0 : 7);
+        const end = addDays(today, id === "this-week" ? 6 : 13);
         return date >= start && date <= end;
       }
       if (id === "weekend") {

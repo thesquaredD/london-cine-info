@@ -31,3 +31,18 @@ Scope: the catalogue, expanded screening programmes, date/facet controls, phone 
 2. Magic-link sign-in currently returns to the watchlist page. Returning to the exact screening being saved would improve the first-save journey, but requires a validated return destination through the authentication flow.
 3. Programme density can still be high for films with many screenings. A per-film cinema/day collapse could help, but should be evaluated with real usage before hiding available shows.
 4. Export correctness is covered at the file level (UTC times, stable IDs, escaping and UTF-8 folding). Manual import into Apple/Google Calendar and a user visual review remain pending. Interactive production verification follows PLAN §11.5.
+
+## Subsequent user refinements
+
+Manage my cinemas now lives in Account. An active My cinemas filter with no
+choices shows Set up my cinemas rather than all films or an automatic chooser.
+The chooser shows removable selected choices above its search, with aligned
+18px native checkboxes in 44px rows. Settings now contains the display controls
+in its own modal. This week and Next week use adjacent rolling seven-day windows.
+These requirements supersede the earlier calendar-week interpretation.
+
+Opening sheets/sidebar use small transform/opacity entrances, and opening a film
+uses a 110 ms opacity fade. The animation does not change internal layout or wait
+before rendering/navigation; close is immediate. Reduced-motion preferences
+suppress these animations. Existing populated cinema results remain visible
+during background preference reloads.

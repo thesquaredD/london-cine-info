@@ -22,6 +22,7 @@ export function DisplayControls({
       <label>
         Film titles
         <select
+          data-initial-focus
           value={value.titleMode}
           onChange={(event) =>
             onChange({ ...value, titleMode: event.currentTarget.value as TitleMode })

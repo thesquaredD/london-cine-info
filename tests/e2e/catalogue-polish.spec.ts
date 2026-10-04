@@ -1,10 +1,31 @@
+import { homedir } from "node:os";
+import { join } from "node:path";
+import { mkdir } from "node:fs/promises";
 import { test, expect, type Page } from "@playwright/test";
+test.use({ video: "on" });
 async function pages(page: Page) {
   if ((page.viewportSize()?.width ?? 1200) < 800)
     await page.getByRole("button", { name: "Toggle pages" }).click();
 }
-async function dismissPages(page: Page) {
-  if ((page.viewportSize()?.width ?? 1200) < 800) await page.keyboard.press("Escape");
+async function settings(page: Page) {
+  await pages(page);
+  await page
+    .getByRole("button", { name: "Settings", exact: true })
+    .filter({ visible: true })
+    .click();
+  const dialog = page.getByRole("dialog", { name: "Settings", exact: true });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByLabel("Film titles")).toBeFocused();
+  await expect(page.locator("dialog[open]")).toHaveCount(1);
+}
+async function closeSettings(page: Page) {
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog", { name: "Settings", exact: true })).toBeHidden();
+  await expect(
+    page.viewportSize()!.width < 800
+      ? page.getByRole("button", { name: "Toggle pages" })
+      : page.locator(".desktop-sidebar .settings-button"),
+  ).toBeFocused();
 }
 test.beforeEach(async ({ page }) => {
   await page.route("**/api/me", (route) => route.fulfill({ json: { user: null } }));
@@ -72,14 +93,14 @@ test("Display changes titles and rating order, persists across navigation and re
 }) => {
   await page.goto("/");
   await expect(page.locator(".film-row")).toHaveCount(6);
-  await pages(page);
+  await settings(page);
   const controls = page.locator(".display-controls").filter({ visible: true });
   await controls.getByLabel("Film titles").selectOption("original");
   await expect(controls.getByRole("button", { name: "Move Letterboxd rating up" })).toBeDisabled();
   await controls.getByRole("button", { name: "Move IMDb rating up" }).focus();
   await page.keyboard.press("Enter");
   await expect(controls.getByRole("status")).toHaveText("IMDb is rating column 1 of 4.");
-  await dismissPages(page);
+  await closeSettings(page);
   await expect(page.locator(".film-title").filter({ hasText: "Titre B" })).not.toContainText(
     "Fixture Classic B",
   );
@@ -96,13 +117,13 @@ test("Display changes titles and rating order, persists across navigation and re
   await expect(page.locator(".film-title").filter({ hasText: "Titre B" })).not.toContainText(
     "Fixture Classic B",
   );
-  await pages(page);
+  await settings(page);
   await controls.getByLabel("Film titles").selectOption("title");
-  await dismissPages(page);
+  await closeSettings(page);
   await expect(page.locator(".film-title i")).toHaveCount(0);
   await page.reload();
   await expect(page.locator(".film-title i")).toHaveCount(1);
-  await pages(page);
+  await settings(page);
   await expect(controls.getByLabel("Film titles")).toHaveValue("both");
   await expect(controls.getByRole("listitem").first()).toContainText("Letterboxd");
   if ((page.viewportSize()?.width ?? 1200) >= 800) {
@@ -113,7 +134,14 @@ test("Display changes titles and rating order, persists across navigation and re
     await expect(page.getByRole("button", { name: "Sort by RT", exact: true })).toBeVisible();
     await expect(page.locator(".film-table th").nth(2)).toContainText("RT");
   }
-  await page.screenshot({ path: test.info().outputPath("display.png") });
+  const evidence = process.env.CI
+    ? test.info().outputPath("settings")
+    : join(homedir(), ".Codex/london-cine-info/discovery/verification");
+  await mkdir(evidence, { recursive: true });
+  await page.getByRole("dialog", { name: "Settings", exact: true }).evaluate(async (node) => {
+    await Promise.all(node.getAnimations().map((animation) => animation.finished));
+  });
+  await page.screenshot({ path: join(evidence, `settings-${test.info().project.name}.png`) });
 });
 test("official TMDB attribution loads locally in About", async ({ page }) => {
   await page.goto("/about");

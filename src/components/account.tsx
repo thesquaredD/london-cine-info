@@ -169,6 +169,7 @@ export function AccountDialogs({
   matches,
   onClose,
   onNavigate,
+  onManageCinemas,
   restoreTo,
 }: {
   account: AccountState;
@@ -176,6 +177,7 @@ export function AccountDialogs({
   matches?: number;
   onClose: () => void;
   onNavigate: (path: string) => void;
+  onManageCinemas: () => void;
   restoreTo: () => HTMLElement | null;
 }) {
   const [email, setEmail] = useState("");
@@ -392,6 +394,19 @@ export function AccountDialogs({
             </button>
           </fieldset>
         </form>
+      )}
+      {!account.loading && !deleting && (
+        <section aria-label="Favourite cinemas">
+          <h3>Favourite cinemas</h3>
+          <p>
+            {account.user
+              ? "Choose cinemas saved to your account."
+              : "Choose cinemas for this browser. Sign in to sync them to your account."}
+          </p>
+          <button aria-haspopup="dialog" disabled={!!account.busy} onClick={onManageCinemas}>
+            Manage my cinemas
+          </button>
+        </section>
       )}
     </Dialog>
   );
