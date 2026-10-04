@@ -36,8 +36,50 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: npm run build-data
       - run: npm run build
+      - name: Apply account migrations
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx wrangler d1 migrations apply london-cine-info --remote
       - name: Deploy to Cloudflare Pages
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: npx wrangler pages deploy dist --project-name london-cine-info --branch main
+
+  accounts:
+    needs: deploy
+    if: vars.WATCHLIST_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: watchlist-maintenance
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Build current screening data
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: npm run build-data
+      - name: Refresh watchlists
+        id: sync
+        continue-on-error: true
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npm run watchlists:refresh
+      - name: Send weekly screening emails
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+        run: npm run digests:send
+      - name: Report watchlist import failures
+        if: steps.sync.outcome == 'failure'
+        run: exit 1

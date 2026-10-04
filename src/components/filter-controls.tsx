@@ -1,3 +1,4 @@
+import type { AccountState } from "../lib/account";
 import { FilterPicker } from "./filter-picker";
 import { CLEAR_FILTERS, FILTERS } from "../lib/filters";
 import type { FacetKey } from "../shared/data";
@@ -5,6 +6,7 @@ import type { DataMeta } from "../shared/data";
 import type { ViewState } from "../lib/catalogue";
 
 export type FilterControlsProps = {
+  account: AccountState;
   filterKeys?: FacetKey[];
   showSearch?: boolean;
   state: ViewState;
@@ -17,6 +19,7 @@ export type FilterControlsProps = {
 };
 export function FilterControls({
   filterKeys,
+  account,
   showSearch = true,
   state,
   meta,
@@ -105,6 +108,18 @@ export function FilterControls({
           )}
         {!filterKeys && (
           <>
+            {account.user && account.watchlist?.fetchedAt && (
+              <label class="availability-filter">
+                <input
+                  type="checkbox"
+                  checked={!!state.watchlist}
+                  onChange={(event) =>
+                    onChange({ watchlist: event.currentTarget.checked, page: 1 })
+                  }
+                />{" "}
+                Only my watchlist
+              </label>
+            )}
             <label class="availability-filter">
               <input
                 type="checkbox"

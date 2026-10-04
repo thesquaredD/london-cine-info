@@ -343,3 +343,153 @@ implemented. See README for behavior and replay commands.
   worker and no offline cache in v1.
 - **Original-language filter.** Clusterflick provides `originalLanguage`; it would be a
   cheap extra select. Default: phase 2, since you chose Accessibility for that slot.
+
+---
+
+## 10. v2: Letterboxd watchlist + accounts (interview 2026-10-03)
+
+Supersedes the v1 "no accounts, nothing stored" decision in the table at the top. Everything
+else in §1–§9 stands; remaining v1 polish (Display controls, calendar grouping, event column,
+TMDB logo, audits) is deferred until this ships.
+
+### 10.1 Decisions
+
+| Decision       | Choice                                                                                                                                              |
+| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Import path    | Server fetches the user's **public** Letterboxd watchlist by username and matches films by Letterboxd slug. CSV upload is a later fallback, not v2. |
+| Account model  | Real accounts. **Magic link by email**, no passwords, no OAuth.                                                                                     |
+| Features       | Watchlist page + "only my watchlist" filter; watchlist marker column (the revived 🔖); **weekly** email digest of new London screenings.            |
+| Not in scope   | Saved filters/preferences, manual site bookmarks, other Letterboxd lists, "hide seen". Watchlist only.                                              |
+| Backend        | Cloudflare Pages Functions + **D1** (users, sessions, watchlists, alert log) + **KV** (rate limits). Same project, same deploy pipeline, £0.        |
+| Email          | **Resend** free tier (3,000/month, 100/day) from `london-cine.info`.                                                                                |
+| Domain         | **london-cine.info** (registered 2026-10-03 at Namecheap, assumed dio's). Move nameservers to Cloudflare so Pages + Resend DNS live in one place.   |
+| Refresh        | Daily, cached, polite: one fetch per user per day, 1 req/s, honest UA; manual refresh rate-limited to 1/hour; stale banner when fetch fails.        |
+| Digest cadence | Weekly. Default **Wednesday after the 11:45 UTC rebuild** (new programmes land Tue/Wed for the Friday week); user can pick the weekday or opt out.  |
+| Privacy        | Minimal but correct: `__Host-session` cookie only (strictly necessary, no banner), `/privacy` page, one-click delete account, unsubscribe link.     |
+| Sequencing     | Letterboxd first, polish after.                                                                                                                     |
+
+### 10.2 Architecture
+
+Verified 2026-10-03: a public watchlist renders server-side at
+`letterboxd.com/<user>/watchlist/page/<n>/`, 28 films per page, each as
+`data-item-slug="<slug>"` / `data-target-link="/film/<slug>/"`, with the total in
+`.js-watchlist-count` and the last page number in `.paginate-page`. Clusterflick's
+`letterboxd.json` already gives every movie its Letterboxd URL, and `Film.ra.lb.url` ships to
+the client, so **matching is slug ∩ slug with no fuzzy title logic** and no change to the
+film payload.
+
+Where each piece runs (the Workers free plan's 10 ms CPU limit rules out parsing ~23 HTML
+pages inside one Function invocation, and Pages has no cron):
+
+```
+GitHub Actions (public repo, unlimited minutes, already the daily scheduler)
+  deploy.yml ─► build-data ─► vite build ─► pages deploy
+             └► scripts/refresh-watchlists.ts   (daily, after deploy)
+                   read users+usernames from D1 (wrangler d1 execute --remote --json)
+                   fetch watchlist pages politely, parse slugs, upsert into D1
+             └► scripts/send-digests.ts         (weekly, same job, gated on weekday)
+                   per user: watchlist slugs ∩ films screening now − already alerted
+                   render + send via Resend, record in alert log
+  refresh.yml ─► workflow_dispatch for one user (manual refresh button)
+
+Cloudflare Pages Functions  (functions/api/*)
+  POST /api/auth/request      email → single-use token (hash in D1, 15 min) → Resend magic link
+  GET  /api/auth/verify       token → session (hash in D1, 90 days) → Set-Cookie __Host-session
+  POST /api/auth/logout
+  GET  /api/me                email, letterboxd username, digest prefs, last refresh, stale flag
+  PUT  /api/me                set/clear username, digest weekday/opt-out
+  DELETE /api/me              cascade delete; sessions, watchlist, alert log
+  GET  /api/watchlist         { slugs: string[], fetchedAt, count, stale }
+  POST /api/watchlist/refresh rate-limited (KV, 1/h) → GitHub workflow_dispatch(refresh.yml, user)
+  GET  /unsubscribe?token=    signed per-user token in every digest; works logged out
+
+D1 tables
+  users(id, email UNIQUE, letterboxd_username, digest_weekday NULL=off, created_at)
+  auth_tokens(hash, user_id, expires_at)       sessions(hash, user_id, expires_at)
+  watchlist_items(user_id, slug, added_at, PRIMARY KEY(user_id, slug))
+  watchlist_sync(user_id, fetched_at, count_reported, count_parsed, error)
+  alerts_sent(user_id, slug, sent_at, PRIMARY KEY(user_id, slug))
+KV  rate limits: auth requests per email/IP, refresh per user
+```
+
+Secrets: `RESEND_API_KEY`, `GITHUB_DISPATCH_TOKEN` (fine-grained PAT, Actions: write on this
+repo) in Pages; `CLOUDFLARE_API_TOKEN` gains D1 edit for the Actions scripts.
+
+### 10.3 Front-end
+
+- Sidebar **Account** block above Display: signed-out → email field + "Send sign-in link";
+  signed-in → email, Letterboxd username field with "Refresh now" and last-synced time,
+  digest weekday select (off by default until a username is set), sign out, delete account.
+- **Watchlist** page (seventh) lists watchlist films that are screening; heading reads
+  "N of your M watchlist films are screening in London". Empty states for signed-out,
+  no username, private/empty watchlist, fetch failed (stale banner with last good data).
+- Sidebar **"Only my watchlist"** checkbox, available on every view when signed in with a
+  synced list; mirrored in the query string like the other filters.
+- 🔖 column revived as a Letterboxd mark on matching rows, linking to the film's Letterboxd
+  page; sortable (watchlist first). Hidden when signed out.
+- Session is the only persisted state; theme and filters stay in-memory/URL as in v1.
+- Routes added: `/watchlist`, `/privacy`, `/auth/verify`, `/unsubscribe`.
+
+### 10.4 Testing and local dev
+
+- `wrangler.toml` with D1/KV bindings; `migrations/` applied by `wrangler d1 migrations apply`
+  in deploy. `wrangler pages dev dist --d1 --kv` for local Functions with Miniflare.
+- Dev mode (`DEV_MAGIC_LINK=1`): auth request returns the link in the JSON body instead of
+  emailing, so Playwright can complete sign-in without a mailbox.
+- Vitest: watchlist parser against a **synthetic** HTML fixture (same markup, invented
+  slugs, never a real user's data); pagination; private/empty detection (`count` present
+  but zero items parsed ⇒ keep previous data, flag error); digest diff; token hashing.
+- Playwright: sign-in → set username → watchlist page → marker column → filter toggle →
+  delete account, at 1200px and 390px. Recorded run-flow for the handoff as usual.
+
+### 10.5 Risks
+
+- **Letterboxd ToS** prohibits scraping. Posture: low volume, cached, polite UA, one fetch
+  per user per day; if blocked, the site degrades to the last cached list and the plan's
+  fallback is a CSV upload path. Not a commercial product.
+- **Markup drift**: parser test fixture plus a runtime guard (reported count vs parsed
+  count); a parse failure never wipes a stored list.
+- **Deliverability**: SPF, DKIM, DMARC on the new domain before any user email; send from
+  a subdomain (`mail.london-cine.info`) so the apex reputation is untouched.
+- **Resend 100/day cap**: digests go out in one weekday batch; if users ever exceed ~90,
+  spread digest weekdays by default.
+- **Free-tier limits**: D1 5M reads/100k writes per day and 5 GB; Pages Functions 100k
+  requests/day. Both are orders of magnitude above expected use.
+
+### 10.6 Phases
+
+| #   | Phase             | Deliverable                                                                                                                     | Est.  |
+| --- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------- | ----- |
+| A   | Domain + platform | Nameservers to Cloudflare, Pages custom domain, Resend domain verified, D1 + KV created, `wrangler.toml`, migrations, local dev | ½ day |
+| B   | Auth              | Magic link, sessions, `/api/me`, account block, delete account, `/privacy`                                                      | 1 day |
+| C   | Letterboxd sync   | Parser + tests, `refresh-watchlists.ts` in Actions, `/api/watchlist`, refresh dispatch, stale handling                          | 1 day |
+| D   | UI                | Watchlist page, filter toggle, marker column, empty states, 390px                                                               | 1 day |
+| E   | Weekly digest     | Diff, template, Resend send, unsubscribe, weekday pref, Actions gating                                                          | ½ day |
+| F   | Verify + ship     | Playwright flows, recorded handoff, deploy, side-by-side check                                                                  | ½ day |
+
+### 10.7 Open points (defaults I will take unless told otherwise)
+
+- Digest default weekday Wednesday; a film is alerted once per user and not again unless it
+  leaves the programme for 30+ days.
+- Session lifetime 90 days, sliding. Magic link 15 minutes, single use.
+- Keep Pages rather than migrating to Workers with Static Assets (which would allow a cron
+  trigger). Revisit only if Actions-driven scheduling proves awkward.
+- Watchlist page shows screening films only; the "M watchlist films" total is informational.
+
+### 10.8 Implementation progress — 4 October 2026
+
+- A: production and isolated preview D1/KV created; both migrations applied;
+  Wrangler configuration and local dev ready. Domain attached to Pages and apex DNS points to the site; the zone is active and HTTPS works. Resend sender domain verified;
+  RESEND_API_KEY installed in Pages production and Actions. Dispatch token installed and Actions: write verified; the Cloudflare token has D1 permission and the Actions remote preflight passed.
+- B–E: implemented magic links/sessions/account deletion/privacy, validated public
+  watchlist sync and refresh dispatch, watchlist UI/filter/markers, daily departure
+  tracking and opt-in weekly digest/unsubscribe. Digest defaults off for consent.
+- F: local Functions/D1 verification passed 39 unit/integration checks and all
+  20 browser tests (18 catalogue + 2 recorded account flows). Hosted preview
+  passed account API, unavailable-email, origin and no-overflow checks at both widths. Real email delivery/import remain a manual handoff; production activation
+  follows passing platform setup; see ACCOUNT_SETUP.md.
+
+Implementation refinements: D1 enforces rate limits atomically instead of KV;
+magic-link and unsubscribe confirmation POSTs prevent email scanners activating
+links. Unsubscribe uses a per-user 256-bit random token. These preserve the intended
+behavior with no extra service or secret.

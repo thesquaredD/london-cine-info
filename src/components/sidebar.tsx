@@ -1,14 +1,26 @@
+import { AccountPanel } from "./account";
+import type { AccountState } from "../lib/account";
 import type { DataMeta } from "../shared/data";
 import { PAGES, type ViewState } from "../lib/catalogue";
 
 type Props = {
+  account: AccountState;
+  idPrefix?: string;
   state: ViewState;
   meta: DataMeta | null;
   onChange: (changes: Partial<ViewState>, push?: boolean) => void;
   dark: boolean;
   onTheme: () => void;
 };
-export function Sidebar({ state, meta, onChange, dark, onTheme }: Props) {
+export function Sidebar({
+  state,
+  meta,
+  onChange,
+  dark,
+  onTheme,
+  account,
+  idPrefix = "desktop",
+}: Props) {
   return (
     <div class="sidebar-content">
       <h2 class="section-label">Pages</h2>
@@ -29,6 +41,7 @@ export function Sidebar({ state, meta, onChange, dark, onTheme }: Props) {
           </a>
         ))}
       </nav>
+      <AccountPanel account={account} idPrefix={idPrefix} />
       <div class="sidebar-bottom">
         <button class="theme-button" onClick={onTheme}>
           {dark ? "☀" : "☾"} <span>{dark ? "Light mode" : "Dark mode"}</span>

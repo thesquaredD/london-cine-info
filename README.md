@@ -159,3 +159,5 @@ Filter sheets use a single scrolling surface, so long option lists do not requir
 nested scrolling.
 
 Page navigation stays in a desktop sidebar and a separate Pages drawer on phones. Film filters remain in the results toolbar and mobile filter sheet.
+
+Accounts and Letterboxd watchlists: see [ACCOUNT_SETUP.md](ACCOUNT_SETUP.md) for platform setup, verification and activation.
