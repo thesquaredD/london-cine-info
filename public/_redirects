@@ -1,1 +1,10 @@
-/*  /index.html  200
+/new              /index.html  200
+/classics         /index.html  200
+/retrospectives   /index.html  200
+/events           /index.html  200
+/calendar         /index.html  200
+/about            /index.html  200
+/watchlist        /index.html  200
+/privacy          /index.html  200
+/auth/verify      /index.html  200
+/unsubscribe      /index.html  200

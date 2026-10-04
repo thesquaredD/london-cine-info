@@ -149,3 +149,5 @@ checks every picker through include/exclude/clear at desktop and phone widths,
 including long cinema labels and overnight time ranges.
 
 Searchable picker lists retain their height when a search has few or no matches.
+
+Accounts and Letterboxd watchlists: see [ACCOUNT_SETUP.md](ACCOUNT_SETUP.md) for platform setup, verification and activation.

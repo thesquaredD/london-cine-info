@@ -1101,3 +1101,52 @@ h3 {
 .filter-options.searchable {
   height: 240px;
 }
+
+.account-panel {
+  border-top: 1px solid var(--line);
+  padding: 12px;
+  font-size: 14px;
+}
+.account-panel form {
+  display: grid;
+  gap: 8px;
+}
+.account-panel input,
+.account-panel select,
+.account-panel button {
+  max-width: 100%;
+  min-width: 0;
+  width: 100%;
+  border-radius: 4px;
+}
+.account-panel > button {
+  margin-top: 8px;
+}
+.account-panel p {
+  overflow-wrap: anywhere;
+}
+.account-panel label {
+  font-weight: 500;
+}
+.watchlist-column {
+  width: 54px;
+  text-align: center;
+}
+.watchlist-column a {
+  text-decoration: none;
+}
+@media (max-width: 799px) {
+  .watchlist-column {
+    width: 38px;
+    font-size: 11px;
+  }
+}
+.sidebar-fields {
+  grid-template-columns: minmax(0, 1fr);
+}
+.filter-picker {
+  min-width: 0;
+}
+.filter-options {
+  min-inline-size: 0;
+}

@@ -1,3 +1,5 @@
+import { AccountPanel } from "./account";
+import type { AccountState } from "../lib/account";
 import { FilterPicker } from "./filter-picker";
 import { CLEAR_FILTERS, FILTERS } from "../lib/filters";
 import type { FacetKey } from "../shared/data";
@@ -5,6 +7,7 @@ import type { DataMeta } from "../shared/data";
 import { PAGES, type ViewState } from "../lib/catalogue";
 
 type Props = {
+  account: AccountState;
   state: ViewState;
   meta: DataMeta | null;
   onChange: (changes: Partial<ViewState>, push?: boolean) => void;
@@ -17,6 +20,7 @@ type Props = {
 };
 export function Sidebar({
   state,
+  account,
   meta,
   onChange,
   dark,
@@ -118,6 +122,16 @@ export function Sidebar({
               )}
             </FilterPicker>
           ))}
+        {account.user && account.watchlist?.fetchedAt && (
+          <label class="availability-filter">
+            <input
+              type="checkbox"
+              checked={!!state.watchlist}
+              onChange={(event) => onChange({ watchlist: event.currentTarget.checked, page: 1 })}
+            />{" "}
+            Only my watchlist
+          </label>
+        )}
         <label class="availability-filter">
           <input
             type="checkbox"
@@ -133,6 +147,7 @@ export function Sidebar({
           Show {resultCount.toLocaleString("en-GB")} {resultCount === 1 ? "film" : "films"}
         </button>
       </div>
+      <AccountPanel account={account} idPrefix={idPrefix} />
       <div class="sidebar-bottom">
         <button class="theme-button" onClick={onTheme}>
           {dark ? "☀" : "☾"} <span>{dark ? "Light mode" : "Dark mode"}</span>

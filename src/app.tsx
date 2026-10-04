@@ -1,4 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
+import { useAccount } from "./lib/account";
+import { Privacy, TokenPage } from "./components/account";
+import { letterboxdSlug } from "./shared/account";
 import { Sidebar } from "./components/sidebar";
 import { FilmTable } from "./components/film-table";
 import { CLEAR_FILTERS, filterFilms, facetCounts, FILTERS, filterLabel } from "./lib/filters";
@@ -43,8 +46,9 @@ function About({ meta }: { meta: DataMeta | null }) {
         availability and access arrangements with the cinema.
       </p>
       <p>
-        No accounts, cookies or browser storage are used. Theme choices last for this visit. Opening
-        a poster or following an external link contacts that provider.
+        Accounts use a necessary session cookie. See our <a href="/privacy">privacy page</a>. Theme
+        choices last for this visit. Opening a poster or following an external link contacts that
+        provider.
       </p>
       {meta && (
         <dl class="source-status">
@@ -110,6 +114,8 @@ function About({ meta }: { meta: DataMeta | null }) {
 }
 
 export function App() {
+  const account = useAccount();
+  const watched = useMemo(() => new Set(account.watchlist?.slugs ?? []), [account.watchlist]);
   const [state, setState] = useState(() => readView(new URL(window.location.href)));
   const [catalogue, setCatalogue] = useState<{ films: Film[]; meta: DataMeta } | null>(null);
   const [error, setError] = useState(false);
@@ -124,29 +130,41 @@ export function App() {
   const drawer = useRef<HTMLDialogElement>(null);
   const dark = themeOverride ?? systemDark;
   const meta = catalogue?.meta ?? null;
-  const pageTitle = PAGES.find((page) => page.path === state.path)?.name ?? "About";
+  const pageTitle =
+    PAGES.find((page) => page.path === state.path)?.name ??
+    { "/privacy": "Privacy", "/auth/verify": "Sign in", "/unsubscribe": "Unsubscribe" }[
+      state.path
+    ] ??
+    "About";
+  const baseFilms = useMemo(
+    () =>
+      catalogue?.films.filter(
+        (film) =>
+          !(state.path === "/watchlist" || state.watchlist) ||
+          (film.sc.length > 0 && watched.has(letterboxdSlug(film.ra.lb?.url) ?? "")),
+      ) ?? [],
+    [catalogue, state.path, state.watchlist, watched],
+  );
   const selected = useMemo(
     () =>
       catalogue
         ? sortFilms(
-            filterFilms(selectFilms(catalogue.films, state), catalogue.meta, state),
+            filterFilms(selectFilms(baseFilms, state), catalogue.meta, state),
             state.sort,
             state.direction,
+            watched,
           )
         : [],
-    [catalogue, state],
+    [catalogue, state, baseFilms, watched],
   );
   const counts = useMemo(
     () =>
       catalogue
-        ? facetCounts(
-            selectFilms(catalogue.films, { ...state, filters: {} }),
-            catalogue.meta,
-            state,
-          )
+        ? facetCounts(selectFilms(baseFilms, { ...state, filters: {} }), catalogue.meta, state)
         : null,
     [
       catalogue,
+      baseFilms,
       state.path,
       state.search,
       state.director,
@@ -222,6 +240,7 @@ export function App() {
   }, [expanded, selected, state]);
   const sidebarProps = {
     state,
+    account,
     meta,
     onChange: change,
     dark,
@@ -295,10 +314,51 @@ export function App() {
         </header>
         <div class="tagline">The database of London cinema screenings</div>
         <h2 class="sr-only">{pageTitle}</h2>
-        {state.path === "/about" ? (
+        {state.path === "/privacy" ? (
+          <Privacy />
+        ) : state.path === "/auth/verify" ? (
+          <TokenPage kind="verify" onSignedIn={account.reload} />
+        ) : state.path === "/unsubscribe" ? (
+          <TokenPage kind="unsubscribe" onSignedIn={account.reload} />
+        ) : state.path === "/about" ? (
           <About meta={meta} />
         ) : (
           <>
+            {state.watchlist && state.path !== "/watchlist" && !account.user && (
+              <p class="view-note">
+                Sign in using Account in the menu to view your watchlist, or clear the My watchlist
+                filter to browse all films.
+              </p>
+            )}
+            {state.path === "/watchlist" && (
+              <div class="view-note">
+                <h2>Your Letterboxd watchlist</h2>
+                {account.loading ? (
+                  <p>Checking sign-in…</p>
+                ) : !account.user ? (
+                  <p>Sign in using Account in the menu to import your watchlist.</p>
+                ) : !account.user.username ? (
+                  <p>Set your Letterboxd username in Account to import your public watchlist.</p>
+                ) : !account.watchlist?.fetchedAt ? (
+                  <p>
+                    {account.user.stale
+                      ? "The watchlist could not be read. Make sure it is public, then try Refresh now."
+                      : "Your watchlist has not been imported yet. Use Refresh now in Account."}
+                  </p>
+                ) : (
+                  <p>
+                    {baseFilms.length} of your {account.watchlist.count} watchlist films are
+                    screening in London.
+                    {account.watchlist.count === 0 ? " Your public watchlist is empty." : ""}
+                  </p>
+                )}
+                {account.user?.stale && account.watchlist?.fetchedAt && (
+                  <p role="status">
+                    The latest refresh failed or is overdue. Showing your last good watchlist.
+                  </p>
+                )}
+              </div>
+            )}
             {state.path === "/retrospectives" && (
               <p class="view-note">
                 Directors with at least three films in the programme. Sorts apply within each
@@ -354,6 +414,7 @@ export function App() {
                         state.from ||
                         state.to ||
                         state.available ||
+                        state.watchlist ||
                         FILTERS.some(
                           ({ key }) => state.filters[key]?.length || state.excluded[key]?.length,
                         )
@@ -429,6 +490,11 @@ export function App() {
                       </button>
                     )),
                   )}
+                  {state.watchlist && (
+                    <button onClick={() => change({ watchlist: false, page: 1 })}>
+                      My watchlist ×
+                    </button>
+                  )}
                   {state.available && (
                     <button onClick={() => change({ available: false, page: 1 })}>
                       Not sold out ×
@@ -452,6 +518,7 @@ export function App() {
             {catalogue && (
               <FilmTable
                 films={selected}
+                watched={account.user ? watched : undefined}
                 meta={catalogue.meta}
                 state={state}
                 expanded={expanded}
