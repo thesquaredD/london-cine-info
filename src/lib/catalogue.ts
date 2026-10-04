@@ -36,6 +36,28 @@ const sortKeys = ["title", "director", "year", "watchlist", ...RATINGS.map((rati
 const collator = new Intl.Collator("en", { sensitivity: "base", numeric: true });
 const normalize = (value: string) => value.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
 
+export function defaultSort(path: string): Pick<ViewState, "sort" | "direction"> {
+  return { sort: path === "/calendar" ? "year" : "lb", direction: "desc" };
+}
+export function hasCustomSort(state: ViewState): boolean {
+  const defaults = defaultSort(state.path);
+  return state.sort !== defaults.sort || state.direction !== defaults.direction;
+}
+export function nextSort(state: ViewState, key: SortKey): Pick<ViewState, "sort" | "direction"> {
+  const first = key === "title" || key === "director" ? "asc" : "desc";
+  if (state.sort !== key) return { sort: key, direction: first };
+  if (state.direction === first) return { sort: key, direction: first === "asc" ? "desc" : "asc" };
+  return defaultSort(state.path);
+}
+export function sortLabel(key: SortKey): string {
+  return (
+    RATINGS.find((rating) => rating.key === key)?.name ??
+    ({ title: "Title", director: "Director", year: "Year", watchlist: "Watchlist" } as const)[
+      key as "title" | "director" | "year" | "watchlist"
+    ]
+  );
+}
+
 export function readView(url: URL): ViewState {
   const sort = url.searchParams.get("sort");
   const path = [
@@ -98,7 +120,7 @@ export function readView(url: URL): ViewState {
     available: url.searchParams.get("available") === "1",
     ...(url.searchParams.get("watchlist") === "1" ? { watchlist: true } : {}),
     director: url.searchParams.get("director") ?? "",
-    sort: sortKeys.includes(sort ?? "") ? (sort as SortKey) : path === "/calendar" ? "year" : "lb",
+    sort: sortKeys.includes(sort ?? "") ? (sort as SortKey) : defaultSort(path).sort,
     direction: url.searchParams.get("order") === "asc" ? "asc" : "desc",
     page: Math.max(1, Number.parseInt(url.searchParams.get("page") ?? "1", 10) || 1),
   };
@@ -115,7 +137,7 @@ export function viewUrl(state: ViewState): string {
   if (state.available) query.set("available", "1");
   if (state.watchlist) query.set("watchlist", "1");
   if (state.director) query.set("director", state.director);
-  if (state.sort !== (state.path === "/calendar" ? "year" : "lb")) query.set("sort", state.sort);
+  if (state.sort !== defaultSort(state.path).sort) query.set("sort", state.sort);
   if (state.direction !== "desc") query.set("order", state.direction);
   if (state.page > 1) query.set("page", String(state.page));
   return `${state.path}${query.size ? `?${query}` : ""}`;
