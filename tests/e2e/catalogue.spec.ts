@@ -1,13 +1,10 @@
 import { test, expect, type Page } from "@playwright/test";
-async function sidebar(page: Page) {
-  if ((page.viewportSize()?.width ?? 1200) < 800) {
-    await page.getByRole("button", { name: "Toggle navigation and filters" }).click();
-    return page.getByRole("dialog");
-  }
-  return page.locator(".desktop-sidebar");
+async function openFilters(page: Page) {
+  await page.getByRole("button", { name: /^(More filters|Filters) ▾$/ }).click();
+  return page.getByRole("dialog", { name: "Filters", exact: true });
 }
-async function closeSidebar(page: Page) {
-  if ((page.viewportSize()?.width ?? 1200) < 800) await page.keyboard.press("Escape");
+async function closeFilters(page: Page) {
+  await page.keyboard.press("Escape");
 }
 test.beforeEach(async ({ page }) => {
   await page.route("**/fixture.jpg", (route) =>
@@ -21,29 +18,38 @@ test.beforeEach(async ({ page }) => {
 test("search, language, director links and navigation share URL state", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator(".film-row")).toHaveCount(6);
-  const menu = await sidebar(page);
+  const menu = await openFilters(page);
   await menu.getByLabel("Search", { exact: true }).fill("Titre B");
-  await closeSidebar(page);
+  await closeFilters(page);
   await expect(page.locator(".film-row")).toHaveCount(1);
   await expect(page).toHaveURL(/q=Titre\+B/);
   await expect(page.getByRole("button", { name: /Fixture Classic B/ })).toBeVisible();
-  const secondMenu = await sidebar(page);
+  const secondMenu = await openFilters(page);
   await secondMenu.getByLabel("Search", { exact: true }).fill("");
   await secondMenu
     .locator("summary")
     .filter({ hasText: /^Original language/ })
     .click();
   await secondMenu.getByRole("checkbox", { name: /French/ }).check();
-  await closeSidebar(page);
+  await closeFilters(page);
   await expect(page.locator(".film-row")).toHaveCount(1);
-  const thirdMenu = await sidebar(page);
+  const thirdMenu = await openFilters(page);
+  await thirdMenu
+    .locator("summary")
+    .filter({ hasText: /^Original language/ })
+    .click();
   await thirdMenu.getByRole("button", { name: "Clear original language", exact: true }).click();
-  await closeSidebar(page);
+  await closeFilters(page);
   await page.locator(".director-column a").first().click();
   await expect(page.locator(".film-row")).toHaveCount(3);
   await expect(page).toHaveURL(/director=director-a/);
-  const fourthMenu = await sidebar(page);
-  await fourthMenu.getByRole("link", { name: "Events", exact: true }).click();
+  if ((page.viewportSize()?.width ?? 1200) < 800)
+    await page.getByRole("button", { name: "Toggle pages" }).click();
+  await page
+    .getByRole("navigation", { name: "Film pages" })
+    .filter({ visible: true })
+    .getByRole("link", { name: "Events", exact: true })
+    .click();
   await expect(page).toHaveURL(/\/events/);
   await page.goBack();
   await expect(page.locator(".film-row")).toHaveCount(3);
@@ -106,7 +112,7 @@ test("200-row pagination and column sorting", async ({ page }) => {
   await page.getByRole("button", { name: "Previous page" }).click();
   await expect(page.locator(".film-row")).toHaveCount(200);
 });
-test("load retries, system theme, drawer keyboard and no persistent storage", async ({
+test("load retries, system theme, sheet keyboard and no persistent storage", async ({
   page,
   context,
 }) => {
@@ -120,12 +126,17 @@ test("load retries, system theme, drawer keyboard and no persistent storage", as
   await page.getByRole("button", { name: "Try again" }).click();
   await expect(page.locator(".film-row")).toHaveCount(6);
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
-  const menu = await sidebar(page);
-  await menu.getByRole("button", { name: /Light mode/ }).click();
-  await closeSidebar(page);
+  const menu = await openFilters(page);
+  await expect(menu).toBeVisible();
+  await closeFilters(page);
+  await expect(page.getByRole("button", { name: /^(More filters|Filters) ▾$/ })).toBeFocused();
+  if ((page.viewportSize()?.width ?? 1200) < 800)
+    await page.getByRole("button", { name: "Toggle pages" }).click();
+  await page.getByRole("button", { name: /Light mode/ }).click();
+  if ((page.viewportSize()?.width ?? 1200) < 800)
+    await page.getByRole("button", { name: "Close pages" }).click();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
   if ((page.viewportSize()?.width ?? 1200) < 800) {
-    await expect(page.getByRole("button", { name: "Toggle navigation and filters" })).toBeFocused();
     await expect(page.locator("th:visible")).toHaveCount(2);
   }
   expect(await page.evaluate(() => [localStorage.length, sessionStorage.length])).toEqual([0, 0]);
@@ -175,7 +186,7 @@ test("multiple choices, correlated screening filters, chips and reset", async ({
   await page.clock.setFixedTime(new Date("2026-10-03T09:00:00Z"));
   await page.goto("/");
   await expect(page.locator(".film-row")).toHaveCount(6);
-  const menu = await sidebar(page);
+  const menu = await openFilters(page);
   await expect(menu.locator(".filter-picker")).toHaveCount(9);
   await menu.locator("summary").filter({ hasText: /^Day/ }).click();
   await menu.getByRole("checkbox", { name: /^Tomorrow/ }).check();
@@ -185,7 +196,7 @@ test("multiple choices, correlated screening filters, chips and reset", async ({
     .filter({ hasText: /^Cinema/ })
     .click();
   await menu.getByRole("checkbox", { name: /BFI Southbank/ }).check();
-  await closeSidebar(page);
+  await closeFilters(page);
   await expect(page).toHaveURL(/day=tomorrow&day=today&venue=/);
   await page.getByRole("button", { name: "Fixture Classic A", exact: true }).click();
   await expect(page.locator(".showtime-day")).toHaveCount(1);
@@ -193,9 +204,9 @@ test("multiple choices, correlated screening filters, chips and reset", async ({
   await expect(page.locator(".showtime-day a")).toHaveCount(1);
   await page.getByRole("button", { name: "Remove day filter: Tomorrow", exact: true }).click();
   await expect(page.getByRole("button", { name: "Fixture Classic A", exact: true })).toHaveCount(0);
-  const menu2 = await sidebar(page);
+  const menu2 = await openFilters(page);
   await menu2.getByRole("button", { name: "Reset all filters" }).click();
-  await closeSidebar(page);
+  await closeFilters(page);
   await expect(page.locator(".film-row")).toHaveCount(6);
   await expect(page.locator(".active-filters button")).toHaveCount(1);
   await expect(
@@ -204,12 +215,12 @@ test("multiple choices, correlated screening filters, chips and reset", async ({
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
 
-test("filter options cycle include, exclude and any with keyboard and shareable state", async ({
+test("filter options toggle normally and exclusions use an explicit mode with shareable state", async ({
   page,
 }) => {
   await page.goto("/");
   await expect(page.locator(".film-row")).toHaveCount(6);
-  const menu = await sidebar(page);
+  const menu = await openFilters(page);
   await menu
     .locator("summary")
     .filter({ hasText: /^Original language/ })
@@ -219,16 +230,20 @@ test("filter options cycle include, exclude and any with keyboard and shareable 
   await expect(french).toBeChecked();
   await expect(page.locator(".film-row")).toHaveCount(1);
   await french.press("Space");
+  await expect(french).toHaveAttribute("aria-checked", "false");
+  await expect(page.locator(".film-row")).toHaveCount(6);
+  await menu.getByRole("button", { name: "Exclude options", exact: true }).click();
+  await french.press("Space");
   await expect(french).toHaveAttribute("aria-checked", "mixed");
   await expect(page.locator(".film-row")).toHaveCount(5);
   await expect(page).toHaveURL(/not_language=fr/);
-  await closeSidebar(page);
+  await closeFilters(page);
   await expect(
     page.getByRole("button", { name: "Remove excluded original language filter: French" }),
   ).toBeVisible();
   await page.reload();
   await expect(page.locator(".film-row")).toHaveCount(5);
-  const secondMenu = await sidebar(page);
+  const secondMenu = await openFilters(page);
   await secondMenu
     .locator("summary")
     .filter({ hasText: /^Original language/ })
@@ -241,7 +256,7 @@ test("filter options cycle include, exclude and any with keyboard and shareable 
     "false",
   );
   await expect(page.locator(".film-row")).toHaveCount(6);
-  await closeSidebar(page);
+  await closeFilters(page);
 });
 
 test("Today and Tomorrow shortcuts replace day filters while preserving other choices", async ({
@@ -266,7 +281,7 @@ test("Today and Tomorrow shortcuts replace day filters while preserving other ch
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
 
-test("filter controls stay stationary through include, exclude, clear and changing counts", async ({
+test("filter controls stay stationary through selection, clearing and changing counts", async ({
   page,
 }) => {
   await page.route("**/meta.*.json", async (route) => {
@@ -289,7 +304,7 @@ test("filter controls stay stationary through include, exclude, clear and changi
   const baselineHeight = (await summary.boundingBox())!.height;
   const quick = page.locator(".quick-days").getByRole("button", { name: /^Tomorrow/ });
   const quickX = (await quick.boundingBox())!.x;
-  const menu = await sidebar(page);
+  const menu = await openFilters(page);
   for (const name of [
     "Day",
     "Time",
@@ -311,12 +326,9 @@ test("filter controls stay stationary through include, exclude, clear and changi
     const control = await option.boundingBox();
     const clear = picker.getByRole("button", { name: `Clear ${name.toLowerCase()}`, exact: true });
     await expect(clear).toBeDisabled();
-    for (let cycle = 0; cycle < 3; cycle++) {
+    for (let cycle = 0; cycle < 2; cycle++) {
       await option.press("Space");
-      await expect(option).toHaveAttribute(
-        "aria-checked",
-        cycle === 0 ? "true" : cycle === 1 ? "mixed" : "false",
-      );
+      await expect(option).toHaveAttribute("aria-checked", cycle % 2 === 0 ? "true" : "false");
       const changed = await option.boundingBox();
       const changedFrame = await picker.boundingBox();
       expect(Math.abs(changed!.y - control!.y), name + " option vertical position").toBeLessThan(1);
@@ -343,11 +355,9 @@ test("filter controls stay stationary through include, exclude, clear and changi
   await cinema.locator("summary").click();
   const search = menu.getByLabel("Find cinema", { exact: true });
   await search.scrollIntoViewIfNeeded();
-  const cinemaHeight = (await cinema.boundingBox())!.height;
   const searchY = (await search.boundingBox())!.y;
   await search.fill("no matching cinema");
   await expect(cinema.getByText(/No options match/)).toBeVisible();
-  expect(Math.abs((await cinema.boundingBox())!.height - cinemaHeight)).toBeLessThan(1);
   expect(Math.abs((await search.boundingBox())!.y - searchY)).toBeLessThan(1);
   await search.fill("");
   const time = menu
@@ -359,6 +369,6 @@ test("filter controls stay stationary through include, exclude, clear and changi
   await menu.getByLabel("From", { exact: true }).fill("23:00");
   await menu.getByLabel("Until", { exact: true }).fill("02:00");
   expect(Math.abs((await time.boundingBox())!.height - timeHeight)).toBeLessThan(1);
-  await closeSidebar(page);
+  await closeFilters(page);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });

@@ -26,6 +26,7 @@ export function FilterPicker({
   children,
   summaryValue,
 }: Props) {
+  const [excludeMode, setExcludeMode] = useState(false);
   const [search, setSearch] = useState("");
   const options =
     filterKey === "day"
@@ -74,6 +75,7 @@ export function FilterPicker({
           : `Any ${filterKey === "venue" ? "cinema" : filterKey === "language" ? "language" : label.toLowerCase()}`));
   return (
     <details
+      data-filter={filterKey}
       name={`${idPrefix}-filters`}
       class={`filter-picker ${selected.length || excluded.length || summaryValue ? "has-selection" : ""}`}
     >
@@ -97,7 +99,13 @@ export function FilterPicker({
           </>
         )}
         <div class="picker-actions">
-          <span>Click: include → exclude → clear</span>
+          <button
+            type="button"
+            aria-pressed={excludeMode}
+            onClick={() => setExcludeMode(!excludeMode)}
+          >
+            Exclude options
+          </button>
           <button
             type="button"
             disabled={!selected.length && !excluded.length}
@@ -134,22 +142,17 @@ export function FilterPicker({
                         if (input) input.indeterminate = excluded.includes(option.id);
                       }}
                       onChange={() => {
-                        if (selected.includes(option.id))
-                          onChange(
-                            selected.filter((id) => id !== option.id),
-                            [...excluded, option.id],
-                          );
-                        else if (excluded.includes(option.id))
-                          onChange(
-                            selected,
-                            excluded.filter((id) => id !== option.id),
-                          );
-                        else onChange([...selected, option.id], excluded);
+                        const included = selected.filter((id) => id !== option.id);
+                        const rejected = excluded.filter((id) => id !== option.id);
+                        if (selected.includes(option.id) || excluded.includes(option.id))
+                          onChange(included, rejected);
+                        else if (excludeMode) onChange(included, [...rejected, option.id]);
+                        else onChange([...included, option.id], rejected);
                       }}
                     />
                     <span class="option-label">
                       <b class={`not-label ${excluded.includes(option.id) ? "" : "inactive"}`}>
-                        NOT
+                        NOT{" "}
                       </b>
                       <span>{option.label}</span>
                     </span>

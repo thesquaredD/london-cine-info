@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { Sidebar } from "./components/sidebar";
+import { FilterBar } from "./components/filter-bar";
 import { FilmTable } from "./components/film-table";
 import { CLEAR_FILTERS, filterFilms, facetCounts, FILTERS, filterLabel } from "./lib/filters";
 import { loadCatalogue } from "./lib/data";
@@ -226,22 +227,20 @@ export function App() {
     onChange: change,
     dark,
     onTheme: () => setThemeOverride(!dark),
-    counts,
-    resultCount: selected.length,
-    onDone: () => setDrawerOpen(false),
   };
+  const filterProps = { state, meta, onChange: change, counts, resultCount: selected.length };
   return (
     <div class={`app-layout ${collapsed ? "sidebar-collapsed" : ""}`}>
       <a class="skip-link" href="#main-content">
         Skip to films
       </a>
-      <aside class="desktop-sidebar" aria-label="Navigation and filters">
+      <aside class="desktop-sidebar" aria-label="Pages">
         <Sidebar {...sidebarProps} />
       </aside>
       <dialog
         ref={drawer}
         class="sidebar-drawer"
-        aria-label="Navigation and filters"
+        aria-label="Pages"
         onClose={() => setDrawerOpen(false)}
         onKeyDown={(event) => {
           if (event.key === "Escape") {
@@ -253,16 +252,16 @@ export function App() {
           if (event.target === drawer.current) setDrawerOpen(false);
         }}
       >
-        <button class="drawer-close" aria-label="Close menu" onClick={() => setDrawerOpen(false)}>
+        <button class="drawer-close" aria-label="Close pages" onClick={() => setDrawerOpen(false)}>
           ×
         </button>
-        <Sidebar {...sidebarProps} idPrefix="drawer" />
+        <Sidebar {...sidebarProps} />
       </dialog>
       <main class="main-column" id="main-content">
         <header class="masthead">
           <button
             class="menu-button"
-            aria-label="Toggle navigation and filters"
+            aria-label="Toggle pages"
             aria-expanded={
               window.matchMedia("(max-width: 799px)").matches ? drawerOpen : !collapsed
             }
@@ -310,6 +309,7 @@ export function App() {
                 Release dates are TMDB originals and may differ from UK dates.
               </p>
             )}
+            {catalogue && <FilterBar {...filterProps} />}
             {catalogue && (
               <div class="filter-summary">
                 <div class="quick-days" role="group" aria-label="Quick day filters">
