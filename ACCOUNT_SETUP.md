@@ -2,7 +2,7 @@
 
 Implementation lives on `codex/watchlist` (draft PR #6). Resend sender verification
 is complete and its key is installed in Pages production and Actions. The apex
-DNS points to Pages; custom-domain certificate activation is pending. Manual
+DNS points to Pages and the domain serves over HTTPS. Manual
 refresh still needs a GitHub dispatch token. Ordinary browsing works without it.
 
 ## Platform
@@ -26,8 +26,8 @@ POST, rather than a signed token. It can only switch off emails, without login.
 
 1. Add `london-cine.info` to Cloudflare and move its nameservers at Namecheap. Check
    existing DNS records before moving them. Attach the domain to the Pages project
-   `london-cine-info`. On 4 October 2026 the Cloudflare zone was pending and still used Namecheap
-   nameservers. Cloudflare assigned `betty.ns.cloudflare.com` and
+   `london-cine-info`. On 4 October 2026 the Cloudflare zone became active and the apex served Pages
+   over HTTPS. Cloudflare assigned `betty.ns.cloudflare.com` and
    `cameron.ns.cloudflare.com`.
 2. Add `mail.london-cine.info` in Resend. Install its SPF/DKIM records and a DMARC
    record in Cloudflare, then confirm the sender domain is verified. The configured
@@ -45,7 +45,8 @@ POST, rather than a signed token. It can only switch off emails, without login.
 
 4. Give the existing Actions `CLOUDFLARE_API_TOKEN` D1: Edit in addition to Pages:
    Edit. The OAuth used for local setup has D1 access, but the existing Actions
-   token's scopes cannot be inferred from it. The configured account is
+   token failed the remote D1 preflight with Cloudflare code 7403. Its current
+   scope is Pages only; add D1 access before activating account jobs. The configured account is
    `5d3189d7982be9522311dada6bf49ecc`.
 5. Merge the implementation, deploy, then enable the repository variable
    `WATCHLIST_ENABLED=true`. Both the daily account job and manual refresh workflow
