@@ -33,3 +33,24 @@ it("keeps text-only sign-in emails compatible and rejects delivery failure", asy
   );
   expect(JSON.parse(fetch.mock.calls[0]![1].body)).not.toHaveProperty("html");
 });
+it("reports a safe 409 category without including provider details", async () => {
+  vi.stubGlobal(
+    "fetch",
+    vi
+      .fn()
+      .mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            name: "invalid_idempotent_request",
+            message: "private provider details",
+          }),
+          { status: 409 },
+        ),
+      ),
+  );
+  await expect(sendEmail("key", "from", "to", "subject", "text", "id")).rejects.toMatchObject({
+    status: 409,
+    code: "invalid_idempotent_request",
+    message: "Email delivery failed (409)",
+  });
+});
