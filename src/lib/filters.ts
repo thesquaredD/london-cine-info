@@ -14,6 +14,8 @@ export const FILTERS: { key: FacetKey; label: string }[] = [
 ];
 export const CLEAR_FILTERS = {
   watchlist: false,
+  short: false,
+  tonight: false,
   search: "",
   director: "",
   filters: {},
@@ -46,6 +48,13 @@ export function dayMatches(date: string, selected: string[], today: string): boo
       if (id === "today") return date === today;
       if (id === "tomorrow") return date === addDays(today, 1);
       if (id === "week") return date >= today && date <= addDays(today, 6);
+      if (id === "this-week" || id === "next-week") {
+        const weekday = (new Date(`${today}T12:00:00Z`).getUTCDay() + 6) % 7;
+        const monday = addDays(today, -weekday);
+        const start = id === "this-week" ? today : addDays(monday, 7);
+        const end = addDays(monday, id === "this-week" ? 6 : 13);
+        return date >= start && date <= end;
+      }
       if (id === "weekend") {
         const weekday = new Date(`${today}T12:00:00Z`).getUTCDay();
         const start = weekday === 0 ? today : addDays(today, (6 - weekday + 7) % 7);
@@ -62,7 +71,9 @@ const any = (selected: string[], values: string[]) =>
 const accepts = (state: ViewState, key: FacetKey, values: string[]) =>
   any(state.filters[key] ?? [], values) &&
   !(state.excluded[key] ?? []).some((id) => values.includes(id));
-type ScreeningView = {
+export type ScreeningView = {
+  epoch: number | null;
+  screen: string | null;
   date: string;
   minute: number;
   venue: Venue | undefined;
@@ -75,7 +86,7 @@ const screeningCache = new WeakMap<
   DataMeta,
   { venues: Map<string, Venue>; films: WeakMap<Film, ScreeningView[]> }
 >();
-function decodedScreenings(film: Film, meta: DataMeta): ScreeningView[] {
+export function decodedScreenings(film: Film, meta: DataMeta): ScreeningView[] {
   let cache = screeningCache.get(meta);
   if (!cache) {
     cache = {
@@ -86,19 +97,39 @@ function decodedScreenings(film: Film, meta: DataMeta): ScreeningView[] {
   }
   const existing = cache.films.get(film);
   if (existing) return existing;
-  const rows = film.sc.map(([day, minute, venue, format, access, soldOut, event]) => ({
-    date: meta.facets.day[day]?.id ?? "",
-    minute,
-    venue: cache.venues.get(meta.facets.venue[venue]?.id ?? ""),
-    formats: meta.facets.format.filter((_, i) => Boolean(format & (2 ** i))).map((o) => o.id),
-    accessibility: meta.facets.accessibility
-      .filter((_, i) => Boolean(access & (2 ** i)))
-      .map((o) => o.id),
-    soldOut: Boolean(soldOut),
-    event: event === undefined ? film.event : Boolean(event),
-  }));
+  const rows = film.sc.map(
+    ([day, minute, venue, format, access, soldOut, event, epoch, screen]) => ({
+      epoch:
+        epoch === undefined
+          ? null
+          : meta.screeningEpoch === undefined
+            ? epoch
+            : Math.round(meta.screeningEpoch + epoch * 60000),
+      screen: typeof screen === "number" ? (meta.screens?.[screen] ?? null) : (screen ?? null),
+      date: meta.facets.day[day]?.id ?? "",
+      minute,
+      venue: cache.venues.get(meta.facets.venue[venue]?.id ?? ""),
+      formats: meta.facets.format.filter((_, i) => Boolean(format & (2 ** i))).map((o) => o.id),
+      accessibility: meta.facets.accessibility
+        .filter((_, i) => Boolean(access & (2 ** i)))
+        .map((o) => o.id),
+      soldOut: Boolean(soldOut),
+      event: event === undefined ? film.event : Boolean(event),
+    }),
+  );
   cache.films.set(film, rows);
   return rows;
+}
+export function upcomingScreenings(film: Film, meta: DataMeta, now: Date): ScreeningView[] {
+  const rows = new Map<string, ScreeningView>();
+  for (const row of decodedScreenings(film, meta)) {
+    if (row.epoch === null || row.epoch <= now.getTime()) continue;
+    const key = JSON.stringify([row.epoch, row.venue?.id, row.screen]);
+    const previous = rows.get(key);
+    if (previous) previous.formats = [...new Set([...previous.formats, ...row.formats])];
+    else rows.set(key, { ...row, formats: [...row.formats] });
+  }
+  return [...rows.values()].sort((a, b) => a.epoch! - b.epoch!);
 }
 export function screeningMatcher(meta: DataMeta, state: ViewState, now = new Date()) {
   const today = londonDate(now),
@@ -125,7 +156,15 @@ export function screeningMatcher(meta: DataMeta, state: ViewState, now = new Dat
     formats: string[],
     accessibility: string[],
     soldOut: boolean,
+    epoch: number | null,
   ) {
+    if (state.path === "/radar" && (epoch === null || epoch <= now.getTime())) return false;
+    if (state.radarSection === "formats" && !isSpecialFormat(formats)) return false;
+    if (
+      state.tonight &&
+      (date !== today || minute < 1080 || epoch === null || epoch <= now.getTime())
+    )
+      return false;
     const venue = venues.get(venueId);
     if ((allowedDays && !allowedDays.has(date)) || forbiddenDays.has(date)) return false;
     if (
@@ -148,15 +187,38 @@ export function screeningMatcher(meta: DataMeta, state: ViewState, now = new Dat
       (!state.available || !soldOut)
     );
   }
+  const opportunities = new WeakMap<Film, boolean>();
+  function radarRow(row: ScreeningView, film?: Film) {
+    if (state.path !== "/radar" || state.radarSection) return true;
+    if (!film) return false;
+    let limited = opportunities.get(film);
+    if (limited === undefined) {
+      const count = upcomingScreenings(film, meta, now).length;
+      limited = count >= 1 && count <= 3;
+      opportunities.set(film, limited);
+    }
+    return limited || isSpecialFormat(row.formats);
+  }
   return {
-    row: (row: ScreeningView) =>
+    row: (row: ScreeningView, film?: Film) =>
+      radarRow(row, film) &&
       (state.path !== "/events" || row.event) &&
-      match(row.date, row.minute, row.venue?.id ?? "", row.formats, row.accessibility, row.soldOut),
+      match(
+        row.date,
+        row.minute,
+        row.venue?.id ?? "",
+        row.formats,
+        row.accessibility,
+        row.soldOut,
+        row.epoch,
+      ),
     film: (film: Film) =>
+      (!state.short || (film.ru !== null && film.ru < 120)) &&
       accepts(state, "genre", film.ge) &&
       accepts(state, "language", [film.la]) &&
       decodedScreenings(film, meta).some(
         (row) =>
+          radarRow(row, film) &&
           (state.path !== "/events" || row.event) &&
           match(
             row.date,
@@ -165,16 +227,27 @@ export function screeningMatcher(meta: DataMeta, state: ViewState, now = new Dat
             row.formats,
             row.accessibility,
             row.soldOut,
+            row.epoch,
           ),
       ),
     showtime: (date: string, row: Showtime) =>
       (state.path !== "/events" || isEventScreening(row.category, row.notes)) &&
-      match(date, minuteOf(row.localTime), row.venue, row.formats, row.accessibility, row.soldOut),
+      match(
+        date,
+        minuteOf(row.localTime),
+        row.venue,
+        row.formats,
+        row.accessibility,
+        row.soldOut,
+        row.time,
+      ),
   };
 }
 export function hasScreeningFilters(state: ViewState) {
   return Boolean(
     state.path === "/events" ||
+    state.path === "/radar" ||
+    state.tonight ||
     state.available ||
     state.from ||
     state.to ||
@@ -189,6 +262,7 @@ export function hasScreeningFilters(state: ViewState) {
 export function filterFilms(films: Film[], meta: DataMeta, state: ViewState, now = new Date()) {
   const matcher = screeningMatcher(meta, state, now);
   return films.filter((film) => {
+    if (state.short && (film.ru === null || film.ru >= 120)) return false;
     if (!accepts(state, "genre", film.ge) || !accepts(state, "language", [film.la])) return false;
     return !hasScreeningFilters(state) || matcher.film(film);
   });
@@ -204,7 +278,7 @@ export function facetCounts(
   const quickDays = new Map(
     meta.facets.day.map((option) => [
       option.id,
-      ["today", "tomorrow", "week", "weekend", "beyond"].filter((id) =>
+      ["today", "tomorrow", "week", "this-week", "next-week", "weekend", "beyond"].filter((id) =>
         dayMatches(option.id, [id], today),
       ),
     ]),
@@ -214,10 +288,14 @@ export function facetCounts(
       ...state,
       filters: { ...state.filters, [key]: [] },
       excluded: { ...state.excluded, [key]: [] },
+      ...(state.tonight && (key === "day" || key === "time")
+        ? { tonight: false, from: "", to: "" }
+        : {}),
     };
     const matcher = screeningMatcher(meta, without, now);
     const counts = new Map<string, number>();
     for (const film of films) {
+      if (state.short && (film.ru === null || film.ru >= 120)) continue;
       if (!accepts(without, "genre", film.ge) || !accepts(without, "language", [film.la])) continue;
       const ids = new Set<string>();
       if (key === "genre" || key === "language") {
@@ -225,7 +303,7 @@ export function facetCounts(
         (key === "genre" ? film.ge : [film.la]).forEach((id) => ids.add(id));
       } else
         for (const row of decodedScreenings(film, meta)) {
-          if (!matcher.row(row)) continue;
+          if (!matcher.row(row, film)) continue;
           const { date, minute, venue, formats, accessibility: access } = row;
           if (key === "day") {
             ids.add(date);
@@ -251,6 +329,8 @@ export function filterLabel(key: FacetKey, id: string, meta: DataMeta): string {
       today: "Today",
       tomorrow: "Tomorrow",
       week: "Next 7 days",
+      "this-week": "This week",
+      "next-week": "Next week",
       weekend: "This weekend",
       beyond: "Later",
     };
@@ -264,4 +344,43 @@ export function filterLabel(key: FacetKey, id: string, meta: DataMeta): string {
       }).format(new Date(`${id}T12:00:00Z`));
   }
   return meta.facets[key].find((option) => option.id === id)?.label ?? id;
+}
+
+export function isSpecialFormat(formats: string[]) {
+  return formats.some((format) => ["35mm", "70mm", "imax", "imax-70mm"].includes(format));
+}
+export const DATE_SHORTCUTS = [
+  "today",
+  "tomorrow",
+  "weekend",
+  "this-week",
+  "next-week",
+  "week",
+  "beyond",
+];
+export function dateShortcut(state: ViewState, id: string): Partial<ViewState> {
+  const active =
+    id === "tonight"
+      ? state.tonight
+      : !state.tonight &&
+        state.filters.day?.length === 1 &&
+        state.filters.day[0] === id &&
+        !state.excluded.day?.length;
+  return {
+    filters: {
+      ...state.filters,
+      day: active ? [] : [id === "tonight" ? "today" : id],
+      ...(state.tonight || id === "tonight" ? { time: [] } : {}),
+    },
+    excluded: {
+      ...state.excluded,
+      day: [],
+      ...(state.tonight || id === "tonight" ? { time: [] } : {}),
+    },
+    tonight: id === "tonight" && !active,
+    ...(state.tonight || id === "tonight"
+      ? { from: id === "tonight" && !active ? "18:00" : "", to: "" }
+      : {}),
+    page: 1,
+  };
 }

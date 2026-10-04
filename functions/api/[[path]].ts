@@ -1,3 +1,9 @@
+import {
+  validCalendarInput,
+  screeningKey,
+  type CalendarScreening,
+} from "../../src/shared/calendar";
+import { calendarFile } from "../../src/shared/ical";
 import type { Env, User } from "../../server/types";
 import {
   hash,
@@ -126,12 +132,13 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
       return json({ error: "Method not allowed" }, 405);
     if (method !== "GET" && !sameOrigin(request))
       return json({ error: "Request origin rejected" }, 403);
-    if (Number(request.headers.get("Content-Length") ?? 0) > 4096)
+    const bodyLimit = path === "/api/cinemas" ? 180000 : path === "/api/calendar" ? 12000 : 4096;
+    if (Number(request.headers.get("Content-Length") ?? 0) > bodyLimit)
       return json({ error: "Request too large" }, 413);
     let body: Record<string, unknown> = {};
     if (["POST", "PUT", "DELETE"].includes(method)) {
       const raw = await request.text();
-      if (raw.length > 4096) return json({ error: "Request too large" }, 413);
+      if (raw.length > bodyLimit) return json({ error: "Request too large" }, 413);
       try {
         body = raw ? JSON.parse(raw) : {};
         if (!body || typeof body !== "object" || Array.isArray(body))
@@ -229,6 +236,124 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
     }
     if (!auth) return json({ error: "Please sign in" }, 401);
     const { user, sessionHash } = auth;
+    if (path === "/api/cinemas" && ["GET", "PUT", "POST"].includes(method)) {
+      if (method !== "GET") {
+        if (
+          !Array.isArray(body.venues) ||
+          body.venues.length > 1000 ||
+          !body.venues.every(
+            (id: unknown) => typeof id === "string" && /^[a-zA-Z0-9._:-]{1,160}$/.test(id),
+          )
+        )
+          return json({ error: "Choose valid cinemas (up to 1000)." }, 400);
+        const venues = JSON.stringify([...new Set(body.venues)]);
+        await env.DB.prepare("INSERT OR IGNORE INTO cinema_preferences(user_id) VALUES (?)")
+          .bind(user.id)
+          .run();
+        if (method === "PUT") {
+          if (!Number.isInteger(body.version) || Number(body.version) < 0)
+            return json({ error: "Reload your saved cinemas and try again." }, 400);
+          const updated = await env.DB.prepare(
+            "UPDATE cinema_preferences SET venues=?,version=version+1 WHERE user_id=? AND version=?",
+          )
+            .bind(venues, user.id, body.version)
+            .run();
+          if (!updated.meta.changes)
+            return json(
+              { error: "Your cinemas changed on another device. Reload them before saving." },
+              409,
+            );
+        } else {
+          if (typeof body.browserId !== "string" || !/^[a-f0-9-]{36}$/.test(body.browserId))
+            return json({ error: "Invalid browser preferences." }, 400);
+          // The receipt and union commit together, so removals can never be undone by retries.
+          await env.DB.batch([
+            env.DB.prepare(
+              `UPDATE cinema_preferences SET venues=(SELECT json_group_array(value) FROM
+              (SELECT DISTINCT value FROM json_each(cinema_preferences.venues) UNION SELECT value FROM json_each(?))),version=version+1
+              WHERE user_id=? AND NOT EXISTS (SELECT 1 FROM cinema_reconciliations WHERE user_id=? AND browser_id=?)`,
+            ).bind(venues, user.id, user.id, body.browserId),
+            env.DB.prepare(
+              "INSERT OR IGNORE INTO cinema_reconciliations(user_id,browser_id) VALUES (?,?)",
+            ).bind(user.id, body.browserId),
+          ]);
+        }
+      }
+      const prefs = await env.DB.prepare(
+        "SELECT venues,version FROM cinema_preferences WHERE user_id=?",
+      )
+        .bind(user.id)
+        .first<{ venues: string; version: number }>();
+      return json({ venues: prefs ? JSON.parse(prefs.venues) : [], version: prefs?.version ?? 0 });
+    }
+    if (path === "/api/calendar" && ["GET", "POST", "DELETE"].includes(method)) {
+      if (method === "POST") {
+        if (!validCalendarInput(body.screening))
+          return json(
+            { error: "This screening could not be saved. Reload its details and try again." },
+            400,
+          );
+        const input = body.screening;
+        const id = await hash(screeningKey(input));
+        const screening: CalendarScreening = { ...input, id };
+        const saved = await env.DB.prepare(
+          "INSERT INTO saved_screenings(user_id,id,start_at,payload) SELECT ?,?,?,? WHERE EXISTS(SELECT 1 FROM saved_screenings WHERE user_id=? AND id=?) OR (SELECT COUNT(*) FROM saved_screenings WHERE user_id=?) < 1000 ON CONFLICT(user_id,id) DO UPDATE SET payload=excluded.payload",
+        )
+          .bind(user.id, id, input.start, JSON.stringify(screening), user.id, id, user.id)
+          .run();
+        if (!saved.meta.changes)
+          return json(
+            {
+              error:
+                "Your calendar has reached 1,000 screenings. Remove a screening before adding another.",
+            },
+            400,
+          );
+        return json({ screening });
+      }
+      if (method === "DELETE") {
+        if (typeof body.id !== "string" || !/^[a-f0-9]{64}$/.test(body.id))
+          return json({ error: "Choose a saved screening to remove." }, 400);
+        await env.DB.prepare("DELETE FROM saved_screenings WHERE user_id=? AND id=?")
+          .bind(user.id, body.id)
+          .run();
+        return json({ ok: true });
+      }
+      const rows = await env.DB.prepare(
+        "SELECT payload FROM saved_screenings WHERE user_id=? ORDER BY start_at,id",
+      )
+        .bind(user.id)
+        .all<{ payload: string }>();
+      return json({ screenings: rows.results.map((row) => JSON.parse(row.payload)) });
+    }
+    if (path === "/api/calendar/export" && method === "GET") {
+      const id = new URL(request.url).searchParams.get("id");
+      if (id && !/^[a-f0-9]{64}$/.test(id))
+        return json({ error: "Choose a saved screening to export." }, 400);
+      const rows = await env.DB.prepare(
+        id
+          ? "SELECT payload FROM saved_screenings WHERE user_id=? AND id=?"
+          : "SELECT payload FROM saved_screenings WHERE user_id=? ORDER BY start_at,id",
+      )
+        .bind(...(id ? [user.id, id] : [user.id]))
+        .all<{ payload: string }>();
+      if (id && !rows.results.length)
+        return json({ error: "That screening is no longer in your calendar." }, 404);
+      return new Response(
+        calendarFile(
+          rows.results.map((row) => JSON.parse(row.payload)),
+          Date.now(),
+        ),
+        {
+          headers: {
+            "Content-Type": "text/calendar; charset=utf-8",
+            "Content-Disposition": 'attachment; filename="london-screenings.ics"',
+            "Cache-Control": "private, no-store",
+            "X-Content-Type-Options": "nosniff",
+          },
+        },
+      );
+    }
     if (path === "/api/auth/logout" && method === "POST") {
       await env.DB.prepare("DELETE FROM sessions WHERE hash=?").bind(sessionHash).run();
       return json({ ok: true }, 200, { "Set-Cookie": sessionCookie("", 0) });

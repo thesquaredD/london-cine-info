@@ -1,3 +1,4 @@
+import { DateCalendar } from "./date-calendar";
 import type { ComponentChildren } from "preact";
 import { useState } from "preact/hooks";
 import type { DataMeta, FacetKey } from "../shared/data";
@@ -84,7 +85,7 @@ export function FilterPicker({
         <small title={summary}>{summary} </small>
       </summary>
       <div class="picker-content">
-        {options.length > 8 && (
+        {filterKey !== "day" && options.length > 8 && (
           <>
             <label class="sr-only" for={`${id}-search`}>
               Find {label.toLowerCase()}
@@ -114,55 +115,66 @@ export function FilterPicker({
             Clear {label.toLowerCase()}
           </button>
         </div>
-        <fieldset class={`filter-options ${options.length > 8 ? "searchable" : ""}`}>
-          <legend class="sr-only">{label}</legend>
-          {[...grouped]
-            .sort(([a], [b]) => a.localeCompare(b))
-            .map(([group, items]) => (
-              <div key={group}>
-                {group && <p class="option-group">{group}</p>}
-                {items.map((option) => (
-                  <label
-                    key={option.id}
-                    class={
-                      excluded.includes(option.id)
-                        ? "excluded-option"
-                        : (counts.get(option.id) ?? 0) === 0
-                          ? "zero-count"
-                          : ""
-                    }
-                  >
-                    <input
-                      type="checkbox"
-                      checked={selected.includes(option.id)}
-                      aria-checked={
-                        excluded.includes(option.id) ? "mixed" : selected.includes(option.id)
+        {filterKey === "day" ? (
+          <DateCalendar
+            selected={selected}
+            excluded={excluded}
+            meta={meta}
+            counts={counts}
+            excludeMode={excludeMode}
+            onChange={onChange}
+          />
+        ) : (
+          <fieldset class={`filter-options ${options.length > 8 ? "searchable" : ""}`}>
+            <legend class="sr-only">{label}</legend>
+            {[...grouped]
+              .sort(([a], [b]) => a.localeCompare(b))
+              .map(([group, items]) => (
+                <div key={group}>
+                  {group && <p class="option-group">{group}</p>}
+                  {items.map((option) => (
+                    <label
+                      key={option.id}
+                      class={
+                        excluded.includes(option.id)
+                          ? "excluded-option"
+                          : (counts.get(option.id) ?? 0) === 0
+                            ? "zero-count"
+                            : ""
                       }
-                      ref={(input) => {
-                        if (input) input.indeterminate = excluded.includes(option.id);
-                      }}
-                      onChange={() => {
-                        const included = selected.filter((id) => id !== option.id);
-                        const rejected = excluded.filter((id) => id !== option.id);
-                        if (selected.includes(option.id) || excluded.includes(option.id))
-                          onChange(included, rejected);
-                        else if (excludeMode) onChange(included, [...rejected, option.id]);
-                        else onChange([...included, option.id], rejected);
-                      }}
-                    />
-                    <span class="option-label">
-                      <b class={`not-label ${excluded.includes(option.id) ? "" : "inactive"}`}>
-                        NOT{" "}
-                      </b>
-                      <span>{option.label}</span>
-                    </span>
-                    <small>{counts.get(option.id) ?? 0}</small>
-                  </label>
-                ))}
-              </div>
-            ))}
-          {!visible.length && <p>No options match “{search}”.</p>}
-        </fieldset>
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selected.includes(option.id)}
+                        aria-checked={
+                          excluded.includes(option.id) ? "mixed" : selected.includes(option.id)
+                        }
+                        ref={(input) => {
+                          if (input) input.indeterminate = excluded.includes(option.id);
+                        }}
+                        onChange={() => {
+                          const included = selected.filter((id) => id !== option.id);
+                          const rejected = excluded.filter((id) => id !== option.id);
+                          if (selected.includes(option.id) || excluded.includes(option.id))
+                            onChange(included, rejected);
+                          else if (excludeMode) onChange(included, [...rejected, option.id]);
+                          else onChange([...included, option.id], rejected);
+                        }}
+                      />
+                      <span class="option-label">
+                        <b class={`not-label ${excluded.includes(option.id) ? "" : "inactive"}`}>
+                          NOT{" "}
+                        </b>
+                        <span>{option.label}</span>
+                      </span>
+                      <small>{counts.get(option.id) ?? 0}</small>
+                    </label>
+                  ))}
+                </div>
+              ))}
+            {!visible.length && <p>No options match “{search}”.</p>}
+          </fieldset>
+        )}
         {children}
       </div>
     </details>

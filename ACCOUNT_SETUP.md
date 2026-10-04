@@ -161,5 +161,42 @@ Digests include inline-styled HTML plus a plain-text alternative; sign-in emails
 remain plain text. Generate a sample without reading accounts or sending email:
 `npx tsx scripts/preview-digest.ts .cache/digest-sample.html [ISO-date]`.
 The sample uses a small selection from the currently built catalogue.
- The remaining v1 visual polish stays
+The remaining v1 visual polish stays
 deferred as agreed in PLAN.md.
+
+## Favourite cinemas
+
+Migration 0005 adds account cinema preferences and per-browser merge receipts, both
+removed by account deletion. `/api/cinemas` uses POST for a one-time guest union,
+GET to read and PUT with the previous version to replace the selection. A stale
+version returns 409; the UI preserves unsaved choices and offers reload/retry.
+Guest choices and a random browser ID live in local storage. Account choices are
+kept separately in memory and D1, so sign-out restores guest choices without
+copying a previous account's favourites into another account.
+
+The production deploy applies migrations automatically; an isolated hosted preview
+needs `npx wrangler d1 migrations apply london-cine-info-preview --remote` first.
+Replay `npm run e2e:accounts -- tests/auth/cinemas.spec.ts` after a fixture build for
+recorded two-browser reconciliation, removal, failed-save and account-isolation
+coverage. This uses synthetic accounts and dev magic links, without real email.
+
+## Saved screenings and calendar export
+
+Migration 0006 adds `saved_screenings`, keyed by account and a SHA-256 identity
+of film, venue, UTC start and screen. Account deletion cascades these rows.
+`/api/calendar` supports GET, POST (idempotent save/update) and DELETE; all require
+an authenticated session and mutations require the same origin. The 1,000-event
+cap is checked atomically during insertion. `/api/calendar/export` exports the
+signed-in account's list or one owned ID; it never exposes another account's rows.
+Exports are private and not cached.
+
+`/my-calendar` keeps upcoming and past saved screenings. Individual and full
+ICS downloads use UTC timestamps, stable event IDs and estimated runtime ends;
+unknown runtime omits the end. Saved details are snapshots, with no subscription
+or automatic programme-change updates. Guests can export one screening without
+an account; persistent saved plans require sign-in.
+
+Production deployment applies 0006 automatically. Apply pending migrations to an
+isolated preview before testing it. Replay
+`npm run e2e:accounts -- tests/auth/calendar.spec.ts` for recorded desktop/390px
+save, persistence, failed-save retry, export, removal and account-isolation flows.

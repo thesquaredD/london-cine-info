@@ -16,6 +16,7 @@ import {
   type FilmShowtimes,
   type Rating,
   type Showtime,
+  type ScreeningFacet,
   type SourceRelease,
   type Venue,
 } from "../../src/shared/data";
@@ -208,6 +209,8 @@ export function buildDataset(
       "No current films remain after removing expired screenings; refusing to publish an empty dataset",
     );
   const allRows = [...screenings.values()].flat();
+  const screeningEpoch = Math.floor(config.now.getTime() / 86400000) * 86400000;
+  const screens = sorted(allRows.flatMap((row) => (row.screen ? [row.screen] : [])));
   const languages = sorted(
     retained.map((movie) => movie.originalLanguage || (movie.isUnmatched ? "unknown" : "en")),
   );
@@ -294,9 +297,9 @@ export function buildDataset(
       ge: movie.genres,
       ra: ratings(movie.id, matched),
       fa,
-      sc: rows.map((row) => {
+      sc: rows.map((row): ScreeningFacet => {
         const local = londonTime(row.time);
-        return [
+        const tuple: ScreeningFacet = [
           indexOf("day", local.date),
           local.minute,
           indexOf("venue", row.venue),
@@ -304,7 +307,10 @@ export function buildDataset(
           mask("accessibility", row.accessibility),
           row.soldOut ? 1 : 0,
           isEventScreening(row.category, row.notes) ? 1 : 0,
+          (row.time - screeningEpoch) / 60000,
         ];
+        if (row.screen) tuple.push(screens.indexOf(row.screen));
+        return tuple;
       }),
       new:
         releaseTime !== null &&
@@ -352,6 +358,8 @@ export function buildDataset(
   const meta: DataMeta = {
     schemaVersion: DATA_SCHEMA_VERSION,
     generatedAt: config.now.toISOString(),
+    screeningEpoch,
+    screens,
     upstreamGeneratedAt: data.generatedAt,
     sources: config.sources,
     releaseDateSource: "tmdb-original",

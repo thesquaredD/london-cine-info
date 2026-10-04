@@ -217,20 +217,26 @@ test("multiple choices, correlated screening filters, chips and reset", async ({
   const menu = await openFilters(page);
   await expect(menu.locator(".filter-picker")).toHaveCount(9);
   await menu.locator("summary").filter({ hasText: /^Day/ }).click();
-  await menu.getByRole("checkbox", { name: /^Tomorrow/ }).check();
-  await menu.getByRole("checkbox", { name: /^Today/ }).check();
+  await menu
+    .locator(".calendar-grid")
+    .getByRole("button", { name: /^Sunday, 4 October 2026/ })
+    .click();
+  await menu
+    .locator(".calendar-grid")
+    .getByRole("button", { name: /^Saturday, 3 October 2026/ })
+    .click();
   await menu
     .locator("summary")
     .filter({ hasText: /^Cinema/ })
     .click();
   await menu.getByRole("checkbox", { name: /BFI Southbank/ }).check();
   await closeFilters(page);
-  await expect(page).toHaveURL(/day=tomorrow&day=today&venue=/);
+  await expect(page).toHaveURL(/day=2026-10-04&day=2026-10-03&venue=/);
   await page.getByRole("button", { name: "Fixture Classic A", exact: true }).click();
   await expect(page.locator(".showtime-day")).toHaveCount(1);
   await expect(page.locator(".showtime-day")).toContainText("4 October");
   await expect(page.locator(".showtime-day a")).toHaveCount(1);
-  await page.getByRole("button", { name: "Remove day filter: Tomorrow", exact: true }).click();
+  await page.getByRole("button", { name: "Remove day filter: Sun 4 Oct", exact: true }).click();
   await expect(page.getByRole("button", { name: "Fixture Classic A", exact: true })).toHaveCount(0);
   const menu2 = await openFilters(page);
   await menu2.getByRole("button", { name: "Reset all filters" }).click();
@@ -289,6 +295,8 @@ test("Today and Tomorrow shortcuts replace day filters while preserving other ch
 }) => {
   await page.clock.setFixedTime(new Date("2026-10-03T09:00:00Z"));
   await page.goto("/?day=beyond&not_day=today&language=fr");
+  if (page.viewportSize()!.width < 800)
+    await page.getByRole("button", { name: /^Quick filters/ }).click();
   const today = page.locator(".quick-days").getByRole("button", { name: /^Today/ });
   const tomorrow = page.locator(".quick-days").getByRole("button", { name: /^Tomorrow/ });
   await today.click();
@@ -327,7 +335,10 @@ test("filter controls stay stationary through selection, clearing and changing c
   await expect(page.locator(".film-row")).toHaveCount(6);
   const summary = page.locator(".filter-summary");
   const baselineHeight = (await summary.boundingBox())!.height;
-  const quick = page.locator(".quick-days").getByRole("button", { name: /^Tomorrow/ });
+  const quick =
+    page.viewportSize()!.width < 800
+      ? page.getByRole("button", { name: /^Quick filters/ })
+      : page.locator(".quick-days").getByRole("button", { name: /^Tomorrow/ });
   const quickX = (await quick.boundingBox())!.x;
   const menu = await openFilters(page);
   for (const name of [
@@ -345,7 +356,10 @@ test("filter controls stay stationary through selection, clearing and changing c
       .locator(".filter-picker")
       .filter({ has: page.locator("summary>span").filter({ hasText: new RegExp(`^${name}$`) }) });
     await picker.locator("summary").click();
-    const option = picker.getByRole("checkbox").first();
+    const option =
+      name === "Day"
+        ? picker.locator(".calendar-grid").getByRole("button").first()
+        : picker.getByRole("checkbox").first();
     await option.scrollIntoViewIfNeeded();
     const frame = await picker.boundingBox();
     const control = await option.boundingBox();
@@ -353,7 +367,10 @@ test("filter controls stay stationary through selection, clearing and changing c
     await expect(clear).toBeDisabled();
     for (let cycle = 0; cycle < 2; cycle++) {
       await option.press("Space");
-      await expect(option).toHaveAttribute("aria-checked", cycle % 2 === 0 ? "true" : "false");
+      await expect(option).toHaveAttribute(
+        name === "Day" ? "aria-pressed" : "aria-checked",
+        cycle % 2 === 0 ? "true" : "false",
+      );
       const changed = await option.boundingBox();
       const changedFrame = await picker.boundingBox();
       expect(Math.abs(changed!.y - control!.y), name + " option vertical position").toBeLessThan(1);

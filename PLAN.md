@@ -754,3 +754,86 @@ resolve interaction details without requiring another product interview.
 Deferred: What am I missing / personalised discovery, watched-history import and
 recommendation modelling. Other brainstormed features are not part of this phase.
 No implementation or deployment is included in this plan-only update.
+
+### 13.6 Implementation progress — 4 October 2026
+
+- [x] Calendar/date semantics and quick filters: separate dates, exclusions,
+      keyboard month navigation, calendar-week shortcuts, Tonight with exact start
+      expiry, strict known-runtime limit, URL/chip/reset behaviour and London dates.
+      Invalid shared dates are rejected before rendering the calendar.
+- [x] My cinemas: searchable borough groups, separate favourite setup and results
+      filtering, guest local storage, one-time browser/account union, authoritative
+      account removals, concrete venue IDs in links and account/guest isolation.
+      Migration 0005 adds cascaded preferences and reconciliation receipts. Versioned
+      saves reject concurrent changes; failed saves preserve choices for retry.
+      Privacy/help text documents storage and deletion.
+- [x] Empty-result recovery: up to three positive-count adjustments, computed by
+      the same film/screening matcher, preserving unrelated filters. Missing account
+      or watchlist setup does not receive search-adjustment suggestions.
+- [x] Radar: dedicated navigation and sections, global distinct upcoming counts
+      including sold-out screenings, local correlated filtering, explicit formats,
+      matching expanded programmes, default section ordering and stable tie-breaks.
+      Results update every 15 seconds and on focus/visibility changes, including
+      London midnight; loading a new page is unnecessary.
+- [x] Format audit: the cached combined snapshot explicitly includes `35mm`,
+      `70mm`, `imax` and `imax-70mm`. Most screenings have unspecified formats;
+      generic IMAX does not distinguish digital versus film. No venue-name inference
+      or historical rarity scoring is used. At the audit cutoff (4 October, 22:00
+      London time), 2,056 films / 25,527 screenings yielded 1,682 Limited opportunity
+      films and 140 Special formats films. These are cached-snapshot measurements,
+      not a new upstream or production audit.
+- [x] Automated verification: 76 unit/API tests, 46 catalogue browser tests and
+      12 account browser tests. Coverage includes year/week/DST boundaries, exact
+      UTC timestamps, 119/120/unknown runtimes, multi-date/exclusion URLs, keyboard
+      navigation, one-time union, second-device removal, save failure/account
+      isolation, Radar deduplication/overlapping labels and global qualification,
+      same-screening correlation, counted recovery and midnight expiry. Recorded
+      desktop/390px flows plus the theme/viewport audit pass without overflow or
+      application exceptions.
+- [x] Payload audit: UTC starts use minute offsets from a UTC-midnight baseline;
+      screen labels are interned in metadata. Exact starts and repeated DST hours
+      survive decoding. Cached live film JSON is 458,815 bytes gzip (448.1 KiB),
+      and application JavaScript is approximately 29.9 KiB gzip.
+- [ ] Dio's visual review and interactive production verification. No interactive
+      production browser actions or deployment were performed. Respect §11.5 before
+      starting that browser step. Production deploy automatically applies migration
+      0005; an isolated preview needs its own migration first.
+
+Replay and behaviour are documented in README's Dates, favourite cinemas and
+Radar section. Local screenshots/recordings live under
+`~/.Codex/london-cine-info/discovery/verification/` and the existing account
+verification directory; browser output is excluded from Git. A draft PR carries
+this implementation for review before merge/deployment.
+
+### 13.7 Mobile UX and saved calendar follow-up — 4 October 2026
+
+User requirement: selected dates invert their colours, mobile quick filters use a
+single button/bottom sheet, review the remaining UX, and add a calendar action to
+every screening. Confirmed scope: **saved screenings plus calendar export**.
+
+- [x] Plain date numbers without minus prefixes; inverted selected colours and
+      strikethrough exclusions, preserving accessible labels and explicit modes.
+- [x] Phone Quick filters button, two-column bottom sheet, result action and focus
+      restoration; management/sign-in closes the preceding sheet.
+- [x] Code/flow UX review in `docs/UX_REVIEW.md`; simplify Radar copy, duplicate
+      empty states, navigation destinations and cinema reload recovery.
+- [x] Add to calendar on each expanded screening, including Radar. Guests can
+      download one ICS; accounts can save/remove and revisit `/my-calendar`.
+      Separate Release calendar navigation from My calendar.
+- [x] Account-scoped saved rows, duplicate-safe identities, atomic 1,000-event
+      limit, persistence, account isolation and deletion cascade (migration 0006).
+      Individual and full calendar exports use exact UTC starts and stable IDs,
+      escaped/folded text and estimated runtime ends; unknown runtime omits end.
+- [x] Automated verification: 80 unit/API tests, 47 catalogue browser checks
+      (one phone-only test skipped on desktop), and 14 account browser checks.
+      Includes mobile sheet/focus, inverted dates, calendar persistence/export,
+      failed-save retry, account isolation, cap/upsert behaviour and deletion.
+      Typecheck, lint and build pass. Application JavaScript is ~33.3 KiB gzip.
+- [ ] Dio's visual review, manual Apple/Google calendar import and interactive
+      production verification (follow §11.5). No deployment performed.
+
+Saved details are snapshots, not subscriptions or automatic change alerts. Ends
+are estimates and saving does not book a ticket. The UX review records the
+remaining first-save sign-in return and programme-density decisions. Production
+deployment applies migration 0006; isolated previews need pending migrations.
+Replay/evidence details are in README and ACCOUNT_SETUP.md.

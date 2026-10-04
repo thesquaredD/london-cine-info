@@ -1336,7 +1336,7 @@ h3 {
   color: var(--muted);
   overflow-wrap: anywhere;
 }
-.account-dialog {
+:is(.account-dialog, .cinema-dialog, .quick-filter-dialog) {
   width: min(480px, calc(100vw - 32px));
   max-height: 85dvh;
   padding: 0;
@@ -1346,7 +1346,7 @@ h3 {
   color: var(--fg);
   overflow-y: auto;
 }
-.account-dialog::backdrop {
+:is(.account-dialog, .cinema-dialog, .quick-filter-dialog)::backdrop {
   background: rgba(0, 0, 0, 0.45);
 }
 .account-dialog-body {
@@ -1358,22 +1358,22 @@ h3 {
   margin: 0;
   overflow-wrap: anywhere;
 }
-.account-dialog form,
-.account-dialog fieldset {
+:is(.account-dialog, .cinema-dialog, .quick-filter-dialog) form,
+:is(.account-dialog, .cinema-dialog, .quick-filter-dialog) fieldset {
   display: grid;
   gap: 8px;
   min-width: 0;
 }
-.account-dialog fieldset {
+:is(.account-dialog, .cinema-dialog, .quick-filter-dialog) fieldset {
   margin: 0;
   padding: 0;
   border: 0;
 }
-.account-dialog label {
+:is(.account-dialog, .cinema-dialog, .quick-filter-dialog) label {
   font-weight: 500;
 }
-.account-dialog input,
-.account-dialog select {
+:is(.account-dialog, .cinema-dialog, .quick-filter-dialog) input,
+:is(.account-dialog, .cinema-dialog, .quick-filter-dialog) select {
   width: 100%;
   min-width: 0;
   padding: 7px 8px;
@@ -1382,8 +1382,8 @@ h3 {
   background: var(--panel);
   color: inherit;
 }
-.account-dialog fieldset p,
-.account-dialog .import-status p + p {
+:is(.account-dialog, .cinema-dialog, .quick-filter-dialog) fieldset p,
+:is(.account-dialog, .cinema-dialog, .quick-filter-dialog) .import-status p + p {
   color: var(--muted);
   font-size: 13px;
 }
@@ -1463,7 +1463,7 @@ h3 {
   justify-self: start;
 }
 @media (max-width: 799px) {
-  .account-dialog {
+  :is(.account-dialog, .cinema-dialog, .quick-filter-dialog) {
     position: fixed;
     inset: auto 0 0;
     margin: 0;
@@ -1473,12 +1473,12 @@ h3 {
     border-radius: 4px 4px 0 0;
     padding-bottom: env(safe-area-inset-bottom);
   }
-  .account-dialog input,
-  .account-dialog select {
+  :is(.account-dialog, .cinema-dialog, .quick-filter-dialog) input,
+  :is(.account-dialog, .cinema-dialog, .quick-filter-dialog) select {
     font-size: 16px;
     min-height: 44px;
   }
-  .account-dialog button,
+  :is(.account-dialog, .cinema-dialog, .quick-filter-dialog) button,
   .watchlist-intro button {
     min-height: 44px;
   }
@@ -1637,4 +1637,218 @@ h3 {
   .active-filters button {
     min-height: 44px;
   }
+}
+
+/* Calendar and discovery controls retain the catalogue's own visual language. */
+.date-calendar {
+  max-width: 340px;
+}
+.date-shortcuts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin: 8px 0;
+}
+.date-shortcuts button {
+  font-size: 12px;
+  padding: 5px;
+}
+.calendar-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 10px 0;
+}
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 3px;
+}
+.calendar-grid button {
+  min-height: 34px;
+  padding: 3px;
+}
+.calendar-weekday {
+  text-align: center;
+  font-size: 11px;
+}
+
+.calendar-grid button[aria-current="date"] {
+  text-decoration: underline;
+}
+.quick-days {
+  flex-wrap: wrap;
+}
+.favourite-options {
+  max-height: 48vh;
+  overflow: auto;
+  margin: 12px 0;
+}
+.favourite-options label {
+  display: block;
+  padding: 6px 0;
+}
+.favourite-options h3 {
+  font-size: 13px;
+  color: var(--muted);
+}
+.radar-page > section > h2 {
+  margin: 18px 14px 8px;
+  font-size: 18px;
+}
+.radar-label {
+  font-size: 12px;
+  color: var(--muted);
+  margin: 4px 0;
+}
+.recovery-suggestions {
+  padding: 12px;
+  border-bottom: 1px solid var(--line);
+}
+.recovery-suggestions button {
+  margin: 3px;
+}
+/* Each Radar section has its own page controls; keep them with that section. */
+.radar-page .pagination {
+  position: static;
+}
+
+.calendar-grid button[aria-pressed="true"],
+.date-shortcuts button[aria-pressed="true"] {
+  background: var(--fg);
+  color: var(--bg);
+  border-color: var(--fg);
+  opacity: 1;
+}
+.calendar-grid button.excluded-option {
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
+}
+.quick-filters-mobile {
+  display: none;
+}
+.quick-filter-dialog .quick-days {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.quick-filter-dialog .quick-days button {
+  min-height: 44px;
+  text-align: left;
+}
+.quick-filter-dialog .quick-days button[aria-pressed="true"] {
+  background: var(--fg);
+  color: var(--bg);
+}
+.quick-filter-dialog .view-results {
+  width: 100%;
+  margin-top: 16px;
+  min-height: 44px;
+}
+@media (max-width: 799px) {
+  .quick-filters-desktop {
+    display: none;
+  }
+  .quick-filters-mobile {
+    display: inline-block;
+    min-height: 44px;
+    margin-bottom: 10px;
+  }
+  .quick-filter-dialog .quick-days {
+    width: 100%;
+  }
+}
+.screening-calendar-dialog {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--fg);
+  width: min(520px, calc(100% - 24px));
+  padding: 0;
+  max-height: 90dvh;
+  overflow: auto;
+}
+.screening-calendar-dialog::backdrop {
+  background: var(--fg);
+  opacity: 0.4;
+}
+.screening-calendar-dialog .sheet-heading {
+  position: sticky;
+  top: 0;
+  background: var(--panel);
+}
+.calendar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin: 12px 0;
+}
+.calendar-actions > p {
+  width: 100%;
+  margin: 0;
+}
+.add-calendar {
+  font-size: 12px;
+  display: inline-block;
+  margin: 3px 0;
+}
+.my-calendar-page {
+  padding: 16px;
+  max-width: 840px;
+}
+.saved-screenings {
+  list-style: none;
+  padding: 0;
+}
+.saved-screenings > li {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  margin: 12px 0;
+  padding: 12px;
+}
+.saved-screenings h4 {
+  margin: 0 0 6px;
+  font-size: 16px;
+  font-weight: 500;
+}
+.saved-screenings p {
+  margin: 6px 0;
+}
+.calendar-export {
+  display: inline-block;
+  padding: 10px 12px;
+}
+@media (max-width: 799px) {
+  .screening-calendar-dialog {
+    margin: auto 0 0;
+    width: 100%;
+    max-width: none;
+    max-height: 90dvh;
+    border-bottom: 0;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .calendar-actions button,
+  .add-calendar {
+    min-height: 44px;
+  }
+}
+
+.radar-intro {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--line);
+}
+.radar-intro > p {
+  margin: 0 0 6px;
+}
+.radar-intro summary {
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 12px;
+}
+.radar-intro details p {
+  font-size: 12px;
+}
+.recovery-suggestions h2 {
+  font-size: 16px;
+  margin: 0;
 }

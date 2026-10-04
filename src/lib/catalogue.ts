@@ -9,8 +9,10 @@ export const PAGES = [
   { path: "/classics", name: "Classics" },
   { path: "/retrospectives", name: "Retrospectives" },
   { path: "/events", name: "Events" },
-  { path: "/calendar", name: "Calendar" },
+  { path: "/calendar", name: "Release calendar" },
   { path: "/watchlist", name: "Watchlist" },
+  { path: "/my-calendar", name: "My calendar" },
+  { path: "/radar", name: "Radar" },
 ] as const;
 export const RATINGS: { key: RatingKey; name: string; short: string; scale: string }[] = [
   { key: "lb", name: "Letterboxd", short: "LB", scale: "/5" },
@@ -18,7 +20,8 @@ export const RATINGS: { key: RatingKey; name: string; short: string; scale: stri
   { key: "mc", name: "Metacritic", short: "MC", scale: "/100" },
   { key: "rt", name: "Rotten Tomatoes", short: "RT", scale: "%" },
 ];
-export type SortKey = "title" | "director" | "year" | "watchlist" | "event" | RatingKey;
+export type SortKey =
+  "title" | "director" | "year" | "watchlist" | "event" | "opportunity" | RatingKey;
 export type ViewState = {
   path: string;
   search: string;
@@ -28,6 +31,9 @@ export type ViewState = {
   to: string;
   available: boolean;
   watchlist?: boolean;
+  short?: boolean;
+  tonight?: boolean;
+  radarSection?: "limited" | "formats";
   director: string;
   sort: SortKey;
   direction: "asc" | "desc";
@@ -39,13 +45,17 @@ const sortKeys = [
   "year",
   "watchlist",
   "event",
+  "opportunity",
   ...RATINGS.map((rating) => rating.key),
 ];
 const collator = new Intl.Collator("en", { sensitivity: "base", numeric: true });
 const normalize = (value: string) => value.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
 
 export function defaultSort(path: string): Pick<ViewState, "sort" | "direction"> {
-  return { sort: path === "/calendar" ? "year" : "lb", direction: "desc" };
+  return {
+    sort: path === "/radar" ? "opportunity" : path === "/calendar" ? "year" : "lb",
+    direction: "desc",
+  };
 }
 export function hasCustomSort(state: ViewState): boolean {
   const defaults = defaultSort(state.path);
@@ -67,11 +77,19 @@ export function sortLabel(key: SortKey): string {
         year: "Year",
         watchlist: "Watchlist",
         event: "Event",
+        opportunity: "Radar order",
       } as const
-    )[key as "title" | "director" | "year" | "watchlist" | "event"]
+    )[key as "title" | "director" | "year" | "watchlist" | "event" | "opportunity"]
   );
 }
 
+function validDateChoice(value: string) {
+  if (["today", "tomorrow", "weekend", "week", "this-week", "next-week", "beyond"].includes(value))
+    return true;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const date = new Date(`${value}T12:00:00Z`);
+  return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value;
+}
 export function readView(url: URL): ViewState {
   const sort = url.searchParams.get("sort");
   const path = [
@@ -83,7 +101,7 @@ export function readView(url: URL): ViewState {
   ].includes(url.pathname)
     ? url.pathname
     : "/";
-  return {
+  const state: ViewState = {
     path,
     search: url.searchParams.get("q") ?? "",
     filters: Object.fromEntries(
@@ -132,12 +150,23 @@ export function readView(url: URL): ViewState {
       ? url.searchParams.get("to")!
       : "",
     available: url.searchParams.get("available") === "1",
+    ...(url.searchParams.get("short") === "1" ? { short: true } : {}),
+    ...(url.searchParams.get("tonight") === "1" ? { tonight: true } : {}),
     ...(url.searchParams.get("watchlist") === "1" ? { watchlist: true } : {}),
     director: url.searchParams.get("director") ?? "",
     sort: sortKeys.includes(sort ?? "") ? (sort as SortKey) : defaultSort(path).sort,
     direction: url.searchParams.get("order") === "asc" ? "asc" : "desc",
     page: Math.max(1, Number.parseInt(url.searchParams.get("page") ?? "1", 10) || 1),
   };
+  if (state.filters.day) state.filters.day = state.filters.day.filter(validDateChoice);
+  if (state.excluded.day) state.excluded.day = state.excluded.day.filter(validDateChoice);
+  if (state.tonight) {
+    state.filters = { ...state.filters, day: ["today"], time: [] };
+    state.excluded = { ...state.excluded, day: [], time: [] };
+    state.from = "18:00";
+    state.to = "";
+  }
+  return state;
 }
 export function viewUrl(state: ViewState): string {
   const query = new URLSearchParams();
@@ -149,6 +178,8 @@ export function viewUrl(state: ViewState): string {
   if (state.from) query.set("from", state.from);
   if (state.to) query.set("to", state.to);
   if (state.available) query.set("available", "1");
+  if (state.short) query.set("short", "1");
+  if (state.tonight) query.set("tonight", "1");
   if (state.watchlist) query.set("watchlist", "1");
   if (state.director) query.set("director", state.director);
   if (state.sort !== defaultSort(state.path).sort) query.set("sort", state.sort);
@@ -178,6 +209,7 @@ function value(
   watched?: ReadonlySet<string>,
   mode: TitleMode = "both",
 ): string | number | null {
+  if (key === "opportunity") return null;
   if (key === "watchlist") return Number(watched?.has(letterboxdSlug(film.ra.lb?.url) ?? ""));
   if (key === "title") return displayTitle(film, mode);
   if (key === "event") return film.ev?.join(", ") || (film.event ? "Special screening" : null);

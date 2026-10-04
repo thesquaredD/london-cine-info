@@ -114,7 +114,7 @@ Filters sit above the table: Search, When, Cinema, Genre and More filters on des
 Below 800px, Search fills a row and When, Cinema and Filters open a full-width bottom
 sheet. The table shows Title and Director at phone widths; expanding a film reveals
 its ratings and year. Desktop retains all seven separately sortable columns. The theme follows the system with an override
-for this visit. No cookies or browser storage are used.
+for this visit. Guest favourite cinemas use browser local storage; signed-in accounts use a necessary session cookie and synchronise cinema favourites through D1. Theme and Display settings last for this visit.
 
 All page links currently select their dataset flags. Retrospectives are grouped alphabetically by director, with sorting inside each
 group and continued headings across page boundaries. Co-directed films appear in
@@ -177,3 +177,76 @@ nested scrolling.
 Page navigation stays in a desktop sidebar and a separate Pages drawer on phones. Film filters remain in the results toolbar and mobile filter sheet.
 
 Accounts and Letterboxd watchlists: see [ACCOUNT_SETUP.md](ACCOUNT_SETUP.md) for platform setup, verification and activation.
+
+## Dates, favourite cinemas and Radar
+
+The When picker offers a keyboard-accessible month calendar for separate dates,
+with explicit exclusions. Arrow keys move by day/week, Home/End move within the
+week, and Page Up/Down change month. Faded dates have no matching listed screenings;
+listing coverage can be incomplete. All relative dates use London time. This week
+means the remaining Monday–Sunday calendar week; Next week means the next
+Monday–Sunday. Next 7 days remains a rolling window in the picker.
+
+Quick filters include Today, Tomorrow, Tonight, This weekend, This week, Next week,
+My watchlist, My cinemas and Under 2 hours. Tonight uses today from 18:00, excluding
+starts that have passed; leaving it clears its supplied time range. The runtime
+limit is strictly below 120 minutes and excludes unknown runtimes. Empty searches
+can offer adjustments with the resulting distinct-film count, keeping unrelated
+choices intact.
+
+Manage my cinemas uses a searchable chooser grouped by borough. Guest choices
+stay in this browser. On sign-in, guest choices merge into the account once per
+browser/account; subsequent account removals remain removed. Signed-in choices
+sync across devices; concurrent saves require reloading rather than overwriting
+another device's edit. Guest and account choices stay separate on sign-out. Shared
+My cinemas links contain concrete venue IDs. Cinema setup does not itself apply a
+results filter. Account deletion cascades through cinema preferences and merge receipts.
+
+`/radar` has Limited opportunity (one to three distinct future screenings across
+all covered cinemas) and Special formats (explicit 35mm, 70mm, IMAX or IMAX 70mm).
+Global counts include sold-out screenings and remain independent of local filters.
+Special-format filters and expanded programmes match the same qualifying screening.
+Generic IMAX metadata does not distinguish digital versus film. Counts describe
+this snapshot, with freshness and listing-horizon context; they do not promise a
+last chance. Time-sensitive results update every 15 seconds and on returning to
+the page, including across London midnight.
+
+Migration `0005_cinema_favourites.sql` is applied automatically by the production
+deploy workflow. Apply it to the isolated preview database before account testing
+on a hosted preview. The film tuple includes a compact UTC offset relative to
+`meta.screeningEpoch`, plus an optional index into `meta.screens`, preserving exact
+starts and repeated DST hours without fetching every show's detail file.
+
+Replay the fixture-based recorded verification from the feature checkout:
+
+```sh
+npm run build-data -- --fixture
+npm run build
+npm run e2e -- tests/e2e/discovery.spec.ts --workers=2
+npm run e2e:accounts -- tests/auth/cinemas.spec.ts
+```
+
+`tests/e2e/discovery.spec.ts` records desktop/390px calendar, quick-filter,
+empty-result, guest-favourite, Radar and midnight-expiry flows. It saves screenshots
+under `~/.Codex/london-cine-info/discovery/verification/` locally (ignored browser
+output on CI). `tests/auth/cinemas.spec.ts` records real local Functions/D1 account
+sync and failure recovery without sending email or scraping Letterboxd. Interactive
+production verification remains pending, respecting PLAN §11.5.
+
+On phones, quick filters are collapsed into one button opening a bottom sheet.
+Selected dates invert their colours; excluded dates use strikethrough rather than
+a minus before the day number. The existing `/calendar` page is labelled Release
+calendar to distinguish it from the new personal calendar.
+
+Each expanded screening has **Add to calendar**. Anyone can download that
+screening as `.ics`. Signed-in users can save screenings to `/my-calendar`, remove
+them, and export an individual screening or the whole saved list. Saved details
+are snapshots; exports do not subscribe to changes or book tickets. Start times
+are exact UTC instants displayed in London time; ends are runtime estimates and
+are omitted when runtime is unknown. Migration `0006_saved_screenings.sql` stores
+account-specific plans and removes them with account deletion. Deploy applies it
+automatically; an isolated preview needs its pending migrations first.
+
+Replay calendar account verification with
+`npm run e2e:accounts -- tests/auth/calendar.spec.ts` after the fixture build.
+The code/flow UX review and remaining decisions are in [docs/UX_REVIEW.md](docs/UX_REVIEW.md).
