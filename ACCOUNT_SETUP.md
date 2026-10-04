@@ -140,10 +140,22 @@ its last announced screening, so later programmes appear in the week they screen
 An empty digest is skipped. Eight available film cards are followed by a compact
 list for sold-out films and overflow, with later dates mentioned in the footer. Failed/stale imports are excluded from mail delivery. Combined
 movie IDs sharing a Letterboxd slug are deduplicated. Resend idempotency keys are
-stable per account/day, and a shared atomic quota keeps combined sign-in/digest
+stored with the exact email payload in a D1 delivery record per account/London date, and a shared atomic quota keeps combined sign-in/digest
 requests under 90 emails in a 24-hour window. Users beyond that cap wait for the
 next weekly run. Unsubscribe works without signing in; deletion cascades through
 all account data.
+
+Migration 0004 adds `digest_deliveries`. New digests use the `digest-v2/` key
+namespace, avoiding the previous per-account/day key collision when the template
+changed. A retry reuses the stored HTML, text, headers and key even after a rebuild;
+alert writes and delivery completion share one atomic D1 batch. Sent payloads are
+removed immediately; completed and never-attempted records are pruned after seven
+days. An attempted but unconfirmed delivery is retained for reconciliation and
+blocks later sends for that watchlist if its 24-hour Resend deduplication window
+has expired. Inspect Resend's delivery record before marking it complete or
+clearing it; never rotate its key blindly. Account deletion cascades these records.
+Failures are counted with safe provider categories and do not block the rest of
+the batch; the Actions run still fails so delivery errors remain visible.
 
 Digests include inline-styled HTML plus a plain-text alternative; sign-in emails
 remain plain text. Generate a sample without reading accounts or sending email:

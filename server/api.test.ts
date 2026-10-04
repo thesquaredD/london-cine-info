@@ -1,3 +1,11 @@
+import {
+  queueDigestQuery,
+  pendingDigestQuery,
+  pruneDigestQuery,
+  attemptDigestQuery,
+  completeDigestQueries,
+  type Delivery,
+} from "../scripts/lib/digest-delivery";
 import { digestAlertQuery } from "../scripts/lib/digest-store";
 import type { DigestFilm } from "../scripts/lib/digest";
 import { syncQueries, failedSyncQueries } from "../scripts/lib/watchlist-store";
@@ -339,4 +347,116 @@ it("digest alerts store each film's announced epoch and cannot recreate a delete
       .bind(user.id)
       .first("count"),
   ).toBe(0);
+});
+
+it("queued digests freeze retries, complete atomically and respect opt-out/deletion", async () => {
+  const { cookie } = await signIn("digest-queue@example.com");
+  await request("/api/me", "PUT", { username: "queue-test", digestWeekday: 0 }, cookie);
+  const { user } = (await (await request("/api/me", "GET", undefined, cookie)).json()) as {
+    user: { id: string };
+  };
+  const payload = {
+    from: "test@example.com",
+    to: ["recipient@example.com"],
+    subject: "Frozen",
+    text: "First version",
+    html: "<p>First version</p>",
+  };
+  const entries = [{ slug: "frozen-film", lastScreeningAt: 3000 }] as DigestFilm[];
+  const run = (q: ReturnType<typeof queueDigestQuery>) =>
+    env.DB.prepare(q.sql)
+      .bind(...q.params!)
+      .all<Delivery>();
+  const queue = (day: string, id: string, text: string) =>
+    run(queueDigestQuery(user.id, "queue-test", 0, day, id, { ...payload, text }, entries, 1000));
+  const first = (await queue("2026-10-04", "first-id", "First version")).results[0]!;
+  const rerun = (await queue("2026-10-04", "second-id", "Changed build")).results[0]!;
+  expect(rerun.payload).toBe(first.payload);
+  expect(rerun.idempotency_key).toBe("digest-v2/first-id");
+  const attempt = (await run(attemptDigestQuery(rerun, 0, 1100))).results[0]!;
+  expect(attempt.attempted_at).toBe(1100);
+  expect((await run(attemptDigestQuery(attempt, 0, 1200))).results[0]!.attempted_at).toBe(1100);
+  // A failed second statement must roll back alert insertion too.
+  const broken = [
+    ...completeDigestQueries(attempt, 1300),
+    { sql: "INSERT INTO missing_table VALUES (1)", params: [] },
+  ];
+  await expect(
+    env.DB.batch(broken.map((q) => env.DB.prepare(q.sql).bind(...q.params!))),
+  ).rejects.toThrow();
+  expect(
+    await env.DB.prepare("SELECT COUNT(*) AS count FROM alerts_sent WHERE user_id=?")
+      .bind(user.id)
+      .first("count"),
+  ).toBe(0);
+  await env.DB.batch(
+    completeDigestQueries(attempt, 1400).map((q) => env.DB.prepare(q.sql).bind(...q.params!)),
+  );
+  const completed = (await queue("2026-10-04", "third-id", "New template")).results[0]!;
+  expect(completed).toMatchObject({ delivered_at: 1400, payload: null, announced: null });
+  expect(
+    await env.DB.prepare("SELECT last_screening_at FROM alerts_sent WHERE user_id=?")
+      .bind(user.id)
+      .first("last_screening_at"),
+  ).toBe(3000);
+  const next = (await queue("2026-10-11", "next-id", "Next week")).results[0]!;
+  expect(next.idempotency_key).not.toBe(completed.idempotency_key);
+  await request("/api/me", "PUT", { digestWeekday: null }, cookie);
+  expect((await run(attemptDigestQuery(next, 0, 1500))).results).toHaveLength(0);
+  await request("/api/me", "PUT", { digestWeekday: 0, username: "changed-queue" }, cookie);
+  expect((await run(attemptDigestQuery(next, 0, 1600))).results).toHaveLength(0);
+  // Late completion of the old watchlist doesn't reintroduce its alerts.
+  await env.DB.batch(
+    completeDigestQueries(next, 1700).map((q) => env.DB.prepare(q.sql).bind(...q.params!)),
+  );
+  expect(
+    await env.DB.prepare("SELECT COUNT(*) AS count FROM alerts_sent WHERE user_id=?")
+      .bind(user.id)
+      .first("count"),
+  ).toBe(0);
+  await request("/api/me", "DELETE", undefined, cookie);
+  expect(
+    await env.DB.prepare("SELECT COUNT(*) AS count FROM digest_deliveries WHERE user_id=?")
+      .bind(user.id)
+      .first("count"),
+  ).toBe(0);
+  expect((await queue("2026-10-04", "late-id", "Deleted")).results).toHaveLength(0);
+});
+
+it("an uncertain older delivery survives cleanup and blocks a later day's new send", async () => {
+  const { cookie } = await signIn("digest-uncertain@example.com");
+  await request("/api/me", "PUT", { username: "uncertain-test", digestWeekday: 0 }, cookie);
+  const { user } = (await (await request("/api/me", "GET", undefined, cookie)).json()) as {
+    user: { id: string };
+  };
+  const run = (q: ReturnType<typeof queueDigestQuery>) =>
+    env.DB.prepare(q.sql)
+      .bind(...q.params!)
+      .all<Delivery>();
+  const payload = {
+    from: "test@example.com",
+    to: ["test@example.com"],
+    subject: "Frozen",
+    text: "Frozen",
+  };
+  const queued = (
+    await run(
+      queueDigestQuery(
+        user.id,
+        "uncertain-test",
+        0,
+        "2026-10-04",
+        "uncertain-key",
+        payload,
+        [],
+        1000,
+      ),
+    )
+  ).results[0]!;
+  await run(attemptDigestQuery(queued, 0, 1100));
+  await run(pruneDigestQuery(1100 + 8 * 86400));
+  const pending = (await run(pendingDigestQuery(user.id, "2026-10-11", "uncertain-test")))
+    .results[0]!;
+  expect(pending.idempotency_key).toBe("digest-v2/uncertain-key");
+  expect((await run(attemptDigestQuery(pending, 0, 1100 + 8 * 86400))).results).toHaveLength(0);
 });
