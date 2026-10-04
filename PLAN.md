@@ -641,3 +641,116 @@ Do not replace its filter redesign as part of account UX work.
   These are synthetic local measurements, not a physical phone or production
   CDN benchmark. First paint and payload budgets pass; initial processing remains
   the main performance improvement opportunity.
+
+## 13. Next phase: dates, quick filters and Radar — agreed 4 October 2026
+
+Requirements agreed with dio. This phase improves filtering and adds a dedicated
+Radar page; it does not implement a recommendation system. The defaults below
+resolve interaction details without requiring another product interview.
+
+### 13.1 Calendar picker and date shortcuts
+
+- Replace the Day exact-date list with a month calendar supporting multiple
+  separate selected dates. Keep the When entry point and existing quick date
+  options (Today, Tomorrow, This weekend, Next 7 days and Later); add This week
+  and Next week. Preserve explicit date exclusions, removable chips and shared
+  filter URLs. This picker is separate from the existing release Calendar page.
+- Calendar navigation, selection and focus must work by keyboard and at 390px.
+  Distinguish dates with no matching listed screenings and make the available
+  listing horizon clear; missing listings do not prove that no screenings exist.
+- Quick-filter row: Today, Tomorrow, Tonight, This weekend, This week, Next week,
+  My watchlist, My cinemas and Under 2 hours. Keep Next 7 days in the picker.
+  Use a compact wrapping or horizontally scrollable layout on phones.
+- London local time governs all relative dates. Weeks run Monday–Sunday: This
+  week covers the remaining days of the current calendar week, including today;
+  Next week covers the following Monday–Sunday. Neither means a rolling seven
+  days. Retain the existing Saturday/Sunday definition of This weekend.
+- Tonight means today, starting at 18:00 or later, excluding screenings whose
+  start instant has passed. Reflect its day/time effect in visible controls.
+- Date shortcuts replace date selections/exclusions; clicking an active shortcut
+  clears it. Tonight also sets the time constraint; leaving Tonight must not
+  leave a hidden time restriction. Preserve unrelated filters. Multiple explicit
+  dates match any chosen date; different filter categories still combine with AND.
+- Under 2 hours means a known runtime strictly below 120 minutes; films with
+  unknown runtime do not match. My watchlist uses the existing imported list and
+  existing account/import recovery states.
+
+### 13.2 My cinemas
+
+- Let users choose and edit a set of favourite cinemas through the searchable,
+  borough-grouped cinema chooser. Favouriting a venue and filtering by it are
+  separate actions; provide a clear Manage my cinemas entry point.
+- No account required: save favourites in this browser. Signed-in users save and
+  synchronise favourites across devices using their account. This explicitly
+  supersedes earlier no-localStorage/no-preference-persistence rules for cinema
+  favourites only; update relevant privacy/help text during implementation.
+- My cinemas matches any saved favourite venue. With no favourites, the shortcut
+  opens setup rather than silently returning an empty list. Use stable venue IDs.
+- Default sign-in reconciliation: union browser favourites into account favourites
+  once, then use the account set as authoritative while signed in. Subsequent
+  removals must sync without old browser copies re-adding them. Keep guest and
+  account state separate on sign-out; do not expose one account's favourites to
+  a different account on a shared browser. Account deletion removes server data.
+- Shared results links encode concrete venue IDs so recipients see the intended
+  cinemas rather than substituting their own favourites. The originating session
+  may retain the My cinemas shortcut state for convenient editing.
+
+### 13.3 Better empty results
+
+- When valid filters yield zero films, offer a small set of specific adjustments
+  with accurate distinct-film counts, such as Include tomorrow or Remove the
+  runtime limit. Calculate suggestions using the same screening matcher as the
+  results; change only the stated constraints when a suggestion is clicked.
+- Preserve selections until the user acts. Provide Clear all as a fallback;
+  do not propose changes that still yield zero results.
+- Keep missing watchlist setup, failed data loading and account/import failures
+  distinct from a successful search with no matching films.
+
+### 13.4 Radar: separate page
+
+- Add `/radar` to desktop and mobile page navigation, with two sections:
+  **Limited opportunity** and **Special formats**. Retain useful film details,
+  matching screening dates/cinemas and booking access. A film may qualify for both.
+- Limited opportunity: films with one to three distinct upcoming screenings
+  across all covered cinemas and the full currently loaded listing horizon.
+  Deduplicate screenings and exclude elapsed starts before counting. Count
+  sold-out screenings too: availability must not manufacture apparent scarcity.
+- Qualification/counts are global, before user cinema/date/availability filters.
+  Local filters can restrict visible matches without changing a film's global
+  scarcity label. Show actual counts and dates, e.g. Only 2 screenings listed,
+  with listing freshness/coverage context. Never claim a definitive last chance.
+- Special formats: explicitly identified **35mm, 70mm and IMAX** screenings.
+  This is a curated format category, not statistical rarity; no historical feed
+  archive or rarity score is required. Do not call all IMAX screenings film prints.
+  A screening carrying more than one qualifying format counts only once.
+- Use explicit source format metadata only; do not infer format from a cinema's
+  name. Preserve distinctions the source provides, including digital versus film
+  IMAX, and do not invent distinctions it does not provide. Audit actual mappings
+  before implementation and report coverage gaps.
+- Special-format matches, counts and expanded programmes must refer to the same
+  qualifying screening as selected date/venue/accessibility constraints. Ordinary
+  screenings of the same film cannot satisfy a special-format result.
+- Default ordering: Limited opportunity by fewest listed screenings, then nearest
+  future screening; Special formats by nearest qualifying screening. Use stable
+  title/ID tie-breaks. Refresh time-sensitive results as time passes, including
+  London midnight, without requiring a page reload.
+
+### 13.5 Delivery and acceptance
+
+1. Implement calendar/date semantics and quick filters, preserving existing URL,
+   exclusion, facet-count and same-screening matching behaviour.
+2. Add guest favourites, account persistence/sync and My cinemas interactions.
+3. Add counted empty-result recovery suggestions.
+4. Audit format metadata and implement Radar using the current listings snapshot.
+5. Verify meaningful boundary cases: London week/year transitions and DST;
+   Tonight before/after 18:00 and elapsed screenings; multi-date selection and
+   exclusions; runtime 119/120/unknown; guest/account reconciliation, removals and
+   sync failure; Radar deduplication, global count versus local filters, sold-out
+   listings, expiry and overlapping format labels; suggestion counts and URLs.
+6. Verify keyboard/focus behaviour, mobile 390px layout, both themes and shared
+   links. Provide visual evidence and a verification handoff. Respect the existing
+   browser-action constraint in §11.5 before starting browser verification.
+
+Deferred: What am I missing / personalised discovery, watched-history import and
+recommendation modelling. Other brainstormed features are not part of this phase.
+No implementation or deployment is included in this plan-only update.
