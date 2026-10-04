@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { fetchWatchlist, parseWatchlist } from "./watchlist";
+import { afterEach, vi } from "vitest";
+import { fetchWatchlist, parseWatchlist, politeGet, WatchlistError } from "./watchlist";
 const html = (count: number, slugs: string[], pages = 1) =>
   `<span class="js-watchlist-count">${count.toLocaleString("en-US")} films</span>${slugs.map((slug) => `<li><div data-item-slug="${slug}" data-target-link="/film/${slug}/"></div></li>`).join("")}<a class="paginate-page">${pages}</a>`;
 describe("public watchlist importer", () => {
@@ -37,4 +38,31 @@ describe("public watchlist importer", () => {
     );
     await expect(fetchWatchlist("../admin", async () => html(0, []))).rejects.toThrow("username");
   });
+  it("classifies failures with safe codes instead of raw upstream detail", async () => {
+    expect(() => parseWatchlist("<h1>Private watchlist</h1>")).toThrow(
+      expect.objectContaining({ code: "inaccessible" }),
+    );
+    await expect(fetchWatchlist("user", async () => html(2, ["one"]))).rejects.toMatchObject({
+      code: "incomplete",
+    });
+    await expect(fetchWatchlist("user", async () => html(2, ["one"], 2))).rejects.toBeInstanceOf(
+      WatchlistError,
+    );
+  });
+  it("maps HTTP and network failures from Letterboxd to safe codes", async () => {
+    const statuses = [404, 503];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => {
+        const status = statuses.shift();
+        if (!status) throw new TypeError("network down");
+        return new Response("", { status });
+      }),
+    );
+    const url = "https://letterboxd.com/synthetic/watchlist/page/1/";
+    await expect(politeGet(url)).rejects.toMatchObject({ code: "not_found" });
+    await expect(politeGet(url)).rejects.toMatchObject({ code: "unavailable" });
+    await expect(politeGet(url)).rejects.toMatchObject({ code: "unavailable" });
+  }, 10000);
+  afterEach(() => vi.unstubAllGlobals());
 });

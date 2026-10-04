@@ -1,6 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { useAccount } from "./lib/account";
-import { Privacy, TokenPage } from "./components/account";
+import {
+  AccountDialogs,
+  AccountFeedback,
+  ImportStatus,
+  Privacy,
+  RefreshButton,
+  TokenPage,
+} from "./components/account";
 import { letterboxdSlug } from "./shared/account";
 import { Sidebar } from "./components/sidebar";
 import { FilterBar } from "./components/filter-bar";
@@ -123,6 +130,7 @@ export function App() {
   const [attempt, setAttempt] = useState(0);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [systemDark, setSystemDark] = useState(
     () => window.matchMedia("(prefers-color-scheme: dark)").matches,
@@ -137,6 +145,13 @@ export function App() {
       state.path
     ] ??
     "About";
+  const watchlistMatches = useMemo(
+    () =>
+      catalogue?.films.filter(
+        (film) => film.sc.length > 0 && watched.has(letterboxdSlug(film.ra.lb?.url) ?? ""),
+      ).length ?? 0,
+    [catalogue, watched],
+  );
   const baseFilms = useMemo(
     () =>
       catalogue?.films.filter(
@@ -239,9 +254,17 @@ export function App() {
     if (expanded && !tableRows(selected, state).some((row) => row.key === expanded))
       setExpanded(null);
   }, [expanded, selected, state]);
+  function openAccount() {
+    // The phone drawer is itself a modal dialog; close it first so dialogs never nest.
+    if (drawer.current?.open) drawer.current.close();
+    setDrawerOpen(false);
+    setAccountOpen(true);
+  }
+  const phone = () => window.matchMedia("(max-width: 799px)").matches;
   const sidebarProps = {
     state,
     account,
+    onAccount: openAccount,
     meta,
     onChange: change,
     dark,
@@ -281,18 +304,16 @@ export function App() {
         <button class="drawer-close" aria-label="Close pages" onClick={() => setDrawerOpen(false)}>
           ×
         </button>
-        <Sidebar {...sidebarProps} idPrefix="drawer" />
+        <Sidebar {...sidebarProps} />
       </dialog>
       <main class="main-column" id="main-content">
         <header class="masthead">
           <button
             class="menu-button"
             aria-label="Toggle pages"
-            aria-expanded={
-              window.matchMedia("(max-width: 799px)").matches ? drawerOpen : !collapsed
-            }
+            aria-expanded={phone() ? drawerOpen : !collapsed}
             onClick={() => {
-              if (window.matchMedia("(max-width: 799px)").matches) setDrawerOpen(true);
+              if (phone()) setDrawerOpen(true);
               else setCollapsed(!collapsed);
             }}
           >
@@ -320,6 +341,26 @@ export function App() {
         </header>
         <div class="tagline">The database of London cinema screenings</div>
         <h2 class="sr-only">{pageTitle}</h2>
+        <AccountDialogs
+          account={account}
+          open={accountOpen}
+          matches={watchlistMatches}
+          onClose={() => setAccountOpen(false)}
+          onNavigate={(path) => change({ path, page: 1, director: "" }, true)}
+          restoreTo={() =>
+            document.querySelector<HTMLElement>(
+              phone() ? ".menu-button" : ".desktop-sidebar .account-panel button",
+            )
+          }
+        />
+        {!accountOpen && (
+          <div class="page-notices">
+            <AccountFeedback
+              account={account}
+              showError={state.path === "/watchlist" || !!state.watchlist}
+            />
+          </div>
+        )}
         {state.path === "/privacy" ? (
           <Privacy />
         ) : state.path === "/auth/verify" ? (
@@ -330,38 +371,49 @@ export function App() {
           <About meta={meta} />
         ) : (
           <>
-            {state.watchlist && state.path !== "/watchlist" && !account.user && (
-              <p class="view-note">
-                Sign in using Account in the menu to view your watchlist, or clear the My watchlist
-                filter to browse all films.
-              </p>
-            )}
+            {state.watchlist &&
+              state.path !== "/watchlist" &&
+              !account.loading &&
+              !account.user && (
+                <div class="view-note account-prompt">
+                  <p>
+                    Sign in to view your watchlist, or clear the My watchlist filter to browse all
+                    films.
+                  </p>
+                  <button aria-haspopup="dialog" onClick={openAccount}>
+                    Sign in
+                  </button>
+                </div>
+              )}
             {state.path === "/watchlist" && (
-              <div class="view-note">
+              <div class="view-note watchlist-intro">
                 <h2>Your Letterboxd watchlist</h2>
                 {account.loading ? (
-                  <p>Checking sign-in…</p>
+                  <p role="status">Checking sign-in…</p>
                 ) : !account.user ? (
-                  <p>Sign in using Account in the menu to import your watchlist.</p>
+                  <>
+                    <p>Sign in to import your public Letterboxd watchlist.</p>
+                    <button aria-haspopup="dialog" onClick={openAccount}>
+                      Sign in
+                    </button>
+                  </>
                 ) : !account.user.username ? (
-                  <p>Set your Letterboxd username in Account to import your public watchlist.</p>
-                ) : !account.watchlist?.fetchedAt ? (
-                  <p>
-                    {account.user.stale
-                      ? "The watchlist could not be read. Make sure it is public, then try Refresh now."
-                      : "Your watchlist has not been imported yet. Use Refresh now in Account."}
-                  </p>
+                  <>
+                    <p>Set your Letterboxd username to import your public watchlist.</p>
+                    <button aria-haspopup="dialog" onClick={openAccount}>
+                      Open account
+                    </button>
+                  </>
                 ) : (
-                  <p>
-                    {baseFilms.length} of your {account.watchlist.count} watchlist films are
-                    screening in London.
-                    {account.watchlist.count === 0 ? " Your public watchlist is empty." : ""}
-                  </p>
-                )}
-                {account.user?.stale && account.watchlist?.fetchedAt && (
-                  <p role="status">
-                    The latest refresh failed or is overdue. Showing your last good watchlist.
-                  </p>
+                  <>
+                    <ImportStatus account={account} matches={watchlistMatches} />
+                    <div class="account-actions">
+                      <RefreshButton account={account} />
+                      <button aria-haspopup="dialog" onClick={openAccount}>
+                        Account
+                      </button>
+                    </div>
+                  </>
                 )}
               </div>
             )}

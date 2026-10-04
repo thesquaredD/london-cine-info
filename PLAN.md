@@ -495,7 +495,6 @@ magic-link and unsubscribe confirmation POSTs prevent email scanners activating
 links. Unsubscribe uses a per-user 256-bit random token. These preserve the intended
 behavior with no extra service or secret.
 
-
 ## 11. Next priority: account modals, import feedback and errors
 
 User feedback, 4 October 2026: live sign-in and import work, but account forms crowd
@@ -584,3 +583,32 @@ Do not replace its filter redesign as part of account UX work.
 - User constraint: stop and report before any further browser actions. Planning
   and code/API inspection can proceed; do not start browser verification without
   returning to dio about the required browser step.
+
+### 11.6 Implementation progress — 4 October 2026
+
+- 11.2 done: compact Sign in / Account entry point in the sidebar; one shared
+  `Dialog` (native modal, labelled, Escape/close/backdrop, initial focus, focus
+  restoration to the opener or the phone menu button, phone bottom sheet). The
+  Pages drawer closes before the dialog opens so dialogs never nest. Delete has
+  its own confirmation view with Cancel first. Inputs keep their values on
+  failure; unsaved changes are flagged and block importing until saved.
+- 11.3 done: `watchlist_sync.started_at` / `attempt_id` (migration 0003); API
+  reports idle / queued / importing / completed / failed with timestamps, retry
+  time and a safe message. Stalled jobs (30 min) become failed and re-queueable.
+  Watchlist page shows status, last successful import, count vs. London matches,
+  empty-list vs. no-matches wording, stale labelling, Refresh and Account
+  buttons; sidebar shows a compact running-import status. Polling only while
+  pending, plus focus refresh; a mismatch between the two account reads retries
+  once before surfacing.
+- 11.4 done: importer failures carry codes (`WatchlistError`), dispatch failure
+  refunds the hourly reservation and is retryable immediately; non-JSON, 401,
+  429 (`Retry-After`) and network failures have fixed messages; page-level
+  notices persist after the dialog closes and are dismissable; account-service
+  errors appear only where accounts matter (Watchlist page / watchlist filter).
+- 11.5: 42 unit/API tests (lifecycle, stalled, refund, code mapping) and 10
+  browser tests at 1200px/390px (recorded real-Functions flow plus controlled
+  fault injection for expired links, service failure, save failure, cooldown,
+  dispatch failure, import failure with and without a previous list, stalled
+  job, empty list, zero matches, focus and overflow). Interactive browser
+  verification on the live site is not started, per the constraint in 11.5;
+  it waits for dio.

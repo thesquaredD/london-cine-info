@@ -1,9 +1,10 @@
 import { syncQueries, failedSyncQueries } from "../scripts/lib/watchlist-store";
 import { beforeAll, afterAll, it, expect } from "vitest";
-import { readFile } from "node:fs/promises";
+import { readdir, readFile } from "node:fs/promises";
 import { Miniflare, convertV4MiniflareOptions } from "miniflare";
 import { onRequest } from "../functions/api/[[path]]";
 import type { Env } from "./types";
+import { IMPORT_ERRORS, IMPORT_TIMEOUT, type Account, type Watchlist } from "../src/shared/account";
 import { hash } from "./security";
 let runtime: Miniflare, env: Env;
 beforeAll(async () => {
@@ -23,9 +24,11 @@ beforeAll(async () => {
     RESEND_FROM: "test@example.com",
     DEV_MAGIC_LINK: "1",
   };
-  const sql =
-    (await readFile("migrations/0001_accounts.sql", "utf8")) +
-    (await readFile("migrations/0002_digest_departures.sql", "utf8"));
+  const sql = (
+    await Promise.all(
+      (await readdir("migrations")).sort().map((file) => readFile(`migrations/${file}`, "utf8")),
+    )
+  ).join("\n");
   for (const statement of sql
     .replace(/^--.*$/gm, "")
     .split(";")
@@ -124,7 +127,8 @@ it("settings validate, refresh is throttled, username changes clear old data and
     ).slugs,
   ).toEqual(["invented-film"]);
   expect((await request("/api/watchlist/refresh", "POST", {}, cookie)).status).toBe(202);
-  expect((await request("/api/watchlist/refresh", "POST", {}, cookie)).status).toBe(429);
+  // A queued import blocks duplicates before the hourly limit is consulted.
+  expect((await request("/api/watchlist/refresh", "POST", {}, cookie)).status).toBe(409);
   expect((await request("/api/me", "PUT", { username: "other-synthetic" }, cookie)).status).toBe(
     200,
   );
@@ -214,4 +218,75 @@ it("sync swaps complete snapshots, keeps stale lists and rejects late results fo
       .bind(user.id)
       .first("count"),
   ).toBe(0);
+});
+
+it("reports the import lifecycle: queued, importing, completed, failed codes, stalled jobs and refunds", async () => {
+  const { cookie } = await signIn("lifecycle@example.com");
+  const me = async () =>
+    ((await (await request("/api/me", "GET", undefined, cookie)).json()) as { user: Account }).user;
+  const list = async () =>
+    (await (await request("/api/watchlist", "GET", undefined, cookie)).json()) as Watchlist;
+  expect((await request("/api/watchlist/refresh", "POST", {}, cookie)).status).toBe(400);
+  await request("/api/me", "PUT", { username: "synthetic-cycle" }, cookie);
+  const idle = await me();
+  expect(idle.sync).toMatchObject({ state: "idle", error: null, retryAt: null });
+  expect(idle.pending).toBe(false);
+  expect((await request("/api/watchlist/refresh", "POST", {}, cookie)).status).toBe(202);
+  const queued = await me();
+  expect(queued.sync).toMatchObject({ state: "queued", startedAt: null, error: null });
+  expect(queued.pending).toBe(true);
+  expect(queued.sync?.retryAt).toBe((queued.sync?.requestedAt ?? 0) + 3600);
+  const row = await env.DB.prepare("SELECT attempt_id FROM watchlist_sync WHERE user_id=?")
+    .bind(idle.id)
+    .first<{ attempt_id: string }>();
+  // The Actions importer claims the queued job.
+  await env.DB.prepare("UPDATE watchlist_sync SET started_at=? WHERE user_id=?")
+    .bind(Math.floor(Date.now() / 1000), idle.id)
+    .run();
+  expect((await me()).sync?.state).toBe("importing");
+  expect((await list()).sync?.state).toBe("importing");
+  const apply = (queries: ReturnType<typeof syncQueries>) =>
+    env.DB.batch(queries.map((q) => env.DB.prepare(q.sql).bind(...(q.params ?? []))));
+  const stamp = Math.floor(Date.now() / 1000);
+  await apply(syncQueries(idle.id, "synthetic-cycle", ["one", "two"], 2, stamp, row!.attempt_id));
+  const completed = await me();
+  expect(completed).toMatchObject({ count: 2, stale: false, pending: false, fetchedAt: stamp });
+  expect(completed.sync).toMatchObject({ state: "completed", error: null });
+  await apply(
+    failedSyncQueries(idle.id, "synthetic-cycle", "not_found", stamp + 1, row!.attempt_id),
+  );
+  const failed = await list();
+  expect(failed).toMatchObject({ slugs: ["one", "two"], stale: true, count: 2 });
+  expect(failed.sync).toMatchObject({ state: "failed", error: IMPORT_ERRORS.not_found });
+  // Unknown codes never leak raw messages.
+  await apply(
+    failedSyncQueries(idle.id, "synthetic-cycle", "TypeError: boom", stamp + 2, row!.attempt_id),
+  );
+  expect((await list()).sync?.error).toBe(IMPORT_ERRORS.internal);
+  // A job that never finishes is reported as failed after the timeout and can be re-queued.
+  await env.DB.prepare(
+    "UPDATE watchlist_sync SET requested_at=?,started_at=?,completed_at=NULL,error=NULL WHERE user_id=?",
+  )
+    .bind(stamp - IMPORT_TIMEOUT - 10, stamp - IMPORT_TIMEOUT - 5, idle.id)
+    .run();
+  const stalled = await me();
+  expect(stalled.pending).toBe(false);
+  expect(stalled.sync).toMatchObject({ state: "failed", error: IMPORT_ERRORS.stalled });
+  await env.DB.prepare("DELETE FROM rate_limits").run();
+  expect((await request("/api/watchlist/refresh", "POST", {}, cookie)).status).toBe(202);
+  expect((await me()).sync?.state).toBe("queued");
+  // A failed dispatch records the failure and refunds the hourly reservation.
+  await env.DB.prepare("UPDATE watchlist_sync SET completed_at=?,error='dispatch' WHERE user_id=?")
+    .bind(stamp + 3, idle.id)
+    .run();
+  const dispatch = await me();
+  expect(dispatch.sync).toMatchObject({
+    state: "failed",
+    error: IMPORT_ERRORS.dispatch,
+    retryAt: null,
+  });
+  // Changing usernames discards the old sync state entirely.
+  await request("/api/me", "PUT", { username: "synthetic-other" }, cookie);
+  expect((await me()).sync?.state).toBe("idle");
+  expect((await list()).slugs).toEqual([]);
 });

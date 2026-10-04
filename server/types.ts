@@ -18,4 +18,6 @@ export type User = {
   error: string | null;
   requested_at: number | null;
   completed_at: number | null;
+  started_at: number | null;
+  attempt_id: string | null;
 };

@@ -1,9 +1,10 @@
+import { IMPORT_TIMEOUT } from "../src/shared/account";
 import { syncQueries, failedSyncQueries } from "./lib/watchlist-store";
 import { readFile } from "node:fs/promises";
 import { letterboxdSlug } from "../src/shared/account";
 import type { Film, DataManifest } from "../src/shared/data";
 import { d1 } from "./lib/d1";
-import { fetchWatchlist, politeGet } from "./lib/watchlist";
+import { fetchWatchlist, politeGet, WatchlistError } from "./lib/watchlist";
 const target = process.env.WATCHLIST_USER_ID || null;
 if (target && !/^[a-f0-9-]{36}$/.test(target)) throw new Error("Invalid user id");
 const force = process.env.WATCHLIST_FORCE === "true";
@@ -17,13 +18,51 @@ const [users] = await d1<{ id: string; letterboxd_username: string }>([
 ]);
 let failed = 0;
 for (const user of users!) {
+  const started = Math.floor(Date.now() / 1000);
+  const attempt = crypto.randomUUID();
+  const [claimed] = await d1<{ attempt_id: string }>([
+    {
+      sql: `INSERT INTO watchlist_sync(user_id,started_at,attempt_id,error)
+      SELECT id,?,?,NULL FROM users WHERE id=? AND letterboxd_username=?
+      ON CONFLICT(user_id) DO UPDATE SET started_at=excluded.started_at,attempt_id=excluded.attempt_id,error=NULL
+      WHERE MAX(COALESCE(watchlist_sync.requested_at,0),COALESCE(watchlist_sync.started_at,0))<=COALESCE(watchlist_sync.completed_at,0)
+      OR COALESCE(watchlist_sync.started_at,watchlist_sync.requested_at,0)<?
+      OR (?=1 AND watchlist_sync.started_at IS NULL) RETURNING attempt_id`,
+      params: [
+        started,
+        attempt,
+        user.id,
+        user.letterboxd_username,
+        started - IMPORT_TIMEOUT,
+        target ? 1 : 0,
+      ],
+    },
+  ]);
+  if (!claimed?.length) continue;
   try {
     const list = await fetchWatchlist(user.letterboxd_username, politeGet);
-    await d1(syncQueries(user.id, user.letterboxd_username, list.slugs, list.count, now));
+    await d1(
+      syncQueries(
+        user.id,
+        user.letterboxd_username,
+        list.slugs,
+        list.count,
+        Math.floor(Date.now() / 1000),
+        attempt,
+      ),
+    );
   } catch (error) {
     failed++;
-    const message = error instanceof Error ? error.message : "Watchlist refresh failed";
-    await d1(failedSyncQueries(user.id, user.letterboxd_username, message, now));
+    const message = error instanceof WatchlistError ? error.code : "internal";
+    await d1(
+      failedSyncQueries(
+        user.id,
+        user.letterboxd_username,
+        message,
+        Math.floor(Date.now() / 1000),
+        attempt,
+      ),
+    );
   }
 }
 // No usernames or emails in public Actions logs.

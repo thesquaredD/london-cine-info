@@ -1325,27 +1325,164 @@ h3 {
   border-top: 1px solid var(--line);
   padding: 12px;
   font-size: 14px;
-}
-.account-panel form {
   display: grid;
   gap: 8px;
 }
-.account-panel input,
-.account-panel select,
-.account-panel button {
-  max-width: 100%;
-  min-width: 0;
+.account-panel > button {
   width: 100%;
   border-radius: 4px;
 }
-.account-panel > button {
-  margin-top: 8px;
-}
 .account-panel p {
+  margin: 0;
+  color: var(--muted);
   overflow-wrap: anywhere;
 }
-.account-panel label {
+.account-dialog {
+  width: min(480px, calc(100vw - 32px));
+  max-height: 85dvh;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--panel);
+  color: var(--fg);
+  overflow-y: auto;
+}
+.account-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.45);
+}
+.account-dialog-body {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+}
+.account-dialog-body p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.account-dialog form,
+.account-dialog fieldset {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.account-dialog fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.account-dialog label {
   font-weight: 500;
+}
+.account-dialog input,
+.account-dialog select {
+  width: 100%;
+  min-width: 0;
+  padding: 7px 8px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--panel);
+  color: inherit;
+}
+.account-dialog fieldset p,
+.account-dialog .import-status p + p {
+  color: var(--muted);
+  font-size: 13px;
+}
+.account-email {
+  font-weight: 500;
+}
+.account-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: flex-start;
+}
+.refresh-action {
+  display: grid;
+  gap: 6px;
+}
+.refresh-action p {
+  color: var(--muted);
+  font-size: 13px;
+}
+.danger-action {
+  color: var(--sold-out);
+  border-color: var(--sold-out);
+}
+.account-notice,
+.import-status {
+  display: grid;
+  gap: 6px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--strong-line);
+  border-radius: 4px;
+  background: var(--shade);
+}
+.account-notice p,
+.import-status p {
+  margin: 0;
+}
+.account-notice[role="alert"],
+.import-status.import-failed {
+  border-left-color: var(--sold-out);
+}
+.import-status.import-completed {
+  border-left-color: var(--rating);
+}
+.account-notice button,
+.import-status button {
+  justify-self: start;
+}
+.page-notices {
+  display: grid;
+  gap: 8px;
+  padding: 0 16px;
+}
+.page-notices:empty {
+  display: none;
+}
+.page-notices .account-notice {
+  margin-top: 10px;
+}
+.watchlist-intro,
+.account-prompt {
+  display: grid;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--fg);
+}
+.watchlist-intro h2 {
+  font-size: 16px;
+  font-weight: 500;
+}
+.watchlist-intro h2 {
+  margin: 0;
+}
+.watchlist-intro button,
+.account-prompt button {
+  justify-self: start;
+}
+@media (max-width: 799px) {
+  .account-dialog {
+    position: fixed;
+    inset: auto 0 0;
+    margin: 0;
+    width: 100%;
+    max-width: none;
+    max-height: 90dvh;
+    border-radius: 4px 4px 0 0;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .account-dialog input,
+  .account-dialog select {
+    font-size: 16px;
+    min-height: 44px;
+  }
+  .account-dialog button,
+  .watchlist-intro button {
+    min-height: 44px;
+  }
 }
 .watchlist-column {
   width: 54px;

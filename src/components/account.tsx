@@ -1,161 +1,399 @@
 import { useEffect, useState } from "preact/hooks";
 import { accountApi, type AccountState } from "../lib/account";
-export function AccountPanel({ account, idPrefix }: { account: AccountState; idPrefix: string }) {
-  const [email, setEmail] = useState(""),
-    [username, setUsername] = useState(""),
-    [weekday, setWeekday] = useState("off");
-  const [message, setMessage] = useState(""),
-    [busy, setBusy] = useState(false),
-    [confirmDelete, setConfirmDelete] = useState(false);
+import { Dialog } from "./dialog";
+function time(stamp: number) {
+  return new Intl.DateTimeFormat("en-GB", {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone: "Europe/London",
+  }).format(new Date(stamp * 1000));
+}
+function useNow() {
+  const [now, setNow] = useState(() => Date.now() / 1000);
   useEffect(() => {
-    setUsername(account.user?.username ?? "");
-    setWeekday(
-      account.user?.digestWeekday === null || !account.user
-        ? "off"
-        : String(account.user.digestWeekday),
-    );
-  }, [account.user?.username, account.user?.digestWeekday]);
-  async function action(work: () => Promise<void>) {
-    setBusy(true);
-    setMessage("");
-    try {
-      await work();
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Please try again");
-    } finally {
-      setBusy(false);
-    }
-  }
+    const interval = window.setInterval(() => setNow(Date.now() / 1000), 1000);
+    return () => window.clearInterval(interval);
+  }, []);
+  return now;
+}
+export function AccountFeedback({
+  account,
+  showError = true,
+}: {
+  account: AccountState;
+  showError?: boolean;
+}) {
+  return (
+    <>
+      {account.error && showError && (
+        <div class="account-notice" role="alert">
+          <p>{account.error}</p>
+          <button disabled={!!account.busy} onClick={() => void account.reload()}>
+            Try loading account again
+          </button>
+        </div>
+      )}
+      {account.notice && (
+        <div class="account-notice" role={account.notice.kind === "error" ? "alert" : "status"}>
+          <p>{account.notice.message}</p>
+          {account.notice.retryAt && (
+            <p>Try again after {time(account.notice.retryAt)} (London time).</p>
+          )}
+          <button aria-label="Dismiss account message" onClick={account.dismissNotice}>
+            Dismiss
+          </button>
+        </div>
+      )}
+    </>
+  );
+}
+export function ImportStatus({ account, matches }: { account: AccountState; matches?: number }) {
+  const user = account.user;
+  if (!user?.username) return null;
+  const sync = user.sync;
+  const active = account.busy === "refresh" || user.pending;
+  const state =
+    account.busy === "refresh"
+      ? "submitting"
+      : (sync?.state ??
+        (user.pending ? "queued" : user.stale ? "failed" : user.fetchedAt ? "completed" : "idle"));
+  const message = {
+    submitting: "Requesting your import…",
+    queued:
+      "Import queued. Waiting for a place in the import queue. You can close Account and keep browsing.",
+    importing:
+      "Importing your public Letterboxd watchlist. You can keep browsing; results update when it finishes.",
+    completed:
+      matches === undefined
+        ? `Imported ${user.count} ${user.count === 1 ? "film" : "films"}.`
+        : `${matches} of your ${user.count} watchlist ${user.count === 1 ? "film is" : "films are"} screening in London.`,
+    failed: sync?.error ?? "The latest import failed. Please try again later.",
+    idle: "Your watchlist has not been imported yet. Choose Import watchlist to get started.",
+  }[state];
+  return (
+    <section class={`import-status import-${state}`} aria-label="Watchlist import">
+      <p
+        role={state === "failed" ? "alert" : "status"}
+        aria-live={state === "failed" ? "assertive" : "polite"}
+      >
+        {message}
+      </p>
+      {user.fetchedAt && (
+        <p>
+          Last successful import: {time(user.fetchedAt)} (London time).
+          {active || user.stale ? " Showing your last good watchlist." : ""}
+        </p>
+      )}
+      {user.stale && state !== "failed" && !active && (
+        <p role="status">
+          These results are overdue for an update. Refresh to check the latest list.
+        </p>
+      )}
+      {state === "completed" && user.count === 0 && (
+        <p>Your public watchlist is empty. Add films on Letterboxd, then refresh here.</p>
+      )}
+      {state === "completed" && user.count > 0 && matches === 0 && (
+        <p>
+          None of your imported films currently have London screenings. Check back when the
+          programme updates.
+        </p>
+      )}
+      {(user.pending || state === "failed") && (
+        <button disabled={!!account.busy} onClick={() => void account.reload()}>
+          Check import status
+        </button>
+      )}
+    </section>
+  );
+}
+export function RefreshButton({
+  account,
+  disabled = false,
+}: {
+  account: AccountState;
+  disabled?: boolean;
+}) {
+  const now = useNow();
+  const retryAt = Math.max(
+    account.user?.sync?.retryAt ?? 0,
+    account.notice?.action === "refresh" ? (account.notice.retryAt ?? 0) : 0,
+  );
+  const cooling = retryAt > now;
+  return (
+    <div class="refresh-action">
+      <button
+        disabled={disabled || !!account.busy || !!account.user?.pending || cooling}
+        onClick={() =>
+          void account.perform(
+            "refresh",
+            async () => {
+              await accountApi("/api/watchlist/refresh", "POST", {});
+              await account.reload();
+            },
+            "Import requested. Check the watchlist import status for progress.",
+          )
+        }
+      >
+        {account.busy === "refresh"
+          ? "Requesting import…"
+          : account.user?.pending
+            ? "Import in progress"
+            : account.user?.fetchedAt
+              ? "Refresh now"
+              : "Import watchlist"}
+      </button>
+      {cooling && !account.user?.pending && (
+        <p>Next import available after {time(retryAt)} (London time).</p>
+      )}
+    </div>
+  );
+}
+export function AccountPanel({ account, onOpen }: { account: AccountState; onOpen: () => void }) {
   return (
     <section class="account-panel" aria-label="Account">
-      <h2 class="section-label">Account</h2>
+      <button aria-haspopup="dialog" onClick={onOpen}>
+        {account.user ? "Account" : "Sign in"}
+      </button>
+      {account.user?.pending && (
+        <p role="status">
+          {account.user.sync?.state === "importing" ? "Importing watchlist…" : "Import queued…"}
+        </p>
+      )}
+      <a href="/privacy">Privacy</a>
+    </section>
+  );
+}
+export function AccountDialogs({
+  account,
+  open,
+  matches,
+  onClose,
+  onNavigate,
+  restoreTo,
+}: {
+  account: AccountState;
+  open: boolean;
+  matches?: number;
+  onClose: () => void;
+  onNavigate: (path: string) => void;
+  restoreTo: () => HTMLElement | null;
+}) {
+  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
+  const [weekday, setWeekday] = useState("off");
+  const [deleting, setDeleting] = useState(false);
+  const now = useNow();
+  useEffect(() => {
+    setUsername(account.user?.username ?? "");
+    setWeekday(account.user?.digestWeekday == null ? "off" : String(account.user.digestWeekday));
+  }, [account.user?.id, account.user?.username, account.user?.digestWeekday]);
+  useEffect(() => {
+    if (!open || !account.user) setDeleting(false);
+  }, [open, account.user?.id]);
+  const dirty =
+    username.trim() !== (account.user?.username ?? "") ||
+    weekday !== (account.user?.digestWeekday == null ? "off" : String(account.user.digestWeekday));
+  const cooling = (account.notice?.retryAt ?? 0) > now;
+  return (
+    <Dialog
+      open={open}
+      focusKey={deleting ? "delete" : account.user ? "account" : "signin"}
+      title={deleting ? "Delete account" : account.user ? "Account" : "Sign in"}
+      onClose={onClose}
+      restoreTo={restoreTo}
+    >
+      <AccountFeedback account={account} />
       {account.loading ? (
-        <p>Checking sign-in…</p>
+        <p role="status">Checking sign-in…</p>
       ) : account.user ? (
-        <>
-          <p class="account-email">{account.user.email}</p>
-          <form
-            onSubmit={(event) => {
-              event.preventDefault();
-              void action(async () => {
-                await accountApi("/api/me", "PUT", {
-                  username,
-                  digestWeekday: weekday === "off" ? null : Number(weekday),
-                });
-                await account.reload();
-                setMessage("Account saved. Use Refresh now to import your public watchlist.");
-              });
-            }}
-          >
-            <label for={`${idPrefix}-username`}>Letterboxd username</label>
-            <input
-              id={`${idPrefix}-username`}
-              value={username}
-              maxLength={30}
-              placeholder="Your public profile"
-              onInput={(event) => setUsername(event.currentTarget.value)}
-            />
-            <label for={`${idPrefix}-digest`}>Weekly screening email</label>
-            <select
-              id={`${idPrefix}-digest`}
-              value={weekday}
-              onChange={(event) => setWeekday(event.currentTarget.value)}
+        deleting ? (
+          <>
+            <p data-initial-focus tabIndex={-1}>
+              Permanently delete your account, imported watchlist and email settings? This cannot be
+              undone.
+            </p>
+            <div class="account-actions">
+              <button
+                data-initial-focus
+                disabled={!!account.busy}
+                onClick={() => setDeleting(false)}
+              >
+                Cancel
+              </button>
+              <button
+                class="danger-action"
+                disabled={!!account.busy}
+                onClick={() =>
+                  void account.perform(
+                    "delete",
+                    async () => {
+                      await accountApi("/api/me", "DELETE", {});
+                      account.clear();
+                      setDeleting(false);
+                      onClose();
+                    },
+                    "Your account and watchlist were deleted.",
+                  )
+                }
+              >
+                {account.busy === "delete" ? "Deleting…" : "Confirm deletion"}
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <p class="account-email">Signed in as {account.user.email}</p>
+            <form
+              onSubmit={(event) => {
+                event.preventDefault();
+                void account.perform(
+                  "save",
+                  async () => {
+                    await accountApi("/api/me", "PUT", {
+                      username,
+                      digestWeekday: weekday === "off" ? null : Number(weekday),
+                    });
+                    await account.reload();
+                  },
+                  username.trim() && !account.user?.fetchedAt
+                    ? "Account saved. Choose Import watchlist to fetch your public list."
+                    : "Account saved.",
+                );
+              }}
             >
-              <option value="off">Off</option>
-              {["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"].map(
-                (name, index) => (
-                  <option key={name} value={index}>
-                    {name}
-                  </option>
-                ),
-              )}
-            </select>
-            <button disabled={busy}>Save account</button>
-          </form>
-          {account.user.username && (
-            <>
+              <fieldset disabled={!!account.busy}>
+                <label for="account-username">Letterboxd username</label>
+                <input
+                  data-initial-focus
+                  id="account-username"
+                  value={username}
+                  maxLength={30}
+                  placeholder="Your public profile"
+                  autoComplete="off"
+                  aria-describedby="username-help"
+                  onInput={(event) => setUsername(event.currentTarget.value)}
+                />
+                <p id="username-help">
+                  Use your username, not a profile URL. Your watchlist must be public. Changing
+                  usernames removes the previous imported list.
+                </p>
+                <label for="account-digest">Weekly screening email</label>
+                <select
+                  id="account-digest"
+                  value={weekday}
+                  onChange={(event) => setWeekday(event.currentTarget.value)}
+                >
+                  <option value="off">Off</option>
+                  {[
+                    "Sunday",
+                    "Monday",
+                    "Tuesday",
+                    "Wednesday",
+                    "Thursday",
+                    "Friday",
+                    "Saturday",
+                  ].map((name, index) => (
+                    <option key={name} value={index}>
+                      {name}
+                    </option>
+                  ))}
+                </select>
+                <p>
+                  Optional emails about watchlist films screening in London. A saved username is
+                  required.
+                </p>
+                <button disabled={!dirty || (cooling && account.notice?.action === "save")}>
+                  {account.busy === "save" ? "Saving…" : "Save account"}
+                </button>
+              </fieldset>
+              {dirty && <p role="status">You have unsaved changes. Save before importing.</p>}
+            </form>
+            <ImportStatus account={account} matches={matches} />
+            {account.user.username && <RefreshButton account={account} disabled={dirty} />}
+            {account.user.fetchedAt && (
+              <a
+                href="/watchlist"
+                onClick={(event) => {
+                  if (
+                    event.button ||
+                    event.metaKey ||
+                    event.ctrlKey ||
+                    event.shiftKey ||
+                    event.altKey
+                  )
+                    return;
+                  event.preventDefault();
+                  onClose();
+                  onNavigate("/watchlist");
+                }}
+              >
+                View your watchlist
+              </a>
+            )}
+            <div class="account-actions">
               <button
-                disabled={busy || account.user.pending}
+                disabled={!!account.busy}
                 onClick={() =>
-                  void action(async () => {
-                    await accountApi("/api/watchlist/refresh", "POST", {});
-                    await account.reload();
-                    setMessage("Refresh queued. This page updates when it finishes.");
-                  })
+                  void account.perform(
+                    "logout",
+                    async () => {
+                      await accountApi("/api/auth/logout", "POST", {});
+                      account.clear();
+                      onClose();
+                    },
+                    "You are signed out.",
+                  )
                 }
               >
-                Refresh now
+                {account.busy === "logout" ? "Signing out…" : "Sign out"}
               </button>
-              <p>
-                {account.user.pending
-                  ? "Refreshing watchlist…"
-                  : account.user.fetchedAt
-                    ? `Last synced ${new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeStyle: "short", timeZone: "Europe/London" }).format(new Date(account.user.fetchedAt * 1000))}`
-                    : "Watchlist not imported yet."}
-              </p>
-              {account.user.stale && (
-                <p role="status">Refresh failed or is overdue. Showing the last good watchlist.</p>
-              )}
-            </>
-          )}
-          <button
-            disabled={busy}
-            onClick={() =>
-              void action(async () => {
-                await accountApi("/api/auth/logout", "POST", {});
-                await account.reload();
-              })
-            }
-          >
-            Sign out
-          </button>
-          {confirmDelete ? (
-            <>
-              <p>Delete your account, watchlist and email settings permanently?</p>
               <button
-                disabled={busy}
-                onClick={() =>
-                  void action(async () => {
-                    await accountApi("/api/me", "DELETE", {});
-                    setConfirmDelete(false);
-                    await account.reload();
-                  })
-                }
+                class="danger-action"
+                disabled={!!account.busy}
+                onClick={() => {
+                  account.dismissNotice();
+                  setDeleting(true);
+                }}
               >
-                Confirm deletion
+                Delete account
               </button>
-              <button onClick={() => setConfirmDelete(false)}>Cancel</button>
-            </>
-          ) : (
-            <button onClick={() => setConfirmDelete(true)}>Delete account</button>
-          )}
-        </>
+            </div>
+          </>
+        )
       ) : (
         <form
           onSubmit={(event) => {
             event.preventDefault();
-            void action(async () => {
-              await accountApi("/api/auth/request", "POST", { email });
-              setMessage("Check your email for a sign-in link. It expires in 15 minutes.");
-            });
+            void account.perform(
+              "signin",
+              async () => {
+                await accountApi("/api/auth/request", "POST", { email });
+              },
+              "Check your email for a sign-in link. It expires in 15 minutes. Check your spam folder if it does not arrive.",
+            );
           }}
         >
-          <label for={`${idPrefix}-email`}>Email</label>
-          <input
-            id={`${idPrefix}-email`}
-            type="email"
-            autoComplete="email"
-            required
-            value={email}
-            onInput={(event) => setEmail(event.currentTarget.value)}
-          />
-          <button disabled={busy}>Send sign-in link</button>
-          <p>Import your public Letterboxd watchlist and choose a weekly screening email.</p>
+          <p>
+            Import your public Letterboxd watchlist and choose an optional weekly screening email.
+          </p>
+          <fieldset disabled={!!account.busy}>
+            <label for="account-email">Email</label>
+            <input
+              data-initial-focus
+              id="account-email"
+              type="email"
+              autoComplete="email"
+              required
+              value={email}
+              onInput={(event) => setEmail(event.currentTarget.value)}
+            />
+            <button disabled={cooling && account.notice?.action === "signin"}>
+              {account.busy === "signin" ? "Sending link…" : "Send sign-in link"}
+            </button>
+          </fieldset>
         </form>
       )}
-      {(message || account.error) && <p role="status">{message || account.error}</p>}
-      <a href="/privacy">Privacy</a>
-    </section>
+    </Dialog>
   );
 }
 export function TokenPage({
