@@ -460,3 +460,66 @@ it("an uncertain older delivery survives cleanup and blocks a later day's new se
   expect(pending.idempotency_key).toBe("digest-v2/uncertain-key");
   expect((await run(attemptDigestQuery(pending, 0, 1100 + 8 * 86400))).results).toHaveLength(0);
 });
+
+it("cinema preferences reconcile once, sync removals, guard concurrent edits and isolate accounts", async () => {
+  const { cookie } = await signIn("cinemas@example.com");
+  const browserId = "00000000-0000-4000-8000-000000000001";
+  const merge = async (venues: string[]) =>
+    request("/api/cinemas", "POST", { venues, browserId }, cookie);
+  expect((await request("/api/cinemas", "PUT", { venues: [] })).status).toBe(401);
+  expect(
+    (await request("/api/cinemas", "POST", { venues: ["invalid/venue"], browserId }, cookie))
+      .status,
+  ).toBe(400);
+  const first = (await (
+    await merge(["bfi.org.uk", "bfi.org.uk", "princecharlescinema.com"])
+  ).json()) as { venues: string[]; version: number };
+  expect(first.venues.sort()).toEqual(["bfi.org.uk", "princecharlescinema.com"]);
+  const removed = await request(
+    "/api/cinemas",
+    "PUT",
+    { venues: [], version: first.version },
+    cookie,
+  );
+  expect(removed.status).toBe(200);
+  expect(((await (await merge(["bfi.org.uk"])).json()) as { venues: string[] }).venues).toEqual([]);
+  expect(
+    (
+      await request(
+        "/api/cinemas",
+        "PUT",
+        { venues: ["bfi.org.uk"], version: first.version },
+        cookie,
+      )
+    ).status,
+  ).toBe(409);
+  const otherBrowser = await request(
+    "/api/cinemas",
+    "POST",
+    { venues: ["new.cinema"], browserId: "00000000-0000-4000-8000-000000000002" },
+    cookie,
+  );
+  expect(((await otherBrowser.json()) as { venues: string[] }).venues).toEqual(["new.cinema"]);
+  const other = await signIn("other-cinemas@example.com");
+  expect(
+    (
+      (await (await request("/api/cinemas", "GET", undefined, other.cookie)).json()) as {
+        venues: string[];
+      }
+    ).venues,
+  ).toEqual([]);
+  const me = (await (await request("/api/me", "GET", undefined, cookie)).json()) as {
+    user: Account;
+  };
+  expect((await request("/api/me", "DELETE", {}, cookie)).status).toBe(200);
+  expect(
+    await env.DB.prepare("SELECT COUNT(*) AS n FROM cinema_preferences WHERE user_id=?")
+      .bind(me.user.id)
+      .first("n"),
+  ).toBe(0);
+  expect(
+    await env.DB.prepare("SELECT COUNT(*) AS n FROM cinema_reconciliations WHERE user_id=?")
+      .bind(me.user.id)
+      .first("n"),
+  ).toBe(0);
+});

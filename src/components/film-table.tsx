@@ -16,6 +16,8 @@ import { ExpandedRow } from "./expanded-row";
 type Props = {
   films: Film[];
   display: DisplayState;
+  now?: Date;
+  labels?: Map<string, string>;
   watched?: Set<string>;
   meta: DataMeta;
   state: ViewState;
@@ -32,6 +34,8 @@ export function FilmTable({
   onChange,
   watched,
   display,
+  now,
+  labels,
 }: Props) {
   const marked = (film: Film) => !!watched?.has(letterboxdSlug(film.ra.lb?.url) ?? "");
   const ratings = display.ratingOrder.map((key) => RATINGS.find((rating) => rating.key === key)!);
@@ -122,7 +126,7 @@ export function FilmTable({
                     <button
                       class="film-title"
                       aria-expanded={expanded === key}
-                      aria-controls={`details-${key}`}
+                      aria-controls={`details-${state.radarSection ?? ""}${key}`}
                       onClick={() => onExpand(expanded === key ? null : key)}
                     >
                       <span class="expansion-icon" aria-hidden="true">
@@ -133,6 +137,7 @@ export function FilmTable({
                         {display.titleMode === "both" && film.o_ti && <i>{film.o_ti}</i>}
                       </span>
                     </button>
+                    {labels?.has(film.id) && <p class="radar-label">{labels.get(film.id)}</p>}
                     {state.path === "/events" && (
                       <div class="mobile-event-labels">
                         {(film.ev?.length ? film.ev : ["Special screening"]).join(" · ")}
@@ -207,7 +212,8 @@ export function FilmTable({
                 {expanded === key && (
                   <ExpandedRow
                     key={`details-${key}`}
-                    detailId={`details-${key}`}
+                    detailId={`details-${state.radarSection ?? ""}${key}`}
+                    now={now}
                     columns={watched ? 8 : 7}
                     film={film}
                     ratingOrder={display.ratingOrder}

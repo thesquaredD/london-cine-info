@@ -754,3 +754,53 @@ resolve interaction details without requiring another product interview.
 Deferred: What am I missing / personalised discovery, watched-history import and
 recommendation modelling. Other brainstormed features are not part of this phase.
 No implementation or deployment is included in this plan-only update.
+
+### 13.6 Implementation progress — 4 October 2026
+
+- [x] Calendar/date semantics and quick filters: separate dates, exclusions,
+      keyboard month navigation, calendar-week shortcuts, Tonight with exact start
+      expiry, strict known-runtime limit, URL/chip/reset behaviour and London dates.
+      Invalid shared dates are rejected before rendering the calendar.
+- [x] My cinemas: searchable borough groups, separate favourite setup and results
+      filtering, guest local storage, one-time browser/account union, authoritative
+      account removals, concrete venue IDs in links and account/guest isolation.
+      Migration 0005 adds cascaded preferences and reconciliation receipts. Versioned
+      saves reject concurrent changes; failed saves preserve choices for retry.
+      Privacy/help text documents storage and deletion.
+- [x] Empty-result recovery: up to three positive-count adjustments, computed by
+      the same film/screening matcher, preserving unrelated filters. Missing account
+      or watchlist setup does not receive search-adjustment suggestions.
+- [x] Radar: dedicated navigation and sections, global distinct upcoming counts
+      including sold-out screenings, local correlated filtering, explicit formats,
+      matching expanded programmes, default section ordering and stable tie-breaks.
+      Results update every 15 seconds and on focus/visibility changes, including
+      London midnight; loading a new page is unnecessary.
+- [x] Format audit: the cached combined snapshot explicitly includes `35mm`,
+      `70mm`, `imax` and `imax-70mm`. Most screenings have unspecified formats;
+      generic IMAX does not distinguish digital versus film. No venue-name inference
+      or historical rarity scoring is used. At the audit cutoff (4 October, 22:00
+      London time), 2,056 films / 25,527 screenings yielded 1,682 Limited opportunity
+      films and 140 Special formats films. These are cached-snapshot measurements,
+      not a new upstream or production audit.
+- [x] Automated verification: 76 unit/API tests, 46 catalogue browser tests and
+      12 account browser tests. Coverage includes year/week/DST boundaries, exact
+      UTC timestamps, 119/120/unknown runtimes, multi-date/exclusion URLs, keyboard
+      navigation, one-time union, second-device removal, save failure/account
+      isolation, Radar deduplication/overlapping labels and global qualification,
+      same-screening correlation, counted recovery and midnight expiry. Recorded
+      desktop/390px flows plus the theme/viewport audit pass without overflow or
+      application exceptions.
+- [x] Payload audit: UTC starts use minute offsets from a UTC-midnight baseline;
+      screen labels are interned in metadata. Exact starts and repeated DST hours
+      survive decoding. Cached live film JSON is 458,815 bytes gzip (448.1 KiB),
+      and application JavaScript is approximately 29.9 KiB gzip.
+- [ ] Dio's visual review and interactive production verification. No interactive
+      production browser actions or deployment were performed. Respect §11.5 before
+      starting that browser step. Production deploy automatically applies migration
+      0005; an isolated preview needs its own migration first.
+
+Replay and behaviour are documented in README's Dates, favourite cinemas and
+Radar section. Local screenshots/recordings live under
+`~/.Codex/london-cine-info/discovery/verification/` and the existing account
+verification directory; browser output is excluded from Git. A draft PR carries
+this implementation for review before merge/deployment.

@@ -12,7 +12,9 @@ export function ExpandedRow({
   columns = 7,
   state,
   ratingOrder,
+  now,
 }: {
+  now?: Date;
   film: Film;
   meta: DataMeta;
   detailId: string;
@@ -39,7 +41,7 @@ export function ExpandedRow({
       active = false;
     };
   }, [film.id, attempt]);
-  const matcher = screeningMatcher(meta, state);
+  const matcher = screeningMatcher(meta, state, now);
   const days = data
     ? Object.entries(data.days)
         .map(([date, rows]) => [date, rows.filter((row) => matcher.showtime(date, row))] as const)

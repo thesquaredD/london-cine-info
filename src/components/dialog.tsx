@@ -7,7 +7,9 @@ export function Dialog({
   children,
   restoreTo,
   focusKey = "",
+  className = "account-dialog",
 }: {
+  className?: string;
   open: boolean;
   title: string;
   onClose: () => void;
@@ -41,7 +43,7 @@ export function Dialog({
   return (
     <dialog
       ref={ref}
-      class="account-dialog"
+      class={className}
       aria-label={title}
       onCancel={(event) => {
         event.preventDefault();

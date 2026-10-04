@@ -459,7 +459,11 @@ export function Privacy() {
       <p>
         A secure, HttpOnly session cookie keeps you signed in for 90 days after your last visit. It
         is strictly necessary for accounts. Filters are in the page URL; theme choices last for this
-        visit. We use no advertising or analytics cookies.
+        visit. Guest favourite cinemas and a random browser preference identifier are saved in local
+        storage. Signed-in favourites are saved to your account, with a receipt preventing repeat
+        guest merges. Account favourites stay separate from guest preferences and are removed on
+        account deletion. Clear browser site data to remove guest favourites. Shared My cinemas
+        links include the selected venue IDs. We use no advertising or analytics cookies.
       </p>
       <p>
         Cloudflare hosts the site and account data. Resend delivers sign-in links and any weekly

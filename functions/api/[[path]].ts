@@ -126,12 +126,13 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
       return json({ error: "Method not allowed" }, 405);
     if (method !== "GET" && !sameOrigin(request))
       return json({ error: "Request origin rejected" }, 403);
-    if (Number(request.headers.get("Content-Length") ?? 0) > 4096)
+    const bodyLimit = path === "/api/cinemas" ? 180000 : 4096;
+    if (Number(request.headers.get("Content-Length") ?? 0) > bodyLimit)
       return json({ error: "Request too large" }, 413);
     let body: Record<string, unknown> = {};
     if (["POST", "PUT", "DELETE"].includes(method)) {
       const raw = await request.text();
-      if (raw.length > 4096) return json({ error: "Request too large" }, 413);
+      if (raw.length > bodyLimit) return json({ error: "Request too large" }, 413);
       try {
         body = raw ? JSON.parse(raw) : {};
         if (!body || typeof body !== "object" || Array.isArray(body))
@@ -229,6 +230,56 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
     }
     if (!auth) return json({ error: "Please sign in" }, 401);
     const { user, sessionHash } = auth;
+    if (path === "/api/cinemas" && ["GET", "PUT", "POST"].includes(method)) {
+      if (method !== "GET") {
+        if (
+          !Array.isArray(body.venues) ||
+          body.venues.length > 1000 ||
+          !body.venues.every(
+            (id: unknown) => typeof id === "string" && /^[a-zA-Z0-9._:-]{1,160}$/.test(id),
+          )
+        )
+          return json({ error: "Choose valid cinemas (up to 1000)." }, 400);
+        const venues = JSON.stringify([...new Set(body.venues)]);
+        await env.DB.prepare("INSERT OR IGNORE INTO cinema_preferences(user_id) VALUES (?)")
+          .bind(user.id)
+          .run();
+        if (method === "PUT") {
+          if (!Number.isInteger(body.version) || Number(body.version) < 0)
+            return json({ error: "Reload your saved cinemas and try again." }, 400);
+          const updated = await env.DB.prepare(
+            "UPDATE cinema_preferences SET venues=?,version=version+1 WHERE user_id=? AND version=?",
+          )
+            .bind(venues, user.id, body.version)
+            .run();
+          if (!updated.meta.changes)
+            return json(
+              { error: "Your cinemas changed on another device. Reload them before saving." },
+              409,
+            );
+        } else {
+          if (typeof body.browserId !== "string" || !/^[a-f0-9-]{36}$/.test(body.browserId))
+            return json({ error: "Invalid browser preferences." }, 400);
+          // The receipt and union commit together, so removals can never be undone by retries.
+          await env.DB.batch([
+            env.DB.prepare(
+              `UPDATE cinema_preferences SET venues=(SELECT json_group_array(value) FROM
+              (SELECT DISTINCT value FROM json_each(cinema_preferences.venues) UNION SELECT value FROM json_each(?))),version=version+1
+              WHERE user_id=? AND NOT EXISTS (SELECT 1 FROM cinema_reconciliations WHERE user_id=? AND browser_id=?)`,
+            ).bind(venues, user.id, user.id, body.browserId),
+            env.DB.prepare(
+              "INSERT OR IGNORE INTO cinema_reconciliations(user_id,browser_id) VALUES (?,?)",
+            ).bind(user.id, body.browserId),
+          ]);
+        }
+      }
+      const prefs = await env.DB.prepare(
+        "SELECT venues,version FROM cinema_preferences WHERE user_id=?",
+      )
+        .bind(user.id)
+        .first<{ venues: string; version: number }>();
+      return json({ venues: prefs ? JSON.parse(prefs.venues) : [], version: prefs?.version ?? 0 });
+    }
     if (path === "/api/auth/logout" && method === "POST") {
       await env.DB.prepare("DELETE FROM sessions WHERE hash=?").bind(sessionHash).run();
       return json({ ok: true }, 200, { "Set-Cookie": sessionCookie("", 0) });

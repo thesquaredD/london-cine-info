@@ -411,3 +411,15 @@ it("Events filters and counts match special screenings, without borrowing a norm
     facetCounts([film], meta, state, new Date(fixture.now)).day.get("2026-10-04"),
   ).toBeUndefined();
 });
+
+it("compact UTC offsets preserve the exact starts and screen identities from showtimes", async () => {
+  const { films, meta, showtimes } = build();
+  const { decodedScreenings } = await import("../../src/lib/filters");
+  expect(meta.screeningEpoch).toBe(Date.parse("2026-10-03T00:00:00Z"));
+  for (const film of films) {
+    const source = Object.values(showtimes.find((entry) => entry.id === film.id)!.days).flat();
+    expect(decodedScreenings(film, meta).map((row) => [row.epoch, row.screen])).toEqual(
+      source.map((row) => [row.time, row.screen]),
+    );
+  }
+});

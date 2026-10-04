@@ -161,5 +161,21 @@ Digests include inline-styled HTML plus a plain-text alternative; sign-in emails
 remain plain text. Generate a sample without reading accounts or sending email:
 `npx tsx scripts/preview-digest.ts .cache/digest-sample.html [ISO-date]`.
 The sample uses a small selection from the currently built catalogue.
- The remaining v1 visual polish stays
+The remaining v1 visual polish stays
 deferred as agreed in PLAN.md.
+
+## Favourite cinemas
+
+Migration 0005 adds account cinema preferences and per-browser merge receipts, both
+removed by account deletion. `/api/cinemas` uses POST for a one-time guest union,
+GET to read and PUT with the previous version to replace the selection. A stale
+version returns 409; the UI preserves unsaved choices and offers reload/retry.
+Guest choices and a random browser ID live in local storage. Account choices are
+kept separately in memory and D1, so sign-out restores guest choices without
+copying a previous account's favourites into another account.
+
+The production deploy applies migrations automatically; an isolated hosted preview
+needs `npx wrangler d1 migrations apply london-cine-info-preview --remote` first.
+Replay `npm run e2e:accounts -- tests/auth/cinemas.spec.ts` after a fixture build for
+recorded two-browser reconciliation, removal, failed-save and account-isolation
+coverage. This uses synthetic accounts and dev magic links, without real email.

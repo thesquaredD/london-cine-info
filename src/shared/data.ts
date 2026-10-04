@@ -39,6 +39,8 @@ export type ScreeningFacet = [
   accessibilityMask: number,
   soldOut: 0 | 1,
   event?: 0 | 1, // optional for compatibility with earlier catalogues
+  epoch?: number, // minutes after meta.screeningEpoch; exact UTC ms in older catalogues
+  screen?: number | string | null, // index into meta.screens
 ];
 export type Film = {
   id: string;
@@ -86,6 +88,8 @@ export type SourceRelease = { repository: string; tag: string; publishedAt: stri
 export type DataMeta = {
   schemaVersion: number;
   generatedAt: string;
+  screeningEpoch?: number; // UTC midnight baseline in epoch milliseconds
+  screens?: string[];
   upstreamGeneratedAt: string;
   sources: { combined: SourceRelease; matched: SourceRelease };
   releaseDateSource: "tmdb-original";

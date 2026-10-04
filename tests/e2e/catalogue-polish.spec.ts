@@ -110,9 +110,7 @@ test("Display changes titles and rating order, persists across navigation and re
       .locator('[title="Drag Rotten Tomatoes"]')
       .dragTo(controls.getByRole("listitem").first());
     await expect(controls.getByRole("listitem").first()).toContainText("Rotten Tomatoes");
-    await expect(
-      page.getByRole("button", { name: "Sort by RT", exact: true }),
-    ).toBeVisible();
+    await expect(page.getByRole("button", { name: "Sort by RT", exact: true })).toBeVisible();
     await expect(page.locator(".film-table th").nth(2)).toContainText("RT");
   }
   await page.screenshot({ path: test.info().outputPath("display.png") });
@@ -148,6 +146,7 @@ test("all catalogue pages fit phone, tablet and desktop in both themes without c
         "/events",
         "/calendar",
         "/watchlist",
+        "/radar",
         "/about",
         "/privacy",
       ]) {
