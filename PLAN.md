@@ -479,8 +479,9 @@ repo) in Pages; `CLOUDFLARE_API_TOKEN` gains D1 edit for the Actions scripts.
 ### 10.8 Implementation progress — 4 October 2026
 
 - A: production and isolated preview D1/KV created; both migrations applied;
-  Wrangler configuration and local dev ready. Domain still on Namecheap nameservers;
-  Resend domain verification and secrets remain pending.
+  Wrangler configuration and local dev ready. Domain attached to Pages and apex DNS points to the site; nameserver propagation
+  and certificate activation are being checked. Resend sender domain verified;
+  RESEND_API_KEY installed in Pages production and Actions. Dispatch token pending.
 - B–E: implemented magic links/sessions/account deletion/privacy, validated public
   watchlist sync and refresh dispatch, watchlist UI/filter/markers, daily departure
   tracking and opt-in weekly digest/unsubscribe. Digest defaults off for consent.

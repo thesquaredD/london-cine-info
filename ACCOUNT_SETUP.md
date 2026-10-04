@@ -1,7 +1,9 @@
 # Accounts and Letterboxd watchlists
 
-Implementation lives on `codex/watchlist`. Production activation depends on the
-email domain and secrets below. Ordinary screening browsing works without them.
+Implementation lives on `codex/watchlist` (draft PR #6). Resend sender verification
+is complete and its key is installed in Pages production and Actions. The apex
+DNS points to Pages; custom-domain certificate activation is pending. Manual
+refresh still needs a GitHub dispatch token. Ordinary browsing works without it.
 
 ## Platform
 
