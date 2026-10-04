@@ -1,6 +1,6 @@
 import type { AccountState } from "../lib/account";
 import { FilterPicker } from "./filter-picker";
-import { CLEAR_FILTERS, FILTERS } from "../lib/filters";
+import { clearFilters, FILTERS } from "../lib/filters";
 import type { FacetKey } from "../shared/data";
 import type { DataMeta } from "../shared/data";
 import type { ViewState } from "../lib/catalogue";
@@ -128,7 +128,7 @@ export function FilterControls({
               />{" "}
               Hide sold-out screenings
             </label>
-            <button class="reset-button" onClick={() => onChange(CLEAR_FILTERS)}>
+            <button class="reset-button" onClick={() => onChange(clearFilters(state.path))}>
               Reset all filters
             </button>
             {onDone && (

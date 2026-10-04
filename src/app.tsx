@@ -12,12 +12,15 @@ import { letterboxdSlug } from "./shared/account";
 import { Sidebar } from "./components/sidebar";
 import { FilterBar } from "./components/filter-bar";
 import { FilmTable } from "./components/film-table";
-import { CLEAR_FILTERS, filterFilms, facetCounts, FILTERS, filterLabel } from "./lib/filters";
+import { clearFilters, filterFilms, facetCounts, FILTERS, filterLabel } from "./lib/filters";
 import { loadCatalogue } from "./lib/data";
 import {
   PAGE_SIZE,
   PAGES,
   readView,
+  defaultSort,
+  hasCustomSort,
+  sortLabel,
   selectFilms,
   sortFilms,
   tableRows,
@@ -332,7 +335,7 @@ export function App() {
                 )
                   return;
                 event.preventDefault();
-                change({ ...CLEAR_FILTERS, path: "/" }, true);
+                change({ ...clearFilters("/"), path: "/" }, true);
               }}
             >
               <span>LONDON CINÉ</span> INFO
@@ -468,6 +471,7 @@ export function App() {
                   <button
                     disabled={
                       !(
+                        hasCustomSort(state) ||
                         state.search ||
                         state.director ||
                         state.from ||
@@ -479,11 +483,19 @@ export function App() {
                         )
                       )
                     }
-                    onClick={() => change(CLEAR_FILTERS)}
+                    onClick={() => change(clearFilters(state.path))}
                   >
                     Clear all
                   </button>
 
+                  {hasCustomSort(state) && (
+                    <button
+                      onClick={() => change({ ...defaultSort(state.path), page: 1 })}
+                      aria-label="Clear sort"
+                    >
+                      Sort: {sortLabel(state.sort)} ×
+                    </button>
+                  )}
                   {state.director && (
                     <button
                       onClick={() => change({ director: "", page: 1 })}

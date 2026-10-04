@@ -111,6 +111,34 @@ test("200-row pagination and column sorting", async ({ page }) => {
   await expect(page).toHaveURL(/page=2/);
   await page.getByRole("button", { name: "Previous page" }).click();
   await expect(page.locator(".film-row")).toHaveCount(200);
+  await page.getByRole("button", { name: "Sort by Title", exact: true }).click();
+  await expect(page.locator("th.title-column")).toHaveAttribute("aria-sort", "descending");
+  await page.getByRole("button", { name: "Sort by Title", exact: true }).click();
+  await expect(page.locator("th.title-column")).toHaveAttribute("aria-sort", "none");
+  await expect(page.locator("th.lb-column")).toHaveAttribute("aria-sort", "descending");
+  await expect(page).toHaveURL("/");
+  await expect(page.getByRole("button", { name: "Clear sort", exact: true })).toHaveCount(0);
+  await page.getByRole("button", { name: "Sort by Director", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Clear sort", exact: true })).toHaveText(
+    "Sort: Director ×",
+  );
+  await page.getByRole("button", { name: "Clear sort", exact: true }).click();
+  await expect(page).toHaveURL("/");
+  await page.getByRole("button", { name: "Sort by Title", exact: true }).click();
+  await page.getByRole("button", { name: "Clear all", exact: true }).click();
+  await expect(page).toHaveURL("/");
+  await expect(page.locator("th.lb-column")).toHaveAttribute("aria-sort", "descending");
+  await page.goto("/calendar?sort=title&order=asc");
+  await page.getByRole("button", { name: "Clear sort", exact: true }).click();
+  await expect(page).toHaveURL("/calendar");
+  await expect(page.locator("th.title-column")).toHaveAttribute("aria-sort", "none");
+  await page.getByRole("button", { name: "Sort by Director", exact: true }).click();
+  await page.getByRole("button", { name: "Clear all", exact: true }).click();
+  await expect(page).toHaveURL("/calendar");
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.screenshot({
+    path: test.info().outputPath("sort-reset.png"),
+  });
 });
 test("load retries, system theme, sheet keyboard and no persistent storage", async ({
   page,

@@ -1,5 +1,5 @@
 import type { DataMeta, FacetKey, Film, Showtime, Venue } from "../shared/data";
-import type { ViewState } from "./catalogue";
+import { defaultSort, type ViewState } from "./catalogue";
 export const FILTERS: { key: FacetKey; label: string }[] = [
   { key: "day", label: "Day" },
   { key: "time", label: "Time" },
@@ -22,6 +22,9 @@ export const CLEAR_FILTERS = {
   available: false,
   page: 1,
 };
+export function clearFilters(path: string) {
+  return { ...CLEAR_FILTERS, ...defaultSort(path) };
+}
 export function londonDate(now = new Date()): string {
   return new Intl.DateTimeFormat("en-CA", {
     timeZone: "Europe/London",

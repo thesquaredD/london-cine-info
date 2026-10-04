@@ -1,8 +1,15 @@
 import { letterboxdSlug } from "../shared/account";
-import { CLEAR_FILTERS } from "../lib/filters";
+import { clearFilters } from "../lib/filters";
 import { Fragment } from "preact";
 import type { DataMeta, Film } from "../shared/data";
-import { PAGE_SIZE, RATINGS, tableRows, type SortKey, type ViewState } from "../lib/catalogue";
+import {
+  PAGE_SIZE,
+  RATINGS,
+  tableRows,
+  nextSort,
+  type SortKey,
+  type ViewState,
+} from "../lib/catalogue";
 import { ExpandedRow } from "./expanded-row";
 
 type Props = {
@@ -31,15 +38,7 @@ export function FilmTable({ films, meta, state, expanded, onExpand, onChange, wa
         <button
           onClick={() =>
             onChange({
-              sort: key,
-              direction:
-                selected && state.direction === "desc"
-                  ? "asc"
-                  : selected
-                    ? "desc"
-                    : key === "title" || key === "director"
-                      ? "asc"
-                      : "desc",
+              ...nextSort(state, key),
               page: 1,
             })
           }
@@ -194,7 +193,7 @@ export function FilmTable({ films, meta, state, expanded, onExpand, onChange, wa
         <div class="empty-state">
           <h2>No films match these filters</h2>
           <p>Try removing a filter or choosing another day or cinema.</p>
-          <button onClick={() => onChange(CLEAR_FILTERS)}>Clear filters</button>
+          <button onClick={() => onChange(clearFilters(state.path))}>Clear filters</button>
         </div>
       )}
       <footer class="pagination" aria-label="Film pagination">
