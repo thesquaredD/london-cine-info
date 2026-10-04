@@ -486,10 +486,101 @@ repo) in Pages; `CLOUDFLARE_API_TOKEN` gains D1 edit for the Actions scripts.
   tracking and opt-in weekly digest/unsubscribe. Digest defaults off for consent.
 - F: local Functions/D1 verification passed 39 unit/integration checks and all
   20 browser tests (18 catalogue + 2 recorded account flows). Hosted preview
-  passed account API, unavailable-email, origin and no-overflow checks at both widths. Real email delivery/import remain a manual handoff; production activation
-  follows passing platform setup; see ACCOUNT_SETUP.md.
+  passed account API, unavailable-email, origin and no-overflow checks at both widths. PR #6 is merged and deployed; WATCHLIST_ENABLED is true, and the first production
+  deploy/account workflow passed. Dio verified live sign-in and Letterboxd import
+  on 4 October 2026. Weekly email delivery remains unverified; see ACCOUNT_SETUP.md.
 
 Implementation refinements: D1 enforces rate limits atomically instead of KV;
 magic-link and unsubscribe confirmation POSTs prevent email scanners activating
 links. Unsubscribe uses a per-user 256-bit random token. These preserve the intended
 behavior with no extra service or secret.
+
+
+## 11. Next priority: account modals, import feedback and errors
+
+User feedback, 4 October 2026: live sign-in and import work, but account forms crowd
+the sidebar and import feedback is too weak. This work takes priority over the
+deferred Display controls, calendar/events details and final visual/performance audit.
+
+### 11.1 Coordinate with the latest PR
+
+Reviewed PR [#7 — Move film filters to a responsive toolbar](https://github.com/thesquaredD/london-cine-info/pull/7).
+It moves screening filters above results and into a mobile filter sheet; it keeps
+AccountPanel in the page sidebar. Build this follow-up on the latest integrated
+version of that work, retaining the toolbar, page navigation, shared filter URLs
+and Only my watchlist control. Check PR #7's latest state before implementation;
+its account/browser tests must cover the integration with the shipped accounts.
+Do not replace its filter redesign as part of account UX work.
+
+### 11.2 Account interactions in modals
+
+- Replace the sidebar's forms with compact Sign in / Account entry points. Put
+  sign-in, Letterboxd connection/import, weekly email settings and sign-out in
+  account dialogs. Keep watchlist results and screening filters accessible from
+  their existing pages and toolbar.
+- Give account deletion a clear, separate confirmation dialog. Describe what is
+  deleted and keep Cancel easy to reach; show completion or failure explicitly.
+- Use one shared dialog approach consistent with the existing filter sheet:
+  labelled dialogs, focus entry/trapping/restoration, Escape and close controls,
+  background isolation, and usable desktop/390px layouts. Avoid nested dialogs
+  when opening Account from the phone Pages drawer; close the drawer first.
+- Preserve entered values on validation/network failure. Distinguish unsaved
+  username/email-preference changes from saved settings and disable conflicting
+  actions while a request is in flight.
+
+### 11.3 Visible import lifecycle
+
+- Expose honest states: not connected/not imported, request being submitted,
+  queued, importing, completed, and failed. A queued GitHub job is not yet an
+  active import; do not show a fabricated percentage or ETA.
+- Give immediate feedback after Refresh now, prevent duplicate submissions, and
+  explain that imports may take time. Keep status visible on the Watchlist page
+  after the dialog closes, with accessible live announcements for transitions.
+- On completion, show the imported film count, how many have London screenings,
+  last successful sync time, and a clear way to view the results. Distinguish a
+  valid empty watchlist from a non-empty list with no current London screenings.
+- Preserve the last good list during refresh and after failure. Clearly label
+  stale results and explain what the user can do next. First-import failure must
+  not appear as an empty successful import.
+- Audit polling and job state across reloads, navigation, multiple tabs, username
+  changes and late responses. Bound waiting and detect jobs that fail or never
+  start so the UI cannot remain indefinitely on Refreshing. Define retry behavior
+  consistent with server cooldowns and retain accurate state after reopening.
+
+### 11.4 Error handling and recovery
+
+- Audit the full path: sign-in email request/redemption, session/account loading,
+  settings save, import dispatch/fetch/parse, logout, deletion and unsubscribe.
+  Surface relevant failures at the affected field/action or in a persistent
+  page notice when a modal is closed; background browsing should remain usable.
+- Provide clear messages and recovery for invalid input, expired/already-used
+  links, expired sessions, offline/network failures, unexpected/non-JSON server
+  responses, unavailable services, and rate limits. Show when retry becomes
+  available using server cooldown/Retry-After information where appropriate.
+- Persist safe import failure categories sufficient to distinguish an unknown
+  username, an inaccessible/private watchlist, a blocked/unavailable upstream,
+  incomplete/changed markup, and internal job failure. Avoid promising a specific
+  cause when the upstream response cannot establish it. Offer the appropriate
+  correction, public-list guidance, sign-in or retry action.
+- Show errors with accessible alert semantics and successes/progress with status
+  semantics. Never expose raw stack traces, credentials, provider payloads or
+  internal diagnostics. Keep existing anti-enumeration behavior for sign-in.
+- Do not silently swallow background refresh errors or replace successful cached
+  data with empty data. Clear obsolete notices after recovery without losing a
+  newer failure or mixing the state of different account actions.
+
+### 11.5 Acceptance and verification
+
+- Verify sign-in → dialog settings → queued/importing → success → matching films,
+  plus dialog dismissal/reopening and navigation while importing, on desktop and
+  at 390px. Keyboard focus, error announcements and no overflow are required.
+- Exercise invalid/expired links, account service failure, save failure, cooldown,
+  dispatch failure, import failure with/without a previous list, a stalled job,
+  a valid empty list and a list with zero screening matches. Use controlled
+  fixtures/fault injection; do not send extra real email for automated tests.
+- Extend meaningful API/unit and recorded browser coverage for these states,
+  including PR #7's toolbar/mobile-sheet integration. Finish with a verification
+  handoff and evidence for dio's review.
+- User constraint: stop and report before any further browser actions. Planning
+  and code/API inspection can proceed; do not start browser verification without
+  returning to dio about the required browser step.
