@@ -45,7 +45,15 @@ export function FilmTable({ films, meta, state, expanded, onExpand, onChange, wa
           }
           aria-label={key === "watchlist" ? "Sort watchlist first" : `Sort by ${label}`}
         >
-          <span title={RATINGS.find((rating) => rating.key === key)?.name}>{label}</span>
+          <span
+            title={
+              key === "watchlist"
+                ? "Letterboxd watchlist"
+                : RATINGS.find((rating) => rating.key === key)?.name
+            }
+          >
+            {label}
+          </span>
           <span class={`sort-arrow ${selected ? "selected" : ""}`} aria-hidden="true">
             {selected && state.direction === "desc" ? "▾" : "▴"}
           </span>

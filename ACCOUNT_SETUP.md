@@ -8,7 +8,9 @@ email domain and secrets below. Ordinary screening browsing works without them.
 `wrangler.toml` is the source of truth for Pages bindings. Production and preview
 have separate D1 databases and KV namespaces. Migrations are already applied to
 both remote databases; CI applies them locally and deployment applies them remotely.
-Never bind a preview deployment to the production account database.
+Never bind a preview deployment to the production account database. Deep links
+use Cloudflare Pages’ [built-in SPA fallback](https://developers.cloudflare.com/pages/configuration/serving-pages/#single-page-application-spa-rendering);
+there is no `404.html` or conflicting redirect to normalize the URL to `/`.
 
 Request-limit reservations use atomic D1 counters. KV is provisioned as planned,
 but is not used to enforce security limits because it is eventually consistent.

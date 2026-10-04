@@ -1,6 +1,9 @@
+import { mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { defineConfig } from "@playwright/test";
+process.env.ACCOUNT_TEST_STATE ??= mkdtempSync(join(tmpdir(), "london-cine-e2e-"));
 export default defineConfig({
   testDir: "./tests/auth",
   outputDir: process.env.CI
@@ -14,7 +17,7 @@ export default defineConfig({
     { name: "mobile", use: { viewport: { width: 390, height: 844 } } },
   ],
   webServer: {
-    command: "npx wrangler pages dev dist --port 4174 --binding DEV_MAGIC_LINK=1",
+    command: "npx tsx scripts/dev-accounts-tests.ts",
     url: "http://localhost:4174",
     reuseExistingServer: false,
     timeout: 60000,

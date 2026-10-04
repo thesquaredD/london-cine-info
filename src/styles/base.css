@@ -1150,3 +1150,14 @@ h3 {
 .filter-options {
   min-inline-size: 0;
 }
+.watchlist-column button {
+  padding-inline: 4px;
+  justify-content: center;
+}
+.watchlist-column .sort-arrow {
+  display: none;
+}
+.watchlist-column[aria-sort="ascending"],
+.watchlist-column[aria-sort="descending"] {
+  background: var(--shade);
+}

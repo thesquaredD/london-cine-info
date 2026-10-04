@@ -63,6 +63,8 @@ test("real Functions sign-in, watchlist, settings, shared filter and account del
       "execute",
       "london-cine-info",
       "--local",
+      "--persist-to",
+      process.env.ACCOUNT_TEST_STATE!,
       "--command",
       `INSERT INTO watchlist_items(user_id,slug,added_at) VALUES ('${user.id}','${slug}',${stamp}); INSERT INTO watchlist_sync(user_id,fetched_at,count_reported,count_parsed) VALUES ('${user.id}',${stamp},1,1);`,
     ],
