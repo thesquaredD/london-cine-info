@@ -480,14 +480,14 @@ repo) in Pages; `CLOUDFLARE_API_TOKEN` gains D1 edit for the Actions scripts.
 
 - A: production and isolated preview D1/KV created; both migrations applied;
   Wrangler configuration and local dev ready. Domain attached to Pages and apex DNS points to the site; the zone is active and HTTPS works. Resend sender domain verified;
-  RESEND_API_KEY installed in Pages production and Actions. Dispatch token pending; the Cloudflare token has D1 permission, but the Actions credential still fails preflight (7403).
+  RESEND_API_KEY installed in Pages production and Actions. Dispatch token installed and Actions: write verified; the Cloudflare token has D1 permission and the Actions remote preflight passed.
 - B–E: implemented magic links/sessions/account deletion/privacy, validated public
   watchlist sync and refresh dispatch, watchlist UI/filter/markers, daily departure
   tracking and opt-in weekly digest/unsubscribe. Digest defaults off for consent.
 - F: local Functions/D1 verification passed 39 unit/integration checks and all
   20 browser tests (18 catalogue + 2 recorded account flows). Hosted preview
-  passed account API, unavailable-email, origin and no-overflow checks at both widths. Real email delivery/import and production activation
-  await platform setup; see ACCOUNT_SETUP.md.
+  passed account API, unavailable-email, origin and no-overflow checks at both widths. Real email delivery/import remain a manual handoff; production activation
+  follows passing platform setup; see ACCOUNT_SETUP.md.
 
 Implementation refinements: D1 enforces rate limits atomically instead of KV;
 magic-link and unsubscribe confirmation POSTs prevent email scanners activating

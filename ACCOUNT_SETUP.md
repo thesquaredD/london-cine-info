@@ -1,9 +1,9 @@
 # Accounts and Letterboxd watchlists
 
-Implementation lives on `codex/watchlist` (draft PR #6). Resend sender verification
+Implementation lives on `codex/watchlist` (PR #6). Resend sender verification
 is complete and its key is installed in Pages production and Actions. The apex
-DNS points to Pages and the domain serves over HTTPS. Manual
-refresh still needs a GitHub dispatch token. Ordinary browsing works without it.
+DNS points to Pages and the domain serves over HTTPS. The repository-scoped GitHub dispatch token is installed in Pages production
+and successfully dispatched the CI workflow. The Actions Cloudflare credential passed the remote D1 preflight. Ordinary browsing works without it.
 
 ## Platform
 
@@ -33,7 +33,8 @@ POST, rather than a signed token. It can only switch off emails, without login.
    record in Cloudflare, then confirm the sender domain is verified. The configured
    sender is `London Ciné Info <hello@mail.london-cine.info>`.
 3. Install `RESEND_API_KEY` as a Pages **production** secret and a GitHub Actions
-   secret. Install `GITHUB_DISPATCH_TOKEN` as a Pages production secret; use a
+   secret. `GITHUB_DISPATCH_TOKEN` is installed as a Pages production secret and was
+   verified by dispatching CI. For replacement, use a
    fine-grained token with Actions: write for this repository only. Do not paste
    keys in chat or committed files. Wrangler prompts privately:
 
@@ -45,10 +46,9 @@ POST, rather than a signed token. It can only switch off emails, without login.
 
 4. Give the existing Actions `CLOUDFLARE_API_TOKEN` D1: Edit in addition to Pages:
    Edit. The OAuth used for local setup has D1 access, but the existing Actions
-   token failed the remote D1 preflight with Cloudflare code 7403. The named
-   Cloudflare token now has D1: Edit and is restricted to this account; the
-   Actions credential still fails after resetting the account ID. Reinstall a
-   matching Cloudflare token and rerun the manual CI platform job before activation. The configured account is
+   token now has D1: Edit and is restricted to this account. After permission
+   propagation and resetting the account ID, the manual CI platform preflight
+   passed on 4 October 2026. Rerun it after credential changes. The configured account is
    `5d3189d7982be9522311dada6bf49ecc`.
 5. Merge the implementation, deploy, then enable the repository variable
    `WATCHLIST_ENABLED=true`. Both the daily account job and manual refresh workflow
