@@ -69,10 +69,12 @@ test.beforeEach(({ page }) => {
 test("an expired or used sign-in link explains how to recover", async ({ page }) => {
   await page.goto(`/auth/verify?token=${"0".repeat(64)}`);
   await page.getByRole("button", { name: "Confirm sign-in" }).click();
-  await expect(page.getByRole("status")).toContainText("expired or was already used");
+  await expect(page.getByRole("main").getByRole("status")).toContainText(
+    "expired or was already used",
+  );
   await expect(page).toHaveURL("/auth/verify");
   await page.goto("/auth/verify");
-  await expect(page.getByRole("status")).toContainText("This link is incomplete");
+  await expect(page.getByRole("main").getByRole("status")).toContainText("This link is incomplete");
 });
 test("account service failures stay out of the way of browsing and can be retried", async ({
   page,

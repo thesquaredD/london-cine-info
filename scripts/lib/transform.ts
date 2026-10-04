@@ -5,6 +5,7 @@ import {
   NEW_RELEASE_DAYS,
   RETROSPECTIVE_MIN_FILMS,
   isEventScreening,
+  eventLabels,
 } from "../../src/data/event-rules";
 import {
   DATA_SCHEMA_VERSION,
@@ -196,7 +197,8 @@ export function buildDataset(
         a.venue.localeCompare(b.venue, "en") ||
         a.bookingUrl.localeCompare(b.bookingUrl, "en"),
     );
-    if (rows.length || (movie.releaseDate && movie.releaseDate > today)) {
+    const laterYear = !movie.releaseDate && Number(movie.year) > Number(today.slice(0, 4));
+    if (rows.length || (movie.releaseDate && movie.releaseDate > today) || laterYear) {
       retained.push(movie);
       screenings.set(movie.id, rows);
     }
@@ -301,6 +303,7 @@ export function buildDataset(
           mask("format", row.formats),
           mask("accessibility", row.accessibility),
           row.soldOut ? 1 : 0,
+          isEventScreening(row.category, row.notes) ? 1 : 0,
         ];
       }),
       new:
@@ -311,8 +314,11 @@ export function buildDataset(
         releaseTime !== null
           ? releaseTime < classicDate.getTime()
           : year !== null && year < Number(today.slice(0, 4)) - CLASSIC_YEARS,
-      upcoming: releaseDate !== null && releaseDate > today,
+      upcoming: releaseDate
+        ? releaseDate > today
+        : year !== null && year > Number(today.slice(0, 4)),
       event: rows.some((row) => isEventScreening(row.category, row.notes)),
+      ev: sorted(rows.flatMap((row) => eventLabels(row.category, row.notes))),
       retro: [],
       unmatched: movie.isUnmatched,
     };

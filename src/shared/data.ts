@@ -38,6 +38,7 @@ export type ScreeningFacet = [
   formatMask: number,
   accessibilityMask: number,
   soldOut: 0 | 1,
+  event?: 0 | 1, // optional for compatibility with earlier catalogues
 ];
 export type Film = {
   id: string;
@@ -59,6 +60,7 @@ export type Film = {
   classic: boolean;
   upcoming: boolean;
   event: boolean;
+  ev?: string[]; // special-screening labels, optional in earlier catalogues
   retro: string[];
   unmatched: boolean;
 };

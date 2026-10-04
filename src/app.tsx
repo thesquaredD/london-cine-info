@@ -1,3 +1,4 @@
+import { DEFAULT_DISPLAY, type DisplayState } from "./lib/display";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { useAccount } from "./lib/account";
 import {
@@ -38,6 +39,14 @@ function About({ meta }: { meta: DataMeta | null }) {
         Select a film to see its programme, then follow a cinema link to book.
       </p>
       <h3>Data & sources</h3>
+      <a
+        class="tmdb-attribution"
+        href="https://www.themoviedb.org"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <img src="/tmdb-logo.svg" width="120" height="16" alt="The Movie Database (TMDB)" />
+      </a>
       <p>
         Screening data and film metadata come from{" "}
         <a href="https://clusterflick.com" target="_blank" rel="noopener noreferrer">
@@ -131,6 +140,10 @@ export function App() {
   const [catalogue, setCatalogue] = useState<{ films: Film[]; meta: DataMeta } | null>(null);
   const [error, setError] = useState(false);
   const [attempt, setAttempt] = useState(0);
+  const [display, setDisplay] = useState<DisplayState>(() => ({
+    ...DEFAULT_DISPLAY,
+    ratingOrder: [...DEFAULT_DISPLAY.ratingOrder],
+  }));
   const [expanded, setExpanded] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
@@ -148,6 +161,16 @@ export function App() {
       state.path
     ] ??
     "About";
+  const hasActiveChoices = Boolean(
+    hasCustomSort(state) ||
+    state.search ||
+    state.director ||
+    state.from ||
+    state.to ||
+    state.available ||
+    state.watchlist ||
+    FILTERS.some(({ key }) => state.filters[key]?.length || state.excluded[key]?.length),
+  );
   const watchlistMatches = useMemo(
     () =>
       catalogue?.films.filter(
@@ -172,9 +195,10 @@ export function App() {
             state.sort,
             state.direction,
             watched,
+            display.titleMode,
           )
         : [],
-    [catalogue, state, baseFilms, watched],
+    [catalogue, state, baseFilms, watched, display.titleMode],
   );
   const counts = useMemo(
     () =>
@@ -266,6 +290,11 @@ export function App() {
   const phone = () => window.matchMedia("(max-width: 799px)").matches;
   const sidebarProps = {
     state,
+    display,
+    onDisplay: (value: DisplayState) => {
+      setDisplay(value);
+      change({ page: 1 });
+    },
     account,
     onAccount: openAccount,
     meta,
@@ -429,6 +458,8 @@ export function App() {
             {["/new", "/calendar"].includes(state.path) && (
               <p class="view-note">
                 Release dates are TMDB originals and may differ from UK dates.
+                {state.path === "/calendar" &&
+                  " Dates run earliest first; column sorts apply within each release group."}
               </p>
             )}
             {catalogue && <FilterBar {...filterProps} />}
@@ -467,111 +498,95 @@ export function App() {
                   </strong>{" "}
                   matching your choices
                 </p>
-                <div class="active-filters" role="group" aria-label="Active filters">
-                  <button
-                    disabled={
-                      !(
-                        hasCustomSort(state) ||
-                        state.search ||
-                        state.director ||
-                        state.from ||
-                        state.to ||
-                        state.available ||
-                        state.watchlist ||
-                        FILTERS.some(
-                          ({ key }) => state.filters[key]?.length || state.excluded[key]?.length,
-                        )
-                      )
-                    }
-                    onClick={() => change(clearFilters(state.path))}
-                  >
-                    Clear all
-                  </button>
+                {hasActiveChoices && (
+                  <div class="active-filters" role="group" aria-label="Active filters">
+                    <button onClick={() => change(clearFilters(state.path))}>Clear all</button>
 
-                  {hasCustomSort(state) && (
-                    <button
-                      onClick={() => change({ ...defaultSort(state.path), page: 1 })}
-                      aria-label="Clear sort"
-                    >
-                      Sort: {sortLabel(state.sort)} ×
-                    </button>
-                  )}
-                  {state.director && (
-                    <button
-                      onClick={() => change({ director: "", page: 1 })}
-                      aria-label="Clear director"
-                    >
-                      Director:{" "}
-                      {catalogue.films
-                        .flatMap((film) => film.di)
-                        .find((director) => director.id === state.director)?.name ??
-                        state.director}{" "}
-                      ×
-                    </button>
-                  )}
-                  {state.search && (
-                    <button
-                      onClick={() => change({ search: "", page: 1 })}
-                      aria-label="Remove search filter"
-                    >
-                      Search: {state.search} ×
-                    </button>
-                  )}
-                  {FILTERS.flatMap(({ key, label }) =>
-                    (state.filters[key] ?? []).map((id) => (
+                    {hasCustomSort(state) && (
                       <button
-                        key={`${key}-${id}`}
-                        aria-label={`Remove ${label.toLowerCase()} filter: ${filterLabel(key, id, catalogue.meta)}`}
-                        onClick={() =>
-                          change({
-                            filters: {
-                              ...state.filters,
-                              [key]: state.filters[key]?.filter((value) => value !== id),
-                            },
-                            page: 1,
-                          })
-                        }
+                        onClick={() => change({ ...defaultSort(state.path), page: 1 })}
+                        aria-label="Clear sort"
                       >
-                        {filterLabel(key, id, catalogue.meta)} ×
+                        Sort: {sortLabel(state.sort)} ×
                       </button>
-                    )),
-                  )}
-                  {(state.from || state.to) && (
-                    <button onClick={() => change({ from: "", to: "", page: 1 })}>
-                      Starts {state.from || "00:00"}–{state.to || "23:59"} ×
-                    </button>
-                  )}
-                  {FILTERS.flatMap(({ key, label }) =>
-                    (state.excluded[key] ?? []).map((id) => (
+                    )}
+                    {state.director && (
                       <button
-                        class="excluded-chip"
-                        key={`not-${key}-${id}`}
-                        aria-label={`Remove excluded ${label.toLowerCase()} filter: ${filterLabel(key, id, catalogue.meta)}`}
-                        onClick={() =>
-                          change({
-                            excluded: {
-                              ...state.excluded,
-                              [key]: state.excluded[key]?.filter((value) => value !== id),
-                            },
-                            page: 1,
-                          })
-                        }
+                        onClick={() => change({ director: "", page: 1 })}
+                        aria-label="Clear director"
                       >
-                        NOT {filterLabel(key, id, catalogue.meta)} ×
+                        Director:{" "}
+                        {catalogue.films
+                          .flatMap((film) => film.di)
+                          .find((director) => director.id === state.director)?.name ??
+                          state.director}{" "}
+                        ×
                       </button>
-                    )),
-                  )}
-                  {state.watchlist && (
-                    <button onClick={() => change({ watchlist: false, page: 1 })}>
-                      My watchlist ×
-                    </button>
-                  )}
-                  {state.available && (
-                    <button onClick={() => change({ available: false, page: 1 })}>
-                      Not sold out ×
-                    </button>
-                  )}
-                </div>
+                    )}
+                    {state.search && (
+                      <button
+                        onClick={() => change({ search: "", page: 1 })}
+                        aria-label="Remove search filter"
+                      >
+                        Search: {state.search} ×
+                      </button>
+                    )}
+                    {FILTERS.flatMap(({ key, label }) =>
+                      (state.filters[key] ?? []).map((id) => (
+                        <button
+                          key={`${key}-${id}`}
+                          aria-label={`Remove ${label.toLowerCase()} filter: ${filterLabel(key, id, catalogue.meta)}`}
+                          onClick={() =>
+                            change({
+                              filters: {
+                                ...state.filters,
+                                [key]: state.filters[key]?.filter((value) => value !== id),
+                              },
+                              page: 1,
+                            })
+                          }
+                        >
+                          {filterLabel(key, id, catalogue.meta)} ×
+                        </button>
+                      )),
+                    )}
+                    {(state.from || state.to) && (
+                      <button onClick={() => change({ from: "", to: "", page: 1 })}>
+                        Starts {state.from || "00:00"}–{state.to || "23:59"} ×
+                      </button>
+                    )}
+                    {FILTERS.flatMap(({ key, label }) =>
+                      (state.excluded[key] ?? []).map((id) => (
+                        <button
+                          class="excluded-chip"
+                          key={`not-${key}-${id}`}
+                          aria-label={`Remove excluded ${label.toLowerCase()} filter: ${filterLabel(key, id, catalogue.meta)}`}
+                          onClick={() =>
+                            change({
+                              excluded: {
+                                ...state.excluded,
+                                [key]: state.excluded[key]?.filter((value) => value !== id),
+                              },
+                              page: 1,
+                            })
+                          }
+                        >
+                          NOT {filterLabel(key, id, catalogue.meta)} ×
+                        </button>
+                      )),
+                    )}
+                    {state.watchlist && (
+                      <button onClick={() => change({ watchlist: false, page: 1 })}>
+                        My watchlist ×
+                      </button>
+                    )}
+                    {state.available && (
+                      <button onClick={() => change({ available: false, page: 1 })}>
+                        Not sold out ×
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
             )}
             {!catalogue && !error && (
@@ -589,6 +604,7 @@ export function App() {
             {catalogue && (
               <FilmTable
                 films={selected}
+                display={display}
                 watched={account.user ? watched : undefined}
                 meta={catalogue.meta}
                 state={state}

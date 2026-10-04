@@ -1,3 +1,4 @@
+import { isEventScreening } from "../data/event-rules";
 import type { DataMeta, FacetKey, Film, Showtime, Venue } from "../shared/data";
 import { defaultSort, type ViewState } from "./catalogue";
 export const FILTERS: { key: FacetKey; label: string }[] = [
@@ -68,6 +69,7 @@ type ScreeningView = {
   formats: string[];
   accessibility: string[];
   soldOut: boolean;
+  event: boolean;
 };
 const screeningCache = new WeakMap<
   DataMeta,
@@ -84,7 +86,7 @@ function decodedScreenings(film: Film, meta: DataMeta): ScreeningView[] {
   }
   const existing = cache.films.get(film);
   if (existing) return existing;
-  const rows = film.sc.map(([day, minute, venue, format, access, soldOut]) => ({
+  const rows = film.sc.map(([day, minute, venue, format, access, soldOut, event]) => ({
     date: meta.facets.day[day]?.id ?? "",
     minute,
     venue: cache.venues.get(meta.facets.venue[venue]?.id ?? ""),
@@ -93,6 +95,7 @@ function decodedScreenings(film: Film, meta: DataMeta): ScreeningView[] {
       .filter((_, i) => Boolean(access & (2 ** i)))
       .map((o) => o.id),
     soldOut: Boolean(soldOut),
+    event: event === undefined ? film.event : Boolean(event),
   }));
   cache.films.set(film, rows);
   return rows;
@@ -147,26 +150,31 @@ export function screeningMatcher(meta: DataMeta, state: ViewState, now = new Dat
   }
   return {
     row: (row: ScreeningView) =>
+      (state.path !== "/events" || row.event) &&
       match(row.date, row.minute, row.venue?.id ?? "", row.formats, row.accessibility, row.soldOut),
     film: (film: Film) =>
       accepts(state, "genre", film.ge) &&
       accepts(state, "language", [film.la]) &&
-      decodedScreenings(film, meta).some((row) =>
-        match(
-          row.date,
-          row.minute,
-          row.venue?.id ?? "",
-          row.formats,
-          row.accessibility,
-          row.soldOut,
-        ),
+      decodedScreenings(film, meta).some(
+        (row) =>
+          (state.path !== "/events" || row.event) &&
+          match(
+            row.date,
+            row.minute,
+            row.venue?.id ?? "",
+            row.formats,
+            row.accessibility,
+            row.soldOut,
+          ),
       ),
     showtime: (date: string, row: Showtime) =>
+      (state.path !== "/events" || isEventScreening(row.category, row.notes)) &&
       match(date, minuteOf(row.localTime), row.venue, row.formats, row.accessibility, row.soldOut),
   };
 }
 export function hasScreeningFilters(state: ViewState) {
   return Boolean(
+    state.path === "/events" ||
     state.available ||
     state.from ||
     state.to ||

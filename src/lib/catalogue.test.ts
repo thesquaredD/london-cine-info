@@ -120,3 +120,27 @@ it("groups retrospective films alphabetically by director, keeping each film's c
   ).toBe("Zoe");
   expect(tableRows(films, { ...view, path: "/retrospectives", director: "z" })).toHaveLength(1);
 });
+
+it("groups Calendar by source release date with unknown dates last, preserving each group's sort", () => {
+  const rows = tableRows(
+    [
+      film("late", { rd: "2027-03-01" }),
+      film("early-b", { rd: "2027-01-01" }),
+      film("unknown"),
+      film("early-a", { rd: "2027-01-01" }),
+    ],
+    { ...view, path: "/calendar" },
+  );
+  expect(rows.map((row) => row.film.id)).toEqual(["early-b", "early-a", "late", "unknown"]);
+  expect(rows[0]!.group).toMatchObject({ name: "Released on 1 January 2027", count: 2 });
+  expect(rows[3]!.group!.name).toContain("date unknown");
+});
+it("sorts original titles using the displayed title and falls back when one is missing", () => {
+  const films = [film("A", { o_ti: "Zulu" }), film("B"), film("C", { o_ti: "Alpha" })];
+  expect(sortFilms(films, "title", "asc", undefined, "original").map((f) => f.id)).toEqual([
+    "C",
+    "B",
+    "A",
+  ]);
+  expect(sortFilms(films, "title", "asc").map((f) => f.id)).toEqual(["A", "B", "C"]);
+});
