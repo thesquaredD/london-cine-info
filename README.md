@@ -104,8 +104,10 @@ original language and director filters are encoded in the URL. Only one film ope
 at a time. Screening groups use London dates and include format, accessibility,
 sold-out and booking-detail badges.
 
-The sidebar becomes a keyboard-accessible drawer below 800px; the table shows
-Title and Director at phone widths. The theme follows the system with an override
+Filters sit above the table: Search, When, Cinema, Genre and More filters on desktop.
+Below 800px, Search fills a row and When, Cinema and Filters open a full-width bottom
+sheet. The table shows Title and Director at phone widths; expanding a film reveals
+its ratings and year. Desktop retains all seven separately sortable columns. The theme follows the system with an override
 for this visit. No cookies or browser storage are used.
 
 All page links currently select their dataset flags. Retrospectives are grouped alphabetically by director, with sorting inside each
@@ -113,11 +115,11 @@ group and continued headings across page boundaries. Co-directed films appear in
 each qualifying director’s group. Release-date calendar grouping, the event-specific
 column and Display controls remain in the next phases. Browser tests use the synthetic fixture, at
 1200px and 390px, covering pagination, sort, filters, navigation, lazy loading,
-retries, drawer keyboard behavior, theme and overflow.
+retries, filter sheet keyboard behavior, theme and overflow.
 
 ## Filters
 
-All nine filters are visible in the sidebar. Each picker supports multiple choices;
+All nine filters are available in More filters (Filters on mobile). Each picker supports multiple choices;
 cinemas are grouped by borough and boroughs by inner/outer London. Long lists can
 be searched. Day offers Today, Tomorrow, This weekend, Next 7 days, Later and exact
 dates. Time offers bands and a custom start-time range, including overnight ranges.
@@ -130,10 +132,14 @@ the same selections. Counts show distinct films matching the other filters, igno
 choices within the picker being counted; zero-result options remain available so they can also be excluded. Chips above the table remove individual choices; Clear all resets
 the complete selection. Query parameters preserve filters in shared links.
 
-In the mobile drawer, Show results closes the menu. A currently expanded film stays
+In the filter sheet, a sticky Show results button closes the sheet. Cinema and When
+shortcuts open directly to their category. Escape closes choosers and sheets without
+clearing search text, and sheets return focus to their trigger. A currently expanded film stays
 open when changing filters if it still matches. No preference is persisted.
 
-Filter options cycle through Any → Include → Exclude → Any with a click or Space.
+Filter options toggle selected/unselected with a click or Space. The explicit
+Exclude options toggle switches new choices to exclusions; clicking an existing
+selection or exclusion clears it.
 Excluded options show a minus checkbox and NOT label; chips use the same label.
 Positive choices still match any value; every excluded value is rejected. Screening
 exclusions apply to individual screenings, so a film can remain when it has another
@@ -142,12 +148,16 @@ Today and Tomorrow buttons above the table replace day selections/exclusions and
 keep all other filters; clicking the active shortcut clears the day filter.
 
 Picker Clear buttons remain in place and are disabled when empty. Summaries keep
-a single line, NOT indicators and counts have reserved space, and helper text does
+a single line and counts have reserved space, and helper text does
 not appear/disappear on selection. Active chips use a reserved horizontal strip
 that can scroll, keeping the table toolbar height stable. The geometry regression
-checks every picker through include/exclude/clear at desktop and phone widths,
+checks every picker through select/deselect at desktop and phone widths,
 including long cinema labels and overnight time ranges.
 
-Searchable picker lists retain their height when a search has few or no matches.
+Desktop dropdown lists retain their height when a search has few or no matches.
+Filter sheets use a single scrolling surface, so long option lists do not require
+nested scrolling.
+
+Page navigation stays in a desktop sidebar and a separate Pages drawer on phones. Film filters remain in the results toolbar and mobile filter sheet.
 
 Accounts and Letterboxd watchlists: see [ACCOUNT_SETUP.md](ACCOUNT_SETUP.md) for platform setup, verification and activation.

@@ -3,8 +3,8 @@ import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 async function menu(page: Page) {
   if ((page.viewportSize()?.width ?? 1200) < 800) {
-    await page.getByRole("button", { name: "Toggle navigation and filters" }).click();
-    return page.getByRole("dialog");
+    await page.getByRole("button", { name: "Toggle pages" }).click();
+    return page.getByRole("dialog", { name: "Pages", exact: true });
   }
   return page.locator(".desktop-sidebar");
 }
@@ -83,9 +83,10 @@ test("real Functions sign-in, watchlist, settings, shared filter and account del
   await page.screenshot({ path: info.outputPath("watchlist.png") });
   panel = await menu(page);
   await panel.getByRole("link", { name: "All movies", exact: true }).click();
-  panel = await menu(page);
-  await panel.getByRole("checkbox", { name: "Only my watchlist" }).check();
-  await close(page);
+  await page.getByRole("button", { name: /^(More filters|Filters) ▾$/ }).click();
+  const filters = page.getByRole("dialog", { name: "Filters", exact: true });
+  await filters.getByRole("checkbox", { name: "Only my watchlist" }).check();
+  await filters.getByRole("button", { name: /^Show/ }).click();
   await expect(page.locator(".film-row")).toHaveCount(1);
   await expect(page).toHaveURL(/watchlist=1/);
   await page.reload();
