@@ -1,13 +1,10 @@
-import { DisplayControls } from "./display-controls";
-import type { DisplayState } from "../lib/display";
 import { AccountPanel } from "./account";
 import type { AccountState } from "../lib/account";
 import type { DataMeta } from "../shared/data";
 import { PAGES, defaultSort, viewUrl, hasCustomSort, type ViewState } from "../lib/catalogue";
 
 type Props = {
-  display: DisplayState;
-  onDisplay: (value: DisplayState) => void;
+  onSettings: () => void;
   account: AccountState;
   onAccount: () => void;
   state: ViewState;
@@ -24,8 +21,7 @@ export function Sidebar({
   onTheme,
   account,
   onAccount,
-  display,
-  onDisplay,
+  onSettings,
 }: Props) {
   return (
     <div class="sidebar-content">
@@ -62,7 +58,9 @@ export function Sidebar({
         ))}
       </nav>
       <AccountPanel account={account} onOpen={onAccount} />
-      <DisplayControls value={display} onChange={onDisplay} />
+      <button class="settings-button" aria-haspopup="dialog" onClick={onSettings}>
+        Settings
+      </button>
       <div class="sidebar-bottom">
         <button class="theme-button" onClick={onTheme}>
           {dark ? "☀" : "☾"} <span>{dark ? "Light mode" : "Dark mode"}</span>

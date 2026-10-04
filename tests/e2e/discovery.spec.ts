@@ -16,7 +16,9 @@ test.beforeEach(async ({ page }) => {
 async function when(page: import("@playwright/test").Page) {
   if (page.viewportSize()!.width < 800) {
     await page.locator(".mobile-filters").getByRole("button", { name: /^When/ }).click();
-    return page.locator('.filter-sheet [data-filter="day"]');
+    const picker = page.locator('.filter-sheet [data-filter="day"]');
+    await expect(picker.locator(":scope > summary")).toBeFocused();
+    return picker;
   }
   await page.locator(".when-picker > summary").click();
   return page.locator('.when-picker [data-filter="day"]');
@@ -81,41 +83,47 @@ test("Tonight leaves no hidden time constraint, runtime recovery has an accurate
   await expect(page.locator(".film-row")).toHaveCount(3);
   expect(new URL(page.url()).searchParams.get("q")).toBe("Fixture Classic A");
 });
-test("guest favourites survive reload, filter concrete venues and stay separate from filtering", async ({
+test("guest favourites use Account management and missing cinemas offer setup", async ({
   page,
 }) => {
   await page.goto("/");
   await expect(page.locator(".film-row")).toHaveCount(6);
-  if (page.viewportSize()!.width < 800)
-    await page.getByRole("button", { name: /^Quick filters/ }).click();
+  const mobile = page.viewportSize()!.width < 800;
+  if (mobile) await page.getByRole("button", { name: /^Quick filters/ }).click();
   const quick = page.locator(".quick-days");
+  await expect(quick.getByRole("button", { name: "Manage my cinemas", exact: true })).toHaveCount(
+    0,
+  );
   await quick.getByRole("button", { name: "My cinemas", exact: true }).click();
-  const dialog = page.getByRole("dialog", { name: "Manage my cinemas", exact: true });
-  await expect(dialog).toBeVisible();
-  await dialog.getByRole("checkbox", { name: "BFI Southbank", exact: true }).check();
-  await dialog.getByRole("button", { name: "Save my cinemas", exact: true }).click();
-  await expect(page.locator(".film-row")).toHaveCount(6);
-  if (page.viewportSize()!.width < 800)
-    await page.getByRole("button", { name: /^Quick filters/ }).click();
-  await quick.getByRole("button", { name: "My cinemas", exact: true }).click();
-  if (page.viewportSize()!.width < 800)
+  if (mobile)
     await page
       .getByRole("dialog", { name: "Quick filters", exact: true })
       .getByRole("button", { name: /^Show/ })
       .click();
-  expect(new URL(page.url()).searchParams.getAll("venue")).toEqual(["bfi.org.uk-southbank"]);
+  await expect(page.getByRole("heading", { name: "Set up my cinemas", exact: true })).toBeVisible();
+  await expect(page.locator(".film-row")).toHaveCount(0);
+  await expect(page.locator("dialog[open]")).toHaveCount(0);
+  await page.getByRole("button", { name: "Set up my cinemas", exact: true }).click();
+  const dialog = page.getByRole("dialog", { name: "Manage my cinemas", exact: true });
+  await expect(dialog).toBeVisible();
+  await dialog.getByRole("checkbox", { name: "BFI Southbank", exact: true }).check();
+  await dialog.getByRole("button", { name: "Save my cinemas", exact: true }).click();
   await expect(page.locator(".film-row")).toHaveCount(2);
+  expect(new URL(page.url()).searchParams.getAll("venue")).toEqual(["bfi.org.uk-southbank"]);
   await page.reload();
-  if (page.viewportSize()!.width < 800)
-    await page.getByRole("button", { name: /^Quick filters/ }).click();
-  await quick.getByRole("button", { name: "Manage my cinemas", exact: true }).click();
+  if (mobile) {
+    await page.getByRole("button", { name: "Toggle pages" }).click();
+    await page
+      .getByRole("dialog", { name: "Pages", exact: true })
+      .getByRole("button", { name: "Sign in", exact: true })
+      .click();
+  } else await page.locator(".desktop-sidebar .account-panel button").click();
+  const account = page.locator(".account-dialog");
+  await account.getByRole("button", { name: "Manage my cinemas", exact: true }).click();
   await expect(dialog.getByRole("checkbox", { name: "BFI Southbank", exact: true })).toBeChecked();
+  await expect(page.locator("dialog[open]")).toHaveCount(1);
   await dialog.getByRole("button", { name: "Close manage my cinemas", exact: true }).click();
-  await expect(
-    page.viewportSize()!.width < 800
-      ? page.getByRole("button", { name: /^Quick filters/ })
-      : quick.getByRole("button", { name: "Manage my cinemas", exact: true }),
-  ).toBeFocused();
+  await expect(account).toBeVisible();
 });
 test("Radar shows explicit formats and global counts, themes fit 390px", async ({
   page,
@@ -210,4 +218,84 @@ test("mobile quick filters collapse into one button and sheet restores keyboard 
   await expect(opener).toBeFocused();
   expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
   await page.screenshot({ path: join(evidenceDirectory, "quick-filters-mobile-collapsed.png") });
+});
+
+test("This week and Next week choose adjacent rolling seven-day windows", async ({ page }) => {
+  const baseline = Date.parse("2026-10-03T00:00:00Z");
+  await page.route("**/films.*.json", async (route) => {
+    const films = await (await route.fetch()).json();
+    await route.fulfill({
+      json: [0, 6, 7, 13, 14].map((offset) => ({
+        ...films[0],
+        id: `window-${offset}`,
+        ti: `Window day ${offset}`,
+        sc: [[offset, 840, 0, 0, 0, 0, 0, offset * 1440 + 780]],
+      })),
+    });
+  });
+  await page.route("**/meta.*.json", async (route) => {
+    const meta = await (await route.fetch()).json();
+    meta.screeningEpoch = baseline;
+    meta.counts.films = 5;
+    meta.facets.day = Array.from({ length: 15 }, (_, offset) => {
+      const id = new Date(baseline + offset * 86400000).toISOString().slice(0, 10);
+      return { id, label: id, count: 1 };
+    });
+    await route.fulfill({ json: meta });
+  });
+  await page.goto("/");
+  const mobile = page.viewportSize()!.width < 800;
+  if (mobile) await page.getByRole("button", { name: /^Quick filters/ }).click();
+  const quick = page.locator(".quick-days");
+  await quick.getByRole("button", { name: /^This week(?:\s|$)/ }).click();
+  if (mobile)
+    await page
+      .getByRole("dialog", { name: "Quick filters", exact: true })
+      .getByRole("button", { name: /^Show/ })
+      .click();
+  await expect(page.locator(".film-row")).toHaveCount(2);
+  await expect(page.locator(".film-row").filter({ hasText: "Window day 0" })).toHaveCount(1);
+  await expect(page.locator(".film-row").filter({ hasText: "Window day 6" })).toHaveCount(1);
+  if (mobile) await page.getByRole("button", { name: /^Quick filters/ }).click();
+  await quick.getByRole("button", { name: /^Next week/ }).click();
+  if (mobile)
+    await page
+      .getByRole("dialog", { name: "Quick filters", exact: true })
+      .getByRole("button", { name: /^Show/ })
+      .click();
+  await expect(page.locator(".film-row")).toHaveCount(2);
+  await expect(page.locator(".film-row").filter({ hasText: "Window day 7" })).toHaveCount(1);
+  await expect(page.locator(".film-row").filter({ hasText: "Window day 13" })).toHaveCount(1);
+});
+
+test("opening motion preserves reduced-motion preference and never blocks film interaction", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/");
+  await page.getByRole("button", { name: "Fixture Classic A", exact: true }).click();
+  await expect(page.locator(".film-expanded")).toBeVisible();
+  await expect(page.locator(".film-expanded")).toHaveCSS("animation-name", "none");
+  await page
+    .getByRole("button", { name: /^Add to calendar:/ })
+    .first()
+    .click();
+  const calendar = page.getByRole("dialog", { name: "Add to calendar", exact: true });
+  await expect(calendar).toBeVisible();
+  await expect(calendar).toHaveCSS("animation-name", "none");
+  await page.keyboard.press("Escape");
+  await expect(calendar).toBeHidden();
+  if (page.viewportSize()!.width < 800) {
+    await page.getByRole("button", { name: "Toggle pages" }).click();
+    const drawer = page.getByRole("dialog", { name: "Pages", exact: true });
+    await expect(drawer).toBeVisible();
+    await expect(drawer).toHaveCSS("animation-name", "none");
+    await drawer.getByRole("link", { name: "Classics", exact: true }).click();
+  } else
+    await page
+      .locator(".desktop-sidebar")
+      .getByRole("link", { name: "Classics", exact: true })
+      .click();
+  await expect(page).toHaveURL(/\/classics/);
+  await expect(page.locator("dialog[open]")).toHaveCount(0);
 });

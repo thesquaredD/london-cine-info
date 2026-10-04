@@ -184,8 +184,8 @@ The When picker offers a keyboard-accessible month calendar for separate dates,
 with explicit exclusions. Arrow keys move by day/week, Home/End move within the
 week, and Page Up/Down change month. Faded dates have no matching listed screenings;
 listing coverage can be incomplete. All relative dates use London time. This week
-means the remaining Monday–Sunday calendar week; Next week means the next
-Monday–Sunday. Next 7 days remains a rolling window in the picker.
+means today through six days from today; Next week means the seven days after
+that (days seven through thirteen). Next 7 days remains a rolling window in the picker.
 
 Quick filters include Today, Tomorrow, Tonight, This weekend, This week, Next week,
 My watchlist, My cinemas and Under 2 hours. Tonight uses today from 18:00, excluding
@@ -200,7 +200,9 @@ browser/account; subsequent account removals remain removed. Signed-in choices
 sync across devices; concurrent saves require reloading rather than overwriting
 another device's edit. Guest and account choices stay separate on sign-out. Shared
 My cinemas links contain concrete venue IDs. Cinema setup does not itself apply a
-results filter. Account deletion cascades through cinema preferences and merge receipts.
+results filter unless My cinemas is already active. Manage my cinemas is part of
+Account. An unconfigured My cinemas filter shows Set up my cinemas; it never
+falls back to all cinemas. Account deletion cascades through cinema preferences and merge receipts.
 
 `/radar` has Limited opportunity (one to three distinct future screenings across
 all covered cinemas) and Special formats (explicit 35mm, 70mm, IMAX or IMAX 70mm).
@@ -250,3 +252,12 @@ automatically; an isolated preview needs its pending migrations first.
 Replay calendar account verification with
 `npm run e2e:accounts -- tests/auth/calendar.spec.ts` after the fixture build.
 The code/flow UX review and remaining decisions are in [docs/UX_REVIEW.md](docs/UX_REVIEW.md).
+
+Display preferences now open in a **Settings** modal from the sidebar/Pages menu.
+The cinema chooser keeps selected cinemas at the top with individual remove
+buttons, independent of its search, and aligns native checkboxes with their labels.
+
+Phone bottom sheets, the sidebar and expanded films have short CSS entrance
+animations (110–140 ms). Only transform/opacity animate; movie contents fade
+without position or size interpolation. Closing and navigation are immediate,
+and reduced-motion preferences disable animations.

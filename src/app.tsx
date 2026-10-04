@@ -1,3 +1,5 @@
+import { Dialog } from "./components/dialog";
+import { DisplayControls } from "./components/display-controls";
 import { useCalendar } from "./lib/calendar";
 import { MyCalendar, ScreeningCalendarDialog } from "./components/screening-calendar";
 import type { CalendarInput } from "./shared/calendar";
@@ -153,6 +155,7 @@ export function App() {
   const calendar = useCalendar(account);
   const [calendarEvent, setCalendarEvent] = useState<CalendarInput | null>(null);
   const cinemas = useCinemas(account);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [quickOpen, setQuickOpen] = useState(false);
   const [cinemasOpen, setCinemasOpen] = useState(false);
   const [myCinemasActive, setMyCinemasActive] = useState(false);
@@ -213,14 +216,16 @@ export function App() {
       ).length ?? 0,
     [catalogue, watched],
   );
+  const myCinemasUnavailable = myCinemasActive && (!!cinemas.error || !cinemas.venues.length);
+  const returnToAccount = useRef(false);
   const baseFilms = useMemo(
     () =>
-      catalogue?.films.filter(
+      (myCinemasUnavailable ? [] : (catalogue?.films ?? [])).filter(
         (film) =>
           !(state.path === "/watchlist" || state.watchlist) ||
           (film.sc.length > 0 && watched.has(letterboxdSlug(film.ra.lb?.url) ?? "")),
       ) ?? [],
-    [catalogue, state.path, state.watchlist, watched],
+    [catalogue, state.path, state.watchlist, watched, myCinemasUnavailable],
   );
   const selected = useMemo(
     () =>
@@ -367,14 +372,11 @@ export function App() {
       page: 1,
     });
     myCinemasUpdating.current = false;
-    if (!cinemas.venues.length) {
-      setMyCinemasActive(false);
-      setCinemasOpen(true);
-    }
   }, [cinemas.venues.join("|"), cinemas.loading, cinemas.error, myCinemasActive]);
   const suggestions =
     catalogue &&
     selected.length === 0 &&
+    !myCinemasUnavailable &&
     (!(state.watchlist || state.path === "/watchlist") ||
       (account.user && account.watchlist?.fetchedAt && !account.error))
       ? recoverySuggestions(baseFilms, catalogue.meta, state, now)
@@ -383,9 +385,16 @@ export function App() {
     document.querySelector<HTMLDialogElement>(".quick-filter-dialog")?.close();
     setQuickOpen(false);
   }
-  function openCinemas() {
+  function openCinemas(fromAccount = false) {
+    returnToAccount.current = fromAccount;
     closeQuickFilters();
+    document.querySelector<HTMLDialogElement>(".account-dialog")?.close();
+    setAccountOpen(false);
     setCinemasOpen(true);
+  }
+  function closeCinemas() {
+    setCinemasOpen(false);
+    if (returnToAccount.current) setAccountOpen(true);
   }
   function openScreeningCalendar(event: CalendarInput) {
     calendar.dismiss();
@@ -394,6 +403,11 @@ export function App() {
   function closeScreeningCalendar() {
     document.querySelector<HTMLDialogElement>(".screening-calendar-dialog")?.close();
     setCalendarEvent(null);
+  }
+  function openSettings() {
+    if (drawer.current?.open) drawer.current.close();
+    setDrawerOpen(false);
+    setSettingsOpen(true);
   }
   function openAccount() {
     closeScreeningCalendar();
@@ -406,11 +420,7 @@ export function App() {
   const phone = () => window.matchMedia("(max-width: 799px)").matches;
   const sidebarProps = {
     state,
-    display,
-    onDisplay: (value: DisplayState) => {
-      setDisplay(value);
-      change({ page: 1 });
-    },
+    onSettings: openSettings,
     account,
     onAccount: openAccount,
     meta,
@@ -489,10 +499,30 @@ export function App() {
         </header>
         <div class="tagline">The database of London cinema screenings</div>
         <h2 class="sr-only">{pageTitle}</h2>
+        <Dialog
+          open={settingsOpen}
+          title="Settings"
+          className="settings-dialog"
+          onClose={() => setSettingsOpen(false)}
+          restoreTo={() =>
+            document.querySelector<HTMLElement>(
+              phone() ? ".menu-button" : ".desktop-sidebar .settings-button",
+            )
+          }
+        >
+          <DisplayControls
+            value={display}
+            onChange={(value) => {
+              setDisplay(value);
+              change({ page: 1 });
+            }}
+          />
+        </Dialog>
         <AccountDialogs
           account={account}
           open={accountOpen}
           matches={watchlistMatches}
+          onManageCinemas={() => openCinemas(true)}
           onClose={() => setAccountOpen(false)}
           onNavigate={(path) => change({ path, page: 1, director: "" }, true)}
           restoreTo={() =>
@@ -502,12 +532,7 @@ export function App() {
           }
         />
         {meta && (
-          <MyCinemas
-            cinemas={cinemas}
-            meta={meta}
-            open={cinemasOpen}
-            onClose={() => setCinemasOpen(false)}
-          />
+          <MyCinemas cinemas={cinemas} meta={meta} open={cinemasOpen} onClose={closeCinemas} />
         )}
         <ScreeningCalendarDialog
           event={calendarEvent}
@@ -637,6 +662,13 @@ export function App() {
                       return (
                         <button
                           key={id}
+                          title={
+                            id === "this-week"
+                              ? "Next 7 days, including today"
+                              : id === "next-week"
+                                ? "The 7 days after that"
+                                : undefined
+                          }
                           aria-pressed={active}
                           onClick={() => change(dateShortcut(state, id))}
                         >
@@ -659,10 +691,6 @@ export function App() {
                       aria-pressed={myCinemasActive}
                       disabled={cinemas.loading}
                       onClick={() => {
-                        if (cinemas.error || !cinemas.venues.length) {
-                          openCinemas();
-                          return;
-                        }
                         myCinemasUpdating.current = true;
                         change({
                           filters: {
@@ -677,9 +705,6 @@ export function App() {
                       }}
                     >
                       My cinemas
-                    </button>
-                    <button aria-haspopup="dialog" onClick={openCinemas}>
-                      Manage my cinemas
                     </button>
                     <button
                       aria-pressed={!!state.short}
@@ -840,7 +865,26 @@ export function App() {
                 ))}
               </div>
             )}
+            {catalogue && myCinemasUnavailable && (
+              <div class="empty-state" aria-label="My cinemas setup">
+                {cinemas.loading ? (
+                  <p role="status">Loading my cinemas…</p>
+                ) : cinemas.error ? (
+                  <>
+                    <p role="alert">{cinemas.error}</p>
+                    <button onClick={() => openCinemas()}>Manage my cinemas</button>
+                  </>
+                ) : (
+                  <>
+                    <h2>Set up my cinemas</h2>
+                    <p>Choose your favourite cinemas in Account to see their screenings here.</p>
+                    <button onClick={() => openCinemas()}>Set up my cinemas</button>
+                  </>
+                )}
+              </div>
+            )}
             {catalogue &&
+              !myCinemasUnavailable &&
               (state.path === "/radar" ? (
                 <Radar
                   films={baseFilms}

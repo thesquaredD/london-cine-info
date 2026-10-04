@@ -4,7 +4,14 @@ import { loadBoroughs } from "../../scripts/lib/boroughs";
 import { buildDataset } from "../../scripts/lib/transform";
 import type { Combined, Matched } from "../../scripts/lib/schemas";
 import type { DataMeta, Film, ScreeningFacet, SourceRelease } from "../shared/data";
-import { dateShortcut, dayMatches, filterFilms, screeningMatcher, facetCounts } from "./filters";
+import {
+  addDays,
+  dateShortcut,
+  dayMatches,
+  filterFilms,
+  screeningMatcher,
+  facetCounts,
+} from "./filters";
 import { readView, viewUrl } from "./catalogue";
 import { radarEntries, radarFilms } from "./radar";
 import { recoverySuggestions } from "./recovery";
@@ -70,15 +77,15 @@ function film(id: string, screenings: ScreeningFacet[], ru: number | null = 119)
   return { ...prototype, id, ti: id, sc: screenings, ru };
 }
 describe("date semantics", () => {
-  it("uses Monday–Sunday weeks across Sunday, year end and leap dates", () => {
-    expect(dayMatches("2026-10-05", ["this-week"], "2026-10-04")).toBe(false);
-    expect(dayMatches("2026-10-04", ["this-week"], "2026-10-04")).toBe(true);
-    expect(dayMatches("2026-10-05", ["next-week"], "2026-10-04")).toBe(true);
-    expect(dayMatches("2026-10-11", ["next-week"], "2026-10-04")).toBe(true);
-    expect(dayMatches("2026-10-12", ["next-week"], "2026-10-04")).toBe(false);
-    expect(dayMatches("2027-01-03", ["this-week"], "2026-12-31")).toBe(true);
-    expect(dayMatches("2027-01-04", ["next-week"], "2026-12-31")).toBe(true);
-    expect(dayMatches("2028-02-29", ["week"], "2028-02-28")).toBe(true);
+  it("uses adjacent seven-day windows across Sunday, year end and leap dates", () => {
+    for (const today of ["2026-10-04", "2026-12-31", "2028-02-28"]) {
+      for (let offset = -1; offset <= 14; offset++) {
+        const date = addDays(today, offset);
+        expect(dayMatches(date, ["this-week"], today)).toBe(offset >= 0 && offset <= 6);
+        expect(dayMatches(date, ["week"], today)).toBe(offset >= 0 && offset <= 6);
+        expect(dayMatches(date, ["next-week"], today)).toBe(offset >= 7 && offset <= 13);
+      }
+    }
   });
   it("Tonight sets visible time, removes exclusions and clears its range when leaving", () => {
     const initial = state("day=beyond&not_day=today&genre=drama&from=12:00");

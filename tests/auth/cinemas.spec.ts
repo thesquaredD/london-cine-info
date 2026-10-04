@@ -13,14 +13,22 @@ async function login(page: Page, email: string) {
   expect(response.ok()).toBe(true);
 }
 async function manage(page: Page) {
-  if (page.viewportSize()!.width < 800)
-    await page.getByRole("button", { name: /^Quick filters/ }).click();
-  await page
-    .locator(".quick-days")
-    .getByRole("button", { name: "Manage my cinemas", exact: true })
-    .click();
+  const account = page.locator(".account-dialog");
+  if (!(await account.isVisible())) {
+    if (page.viewportSize()!.width < 800) {
+      await page.getByRole("button", { name: "Toggle pages" }).click();
+      await page
+        .getByRole("dialog", { name: "Pages", exact: true })
+        .getByRole("button", { name: /^(Sign in|Account)$/ })
+        .click();
+    } else await page.locator(".desktop-sidebar .account-panel button").click();
+  }
+  await expect(account).toBeVisible();
+  await account.getByRole("button", { name: "Manage my cinemas", exact: true }).click();
   const dialog = page.getByRole("dialog", { name: "Manage my cinemas", exact: true });
   await expect(dialog.getByRole("button", { name: "Save my cinemas", exact: true })).toBeEnabled();
+  await expect(account).toBeHidden();
+  await expect(page.locator("dialog[open]")).toHaveCount(1);
   return dialog;
 }
 test("real favourite union, cross-device removal, failed save, sign-out and account isolation", async ({
@@ -30,7 +38,22 @@ test("real favourite union, cross-device removal, failed save, sign-out and acco
   const email = `favourites-${info.project.name}-${Date.now()}@example.com`;
   await page.goto("/");
   let dialog = await manage(page);
-  await dialog.getByRole("checkbox", { name: "BFI Southbank", exact: true }).check();
+  const bfi = dialog.getByRole("checkbox", { name: "BFI Southbank", exact: true });
+  await bfi.check();
+  const selected = dialog.getByRole("region", { name: "Selected cinemas", exact: true });
+  await expect(
+    selected.getByRole("button", { name: "Remove BFI Southbank", exact: true }),
+  ).toBeVisible();
+  const checkboxBox = await bfi.boundingBox();
+  expect(checkboxBox!.width).toBe(18);
+  expect(checkboxBox!.height).toBe(18);
+  await dialog.getByLabel("Find cinemas", { exact: true }).fill("Prince Charles");
+  await selected.getByRole("button", { name: "Remove BFI Southbank", exact: true }).click();
+  await expect(selected.getByText("No cinemas selected yet.")).toBeVisible();
+  await dialog.getByLabel("Find cinemas", { exact: true }).fill("");
+  await expect(bfi).not.toBeChecked();
+  await bfi.check();
+  await page.screenshot({ path: info.outputPath("cinema-selection.png") });
   await dialog.getByRole("button", { name: "Save my cinemas", exact: true }).click();
   await login(page, email);
   await page.reload();
@@ -94,6 +117,39 @@ test("real favourite union, cross-device removal, failed save, sign-out and acco
     await expect(
       dialog.getByRole("checkbox", { name: "Prince Charles Cinema", exact: true }),
     ).not.toBeChecked();
+    await dialog.getByRole("checkbox", { name: "BFI Southbank", exact: true }).uncheck();
+    await dialog.getByRole("button", { name: "Save my cinemas", exact: true }).click();
+    const account = page.locator(".account-dialog");
+    await expect(account).toBeVisible();
+    await account.getByRole("button", { name: "Close account", exact: true }).click();
+    if (page.viewportSize()!.width < 800)
+      await page.getByRole("button", { name: /^Quick filters/ }).click();
+    await page
+      .locator(".quick-days")
+      .getByRole("button", { name: "My cinemas", exact: true })
+      .click();
+    if (page.viewportSize()!.width < 800)
+      await page
+        .getByRole("dialog", { name: "Quick filters", exact: true })
+        .getByRole("button", { name: /^Show/ })
+        .click();
+    await expect(
+      page.getByRole("heading", { name: "Set up my cinemas", exact: true }),
+    ).toBeVisible();
+    await expect(page.locator(".film-row")).toHaveCount(0);
+    await expect(page.locator("dialog[open]")).toHaveCount(0);
+    await page.screenshot({ path: info.outputPath("cinema-setup-empty.png") });
+    await expect(page.getByRole("group", { name: "Suggested filter adjustments" })).toBeHidden();
+    await page.getByRole("button", { name: "Set up my cinemas", exact: true }).click();
+    await expect(
+      dialog.getByRole("checkbox", { name: "BFI Southbank", exact: true }),
+    ).not.toBeChecked();
+    await dialog.getByRole("checkbox", { name: "BFI Southbank", exact: true }).check();
+    await dialog.getByRole("button", { name: "Save my cinemas", exact: true }).click();
+    await expect(page.locator(".film-row")).toHaveCount(2);
+    await expect(
+      page.getByRole("heading", { name: "Set up my cinemas", exact: true }),
+    ).toBeHidden();
     expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(
       false,
     );

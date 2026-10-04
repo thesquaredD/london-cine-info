@@ -661,10 +661,10 @@ resolve interaction details without requiring another product interview.
 - Quick-filter row: Today, Tomorrow, Tonight, This weekend, This week, Next week,
   My watchlist, My cinemas and Under 2 hours. Keep Next 7 days in the picker.
   Use a compact wrapping or horizontally scrollable layout on phones.
-- London local time governs all relative dates. Weeks run Monday–Sunday: This
-  week covers the remaining days of the current calendar week, including today;
-  Next week covers the following Monday–Sunday. Neither means a rolling seven
-  days. Retain the existing Saturday/Sunday definition of This weekend.
+- London local time governs all relative dates. Updated requirement: This week
+  means the next seven days, including today (today through day six). Next week
+  means the following seven days (day seven through day thirteen). Retain the
+  existing Saturday/Sunday definition of This weekend.
 - Tonight means today, starting at 18:00 or later, excluding screenings whose
   start instant has passed. Reflect its day/time effect in visible controls.
 - Date shortcuts replace date selections/exclusions; clicking an active shortcut
@@ -837,3 +837,29 @@ are estimates and saving does not book a ticket. The UX review records the
 remaining first-save sign-in return and programme-density decisions. Production
 deployment applies migration 0006; isolated previews need pending migrations.
 Replay/evidence details are in README and ACCOUNT_SETUP.md.
+
+### 13.8 Account, cinema selection and Settings follow-up
+
+- [x] Move Manage my cinemas into Account. Opening management closes the preceding
+      dialog, and closing/saving from Account returns there.
+- [x] My cinemas with no saved choices shows no films and an explicit Set up my
+      cinemas action; suppress generic filter-recovery suggestions in this state.
+      Saving choices while the filter is active updates results immediately.
+- [x] Selected cinemas appear above search with individual remove buttons, even
+      when the search hides their rows. Native checkboxes use aligned 18px controls
+      inside 44px rows; removals stay provisional until saved.
+- [x] Display controls move from the sidebar into a Settings modal, with keyboard
+      focus, Escape/close and phone Pages drawer handoff.
+- [x] This week and Next week now use adjacent rolling seven-day windows instead
+      of Monday–Sunday calendar weeks. Existing URL IDs and Next 7 days are retained.
+- [x] Short CSS entrance animations for phone bottom sheets, sidebar and film
+      expansion. Only transform/opacity animate; film contents only fade. No
+      delayed close/navigation, height/width transitions or retained layers.
+      Reduced-motion preference disables them.
+- [x] Automated verification: 80 unit/API tests, 51 catalogue browser checks
+      (one phone-only desktop skip), 14 account browser checks, typecheck, lint
+      and build. Recorded desktop/390px coverage includes selected-chip removal
+      while searching, aligned checkboxes, account-specific setup recovery,
+      Settings focus/close, seven-day windows and reduced-motion navigation.
+- [ ] Dio's visual review. No merge/deployment or interactive production browsing
+      performed for this follow-up.
