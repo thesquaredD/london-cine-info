@@ -33,6 +33,8 @@ import {
   FILTERS,
   filterLabel,
   dateShortcut,
+  eveningShortcut,
+  isEvening,
 } from "./lib/filters";
 import { loadCatalogue } from "./lib/data";
 import {
@@ -665,6 +667,7 @@ export function App() {
                   resultLabel={state.path === "/events" ? "event" : "film"}
                   activeCount={
                     Number(!!state.filters.day?.length) +
+                    Number(isEvening(state)) +
                     Number(!!state.watchlist) +
                     Number(myCinemasActive) +
                     Number(!!state.short)
@@ -675,32 +678,48 @@ export function App() {
                       { id: "today", label: "Today" },
                       { id: "tomorrow", label: "Tomorrow" },
                       { id: "tonight", label: "Tonight" },
+                      { id: "evening", label: "Evening" },
                       { id: "weekend", label: "This weekend" },
                       { id: "this-week", label: "This week" },
                       { id: "next-week", label: "Next week" },
                     ].map(({ id, label }) => {
                       const active =
-                        id === "tonight"
-                          ? !!state.tonight
-                          : !state.tonight &&
-                            state.filters.day?.length === 1 &&
-                            state.filters.day[0] === id &&
-                            !state.excluded.day?.length;
+                        id === "evening"
+                          ? isEvening(state)
+                          : id === "tonight"
+                            ? !!state.tonight
+                            : !state.tonight &&
+                              state.filters.day?.length === 1 &&
+                              state.filters.day[0] === id &&
+                              !state.excluded.day?.length;
                       return (
                         <button
                           key={id}
                           title={
-                            id === "this-week"
-                              ? "Next 7 days, including today"
-                              : id === "next-week"
-                                ? "The 7 days after that"
-                                : undefined
+                            id === "evening"
+                              ? "Screenings starting from 17:00 on your selected dates"
+                              : id === "this-week"
+                                ? "Next 7 days, including today"
+                                : id === "next-week"
+                                  ? "The 7 days after that"
+                                  : undefined
                           }
                           aria-pressed={active}
-                          onClick={() => change(dateShortcut(state, id))}
+                          onClick={() =>
+                            change(
+                              id === "evening" ? eveningShortcut(state) : dateShortcut(state, id),
+                            )
+                          }
                         >
                           {label}
-                          {id !== "tonight" && <small> {counts?.day.get(id) ?? 0}</small>}
+                          {id !== "tonight" && (
+                            <small>
+                              {" "}
+                              {id === "evening"
+                                ? (counts?.time.get("evening") ?? 0)
+                                : (counts?.day.get(id) ?? 0)}
+                            </small>
+                          )}
                         </button>
                       );
                     })}

@@ -297,3 +297,36 @@ test("opening motion preserves reduced-motion preference and never blocks film i
   await expect(page).toHaveURL(/\/classics/);
   await expect(page.locator("dialog[open]")).toHaveCount(0);
 });
+
+test("Evening quick filter preserves dates, shares its URL, and toggles off", async ({ page }) => {
+  await page.goto("/?day=2026-10-04&genre=drama&from=09:00&to=12:00");
+  const mobile = page.viewportSize()!.width < 800;
+  if (mobile) await page.getByRole("button", { name: /^Quick filters/ }).click();
+  const button = page
+    .locator(".quick-days")
+    .filter({ visible: true })
+    .getByRole("button", { name: /^Evening/ });
+  await button.click();
+  await expect(button).toHaveAttribute("aria-pressed", "true");
+  let url = new URL(page.url());
+  expect(url.searchParams.getAll("time")).toEqual(["evening"]);
+  expect(url.searchParams.getAll("day")).toEqual(["2026-10-04"]);
+  expect(url.searchParams.getAll("genre")).toEqual(["drama"]);
+  expect(url.searchParams.has("from")).toBe(false);
+  expect(url.searchParams.has("to")).toBe(false);
+  await button.click();
+  await expect(button).toHaveAttribute("aria-pressed", "false");
+  url = new URL(page.url());
+  expect(url.searchParams.getAll("time")).toEqual([]);
+  expect(url.searchParams.getAll("day")).toEqual(["2026-10-04"]);
+  await button.click();
+  await page.reload();
+  if (mobile) await page.getByRole("button", { name: /^Quick filters/ }).click();
+  await expect(button).toHaveAttribute("aria-pressed", "true");
+  if (mobile)
+    await page
+      .getByRole("dialog", { name: "Quick filters", exact: true })
+      .getByRole("button", { name: /^Show/ })
+      .click();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
