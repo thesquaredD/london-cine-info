@@ -401,3 +401,24 @@ export function dateShortcut(state: ViewState, id: string): Partial<ViewState> {
     page: 1,
   };
 }
+
+export function isEvening(state: ViewState): boolean {
+  return (
+    !state.tonight &&
+    !state.from &&
+    !state.to &&
+    state.filters.time?.length === 1 &&
+    state.filters.time[0] === "evening" &&
+    !state.excluded.time?.length
+  );
+}
+export function eveningShortcut(state: ViewState): Partial<ViewState> {
+  return {
+    filters: { ...state.filters, time: isEvening(state) ? [] : ["evening"] },
+    excluded: { ...state.excluded, time: [] },
+    from: "",
+    to: "",
+    tonight: false,
+    page: 1,
+  };
+}

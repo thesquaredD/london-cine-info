@@ -7,6 +7,8 @@ import type { DataMeta, Film, ScreeningFacet, SourceRelease } from "../shared/da
 import {
   addDays,
   dateShortcut,
+  eveningShortcut,
+  isEvening,
   dayMatches,
   filterFilms,
   screeningMatcher,
@@ -275,4 +277,42 @@ it("splits generic IMAX from film and permits overlap with explicit IMAX 70mm", 
   expect(
     radarFilms(entries, meta, state("day=tomorrow", "/radar"), "imax", now).map((film) => film.id),
   ).toEqual(["separate"]);
+});
+
+it("Evening preserves chosen dates and other filters, clears conflicting times, and toggles off", () => {
+  const initial = state(
+    "day=tomorrow&genre=drama&time=morning&not_time=evening&not_venue=other&from=09:00&to=12:00",
+  );
+  const evening = { ...initial, ...eveningShortcut(initial) };
+  expect(evening).toMatchObject({
+    filters: { day: ["tomorrow"], genre: ["drama"], time: ["evening"] },
+    excluded: { time: [], venue: ["other"] },
+    from: "",
+    to: "",
+    tonight: false,
+    page: 1,
+  });
+  expect(isEvening(evening)).toBe(true);
+  expect(readView(new URL(viewUrl(evening), "https://test.local"))).toMatchObject({
+    filters: { day: ["tomorrow"], time: ["evening"] },
+  });
+  expect(eveningShortcut(evening).filters?.time).toEqual([]);
+  const fromTonight = { ...state("tonight=1"), ...eveningShortcut(state("tonight=1")) };
+  expect(fromTonight).toMatchObject({
+    tonight: false,
+    from: "",
+    to: "",
+    filters: { day: ["today"], time: ["evening"] },
+  });
+  const inputs = ["2026-10-04T15:59:00Z", "2026-10-04T16:00:00Z", "2026-10-04T22:00:00Z"].map(
+    (epoch, index) => film(String(index), [row(epoch)]),
+  );
+  expect(
+    filterFilms(
+      inputs,
+      meta,
+      { ...state("day=tomorrow"), ...eveningShortcut(state("day=tomorrow")) },
+      now,
+    ).map((film) => film.id),
+  ).toEqual(["1", "2"]);
 });
