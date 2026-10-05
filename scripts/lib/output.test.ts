@@ -35,6 +35,14 @@ it("publishes immutable URLs, removes obsolete outputs, and preserves the last b
   expect(
     JSON.parse(await readFile(join(root, "public", first.showtimes, "classic-a.json"), "utf8")),
   ).toMatchObject({ id: "classic-a" });
+  const index = JSON.parse(await readFile(join(root, "public", first.events), "utf8"));
+  expect(index).toHaveLength(2);
+  expect(index.find((row: { filmId: string }) => row.filmId === "classic-a")).toMatchObject({
+    labels: ["Live score"],
+    date: "2026-10-03",
+    localTime: "14:00",
+    bookingUrl: "https://example.com/book/pcc/1791032400000",
+  });
   const changed = structuredClone(dataset);
   changed.showtimes[0]!.days["2026-10-03"]![0]!.bookingUrl = "https://example.com/new-booking";
   const second = await writeDataset(changed, root);

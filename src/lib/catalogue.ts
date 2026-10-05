@@ -33,7 +33,9 @@ export type ViewState = {
   watchlist?: boolean;
   short?: boolean;
   tonight?: boolean;
-  radarSection?: "limited" | "formats";
+  radarSection?: "limited" | "film" | "imax";
+  filmGauge?: "35mm" | "70mm";
+  eventType?: string;
   director: string;
   sort: SortKey;
   direction: "asc" | "desc";
@@ -104,6 +106,14 @@ export function readView(url: URL): ViewState {
   const state: ViewState = {
     path,
     search: url.searchParams.get("q") ?? "",
+    filmGauge: ["35mm", "70mm"].includes(url.searchParams.get("filmGauge") ?? "")
+      ? (url.searchParams.get("filmGauge") as "35mm" | "70mm")
+      : undefined,
+    eventType: ["qa", "score", "programme", "talk", "other"].includes(
+      url.searchParams.get("eventType") ?? "",
+    )
+      ? url.searchParams.get("eventType")!
+      : "",
     filters: Object.fromEntries(
       [
         "day",
@@ -171,6 +181,8 @@ export function readView(url: URL): ViewState {
 export function viewUrl(state: ViewState): string {
   const query = new URLSearchParams();
   if (state.search) query.set("q", state.search);
+  if (state.path === "/radar" && state.filmGauge) query.set("filmGauge", state.filmGauge);
+  if (state.eventType) query.set("eventType", state.eventType);
   for (const [key, values] of Object.entries(state.filters))
     for (const value of values ?? []) query.append(key, value);
   for (const [key, values] of Object.entries(state.excluded))

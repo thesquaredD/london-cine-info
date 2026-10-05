@@ -6,6 +6,7 @@ import {
   RETROSPECTIVE_MIN_FILMS,
   isEventScreening,
   eventLabels,
+  eventTypes,
 } from "../../src/data/event-rules";
 import {
   DATA_SCHEMA_VERSION,
@@ -177,6 +178,7 @@ export function buildDataset(
         screen: performance.screen || null,
         notes: performance.notes || null,
         category: showing.category,
+        eventTitle: movie.title,
         formats: formats.length ? formats : ["standard"],
         accessibility: Object.entries(performance.accessibility ?? {})
           .filter(([, enabled]) => enabled)
@@ -306,10 +308,11 @@ export function buildDataset(
           mask("format", row.formats),
           mask("accessibility", row.accessibility),
           row.soldOut ? 1 : 0,
-          isEventScreening(row.category, row.notes) ? 1 : 0,
+          isEventScreening(row.category, row.notes, movie.title) ? 1 : 0,
           (row.time - screeningEpoch) / 60000,
         ];
-        if (row.screen) tuple.push(screens.indexOf(row.screen));
+        tuple.push(row.screen ? screens.indexOf(row.screen) : null);
+        tuple.push(eventTypes(row.category, row.notes, movie.title));
         return tuple;
       }),
       new:
@@ -323,8 +326,8 @@ export function buildDataset(
       upcoming: releaseDate
         ? releaseDate > today
         : year !== null && year > Number(today.slice(0, 4)),
-      event: rows.some((row) => isEventScreening(row.category, row.notes)),
-      ev: sorted(rows.flatMap((row) => eventLabels(row.category, row.notes))),
+      event: rows.some((row) => isEventScreening(row.category, row.notes, movie.title)),
+      ev: sorted(rows.flatMap((row) => eventLabels(row.category, row.notes, movie.title))),
       retro: [],
       unmatched: movie.isUnmatched,
     };

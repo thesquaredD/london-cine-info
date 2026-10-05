@@ -171,13 +171,7 @@ describe("Radar", () => {
     );
     expect(entries[0]!.screenings).toHaveLength(2);
     expect(
-      radarFilms(
-        entries,
-        meta,
-        state(`venue=${meta.facets.venue[1]!.id}`, "/radar"),
-        "formats",
-        now,
-      ),
+      radarFilms(entries, meta, state(`venue=${meta.facets.venue[1]!.id}`, "/radar"), "film", now),
     ).toHaveLength(0);
     expect(
       radarEntries([input], meta, new Date("2026-10-04T18:00:00Z"))[0]!.screenings,
@@ -203,13 +197,13 @@ describe("Radar", () => {
         radarEntries([input], meta, now),
         meta,
         state("day=tomorrow", "/radar"),
-        "formats",
+        "film",
         now,
       ),
     ).toHaveLength(0);
     const matcher = screeningMatcher(
       meta,
-      { ...state("day=tomorrow", "/radar"), radarSection: "formats" },
+      { ...state("day=tomorrow", "/radar"), radarSection: "film" },
       now,
     );
     expect(
@@ -257,4 +251,28 @@ it("rejects malformed and impossible shared dates before opening the picker", ()
     state("day=2026-99-03&day=2026-02-31&day=2026-10-04&not_day=2026-13-12").filters.day,
   ).toEqual(["2026-10-04"]);
   expect(state("not_day=2026-13-12").excluded.day).toEqual([]);
+});
+
+it("splits generic IMAX from film and permits overlap with explicit IMAX 70mm", () => {
+  const inputs = [
+    film("digital-imax", [row("2026-10-03T17:00:00Z", "IMAX")]),
+    film("film-imax", [row("2026-10-03T17:00:00Z", "IMAX 70mm")]),
+    film("separate", [row("2026-10-03T17:00:00Z", "35mm"), row("2026-10-04T17:00:00Z", "imax", 1)]),
+  ];
+  const entries = radarEntries(inputs, meta, now);
+  const current = state("", "/radar");
+  expect(radarFilms(entries, meta, current, "film", now).map((film) => film.id)).toEqual([
+    "film-imax",
+    "separate",
+  ]);
+  expect(radarFilms(entries, meta, current, "imax", now)).toHaveLength(3);
+  expect(
+    radarFilms(entries, meta, { ...current, filmGauge: "70mm" }, "film", now).map(
+      (film) => film.id,
+    ),
+  ).toEqual(["film-imax"]);
+  expect(radarFilms(entries, meta, state("day=tomorrow", "/radar"), "film", now)).toHaveLength(0);
+  expect(
+    radarFilms(entries, meta, state("day=tomorrow", "/radar"), "imax", now).map((film) => film.id),
+  ).toEqual(["separate"]);
 });

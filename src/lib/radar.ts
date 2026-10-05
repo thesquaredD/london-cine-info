@@ -1,6 +1,13 @@
 import type { TitleMode } from "./display";
 import type { DataMeta, Film } from "../shared/data";
-import { upcomingScreenings, filterFilms, isSpecialFormat, type ScreeningView } from "./filters";
+import {
+  upcomingScreenings,
+  filterFilms,
+  isSpecialFormat,
+  isFilmFormat,
+  isImaxFormat,
+  type ScreeningView,
+} from "./filters";
 import { selectFilms, sortFilms, hasCustomSort, type ViewState } from "./catalogue";
 export type RadarEntry = { film: Film; screenings: ScreeningView[]; special: ScreeningView[] };
 export function radarEntries(films: Film[], meta: DataMeta, now = new Date()): RadarEntry[] {
@@ -13,7 +20,7 @@ export function radarFilms(
   entries: RadarEntry[],
   meta: DataMeta,
   state: ViewState,
-  section: "limited" | "formats",
+  section: "limited" | "film" | "imax",
   now = new Date(),
   watched?: ReadonlySet<string>,
   titleMode: TitleMode = "both",
@@ -21,7 +28,11 @@ export function radarFilms(
   const qualifying = entries.filter((entry) =>
     section === "limited"
       ? entry.screenings.length >= 1 && entry.screenings.length <= 3
-      : entry.special.length > 0,
+      : entry.special.some((row) =>
+          section === "film"
+            ? isFilmFormat(row.formats, state.filmGauge)
+            : isImaxFormat(row.formats),
+        ),
   );
   const films = filterFilms(
     selectFilms(
@@ -42,7 +53,16 @@ export function radarFilms(
       (section === "limited" ? av.screenings.length - bv.screenings.length : 0) ||
       (section === "limited"
         ? av.screenings[0]!.epoch! - bv.screenings[0]!.epoch!
-        : av.special[0]!.epoch! - bv.special[0]!.epoch!) ||
+        : av.special.find((row) =>
+            section === "film"
+              ? isFilmFormat(row.formats, state.filmGauge)
+              : isImaxFormat(row.formats),
+          )!.epoch! -
+          bv.special.find((row) =>
+            section === "film"
+              ? isFilmFormat(row.formats, state.filmGauge)
+              : isImaxFormat(row.formats),
+          )!.epoch!) ||
       a.ti.localeCompare(b.ti) ||
       a.id.localeCompare(b.id)
     );

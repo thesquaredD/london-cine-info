@@ -1951,3 +1951,112 @@ h3 {
     opacity: 1;
   }
 }
+
+.radar-section-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+  font-size: 16px;
+  font-weight: 500;
+  padding: 12px 14px;
+}
+.radar-section-toggle small,
+.events-agenda h2 small {
+  font-size: 12px;
+  color: var(--muted);
+}
+.radar-page > section > h2 {
+  margin: 0;
+}
+.gauge-filter,
+.event-type-filter {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+}
+.gauge-filter select,
+.event-type-filter select {
+  min-width: 0;
+  max-width: 100%;
+}
+.events-agenda > section > h2 {
+  font-size: 16px;
+  font-weight: 500;
+  padding: 14px;
+  margin: 0;
+  border-bottom: 1px solid var(--line);
+}
+.event-table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+.event-row > td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+.event-row > td:first-child {
+  width: 76px;
+  font-variant-numeric: tabular-nums;
+}
+.event-information {
+  overflow-wrap: anywhere;
+}
+.event-information h3 {
+  margin: 0 0 6px;
+  font-size: 14px;
+  font-weight: 500;
+}
+.event-information p {
+  margin: 4px 0;
+}
+.event-notes {
+  color: var(--muted);
+  font-size: 12px;
+}
+.event-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin-top: 8px;
+}
+.event-actions button {
+  min-height: 32px;
+}
+@media (max-width: 799px) {
+  .event-row > td {
+    padding: 12px 8px;
+  }
+  .event-row > td:first-child {
+    width: 58px;
+  }
+  .event-actions button,
+  .event-actions a {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
+}
+
+.gauge-filter select,
+.event-type-filter select {
+  font: inherit;
+  color: var(--fg);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 6px 8px;
+  min-height: 36px;
+}
+@media (max-width: 799px) {
+  .gauge-filter select,
+  .event-type-filter select {
+    min-height: 44px;
+  }
+}

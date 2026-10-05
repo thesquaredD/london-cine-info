@@ -1,5 +1,11 @@
 import manifest from "../generated/manifest.json";
-import { DATA_SCHEMA_VERSION, type DataMeta, type Film, type FilmShowtimes } from "../shared/data";
+import {
+  DATA_SCHEMA_VERSION,
+  type DataMeta,
+  type Film,
+  type FilmShowtimes,
+  type EventOccurrence,
+} from "../shared/data";
 
 export async function fetchJson<T>(url: string, signal?: AbortSignal): Promise<T> {
   const response = await fetch(url, { signal });
@@ -8,19 +14,21 @@ export async function fetchJson<T>(url: string, signal?: AbortSignal): Promise<T
 }
 export async function loadCatalogue(
   signal: AbortSignal,
-): Promise<{ films: Film[]; meta: DataMeta }> {
-  const [films, meta] = await Promise.all([
+): Promise<{ films: Film[]; meta: DataMeta; events: EventOccurrence[] }> {
+  const [films, meta, events] = await Promise.all([
     fetchJson<Film[]>(manifest.films, signal),
     fetchJson<DataMeta>(manifest.meta, signal),
+    fetchJson<EventOccurrence[]>(manifest.events, signal),
   ]);
   if (
     manifest.schemaVersion !== DATA_SCHEMA_VERSION ||
     meta.schemaVersion !== DATA_SCHEMA_VERSION ||
+    !Array.isArray(events) ||
     !Array.isArray(films) ||
     films.length !== meta.counts.films
   )
     throw new Error("The screening data is incompatible. Please reload the page.");
-  return { films, meta };
+  return { films, meta, events };
 }
 const showtimeCache = new Map<string, Promise<FilmShowtimes>>();
 export function loadShowtimes(id: string): Promise<FilmShowtimes> {
