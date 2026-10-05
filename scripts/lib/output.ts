@@ -2,6 +2,7 @@ import { createHash, randomUUID } from "node:crypto";
 import { mkdir, writeFile, rename, rm, stat } from "node:fs/promises";
 import { join } from "node:path";
 import { DATA_SCHEMA_VERSION, type DataManifest } from "../../src/shared/data";
+import { buildEventIndex } from "../../src/shared/events";
 import type { Dataset } from "./transform";
 
 const hash = (content: string) => createHash("sha256").update(content).digest("hex").slice(0, 16);
@@ -21,11 +22,13 @@ export async function writeDataset(dataset: Dataset, root: string): Promise<Data
   if (dataset.showtimes.length > 19_900)
     throw new Error("Too many showtime files for Cloudflare Pages");
   const filmJson = json(dataset.films),
-    metaJson = json(dataset.meta);
+    metaJson = json(dataset.meta),
+    eventJson = json(buildEventIndex(dataset.films, dataset.showtimes));
   const showtimes = dataset.showtimes.map((entry) => ({ id: entry.id, content: json(entry) }));
   for (const file of [
     { id: "films", content: filmJson },
     { id: "meta", content: metaJson },
+    { id: "events", content: eventJson },
     ...showtimes,
   ]) {
     if (Buffer.byteLength(file.content) > 25 * 1024 * 1024)
@@ -36,13 +39,15 @@ export async function writeDataset(dataset: Dataset, root: string): Promise<Data
   for (const file of showtimes) showtimeDigest.update(file.content);
   const showtimeDirectory = `showtimes.${showtimeDigest.digest("hex").slice(0, 16)}`;
   const filmFile = `films.${hash(filmJson)}.json`,
-    metaFile = `meta.${hash(metaJson)}.json`;
+    metaFile = `meta.${hash(metaJson)}.json`,
+    eventFile = `events.${hash(eventJson)}.json`;
   const manifest: DataManifest = {
     schemaVersion: DATA_SCHEMA_VERSION,
     generatedAt: dataset.meta.generatedAt,
     films: `/data/${filmFile}`,
     meta: `/data/${metaFile}`,
     showtimes: `/data/${showtimeDirectory}/`,
+    events: `/data/${eventFile}`,
   };
   const buildId = randomUUID();
   const staging = join(root, ".cache", `output-${buildId}`);
@@ -56,6 +61,7 @@ export async function writeDataset(dataset: Dataset, root: string): Promise<Data
     await mkdir(join(staging, showtimeDirectory), { recursive: true });
     await writeFile(join(staging, filmFile), filmJson);
     await writeFile(join(staging, metaFile), metaJson);
+    await writeFile(join(staging, eventFile), eventJson);
     // Bound open file descriptors while writing thousands of small files.
     for (let i = 0; i < showtimes.length; i += 50)
       await Promise.all(

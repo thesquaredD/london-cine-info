@@ -1,4 +1,4 @@
-import { isEventScreening } from "../data/event-rules";
+import { isEventScreening, eventTypes } from "../data/event-rules";
 import type { DataMeta, FacetKey, Film, Showtime, Venue } from "../shared/data";
 import { defaultSort, type ViewState } from "./catalogue";
 export const FILTERS: { key: FacetKey; label: string }[] = [
@@ -13,6 +13,8 @@ export const FILTERS: { key: FacetKey; label: string }[] = [
   { key: "language", label: "Original language" },
 ];
 export const CLEAR_FILTERS = {
+  eventType: "",
+  filmGauge: undefined,
   watchlist: false,
   short: false,
   tonight: false,
@@ -79,6 +81,7 @@ export type ScreeningView = {
   accessibility: string[];
   soldOut: boolean;
   event: boolean;
+  eventTypes?: string[];
 };
 const screeningCache = new WeakMap<
   DataMeta,
@@ -96,7 +99,7 @@ export function decodedScreenings(film: Film, meta: DataMeta): ScreeningView[] {
   const existing = cache.films.get(film);
   if (existing) return existing;
   const rows = film.sc.map(
-    ([day, minute, venue, format, access, soldOut, event, epoch, screen]) => ({
+    ([day, minute, venue, format, access, soldOut, event, epoch, screen, eventTypes]) => ({
       epoch:
         epoch === undefined
           ? null
@@ -112,6 +115,7 @@ export function decodedScreenings(film: Film, meta: DataMeta): ScreeningView[] {
         .filter((_, i) => Boolean(access & (2 ** i)))
         .map((o) => o.id),
       soldOut: Boolean(soldOut),
+      eventTypes,
       event: event === undefined ? film.event : Boolean(event),
     }),
   );
@@ -157,7 +161,8 @@ export function screeningMatcher(meta: DataMeta, state: ViewState, now = new Dat
     epoch: number | null,
   ) {
     if (state.path === "/radar" && (epoch === null || epoch <= now.getTime())) return false;
-    if (state.radarSection === "formats" && !isSpecialFormat(formats)) return false;
+    if (state.radarSection === "film" && !isFilmFormat(formats, state.filmGauge)) return false;
+    if (state.radarSection === "imax" && !isImaxFormat(formats)) return false;
     if (
       state.tonight &&
       (date !== today || minute < 1080 || epoch === null || epoch <= now.getTime())
@@ -200,7 +205,8 @@ export function screeningMatcher(meta: DataMeta, state: ViewState, now = new Dat
   return {
     row: (row: ScreeningView, film?: Film) =>
       radarRow(row, film) &&
-      (state.path !== "/events" || row.event) &&
+      (state.path !== "/events" ||
+        (row.event && (!state.eventType || row.eventTypes?.includes(state.eventType)))) &&
       match(
         row.date,
         row.minute,
@@ -217,7 +223,8 @@ export function screeningMatcher(meta: DataMeta, state: ViewState, now = new Dat
       decodedScreenings(film, meta).some(
         (row) =>
           radarRow(row, film) &&
-          (state.path !== "/events" || row.event) &&
+          (state.path !== "/events" ||
+            (row.event && (!state.eventType || row.eventTypes?.includes(state.eventType)))) &&
           match(
             row.date,
             row.minute,
@@ -229,7 +236,10 @@ export function screeningMatcher(meta: DataMeta, state: ViewState, now = new Dat
           ),
       ),
     showtime: (date: string, row: Showtime) =>
-      (state.path !== "/events" || isEventScreening(row.category, row.notes)) &&
+      (state.path !== "/events" ||
+        (isEventScreening(row.category, row.notes, row.eventTitle) &&
+          (!state.eventType ||
+            eventTypes(row.category, row.notes, row.eventTitle).includes(state.eventType)))) &&
       match(
         date,
         minuteOf(row.localTime),
@@ -345,7 +355,16 @@ export function filterLabel(key: FacetKey, id: string, meta: DataMeta): string {
 }
 
 export function isSpecialFormat(formats: string[]) {
-  return formats.some((format) => ["35mm", "70mm", "imax", "imax-70mm"].includes(format));
+  return isFilmFormat(formats) || isImaxFormat(formats);
+}
+export function isFilmFormat(formats: string[], gauge?: "35mm" | "70mm") {
+  return formats.some((format) => {
+    const value = format.toLowerCase();
+    return (!gauge || value.includes(gauge)) && /\b(?:35|70)mm\b/.test(value);
+  });
+}
+export function isImaxFormat(formats: string[]) {
+  return formats.some((format) => /\bimax\b/i.test(format));
 }
 export const DATE_SHORTCUTS = [
   "today",

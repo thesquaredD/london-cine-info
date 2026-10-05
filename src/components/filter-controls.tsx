@@ -133,7 +133,14 @@ export function FilterControls({
             </button>
             {onDone && (
               <button class="view-results" onClick={onDone}>
-                Show {resultCount.toLocaleString("en-GB")} {resultCount === 1 ? "film" : "films"}
+                Show {resultCount.toLocaleString("en-GB")}{" "}
+                {state.path === "/events"
+                  ? resultCount === 1
+                    ? "event"
+                    : "events"
+                  : resultCount === 1
+                    ? "film"
+                    : "films"}
               </button>
             )}
           </>

@@ -44,18 +44,26 @@ Generated files are excluded from git:
 - `public/data/films.<hash>.json`: film metadata, ratings, facet bitsets and compact
   screening tuples. Each tuple keeps day, local minute, venue, format, accessibility
   availability and event status together, so filters can match a single screening.
-  The seventh event flag is optional for compatibility with earlier catalogues.
+  The seventh field is the event flag; the tenth contains occurrence event groups.
 - `public/data/meta.<hash>.json`: venues, boroughs, memberships, facet dictionaries
   and counts, build time, upstream release tags and diagnostics. Facet counts refer
   to distinct films, not the number of screenings.
 - `public/data/showtimes.<hash>/<movieId>.json`: showtimes grouped by London date,
   with booking URLs, format and accessibility flags, plus actor/overview details.
   UTC timestamps remain available even when DST repeats a local hour.
-- `src/generated/manifest.json`: URLs of the current film, metadata and showtime
+- `public/data/events.<hash>.json`: a chronological occurrence index with London dates,
+  occasion labels, event groups, booking links, sold-out status and film references.
+  Events loads this index with the catalogue; film details remain lazy.
+- `src/generated/manifest.json`: URLs of the current film, metadata, event and showtime
   assets. The UI imports this manifest at build time; generate data before typechecking.
 
-The shared contract is in `src/shared/data.ts`. Film facet bitsets are base64,
-least significant bit first; option order comes from `meta.facets`. Screening
+The shared contract is in `src/shared/data.ts` (schema version 2). Rebuild data before
+building the UI: version 1 assets lack the event index. The repository’s existing
+`build-data` producer generates it for both fixtures and live releases; the Deploy
+workflow already runs this producer before Vite, so no external producer or separate
+deployment migration is required.
+
+Film facet bitsets are base64, least significant bit first; option order comes from `meta.facets`. Screening
 format/accessibility masks use those same dictionaries. Formats without upstream
 metadata are marked `standard` (unspecified), rather than inferred as digital/2D.
 
@@ -120,8 +128,12 @@ All page links currently select their dataset flags. Retrospectives are grouped 
 group and continued headings across page boundaries. Co-directed films appear in
 each qualifying director’s group. Calendar groups release dates earliest first,
 with unknown dates last; column sorts apply inside each group and headings repeat
-across page boundaries. Events replaces Year with special-screening labels and
-matches filters and expanded programmes against event screenings only.
+across page boundaries. Events shows a London-date agenda of qualifying special occurrences, with immediate
+booking and calendar actions and film details on demand. Event-type, date and cinema
+filters match the same occurrence; totals and picker counts describe events. Formats
+alone and unrelated venue activities do not qualify. Radar separates Limited opportunity,
+On film (35mm / 70mm) and IMAX; section headers show matching film counts and preserve
+collapsed sections locally. Each expanded section retains its complete paginated list.
 
 Display offers Title & original, Title only and Original title (falling back to
 the title when missing). Title sorting follows the displayed title. Rating columns

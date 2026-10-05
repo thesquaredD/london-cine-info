@@ -131,11 +131,9 @@ test("Radar shows explicit formats and global counts, themes fit 390px", async (
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("/radar");
-  await expect(
-    page.getByRole("heading", { name: "Limited opportunity", exact: true }),
-  ).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Special formats", exact: true })).toBeVisible();
-  const special = page.getByRole("region", { name: "Special formats", exact: true });
+  await expect(page.getByRole("heading", { name: /Limited opportunity/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /On film/ })).toBeVisible();
+  const special = page.getByRole("region", { name: "On film", exact: true });
   await expect(special.locator(".film-row")).toHaveCount(1);
   await special.getByRole("button", { name: "Fixture Classic A", exact: true }).click();
   await expect(special.locator(".showtime-day")).toHaveCount(1);
@@ -189,7 +187,7 @@ test("Radar expires screenings and relative Today moves at London midnight witho
   await expect(limited.locator(".film-row")).toHaveCount(0);
   await page.clock.fastForward(105000);
   await expect(limited.locator(".radar-label")).toContainText(
-    "Only 1 screening listed · 2026-10-04",
+    "Only 1 screening listed · 4 October 2026",
   );
   await expect(page).toHaveURL(/radar\?day=today/);
 });

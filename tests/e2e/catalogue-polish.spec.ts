@@ -72,21 +72,19 @@ test("Calendar groups release dates and repeats a continued heading on page two"
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.screenshot({ path: test.info().outputPath("calendar.png") });
 });
-test("Events show special-screening labels and only matching event dates", async ({ page }) => {
+test("Events show occurrences and only matching event dates", async ({ page }) => {
   await page.goto("/events");
-  await expect(page.locator(".film-row").filter({ hasText: "Fixture Classic A" })).toContainText(
-    "Live score",
-  );
-  await page.getByRole("button", { name: "Fixture Classic A", exact: true }).click();
+  const live = page.locator(".event-row").filter({ hasText: "Fixture Classic A" });
+  await expect(live).toContainText("Live score");
+  await expect(live.locator("time")).toHaveText("14:00");
+  await expect(live.getByRole("link", { name: /^Book/ })).toBeVisible();
+  await live.getByRole("button", { name: "Film details", exact: true }).click();
   await expect(page.locator(".showtime-day")).toHaveCount(1);
-  await expect(page.locator(".showtimes")).toContainText("Live score");
   await page.goto("/events?day=2026-10-04");
-  await expect(page.locator(".film-row")).toHaveCount(1);
-  await expect(page.locator(".film-row")).toContainText("Fixture Q&A");
-  await expect(page.locator(".film-row").filter({ hasText: "Fixture Classic A" })).toHaveCount(0);
+  await expect(page.locator(".event-row")).toHaveCount(1);
+  await expect(page.locator(".event-row")).toContainText("Fixture Q&A");
   await page.goto("/events?day=2026-10-03");
-  await expect(page.locator(".film-row").filter({ hasText: "Fixture Classic A" })).toHaveCount(1);
-  await page.screenshot({ path: test.info().outputPath("events.png") });
+  await expect(page.locator(".event-row")).toHaveCount(1);
 });
 test("Display changes titles and rating order, persists across navigation and resets on reload", async ({
   page,
@@ -187,7 +185,7 @@ test("all catalogue pages fit phone, tablet and desktop in both themes without c
         ).toBe(true);
       }
       await page.goto("/events");
-      await expect(page.locator(".film-row")).not.toHaveCount(0);
+      await expect(page.locator(".event-row")).not.toHaveCount(0);
       await page.screenshot({
         path: test.info().outputPath(`audit-${theme}-${width}.png`),
         fullPage: true,

@@ -7,6 +7,7 @@ export function QuickFilters({
   onClose,
   activeCount,
   resultCount,
+  resultLabel = "film",
 }: {
   children: ComponentChildren;
   open: boolean;
@@ -14,6 +15,7 @@ export function QuickFilters({
   onClose: () => void;
   activeCount: number;
   resultCount: number;
+  resultLabel?: "film" | "event";
 }) {
   return (
     <>
@@ -30,7 +32,8 @@ export function QuickFilters({
         <p class="filter-hint">Choose shortcuts, then return to the results.</p>
         {children}
         <button class="view-results" onClick={onClose}>
-          Show {resultCount.toLocaleString("en-GB")} {resultCount === 1 ? "film" : "films"}
+          Show {resultCount.toLocaleString("en-GB")}{" "}
+          {resultCount === 1 ? resultLabel : `${resultLabel}s`}
         </button>
       </Dialog>
     </>

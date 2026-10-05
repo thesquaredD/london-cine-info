@@ -1,4 +1,4 @@
-export const DATA_SCHEMA_VERSION = 1;
+export const DATA_SCHEMA_VERSION = 2;
 
 export type FacetKey =
   | "day"
@@ -41,6 +41,7 @@ export type ScreeningFacet = [
   event?: 0 | 1, // optional for compatibility with earlier catalogues
   epoch?: number, // minutes after meta.screeningEpoch; exact UTC ms in older catalogues
   screen?: number | string | null, // index into meta.screens
+  eventTypes?: string[],
 ];
 export type Film = {
   id: string;
@@ -66,7 +67,16 @@ export type Film = {
   retro: string[];
   unmatched: boolean;
 };
+export type EventOccurrence = Showtime & {
+  id: string;
+  filmId: string;
+  title: string;
+  date: string;
+  labels: string[];
+  types: string[];
+};
 export type Showtime = {
+  eventTitle?: string;
   venue: string;
   time: number; // UTC epoch milliseconds; repeated DST hours remain distinct
   localTime: string;
@@ -111,4 +121,5 @@ export type DataManifest = {
   films: string;
   meta: string;
   showtimes: string;
+  events: string;
 };

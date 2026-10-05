@@ -6,6 +6,9 @@ import type { CalendarInput } from "./shared/calendar";
 import { useCinemas } from "./lib/cinemas";
 import { QuickFilters } from "./components/quick-filters";
 import { MyCinemas } from "./components/my-cinemas";
+import { Events, EventTypeFilter } from "./components/events";
+import { matchingEvents, eventFacetCounts } from "./lib/events";
+import { EVENT_TYPES } from "./data/event-rules";
 import { Radar } from "./components/radar";
 import { recoverySuggestions } from "./lib/recovery";
 import { DEFAULT_DISPLAY, type DisplayState } from "./lib/display";
@@ -45,7 +48,7 @@ import {
   viewUrl,
   type ViewState,
 } from "./lib/catalogue";
-import type { DataMeta, Film } from "./shared/data";
+import type { DataMeta, Film, EventOccurrence } from "./shared/data";
 
 function About({ meta }: { meta: DataMeta | null }) {
   return (
@@ -173,7 +176,11 @@ export function App() {
   }, []);
   const watched = useMemo(() => new Set(account.watchlist?.slugs ?? []), [account.watchlist]);
   const [state, setState] = useState(() => readView(new URL(window.location.href)));
-  const [catalogue, setCatalogue] = useState<{ films: Film[]; meta: DataMeta } | null>(null);
+  const [catalogue, setCatalogue] = useState<{
+    films: Film[];
+    meta: DataMeta;
+    events: EventOccurrence[];
+  } | null>(null);
   const [error, setError] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const [display, setDisplay] = useState<DisplayState>(() => ({
@@ -198,6 +205,8 @@ export function App() {
     ] ??
     "About";
   const hasActiveChoices = Boolean(
+    state.filmGauge ||
+    state.eventType ||
     hasCustomSort(state) ||
     state.search ||
     state.director ||
@@ -240,15 +249,31 @@ export function App() {
         : [],
     [catalogue, state, baseFilms, watched, display.titleMode, now],
   );
+  const events = useMemo(
+    () =>
+      catalogue && state.path === "/events"
+        ? matchingEvents(catalogue.events, baseFilms, catalogue.meta, state, now)
+        : [],
+    [catalogue, baseFilms, state, now],
+  );
+  const resultCount = state.path === "/events" ? events.length : selected.length;
   const counts = useMemo(
     () =>
       catalogue
-        ? facetCounts(selectFilms(baseFilms, { ...state, filters: {} }), catalogue.meta, state, now)
+        ? state.path === "/events"
+          ? eventFacetCounts(catalogue.events, baseFilms, catalogue.meta, state, now)
+          : facetCounts(
+              selectFilms(baseFilms, { ...state, filters: {} }),
+              catalogue.meta,
+              state,
+              now,
+            )
         : null,
     [
       catalogue,
       baseFilms,
       state.path,
+      state.eventType,
       state.search,
       state.director,
       state.filters,
@@ -347,7 +372,7 @@ export function App() {
     if (!drawerOpen && drawer.current?.open) drawer.current.close();
   }, [drawerOpen]);
   useEffect(() => {
-    if (!catalogue) return;
+    if (!catalogue || state.path === "/events") return;
     const maximum = Math.max(1, Math.ceil(tableRows(selected, state).length / PAGE_SIZE));
     if (state.page > maximum) {
       const next = { ...state, page: maximum };
@@ -375,6 +400,7 @@ export function App() {
   }, [cinemas.venues.join("|"), cinemas.loading, cinemas.error, myCinemasActive]);
   const suggestions =
     catalogue &&
+    state.path !== "/events" &&
     selected.length === 0 &&
     !myCinemasUnavailable &&
     (!(state.watchlist || state.path === "/watchlist") ||
@@ -434,7 +460,7 @@ export function App() {
     meta,
     onChange: change,
     counts,
-    resultCount: selected.length,
+    resultCount,
   };
   return (
     <div class={`app-layout ${collapsed ? "sidebar-collapsed" : ""}`}>
@@ -635,7 +661,8 @@ export function App() {
                   open={quickOpen}
                   onOpen={() => setQuickOpen(true)}
                   onClose={() => setQuickOpen(false)}
-                  resultCount={selected.length}
+                  resultCount={resultCount}
+                  resultLabel={state.path === "/events" ? "event" : "film"}
                   activeCount={
                     Number(!!state.filters.day?.length) +
                     Number(!!state.watchlist) +
@@ -729,10 +756,17 @@ export function App() {
                     </button>
                   </p>
                 )}
+                {state.path === "/events" && <EventTypeFilter state={state} onChange={change} />}
                 <p role="status" aria-live="polite">
                   <strong>
-                    {selected.length.toLocaleString("en-GB")}{" "}
-                    {selected.length === 1 ? "film" : "films"}
+                    {resultCount.toLocaleString("en-GB")}{" "}
+                    {state.path === "/events"
+                      ? resultCount === 1
+                        ? "event"
+                        : "events"
+                      : resultCount === 1
+                        ? "film"
+                        : "films"}
                   </strong>{" "}
                   matching your choices
                 </p>
@@ -746,6 +780,17 @@ export function App() {
                         aria-label="Clear sort"
                       >
                         Sort: {sortLabel(state.sort)} ×
+                      </button>
+                    )}
+                    {state.filmGauge && state.path === "/radar" && (
+                      <button onClick={() => change({ filmGauge: undefined, page: 1 })}>
+                        On film: {state.filmGauge} ×
+                      </button>
+                    )}
+                    {state.eventType && (
+                      <button onClick={() => change({ eventType: "", page: 1 })}>
+                        Event type: {EVENT_TYPES.find((type) => type.id === state.eventType)?.label}{" "}
+                        ×
                       </button>
                     )}
                     {state.director && (
@@ -897,6 +942,18 @@ export function App() {
                   onCalendar={openScreeningCalendar}
                   expanded={expanded}
                   onExpand={setExpanded}
+                  onChange={change}
+                />
+              ) : state.path === "/events" ? (
+                <Events
+                  events={events}
+                  films={baseFilms}
+                  meta={catalogue.meta}
+                  state={state}
+                  display={display}
+                  watched={account.user ? watched : undefined}
+                  calendar={calendar}
+                  onCalendar={openScreeningCalendar}
                   onChange={change}
                 />
               ) : (
