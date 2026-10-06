@@ -137,7 +137,7 @@ test("real friendship lifecycle, 500-friend search and filters, guest comparison
     await page.reload();
     dialog = await openFriends(page);
     await expect(dialog.getByRole("heading", { name: "Your friends · 501" })).toBeVisible();
-    expect(await dialog.locator(".social-person").count()).toBeLessThanOrEqual(30);
+    expect(await dialog.locator(".social-person").count()).toBeLessThanOrEqual(6);
     const start = performance.now();
     await dialog
       .getByLabel("Search friends", { exact: true })
@@ -149,11 +149,11 @@ test("real friendship lifecycle, 500-friend search and filters, guest comparison
     await page.screenshot({ path: info.outputPath("friends-search-500.png") });
     await dialog.getByLabel("Search friends", { exact: true }).fill("");
     await dialog.getByRole("button", { name: "Next", exact: true }).click();
-    await expect(dialog.getByText("2 / 17", { exact: true })).toBeVisible();
+    await expect(dialog.getByText("2 / 84", { exact: true })).toBeVisible();
     await dialog.getByRole("button", { name: "Close friends", exact: true }).click();
     await page.getByRole("button", { name: /^Watchlists/ }).click();
     const lists = page.getByRole("dialog", { name: "Watchlists", exact: true });
-    expect(await lists.locator(".watchlist-option").count()).toBeLessThanOrEqual(32);
+    expect(await lists.locator(".watchlist-option").count()).toBeLessThanOrEqual(8);
     await lists.getByRole("checkbox", { name: /Any friend’s watchlist/ }).check();
     await lists.getByRole("button", { name: "Apply watchlists" }).click();
     await expect(page.locator(".watchlist-selections")).toContainText("Any friend");

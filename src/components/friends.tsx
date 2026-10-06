@@ -4,7 +4,7 @@ import { useFriendContext } from "../lib/friends";
 import { letterboxdSlug } from "../shared/account";
 import type { Film } from "../shared/data";
 import { normalizeUsername, type Friend } from "../shared/friends";
-const PAGE_SIZE = 30;
+const PAGE_SIZE = 6;
 export function WatchlistsButton() {
   const m = useFriendContext();
   if (!m) return null;
@@ -319,20 +319,23 @@ export function FriendsDialogs({
           )}
           <section class="social-section">
             <h3>Your friends · {m.accepted.length}</h3>
-            <label class="sr-only" for="friends-search">
-              Search friends
-            </label>
-            <input
-              class="social-search"
-              id="friends-search"
-              type="search"
-              placeholder="Search friends…"
-              value={query}
-              onInput={(e) => {
-                setQuery(e.currentTarget.value);
-                setPage(1);
-              }}
-            />
+            <div class="social-list-toolbar">
+              <label class="sr-only" for="friends-search">
+                Search friends
+              </label>
+              <input
+                class="social-search"
+                id="friends-search"
+                type="search"
+                placeholder="Search friends…"
+                value={query}
+                onInput={(e) => {
+                  setQuery(e.currentTarget.value);
+                  setPage(1);
+                }}
+              />
+              {pagination}
+            </div>
             {shown.map((f) => (
               <div class="social-person" key={f.id}>
                 <span>
@@ -365,7 +368,6 @@ export function FriendsDialogs({
                   : "Add a friend above to find films in common."}
               </p>
             )}
-            {pagination}
           </section>
           {remove && (
             <div class="social-remove" role="group" aria-label="Remove friend">
@@ -483,36 +485,38 @@ export function FriendsDialogs({
           </div>
           {m.accepted.length > 0 && (
             <section class="social-section">
-              <label for="watchlist-friend-search">Friends’ watchlists</label>
-              <input
-                class="social-search"
-                id="watchlist-friend-search"
-                type="search"
-                placeholder="Search friends…"
-                value={query}
-                onInput={(e) => {
-                  setQuery(e.currentTarget.value);
-                  setPage(1);
-                }}
-              />
+              <div class="social-list-toolbar">
+                <label for="watchlist-friend-search">Friends’ watchlists</label>
+                <input
+                  class="social-search"
+                  id="watchlist-friend-search"
+                  type="search"
+                  placeholder="Search friends…"
+                  value={query}
+                  onInput={(e) => {
+                    setQuery(e.currentTarget.value);
+                    setPage(1);
+                  }}
+                />
+                {pagination}
+              </div>
               {shown.map((f) => (
-                <label class="watchlist-option" key={f.id}>
+                <label class="watchlist-option watchlist-friend-option" key={f.id}>
                   <input
                     type="checkbox"
                     checked={m.active.includes(`f:${f.id}`)}
                     onChange={() => m.toggle(`f:${f.id}`)}
                   />
                   <span>
-                    <strong>@{f.username}</strong>
+                    <strong title={`@${f.username}`}>@{f.username}</strong>
                     <small>
                       {f.fetchedAt
-                        ? `${f.count} films${f.stale ? " · Last import is out of date" : ""}`
+                        ? `${f.count} films${f.stale ? " · Out of date" : ""}`
                         : "Watchlist not imported yet"}
                     </small>
                   </span>
                 </label>
               ))}
-              {pagination}
             </section>
           )}
           {m.active.length > 1 && (

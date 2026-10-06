@@ -208,7 +208,8 @@ friendships and the shared-film email preference. App usernames are separate fro
 handles. Choose one in Friends beside Account and Settings, then request another app username.
 Only the recipient can accept. Removing a friend or deleting either account revokes access;
 account deletion cascades through both sides of the relationship. Friendships and pending
-requests are capped at 1,000 per account. Lists are searchable and shown 30 friends at a time.
+requests are capped at 1,000 per account. Lists are searchable and shown six friends at a time,
+with compact selector rows and search/page controls kept above the list.
 
 Every film page, including Events, Radar, Release calendar and My calendar, has a Watchlists
 control. Select a friend, your own list, or Any friend's watchlist; select All/Any for multiple

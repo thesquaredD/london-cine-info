@@ -13,8 +13,16 @@
   width: min(560px, calc(100% - 24px));
   max-height: 90dvh;
 }
+.social-dialog[open] {
+  display: flex;
+  flex-direction: column;
+}
+.social-dialog > .sheet-heading {
+  flex-shrink: 0;
+}
 .social-dialog .account-dialog-body {
-  padding: 22px;
+  min-height: 0;
+  padding: 16px;
 }
 .social-dialog p {
   line-height: 1.5;
@@ -45,9 +53,9 @@
   border-radius: 4px;
 }
 .social-section {
-  margin-top: 24px;
+  margin-top: 12px;
   border-top: 1px solid var(--line);
-  padding-top: 16px;
+  padding-top: 8px;
 }
 .social-section h3 {
   font-size: 14px;
@@ -82,7 +90,8 @@
   display: flex !important;
   align-items: center;
   gap: 12px;
-  padding: 15px 0;
+  min-height: 44px;
+  padding: 8px 0;
   border-bottom: 1px solid var(--line);
 }
 .watchlist-option input {
@@ -271,9 +280,39 @@
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  margin-top: 12px;
+  margin: 6px 0;
   font-size: 12px;
   color: var(--muted);
+}
+.social-list-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 4px 0;
+  background: var(--panel);
+}
+.social-list-toolbar > label {
+  display: block;
+  margin-bottom: 6px;
+}
+.watchlist-friend-option > span:nth-child(2) {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+.watchlist-friend-option strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.watchlist-friend-option small {
+  flex-shrink: 0;
+  max-width: 55%;
+  margin-top: 0;
+  text-align: right;
 }
 .social-pagination > div {
   display: flex;
