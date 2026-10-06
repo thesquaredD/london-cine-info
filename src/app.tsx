@@ -865,7 +865,12 @@ export function App() {
                     </strong>{" "}
                     <span class="result-context">matching your choices</span>
                   </p>
-                  <div class="active-filters" role="group" aria-label="Active filters">
+                  <div
+                    class="active-filters"
+                    role="group"
+                    aria-label="Active filters"
+                    tabIndex={hasActiveChoices ? 0 : undefined}
+                  >
                     {hasActiveChoices && (
                       <button onClick={() => change(clearFilters(state.path))}>Clear all</button>
                     )}

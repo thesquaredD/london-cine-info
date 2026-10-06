@@ -265,6 +265,12 @@
 .active-filters .watchlist-selections button {
   padding: 5px 8px;
 }
+@media (max-width: 799px) {
+  /* The Watchlists button opens the complete selection editor on phones. */
+  .active-filters .watchlist-selections {
+    display: none;
+  }
+}
 .social-search {
   width: 100%;
   min-width: 0;
