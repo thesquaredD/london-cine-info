@@ -10,6 +10,10 @@ export class AccountError extends Error {
   }
 }
 export async function accountApi<T>(path: string, method = "GET", body?: unknown): Promise<T> {
+  if (import.meta.env.VITE_FRIENDS_PROTOTYPE === "true") {
+    const { prototypeAccountApi } = await import("./prototype-account");
+    return (await prototypeAccountApi(path, method, body)) as T;
+  }
   let response: Response;
   try {
     response = await fetch(path, {

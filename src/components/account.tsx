@@ -159,7 +159,6 @@ export function AccountPanel({ account, onOpen }: { account: AccountState; onOpe
           {account.user.sync?.state === "importing" ? "Importing watchlist…" : "Import queued…"}
         </p>
       )}
-      <a href="/privacy">Privacy</a>
     </section>
   );
 }

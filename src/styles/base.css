@@ -2060,3 +2060,22 @@ h3 {
     min-height: 44px;
   }
 }
+
+/* Keep result positions stable as shortcuts and their chips change. */
+.active-filters {
+  height: 42px;
+}
+.shortcut-count {
+  display: inline-block;
+  width: 3ch;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.privacy-link {
+  margin-top: 8px;
+}
+@media (max-width: 799px) {
+  .active-filters {
+    height: 56px;
+  }
+}

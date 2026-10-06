@@ -26,7 +26,12 @@ export function QuickFilters({
         aria-expanded={open}
         onClick={onOpen}
       >
-        Quick filters{activeCount ? ` · ${activeCount}` : ""} ▾
+        Quick filters
+        <span class="shortcut-count" style={{ visibility: activeCount ? "visible" : "hidden" }}>
+          {" "}
+          · {activeCount || 0}
+        </span>{" "}
+        ▾
       </button>
       <Dialog open={open} onClose={onClose} title="Quick filters" className="quick-filter-dialog">
         <p class="filter-hint">Choose shortcuts, then return to the results.</p>
