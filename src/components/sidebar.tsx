@@ -1,3 +1,4 @@
+import { FriendsButton } from "./friends";
 import { AccountPanel } from "./account";
 import type { AccountState } from "../lib/account";
 import type { DataMeta } from "../shared/data";
@@ -5,6 +6,7 @@ import { PAGES, defaultSort, viewUrl, hasCustomSort, type ViewState } from "../l
 
 type Props = {
   onSettings: () => void;
+  onFriends: () => void;
   account: AccountState;
   onAccount: () => void;
   state: ViewState;
@@ -22,6 +24,7 @@ export function Sidebar({
   account,
   onAccount,
   onSettings,
+  onFriends,
 }: Props) {
   return (
     <div class="sidebar-content">
@@ -58,6 +61,7 @@ export function Sidebar({
         ))}
       </nav>
       <AccountPanel account={account} onOpen={onAccount} />
+      <FriendsButton onOpen={onFriends} />
       <button class="settings-button" aria-haspopup="dialog" onClick={onSettings}>
         Settings
       </button>
@@ -77,6 +81,19 @@ export function Sidebar({
           }}
         >
           About & sources
+        </a>
+        <a
+          class="about-link privacy-link"
+          href="/privacy"
+          aria-current={state.path === "/privacy" ? "page" : undefined}
+          onClick={(event) => {
+            if (event.button || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)
+              return;
+            event.preventDefault();
+            onChange({ path: "/privacy", page: 1 }, true);
+          }}
+        >
+          Privacy
         </a>
         {meta && (
           <p class="update-note">

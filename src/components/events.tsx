@@ -1,3 +1,4 @@
+import { FilmFriends } from "./friends";
 import { Fragment } from "preact";
 import { useState } from "preact/hooks";
 import { EVENT_TYPES } from "../data/event-rules";
@@ -118,6 +119,7 @@ export function Events({
                           {venue?.name ?? row.venue}
                           {row.screen && ` · Screen ${row.screen}`}
                         </p>
+                        {film && <FilmFriends film={film} />}
                         {row.notes && <p class="event-notes">{row.notes}</p>}
                         {watched?.has(letterboxdSlug(film?.ra.lb?.url) ?? "") && (
                           <a

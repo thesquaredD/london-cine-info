@@ -1,3 +1,4 @@
+import { WatchlistsButton } from "./friends";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { FilterControls, type FilterControlsProps } from "./filter-controls";
 import type { FacetKey } from "../shared/data";
@@ -116,6 +117,7 @@ export function FilterBar(props: FilterControlsProps) {
           Cinema{count(["venue"]) ? ` · ${count(["venue"])}` : ""} ▾
         </button>
       </div>
+      <WatchlistsButton />
       <button class="all-filters" aria-haspopup="dialog" onClick={() => setCategory("all")}>
         <span class="desktop-more">More filters</span>
         <span class="mobile-more">Filters</span> ▾

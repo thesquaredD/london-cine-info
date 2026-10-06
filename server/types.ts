@@ -10,6 +10,8 @@ export type Env = {
 export type User = {
   id: string;
   email: string;
+  app_username: string | null;
+  friends_digest: number;
   letterboxd_username: string | null;
   digest_weekday: number | null;
   unsubscribe_token: string;

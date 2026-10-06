@@ -7,7 +7,7 @@ export class WatchlistError extends Error {
     super(message);
   }
 }
-import { load } from "cheerio";
+import { load } from "cheerio/slim";
 export type WatchlistPage = { slugs: string[]; count: number; pages: number };
 export function parseWatchlist(html: string): WatchlistPage {
   const $ = load(html);

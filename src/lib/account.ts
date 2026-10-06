@@ -9,12 +9,19 @@ export class AccountError extends Error {
     super(message);
   }
 }
-export async function accountApi<T>(path: string, method = "GET", body?: unknown): Promise<T> {
+export async function accountApi<T>(
+  path: string,
+  method = "GET",
+  body?: unknown,
+  signal?: AbortSignal,
+): Promise<T> {
   let response: Response;
   try {
     response = await fetch(path, {
       method,
-      signal: AbortSignal.timeout(20000),
+      signal: signal
+        ? AbortSignal.any([signal, AbortSignal.timeout(20000)])
+        : AbortSignal.timeout(20000),
       headers: body !== undefined ? { "Content-Type": "application/json" } : {},
       ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
     });

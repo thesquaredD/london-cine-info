@@ -1,3 +1,10 @@
+import { FriendsContext, useFriendsModel } from "./lib/friends";
+import {
+  FriendsDialogs,
+  FriendsFeedback,
+  WatchlistsButton,
+  WatchlistSelections,
+} from "./components/friends";
 import { Dialog } from "./components/dialog";
 import { DisplayControls } from "./components/display-controls";
 import { useCalendar } from "./lib/calendar";
@@ -155,6 +162,7 @@ function About({ meta }: { meta: DataMeta | null }) {
   );
 }
 
+const EMPTY_FILMS: Film[] = [];
 export function App() {
   const account = useAccount();
   const calendar = useCalendar(account);
@@ -183,6 +191,14 @@ export function App() {
     meta: DataMeta;
     events: EventOccurrence[];
   } | null>(null);
+  const friends = useFriendsModel(
+    catalogue?.films ?? EMPTY_FILMS,
+    state.path === "/watchlist",
+    () => setState((s) => ({ ...s, page: 1 })),
+    !!state.watchlist,
+    (selected) => change({ watchlist: selected, page: 1 }),
+    account,
+  );
   const [error, setError] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const [display, setDisplay] = useState<DisplayState>(() => ({
@@ -207,6 +223,7 @@ export function App() {
     ] ??
     "About";
   const hasActiveChoices = Boolean(
+    friends.choices.selected.length ||
     state.filmGauge ||
     state.eventType ||
     hasCustomSort(state) ||
@@ -231,12 +248,19 @@ export function App() {
   const returnToAccount = useRef(false);
   const baseFilms = useMemo(
     () =>
-      (myCinemasUnavailable ? [] : (catalogue?.films ?? [])).filter(
-        (film) =>
-          !(state.path === "/watchlist" || state.watchlist) ||
-          (film.sc.length > 0 && watched.has(letterboxdSlug(film.ra.lb?.url) ?? "")),
+      (myCinemasUnavailable ? [] : (catalogue?.films ?? [])).filter((film) =>
+        friends.matchesFilm(film),
       ) ?? [],
-    [catalogue, state.path, state.watchlist, watched, myCinemasUnavailable],
+    [
+      catalogue,
+      state.path,
+      state.watchlist,
+      watched,
+      myCinemasUnavailable,
+      friends.choices,
+      friends.listSets,
+      friends.matchMap,
+    ],
   );
   const selected = useMemo(
     () =>
@@ -251,19 +275,24 @@ export function App() {
         : [],
     [catalogue, state, baseFilms, watched, display.titleMode, now],
   );
+  const eventsSource = useMemo(() => {
+    if (!friends.active.length) return catalogue?.events ?? [];
+    const ids = new Set(baseFilms.map((film) => film.id));
+    return (catalogue?.events ?? []).filter((event) => ids.has(event.filmId));
+  }, [catalogue, baseFilms, friends.active.length]);
   const events = useMemo(
     () =>
       catalogue && state.path === "/events"
-        ? matchingEvents(catalogue.events, baseFilms, catalogue.meta, state, now)
+        ? matchingEvents(eventsSource, baseFilms, catalogue.meta, state, now)
         : [],
-    [catalogue, baseFilms, state, now],
+    [catalogue, eventsSource, baseFilms, state, now],
   );
   const resultCount = state.path === "/events" ? events.length : selected.length;
   const counts = useMemo(
     () =>
       catalogue
         ? state.path === "/events"
-          ? eventFacetCounts(catalogue.events, baseFilms, catalogue.meta, state, now)
+          ? eventFacetCounts(eventsSource, baseFilms, catalogue.meta, state, now)
           : facetCounts(
               selectFilms(baseFilms, { ...state, filters: {} }),
               catalogue.meta,
@@ -273,6 +302,7 @@ export function App() {
         : null,
     [
       catalogue,
+      eventsSource,
       baseFilms,
       state.path,
       state.eventType,
@@ -302,6 +332,14 @@ export function App() {
   }, [account.user?.id]);
   const myCinemasUpdating = useRef(false);
   function change(changes: Partial<ViewState>, push = false) {
+    if (
+      "search" in changes &&
+      "excluded" in changes &&
+      "filters" in changes &&
+      "available" in changes &&
+      "watchlist" in changes
+    )
+      friends.update({ selected: [] });
     if (
       changes.filters &&
       changes.filters.venue !== state.filters.venue &&
@@ -448,6 +486,11 @@ export function App() {
   const phone = () => window.matchMedia("(max-width: 799px)").matches;
   const sidebarProps = {
     state,
+    onFriends: () => {
+      if (drawer.current?.open) drawer.current.close();
+      setDrawerOpen(false);
+      friends.setPanel("friends");
+    },
     onSettings: openSettings,
     account,
     onAccount: openAccount,
@@ -465,333 +508,373 @@ export function App() {
     resultCount,
   };
   return (
-    <div class={`app-layout ${collapsed ? "sidebar-collapsed" : ""}`}>
-      <a class="skip-link" href="#main-content">
-        Skip to films
-      </a>
-      <aside class="desktop-sidebar" aria-label="Pages">
-        <Sidebar {...sidebarProps} />
-      </aside>
-      <dialog
-        ref={drawer}
-        class="sidebar-drawer"
-        aria-label="Pages"
-        onClose={() => setDrawerOpen(false)}
-        onKeyDown={(event) => {
-          if (event.key === "Escape") {
-            event.preventDefault();
-            setDrawerOpen(false);
-          }
-        }}
-        onClick={(event) => {
-          if (event.target === drawer.current) setDrawerOpen(false);
-        }}
-      >
-        <button class="drawer-close" aria-label="Close pages" onClick={() => setDrawerOpen(false)}>
-          ×
-        </button>
-        <Sidebar {...sidebarProps} />
-      </dialog>
-      <main class="main-column" id="main-content">
-        <header class="masthead">
+    <FriendsContext.Provider value={friends}>
+      <div class={`app-layout ${collapsed ? "sidebar-collapsed" : ""}`}>
+        <a class="skip-link" href="#main-content">
+          Skip to films
+        </a>
+        <aside class="desktop-sidebar" aria-label="Pages">
+          <Sidebar {...sidebarProps} />
+        </aside>
+        <dialog
+          ref={drawer}
+          class="sidebar-drawer"
+          aria-label="Pages"
+          onClose={() => setDrawerOpen(false)}
+          onKeyDown={(event) => {
+            if (event.key === "Escape") {
+              event.preventDefault();
+              setDrawerOpen(false);
+            }
+          }}
+          onClick={(event) => {
+            if (event.target === drawer.current) setDrawerOpen(false);
+          }}
+        >
           <button
-            class="menu-button"
-            aria-label="Toggle pages"
-            aria-expanded={phone() ? drawerOpen : !collapsed}
-            onClick={() => {
-              if (phone()) setDrawerOpen(true);
-              else setCollapsed(!collapsed);
-            }}
+            class="drawer-close"
+            aria-label="Close pages"
+            onClick={() => setDrawerOpen(false)}
           >
-            <span aria-hidden="true">☰</span>
+            ×
           </button>
-          <h1>
-            <a
-              href="/"
-              onClick={(event) => {
-                if (
-                  event.button ||
-                  event.metaKey ||
-                  event.ctrlKey ||
-                  event.shiftKey ||
-                  event.altKey
-                )
-                  return;
-                event.preventDefault();
-                change({ ...clearFilters("/"), path: "/" }, true);
+          <Sidebar {...sidebarProps} />
+        </dialog>
+        <main class="main-column" id="main-content">
+          <FriendsDialogs
+            onAccount={openAccount}
+            onNavigate={() => change({ path: "/watchlist", page: 1 }, true)}
+          />
+          {!friends.panel && <FriendsFeedback />}
+          <header class="masthead">
+            <button
+              class="menu-button"
+              aria-label="Toggle pages"
+              aria-expanded={phone() ? drawerOpen : !collapsed}
+              onClick={() => {
+                if (phone()) setDrawerOpen(true);
+                else setCollapsed(!collapsed);
               }}
             >
-              <span>LONDON CINÉ</span> INFO
-            </a>
-          </h1>
-        </header>
-        <div class="tagline">The database of London cinema screenings</div>
-        <h2 class="sr-only">{pageTitle}</h2>
-        <Dialog
-          open={settingsOpen}
-          title="Settings"
-          className="settings-dialog"
-          onClose={() => setSettingsOpen(false)}
-          restoreTo={() =>
-            document.querySelector<HTMLElement>(
-              phone() ? ".menu-button" : ".desktop-sidebar .settings-button",
-            )
-          }
-        >
-          <DisplayControls
-            value={display}
-            onChange={(value) => {
-              setDisplay(value);
-              change({ page: 1 });
+              <span aria-hidden="true">☰</span>
+            </button>
+            <h1>
+              <a
+                href="/"
+                onClick={(event) => {
+                  if (
+                    event.button ||
+                    event.metaKey ||
+                    event.ctrlKey ||
+                    event.shiftKey ||
+                    event.altKey
+                  )
+                    return;
+                  event.preventDefault();
+                  change({ ...clearFilters("/"), path: "/" }, true);
+                }}
+              >
+                <span>LONDON CINÉ</span> INFO
+              </a>
+            </h1>
+          </header>
+          <div class="tagline">The database of London cinema screenings</div>
+          <h2 class="sr-only">{pageTitle}</h2>
+          <Dialog
+            open={settingsOpen}
+            title="Settings"
+            className="settings-dialog"
+            onClose={() => setSettingsOpen(false)}
+            restoreTo={() =>
+              document.querySelector<HTMLElement>(
+                phone() ? ".menu-button" : ".desktop-sidebar .settings-button",
+              )
+            }
+          >
+            <DisplayControls
+              value={display}
+              onChange={(value) => {
+                setDisplay(value);
+                change({ page: 1 });
+              }}
+            />
+          </Dialog>
+          <AccountDialogs
+            account={account}
+            open={accountOpen}
+            matches={watchlistMatches}
+            onManageCinemas={() => openCinemas(true)}
+            onClose={() => setAccountOpen(false)}
+            onNavigate={(path) => change({ path, page: 1, director: "" }, true)}
+            restoreTo={() =>
+              document.querySelector<HTMLElement>(
+                phone() ? ".menu-button" : ".desktop-sidebar .account-panel button",
+              )
+            }
+          />
+          {meta && (
+            <MyCinemas cinemas={cinemas} meta={meta} open={cinemasOpen} onClose={closeCinemas} />
+          )}
+          <ScreeningCalendarDialog
+            event={calendarEvent}
+            calendar={calendar}
+            account={account}
+            onClose={() => setCalendarEvent(null)}
+            onAccount={openAccount}
+            onNavigate={() => {
+              closeScreeningCalendar();
+              change({ path: "/my-calendar", page: 1 }, true);
             }}
           />
-        </Dialog>
-        <AccountDialogs
-          account={account}
-          open={accountOpen}
-          matches={watchlistMatches}
-          onManageCinemas={() => openCinemas(true)}
-          onClose={() => setAccountOpen(false)}
-          onNavigate={(path) => change({ path, page: 1, director: "" }, true)}
-          restoreTo={() =>
-            document.querySelector<HTMLElement>(
-              phone() ? ".menu-button" : ".desktop-sidebar .account-panel button",
-            )
-          }
-        />
-        {meta && (
-          <MyCinemas cinemas={cinemas} meta={meta} open={cinemasOpen} onClose={closeCinemas} />
-        )}
-        <ScreeningCalendarDialog
-          event={calendarEvent}
-          calendar={calendar}
-          account={account}
-          onClose={() => setCalendarEvent(null)}
-          onAccount={openAccount}
-          onNavigate={() => {
-            closeScreeningCalendar();
-            change({ path: "/my-calendar", page: 1 }, true);
-          }}
-        />
-        {!accountOpen && (
-          <div class="page-notices">
-            <AccountFeedback
-              account={account}
-              showError={
-                ["/watchlist", "/my-calendar"].includes(state.path) ||
-                !!state.watchlist ||
-                !!calendarEvent
-              }
-            />
-          </div>
-        )}
-        {state.path === "/privacy" ? (
-          <Privacy />
-        ) : state.path === "/auth/verify" ? (
-          <TokenPage kind="verify" onSignedIn={account.reload} />
-        ) : state.path === "/unsubscribe" ? (
-          <TokenPage kind="unsubscribe" onSignedIn={account.reload} />
-        ) : state.path === "/my-calendar" ? (
-          <MyCalendar calendar={calendar} account={account} onAccount={openAccount} now={now} />
-        ) : state.path === "/about" ? (
-          <About meta={meta} />
-        ) : (
-          <>
-            {state.watchlist &&
-              state.path !== "/watchlist" &&
-              !account.loading &&
-              !account.user && (
-                <div class="view-note account-prompt">
-                  <p>
-                    Sign in to view your watchlist, or clear the My watchlist filter to browse all
-                    films.
-                  </p>
-                  <button aria-haspopup="dialog" onClick={openAccount}>
-                    Sign in
-                  </button>
-                </div>
-              )}
-            {state.path === "/watchlist" && (
-              <div class="view-note watchlist-intro">
-                <h2>Your Letterboxd watchlist</h2>
-                {account.loading ? (
-                  <p role="status">Checking sign-in…</p>
-                ) : !account.user ? (
-                  <>
-                    <p>Sign in to import your public Letterboxd watchlist.</p>
+          {!accountOpen && (
+            <div class="page-notices">
+              <AccountFeedback
+                account={account}
+                showError={
+                  ["/watchlist", "/my-calendar"].includes(state.path) ||
+                  !!state.watchlist ||
+                  !!calendarEvent
+                }
+              />
+            </div>
+          )}
+          {state.path === "/privacy" ? (
+            <Privacy />
+          ) : state.path === "/auth/verify" ? (
+            <TokenPage kind="verify" onSignedIn={account.reload} />
+          ) : state.path === "/unsubscribe" ? (
+            <TokenPage kind="unsubscribe" onSignedIn={account.reload} />
+          ) : state.path === "/my-calendar" ? (
+            <>
+              <div class="calendar-watchlists">
+                <WatchlistsButton />
+                <WatchlistSelections />
+              </div>
+              <MyCalendar
+                calendar={{
+                  ...calendar,
+                  screenings: calendar.screenings.filter((e) => {
+                    const film = catalogue?.films.find((f) => f.id === e.filmId);
+                    return !friends.active.length || (!!film && friends.matchesFilm(film));
+                  }),
+                }}
+                account={account}
+                onAccount={openAccount}
+                now={now}
+              />
+            </>
+          ) : state.path === "/about" ? (
+            <About meta={meta} />
+          ) : (
+            <>
+              {state.watchlist &&
+                state.path !== "/watchlist" &&
+                !account.loading &&
+                !account.user && (
+                  <div class="view-note account-prompt">
+                    <p>
+                      Sign in to view your watchlist, or clear the My watchlist filter to browse all
+                      films.
+                    </p>
                     <button aria-haspopup="dialog" onClick={openAccount}>
                       Sign in
                     </button>
-                  </>
-                ) : !account.user.username ? (
-                  <>
-                    <p>Set your Letterboxd username to import your public watchlist.</p>
-                    <button aria-haspopup="dialog" onClick={openAccount}>
-                      Open account
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <ImportStatus account={account} matches={watchlistMatches} />
-                    <div class="account-actions">
-                      <RefreshButton account={account} />
-                      <button aria-haspopup="dialog" onClick={openAccount}>
-                        Account
-                      </button>
-                    </div>
-                  </>
+                  </div>
                 )}
-              </div>
-            )}
-            {state.path === "/retrospectives" && (
-              <p class="view-note">
-                Directors with at least three films in the programme. Sorts apply within each
-                director’s group.
-              </p>
-            )}
-            {["/new", "/calendar"].includes(state.path) && (
-              <p class="view-note">
-                Release dates are TMDB originals and may differ from UK dates.
-                {state.path === "/calendar" &&
-                  " Dates run earliest first; column sorts apply within each release group."}
-              </p>
-            )}
-            {catalogue && <FilterBar {...filterProps} />}
-            {catalogue && (
-              <div class="filter-summary">
-                <QuickFilters
-                  open={quickOpen}
-                  onOpen={() => setQuickOpen(true)}
-                  onClose={() => setQuickOpen(false)}
-                  resultCount={resultCount}
-                  resultLabel={state.path === "/events" ? "event" : "film"}
-                  activeCount={
-                    Number(!!state.filters.day?.length) +
-                    Number(isEvening(state)) +
-                    Number(!!state.watchlist) +
-                    Number(myCinemasActive) +
-                    Number(!!state.short)
-                  }
+              {state.path === "/watchlist" && (
+                <div
+                  class={`view-note watchlist-intro ${account.user?.username ? "watchlist-connected" : ""}`}
                 >
-                  <div class="quick-days" role="group" aria-label="Quick filters">
-                    {[
-                      { id: "today", label: "Today" },
-                      { id: "tomorrow", label: "Tomorrow" },
-                      { id: "tonight", label: "Tonight" },
-                      { id: "evening", label: "Evening" },
-                      { id: "weekend", label: "This weekend" },
-                      { id: "this-week", label: "This week" },
-                      { id: "next-week", label: "Next week" },
-                    ].map(({ id, label }) => {
-                      const active =
-                        id === "evening"
-                          ? isEvening(state)
-                          : id === "tonight"
-                            ? !!state.tonight
-                            : !state.tonight &&
-                              state.filters.day?.length === 1 &&
-                              state.filters.day[0] === id &&
-                              !state.excluded.day?.length;
-                      return (
-                        <button
-                          key={id}
-                          title={
-                            id === "evening"
-                              ? "Screenings starting from 17:00 on your selected dates"
-                              : id === "this-week"
+                  <h2 class={account.user?.username ? "sr-only" : undefined}>
+                    Your Letterboxd watchlist
+                  </h2>
+                  {account.loading ? (
+                    <p role="status">Checking sign-in…</p>
+                  ) : !account.user ? (
+                    <>
+                      <p>Sign in to import your public Letterboxd watchlist.</p>
+                      <button aria-haspopup="dialog" onClick={openAccount}>
+                        Sign in
+                      </button>
+                    </>
+                  ) : !account.user.username ? (
+                    <>
+                      <p>Set your Letterboxd username to import your public watchlist.</p>
+                      <button aria-haspopup="dialog" onClick={openAccount}>
+                        Open account
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <ImportStatus account={account} matches={watchlistMatches} />
+                      <div class="account-actions">
+                        <RefreshButton account={account} />
+                        <button aria-haspopup="dialog" onClick={openAccount}>
+                          Account
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+              {state.path === "/retrospectives" && (
+                <p class="view-note">
+                  Directors with at least three films in the programme. Sorts apply within each
+                  director’s group.
+                </p>
+              )}
+              {["/new", "/calendar"].includes(state.path) && (
+                <p class="view-note">
+                  Release dates are TMDB originals and may differ from UK dates.
+                  {state.path === "/calendar" &&
+                    " Dates run earliest first; column sorts apply within each release group."}
+                </p>
+              )}
+              {catalogue && (
+                <>
+                  <FilterBar {...filterProps} />
+                </>
+              )}
+              {catalogue && (
+                <div class="filter-summary">
+                  <QuickFilters
+                    open={quickOpen}
+                    onOpen={() => setQuickOpen(true)}
+                    onClose={() => setQuickOpen(false)}
+                    resultCount={resultCount}
+                    resultLabel={state.path === "/events" ? "event" : "film"}
+                    activeCount={
+                      Number(!!state.filters.day?.length) +
+                      Number(isEvening(state)) +
+                      Number(!!state.watchlist) +
+                      Number(myCinemasActive) +
+                      Number(!!state.short)
+                    }
+                  >
+                    <div class="quick-days" role="group" aria-label="Quick filters">
+                      {[
+                        { id: "today", label: "Today" },
+                        { id: "tomorrow", label: "Tomorrow" },
+                        { id: "tonight", label: "Tonight" },
+                        { id: "evening", label: "Evening" },
+                        { id: "weekend", label: "This weekend" },
+                        { id: "this-week", label: "This week" },
+                        { id: "next-week", label: "Next week" },
+                      ].map(({ id, label }) => {
+                        const active =
+                          id === "evening"
+                            ? isEvening(state)
+                            : id === "tonight"
+                              ? !!state.tonight
+                              : !state.tonight &&
+                                state.filters.day?.length === 1 &&
+                                state.filters.day[0] === id &&
+                                !state.excluded.day?.length;
+                        return (
+                          <button
+                            key={id}
+                            title={
+                              id === "this-week"
                                 ? "Next 7 days, including today"
                                 : id === "next-week"
                                   ? "The 7 days after that"
                                   : undefined
-                          }
-                          aria-pressed={active}
-                          onClick={() =>
-                            change(
-                              id === "evening" ? eveningShortcut(state) : dateShortcut(state, id),
-                            )
-                          }
-                        >
-                          {label}
-                          {id !== "tonight" && (
-                            <small>
-                              {" "}
-                              {id === "evening"
-                                ? (counts?.time.get("evening") ?? 0)
-                                : (counts?.day.get(id) ?? 0)}
-                            </small>
-                          )}
-                        </button>
-                      );
-                    })}
-                    <button
-                      aria-pressed={!!state.watchlist}
-                      onClick={() => {
-                        change({ watchlist: !state.watchlist, page: 1 });
-                        if (!state.watchlist && (!account.user || !account.watchlist?.fetchedAt))
-                          openAccount();
-                      }}
-                    >
-                      My watchlist
-                    </button>
-                    <button
-                      aria-pressed={myCinemasActive}
-                      disabled={cinemas.loading}
-                      onClick={() => {
-                        myCinemasUpdating.current = true;
-                        change({
-                          filters: {
-                            ...state.filters,
-                            venue: myCinemasActive ? [] : [...cinemas.venues],
-                          },
-                          excluded: { ...state.excluded, venue: [] },
-                          page: 1,
-                        });
-                        myCinemasUpdating.current = false;
-                        setMyCinemasActive(!myCinemasActive);
-                      }}
-                    >
-                      My cinemas
-                    </button>
-                    <button
-                      aria-pressed={!!state.short}
-                      onClick={() => change({ short: !state.short, page: 1 })}
-                    >
-                      Under 2 hours
-                    </button>
-                  </div>
-                </QuickFilters>
-                {cinemas.storageError && !cinemasOpen && (
-                  <p role="status">{cinemas.storageError}</p>
-                )}
-                {cinemas.error && myCinemasActive && !cinemasOpen && (
-                  <p role="alert">
-                    {cinemas.error}{" "}
-                    <button
-                      onClick={() => {
-                        void cinemas.reload();
-                      }}
-                    >
-                      Retry cinema sync
-                    </button>
+                            }
+                            aria-pressed={active}
+                            onClick={() =>
+                              change(
+                                id === "evening" ? eveningShortcut(state) : dateShortcut(state, id),
+                              )
+                            }
+                          >
+                            {label}
+                            {id !== "tonight" && (
+                              <small>
+                                {" "}
+                                {id === "evening"
+                                  ? (counts?.time.get("evening") ?? 0)
+                                  : (counts?.day.get(id) ?? 0)}
+                              </small>
+                            )}
+                          </button>
+                        );
+                      })}
+                      <button
+                        aria-pressed={!!state.watchlist}
+                        onClick={() => {
+                          change({ watchlist: !state.watchlist, page: 1 });
+                          if (!state.watchlist && (!account.user || !account.watchlist?.fetchedAt))
+                            openAccount();
+                        }}
+                      >
+                        My watchlist
+                      </button>
+                      <button
+                        aria-pressed={myCinemasActive}
+                        disabled={cinemas.loading}
+                        onClick={() => {
+                          myCinemasUpdating.current = true;
+                          change({
+                            filters: {
+                              ...state.filters,
+                              venue: myCinemasActive ? [] : [...cinemas.venues],
+                            },
+                            excluded: { ...state.excluded, venue: [] },
+                            page: 1,
+                          });
+                          myCinemasUpdating.current = false;
+                          setMyCinemasActive(!myCinemasActive);
+                        }}
+                      >
+                        My cinemas
+                      </button>
+                      <button
+                        aria-pressed={!!state.short}
+                        onClick={() => change({ short: !state.short, page: 1 })}
+                      >
+                        Under 2 hours
+                      </button>
+                    </div>
+                  </QuickFilters>
+                  {cinemas.storageError && !cinemasOpen && (
+                    <p role="status">{cinemas.storageError}</p>
+                  )}
+                  {cinemas.error && myCinemasActive && !cinemasOpen && (
+                    <p role="alert">
+                      {cinemas.error}{" "}
+                      <button
+                        onClick={() => {
+                          void cinemas.reload();
+                        }}
+                      >
+                        Retry cinema sync
+                      </button>
+                    </p>
+                  )}
+                  {state.path === "/events" && <EventTypeFilter state={state} onChange={change} />}
+                  <p class="result-status" role="status" aria-live="polite">
+                    <strong>
+                      {resultCount.toLocaleString("en-GB")}{" "}
+                      {state.path === "/events"
+                        ? resultCount === 1
+                          ? "event"
+                          : "events"
+                        : resultCount === 1
+                          ? "film"
+                          : "films"}
+                    </strong>{" "}
+                    <span class="result-context">matching your choices</span>
                   </p>
-                )}
-                {state.path === "/events" && <EventTypeFilter state={state} onChange={change} />}
-                <p role="status" aria-live="polite">
-                  <strong>
-                    {resultCount.toLocaleString("en-GB")}{" "}
-                    {state.path === "/events"
-                      ? resultCount === 1
-                        ? "event"
-                        : "events"
-                      : resultCount === 1
-                        ? "film"
-                        : "films"}
-                  </strong>{" "}
-                  matching your choices
-                </p>
-                {hasActiveChoices && (
-                  <div class="active-filters" role="group" aria-label="Active filters">
-                    <button onClick={() => change(clearFilters(state.path))}>Clear all</button>
+                  <div
+                    class="active-filters"
+                    role="group"
+                    aria-label="Active filters"
+                    tabIndex={hasActiveChoices ? 0 : undefined}
+                  >
+                    {hasActiveChoices && (
+                      <button onClick={() => change(clearFilters(state.path))}>Clear all</button>
+                    )}
+                    <WatchlistSelections />
 
                     {hasCustomSort(state) && (
                       <button
@@ -877,11 +960,6 @@ export function App() {
                         </button>
                       )),
                     )}
-                    {state.watchlist && (
-                      <button onClick={() => change({ watchlist: false, page: 1 })}>
-                        My watchlist ×
-                      </button>
-                    )}
                     {state.short && (
                       <button onClick={() => change({ short: false, page: 1 })}>
                         Under 2 hours ×
@@ -898,112 +976,112 @@ export function App() {
                       </button>
                     )}
                   </div>
-                )}
-              </div>
-            )}
-            {!catalogue && !error && (
-              <div class="catalogue-status" role="status">
-                Loading London screenings…
-              </div>
-            )}
-            {error && (
-              <div class="catalogue-status" role="alert">
-                <h2>The programme could not be loaded</h2>
-                <p>Please check your connection and try again.</p>
-                <button onClick={() => setAttempt((value) => value + 1)}>Try again</button>
-              </div>
-            )}
-            {suggestions.length > 0 && (
-              <div
-                class="recovery-suggestions"
-                role="group"
-                aria-label="Suggested filter adjustments"
-              >
-                <h2>No films match these filters</h2>
-                <p>Try one adjustment below. Your other choices stay selected.</p>
-                {suggestions.map((suggestion) => (
-                  <button key={suggestion.label} onClick={() => change(suggestion.changes)}>
-                    {suggestion.label} · {suggestion.count}{" "}
-                    {suggestion.count === 1 ? "film" : "films"}
-                  </button>
-                ))}
-              </div>
-            )}
-            {catalogue && myCinemasUnavailable && (
-              <div class="empty-state" aria-label="My cinemas setup">
-                {cinemas.loading ? (
-                  <p role="status">Loading my cinemas…</p>
-                ) : cinemas.error ? (
-                  <>
-                    <p role="alert">{cinemas.error}</p>
-                    <button onClick={() => openCinemas()}>Manage my cinemas</button>
-                  </>
+                </div>
+              )}
+              {!catalogue && !error && (
+                <div class="catalogue-status" role="status">
+                  Loading London screenings…
+                </div>
+              )}
+              {error && (
+                <div class="catalogue-status" role="alert">
+                  <h2>The programme could not be loaded</h2>
+                  <p>Please check your connection and try again.</p>
+                  <button onClick={() => setAttempt((value) => value + 1)}>Try again</button>
+                </div>
+              )}
+              {suggestions.length > 0 && (
+                <div
+                  class="recovery-suggestions"
+                  role="group"
+                  aria-label="Suggested filter adjustments"
+                >
+                  <h2>No films match these filters</h2>
+                  <p>Try one adjustment below. Your other choices stay selected.</p>
+                  {suggestions.map((suggestion) => (
+                    <button key={suggestion.label} onClick={() => change(suggestion.changes)}>
+                      {suggestion.label} · {suggestion.count}{" "}
+                      {suggestion.count === 1 ? "film" : "films"}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {catalogue && myCinemasUnavailable && (
+                <div class="empty-state" aria-label="My cinemas setup">
+                  {cinemas.loading ? (
+                    <p role="status">Loading my cinemas…</p>
+                  ) : cinemas.error ? (
+                    <>
+                      <p role="alert">{cinemas.error}</p>
+                      <button onClick={() => openCinemas()}>Manage my cinemas</button>
+                    </>
+                  ) : (
+                    <>
+                      <h2>Set up my cinemas</h2>
+                      <p>Choose your favourite cinemas in Account to see their screenings here.</p>
+                      <button onClick={() => openCinemas()}>Set up my cinemas</button>
+                    </>
+                  )}
+                </div>
+              )}
+              {catalogue &&
+                !myCinemasUnavailable &&
+                (state.path === "/radar" ? (
+                  <Radar
+                    films={baseFilms}
+                    meta={catalogue.meta}
+                    state={state}
+                    now={now}
+                    display={display}
+                    watched={account.user ? watched : undefined}
+                    calendar={calendar}
+                    onCalendar={openScreeningCalendar}
+                    expanded={expanded}
+                    onExpand={setExpanded}
+                    onChange={change}
+                  />
+                ) : state.path === "/events" ? (
+                  <Events
+                    events={events}
+                    films={baseFilms}
+                    meta={catalogue.meta}
+                    state={state}
+                    display={display}
+                    watched={account.user ? watched : undefined}
+                    calendar={calendar}
+                    onCalendar={openScreeningCalendar}
+                    onChange={change}
+                  />
                 ) : (
-                  <>
-                    <h2>Set up my cinemas</h2>
-                    <p>Choose your favourite cinemas in Account to see their screenings here.</p>
-                    <button onClick={() => openCinemas()}>Set up my cinemas</button>
-                  </>
-                )}
-              </div>
-            )}
-            {catalogue &&
-              !myCinemasUnavailable &&
-              (state.path === "/radar" ? (
-                <Radar
-                  films={baseFilms}
-                  meta={catalogue.meta}
-                  state={state}
-                  now={now}
-                  display={display}
-                  watched={account.user ? watched : undefined}
-                  calendar={calendar}
-                  onCalendar={openScreeningCalendar}
-                  expanded={expanded}
-                  onExpand={setExpanded}
-                  onChange={change}
-                />
-              ) : state.path === "/events" ? (
-                <Events
-                  events={events}
-                  films={baseFilms}
-                  meta={catalogue.meta}
-                  state={state}
-                  display={display}
-                  watched={account.user ? watched : undefined}
-                  calendar={calendar}
-                  onCalendar={openScreeningCalendar}
-                  onChange={change}
-                />
-              ) : (
-                <FilmTable
-                  films={selected}
-                  showEmpty={!suggestions.length}
-                  calendar={calendar}
-                  onCalendar={openScreeningCalendar}
-                  now={now}
-                  display={display}
-                  watched={account.user ? watched : undefined}
-                  meta={catalogue.meta}
-                  state={state}
-                  expanded={expanded}
-                  onExpand={setExpanded}
-                  onChange={change}
-                />
-              ))}
-          </>
-        )}
-        <div class="source-footer">
-          Screening data from{" "}
-          <a href="https://clusterflick.com" target="_blank" rel="noopener noreferrer">
-            Clusterflick
-          </a>{" "}
-          · Film imagery from{" "}
-          <a href="https://www.themoviedb.org" target="_blank" rel="noopener noreferrer">
-            TMDB
-          </a>
-        </div>
-      </main>
-    </div>
+                  <FilmTable
+                    films={selected}
+                    showEmpty={!suggestions.length}
+                    calendar={calendar}
+                    onCalendar={openScreeningCalendar}
+                    now={now}
+                    display={display}
+                    watched={account.user ? watched : undefined}
+                    meta={catalogue.meta}
+                    state={state}
+                    expanded={expanded}
+                    onExpand={setExpanded}
+                    onChange={change}
+                  />
+                ))}
+            </>
+          )}
+          <div class="source-footer">
+            Screening data from{" "}
+            <a href="https://clusterflick.com" target="_blank" rel="noopener noreferrer">
+              Clusterflick
+            </a>{" "}
+            · Film imagery from{" "}
+            <a href="https://www.themoviedb.org" target="_blank" rel="noopener noreferrer">
+              TMDB
+            </a>
+          </div>
+        </main>
+      </div>
+    </FriendsContext.Provider>
   );
 }

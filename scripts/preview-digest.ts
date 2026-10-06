@@ -23,6 +23,10 @@ const sample = new Set(
   [...all.cards, ...all.also.slice(0, 4), ...all.later.slice(0, 6)].map((entry) => entry.slug),
 );
 const digest = await digestFilms(films, sample, [], now, loadShowtimes);
+if (process.argv.includes("--friends"))
+  digest.shared = [...digest.cards, ...digest.also]
+    .slice(0, 4)
+    .map((entry) => ({ entry, usernames: ["alice", "sam", "maya"], friendCount: 500 }));
 const base = "https://london-cine.info";
 const unsubscribe = `${base}/unsubscribe?token=sample-not-valid`;
 await mkdir(dirname(output), { recursive: true });

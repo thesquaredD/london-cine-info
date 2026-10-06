@@ -1,3 +1,4 @@
+import { FilmFriends } from "./friends";
 import { displayTitle, type DisplayState } from "../lib/display";
 import { letterboxdSlug } from "../shared/account";
 import { clearFilters } from "../lib/filters";
@@ -145,6 +146,7 @@ export function FilmTable({
                         {display.titleMode === "both" && film.o_ti && <i>{film.o_ti}</i>}
                       </span>
                     </button>
+                    <FilmFriends film={film} />
                     {labels?.has(film.id) && <p class="radar-label">{labels.get(film.id)}</p>}
                     {state.path === "/events" && (
                       <div class="mobile-event-labels">

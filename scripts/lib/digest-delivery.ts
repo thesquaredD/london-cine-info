@@ -45,7 +45,7 @@ export function queueDigestQuery(
     params: [
       day,
       username,
-      `digest-v2/${id}`,
+      `digest-v3/${id}`,
       JSON.stringify(payload),
       JSON.stringify(announced.map(({ slug, lastScreeningAt }) => ({ slug, lastScreeningAt }))),
       now,

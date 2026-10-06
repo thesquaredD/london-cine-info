@@ -1,0 +1,367 @@
+.watchlists-trigger {
+  white-space: nowrap;
+}
+.filter-bar {
+  flex-wrap: wrap;
+}
+.friends-count {
+  float: right;
+  font-size: 12px;
+  color: var(--muted);
+}
+.social-dialog {
+  width: min(560px, calc(100% - 24px));
+  max-height: 90dvh;
+}
+.social-dialog[open] {
+  display: flex;
+  flex-direction: column;
+}
+.social-dialog > .sheet-heading {
+  flex-shrink: 0;
+}
+.social-dialog .account-dialog-body {
+  min-height: 0;
+  padding: 16px;
+}
+.social-dialog p {
+  line-height: 1.5;
+}
+.social-intro {
+  color: var(--muted);
+  margin-top: 0;
+}
+.social-identity {
+  display: flex;
+  justify-content: space-between;
+  padding-bottom: 16px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+}
+.social-input-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+.social-input-row input {
+  flex: 1;
+  min-width: 0;
+  padding: 9px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--fg);
+  border-radius: 4px;
+}
+.social-section {
+  margin-top: 12px;
+  border-top: 1px solid var(--line);
+  padding-top: 8px;
+}
+.social-section h3 {
+  font-size: 14px;
+  margin: 0 0 12px;
+}
+.social-person {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+}
+.social-person small,
+.watchlist-option small,
+.social-match small {
+  display: block;
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+.social-person > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.social-person > div {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.watchlist-option {
+  display: flex !important;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+}
+.watchlist-option input {
+  width: 16px;
+  height: 16px;
+}
+.watchlist-option > span:nth-child(2) {
+  flex: 1;
+}
+.social-number {
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+  font-size: 12px;
+}
+.social-match {
+  margin: 20px 0;
+  border: 1px solid var(--line);
+  padding: 14px;
+  border-radius: 4px;
+}
+.social-match label {
+  display: block;
+  margin: 10px 0;
+}
+.social-match small {
+  margin-left: 24px;
+}
+.social-add {
+  margin-top: 18px;
+  width: 100%;
+  text-align: left;
+}
+.social-add-form {
+  margin-top: 20px;
+  padding: 16px;
+  background: var(--shade);
+  border-radius: 4px;
+}
+.social-dialog-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+.social-primary {
+  background: var(--active-bg);
+  color: var(--active-fg);
+}
+.social-temp-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+.social-temp-actions button {
+  font-size: 12px;
+}
+.watchlist-selections {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  padding: 10px 0;
+  font-size: 12px;
+}
+.watchlist-selections button {
+  padding: 4px 8px;
+  font-size: 12px;
+}
+.watchlist-selections button:disabled {
+  opacity: 1;
+  background: var(--shade);
+}
+.film-friends {
+  display: block;
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 400;
+  margin: 5px 0 3px 18px;
+  line-height: 1.4;
+}
+
+.social-dialog button {
+  border-radius: 4px;
+}
+.calendar-watchlists {
+  padding: 16px 0;
+}
+@media (max-width: 799px) {
+  .social-dialog {
+    max-height: 90dvh;
+  }
+  .social-dialog .account-dialog-body {
+    padding: 16px;
+  }
+  .social-person {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+  .social-person > div {
+    justify-content: flex-start;
+  }
+  .social-input-row {
+    flex-wrap: wrap;
+  }
+  .social-input-row input {
+    min-width: 140px;
+  }
+  .watchlists-trigger {
+    min-height: 40px;
+  }
+
+  .film-friends {
+    font-size: 12px;
+  }
+  .social-dialog-actions {
+    position: sticky;
+    bottom: 0;
+    background: var(--panel);
+    padding-bottom: 8px;
+  }
+}
+.social-dialog input[type="checkbox"],
+.social-dialog input[type="radio"] {
+  width: 16px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0;
+  vertical-align: middle;
+  margin-right: 6px;
+  flex-shrink: 0;
+}
+.watchlist-selections {
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
+@media (min-width: 370px) and (max-width: 799px) {
+  .filter-bar:has(.watchlists-trigger) {
+    gap: 6px;
+  }
+  .filter-bar:has(.watchlists-trigger) .mobile-filters {
+    gap: 6px;
+  }
+  .filter-bar:has(.watchlists-trigger) button {
+    padding-left: 7px;
+    padding-right: 7px;
+  }
+  .filter-bar:has(.watchlists-trigger) .watchlists-trigger {
+    min-height: 44px;
+  }
+}
+@media (max-width: 369px) {
+  .filter-bar:has(.watchlists-trigger) .mobile-filters {
+    display: contents;
+  }
+  .filter-bar:has(.watchlists-trigger) > button,
+  .filter-bar:has(.watchlists-trigger) .mobile-filters button {
+    width: calc(50% - 4px);
+    min-height: 44px;
+  }
+}
+.active-filters .watchlist-selections {
+  flex-wrap: nowrap;
+  flex-shrink: 0;
+  padding: 0;
+  white-space: nowrap;
+}
+.active-filters .watchlist-selections button {
+  padding: 5px 8px;
+}
+@media (max-width: 799px) {
+  /* The Watchlists button opens the complete selection editor on phones. */
+  .active-filters .watchlist-selections {
+    display: none;
+  }
+}
+.social-search {
+  width: 100%;
+  min-width: 0;
+  padding: 9px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--panel);
+  color: var(--fg);
+}
+.social-pagination {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  margin: 6px 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+.social-list-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 4px 0;
+  background: var(--panel);
+}
+.social-list-toolbar > label {
+  display: block;
+  margin-bottom: 6px;
+}
+.watchlist-friend-option > span:nth-child(2) {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+.watchlist-friend-option strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.watchlist-friend-option small {
+  flex-shrink: 0;
+  max-width: 55%;
+  margin-top: 0;
+  text-align: right;
+}
+.social-pagination > div {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.social-remove {
+  padding: 16px;
+  margin-top: 16px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+}
+.social-temporary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.social-temporary .watchlist-option {
+  flex: 1;
+  min-width: 0;
+}
+.social-dialog .watchlist-option strong,
+.social-dialog .social-person strong {
+  overflow-wrap: anywhere;
+}
+.social-dialog {
+  padding: 0;
+  background: var(--panel);
+  color: var(--fg);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+}
+.social-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.4);
+}
+.social-dialog form > label {
+  display: block;
+  font-weight: 500;
+}
+.social-dialog .filter-hint {
+  font-size: 12px;
+  color: var(--muted);
+}
+.social-dialog > .account-dialog-body {
+  overflow-y: auto;
+}
