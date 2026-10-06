@@ -265,13 +265,15 @@ export function digestHtml(
   unsubscribe: string,
 ): string {
   const shared = digest.shared?.length
-    ? `<tr><td style="padding:0 16px 20px"><div style="font-size:18px;font-weight:500">See something with friends</div><p>${digest.shared.length} films you both want to see have screenings in the next ten days.</p>${digest.shared
+    ? `<tr><td style="padding:0 16px 20px"><table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="table-layout:fixed;background:#ffffff;border:1px solid #cccccc;border-top:3px solid #000000;border-radius:4px"><tr><td style="padding:16px 12px 12px"><div style="font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#555555;margin-bottom:6px">Your shared watchlist</div><div style="font-size:18px;font-weight:500;line-height:1.3">See something with friends</div><p style="font-size:14px;line-height:1.5;color:#555555;margin:6px 0 0">${digest.shared.length === 1 ? "1 film on your watchlist is" : `${digest.shared.length} films on your watchlist are`} on friends’ lists too. Catch ${digest.shared.length === 1 ? "it" : "them"} in the next ten days.</p></td></tr><tr><td style="padding:0 12px"><table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="table-layout:fixed">${digest.shared
         .slice(0, 6)
-        .map(
-          ({ entry, usernames, friendCount }) =>
-            `<div style="padding:8px 0;border-bottom:1px solid #cccccc">${link(entry.film.ti, filmUrl(entry, base))}<div style="font-size:12px;color:#555555">With ${escape(usernames.map((u) => `@${u}`).join(", "))}${friendCount > usernames.length ? ` and ${friendCount - usernames.length} more friends` : ""}</div><div style="font-size:12px">${escape(screeningLines(entry, venues)[0]?.label ?? "")}</div></div>`,
-        )
-        .join("")}<p>${link("View films in common →", `${base}/watchlist?friends=1`)}</p></td></tr>`
+        .map(({ entry, usernames, friendCount }) => {
+          const first = screeningLines(entry, venues)[0];
+          return `<tr><td width="48" valign="top" style="padding:12px 0;border-top:1px solid #cccccc">${poster(entry.film, 36)}</td><td valign="top" style="padding:12px 0;border-top:1px solid #cccccc;overflow-wrap:anywhere;word-wrap:break-word"><div style="font-size:16px;font-weight:500;line-height:1.4">${link(entry.film.ti, filmUrl(entry, base))}</div><div style="font-size:12px;line-height:1.5;color:#555555;margin-top:4px">On the watchlists of ${escape(usernames.map((u) => `@${u}`).join(", "))}${friendCount > usernames.length ? ` and ${friendCount - usernames.length} more friends` : ""}</div>${first ? `<div style="font-size:13px;line-height:1.6;color:#555555;margin-top:4px">${escape(first.label)}${first.soldOut ? ` ${chip("Sold out", true)}` : ""}</div>` : ""}</td></tr>`;
+        })
+        .join(
+          "",
+        )}</table></td></tr><tr><td style="padding:4px 12px 16px"><a href="${safeUrl(`${base}/watchlist?friends=1`)}" style="display:inline-block;background:#000000;color:#ffffff;border:1px solid #000000;border-radius:4px;padding:11px 14px;font-size:14px;line-height:20px;font-weight:500;text-decoration:none">View films in common &rarr;</a></td></tr></table></td></tr>`
     : "";
   const cards = digest.cards
     .map((entry) => {
