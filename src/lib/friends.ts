@@ -9,9 +9,15 @@ import {
   type FriendsResponse,
   type FriendMatch,
   type FriendWatchlist,
-  type PublicWatchlistPage,
 } from "../shared/friends";
 import { AccountError, accountApi, type AccountState } from "./account";
+import {
+  readFriends,
+  readMatches,
+  readFriendLists,
+  readPublicPage,
+  readFriendMutation,
+} from "./friends-response";
 
 type Temporary = { username: string; slugs: string[]; fetchedAt: number };
 type Choices = { selected: string[]; mode: "all" | "any"; temporary: Temporary[] };
@@ -87,6 +93,9 @@ export function useFriendsModel(
     [listLoading, setListLoading] = useState(false),
     [error, setError] = useState(""),
     [notice, setNotice] = useState("");
+  const [readError, setReadError] = useState(""),
+    [listError, setListError] = useState("");
+  const [actionReload, setActionReload] = useState(false);
   const [importing, setImporting] = useState<string | null>(null),
     [progress, setProgress] = useState("");
   const [storageError, setStorageError] = useState("");
@@ -95,6 +104,17 @@ export function useFriendsModel(
   const generation = useRef(0),
     mutation = useRef(false),
     importController = useRef<AbortController | null>(null);
+  const recoverSession = useCallback(
+    (failure: unknown) => {
+      if (failure instanceof AccountError && failure.status === 401) {
+        setRemote(null);
+        setMatches(null);
+        setWatchlists(null);
+        void account.reload();
+      }
+    },
+    [account.reload],
+  );
   const slugs = useMemo(
     () => [
       ...new Set(films.map((f) => letterboxdSlug(f.ra.lb?.url)).filter((s): s is string => !!s)),
@@ -107,24 +127,27 @@ export function useFriendsModel(
       setRemote(null);
       setMatches(null);
       setWatchlists(null);
-      setError("");
+      setReadError("");
+      setListError("");
       setLoading(false);
       return true;
     }
     setLoading(true);
     try {
-      const data = await accountApi<FriendsResponse>("/api/friends");
+      const data = readFriends(await accountApi("/api/friends"));
       const items: FriendMatch[] = [];
       for (let offset = 0; offset < slugs.length; offset += 6000) {
-        const batch = await accountApi<{ matches: FriendMatch[] }>("/api/friends/matches", "POST", {
-          slugs: slugs.slice(offset, offset + 6000),
-        });
+        const batch = readMatches(
+          await accountApi("/api/friends/matches", "POST", {
+            slugs: slugs.slice(offset, offset + 6000),
+          }),
+        );
         items.push(...batch.matches);
       }
       if (current !== generation.current || identity.current !== id) return false;
       setRemote({ id, data });
       setMatches({ id, items });
-      setError("");
+      setReadError("");
       const accepted = new Set(
         data.friends.filter((f) => f.status === "accepted").map((f) => `f:${f.id}`),
       );
@@ -143,17 +166,23 @@ export function useFriendsModel(
       );
       return true;
     } catch (failure) {
-      if (current === generation.current && identity.current === id)
-        setError(failure instanceof Error ? failure.message : "Friends could not be loaded.");
+      if (current === generation.current && identity.current === id) {
+        setReadError(failure instanceof Error ? failure.message : "Friends could not be loaded.");
+        recoverSession(failure);
+      }
       return false;
     } finally {
       if (current === generation.current) setLoading(false);
     }
-  }, [id, slugs]);
+  }, [id, slugs, recoverSession]);
   useEffect(() => {
     setStored({ id, choices: initialChoices(id) });
     setPanel(null);
     setNotice("");
+    setError("");
+    setActionReload(false);
+    setReadError("");
+    setListError("");
     importController.current?.abort();
     setImporting(null);
     return () => {
@@ -197,24 +226,32 @@ export function useFriendsModel(
     if (!id || !selectedIds) {
       setWatchlists(id ? { id, lists: [] } : null);
       setListLoading(false);
+      setListError("");
       return;
     }
     setListLoading(true);
-    void accountApi<{ watchlists: FriendWatchlist[] }>("/api/friends/watchlists", "POST", {
+    void accountApi("/api/friends/watchlists", "POST", {
       ids: selectedIds.split(","),
     })
       .then((result) => {
         if (!cancelled && identity.current === id) {
-          setWatchlists({ id, lists: result.watchlists });
-          setError("");
+          const parsed = readFriendLists(result);
+          if (
+            new Set(parsed.watchlists.map((w) => w.id)).size !== selectedIds.split(",").length ||
+            parsed.watchlists.some((w) => !selectedIds.split(",").includes(w.id))
+          )
+            throw new AccountError("A selected friendship changed. Reload your friends.");
+          setWatchlists({ id, lists: parsed.watchlists });
+          setListError("");
         }
       })
       .catch((failure) => {
         if (!cancelled && identity.current === id) {
           setWatchlists({ id, lists: [] });
-          setError(
+          setListError(
             failure instanceof Error ? failure.message : "Selected lists could not be loaded.",
           );
+          recoverSession(failure);
         }
       })
       .finally(() => {
@@ -223,7 +260,7 @@ export function useFriendsModel(
     return () => {
       cancelled = true;
     };
-  }, [id, selectedIds, remote]);
+  }, [id, selectedIds, remote, recoverSession]);
   const active = [...new Set([...(mine || ownFilter ? ["mine"] : []), ...choices.selected])];
   const mineSlugs = useMemo(() => new Set(account.watchlist?.slugs ?? []), [account.watchlist]);
   const matchMap = useMemo(
@@ -260,6 +297,8 @@ export function useFriendsModel(
     );
   };
   const update = (next: Partial<Choices>) => {
+    setError("");
+    setActionReload(false);
     setStored((previous) => ({
       id,
       choices: { ...(previous.id === id ? previous.choices : empty()), ...next },
@@ -286,17 +325,28 @@ export function useFriendsModel(
     mutation.current = true;
     setBusy(true);
     setError("");
+    setActionReload(false);
     setNotice("");
     const owner = id;
     try {
-      await accountApi(path, method, body);
+      readFriendMutation(await accountApi(path, method, body));
       if (identity.current !== owner) return false;
-      await reload();
-      setNotice(message);
+      const refreshed = await reload();
+      if (identity.current !== owner) return false;
+      setNotice(
+        refreshed
+          ? message
+          : `${message} The updated list could not be loaded; retry loading friends.`,
+      );
       return true;
     } catch (failure) {
-      if (identity.current === owner)
+      if (identity.current === owner) {
         setError(failure instanceof Error ? failure.message : "The action could not be completed.");
+        setActionReload(
+          failure instanceof AccountError && (failure.status === 0 || failure.status >= 500),
+        );
+        recoverSession(failure);
+      }
       return false;
     } finally {
       mutation.current = false;
@@ -325,16 +375,22 @@ export function useFriendsModel(
     const owner = id;
     setImporting(username);
     setError("");
+    setActionReload(false);
+    setNotice("");
     setProgress("Reading the public watchlist…");
     try {
       const getPage = async (page: number) => {
         for (let retry = 0; retry < 5; retry++) {
           try {
-            return await accountApi<PublicWatchlistPage>(
-              "/api/watchlists/public",
-              "POST",
-              { username, page },
-              controller.signal,
+            return readPublicPage(
+              await accountApi(
+                "/api/watchlists/public",
+                "POST",
+                { username, page },
+                controller.signal,
+              ),
+              username,
+              page,
             );
           } catch (failure) {
             if (controller.signal.aborted) throw failure;
@@ -426,7 +482,8 @@ export function useFriendsModel(
     loading,
     busy,
     listLoading,
-    error,
+    error: [error, readError, listError].filter(Boolean).join(" "),
+    retryable: !!(readError || listError || actionReload),
     notice,
     storageError,
     importing,

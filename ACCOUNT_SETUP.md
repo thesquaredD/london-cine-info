@@ -219,6 +219,13 @@ full slugs are fetched only for selected friends. Film annotations show at most 
 usernames and the remaining count. Pending and stale/error imports are excluded from aggregate
 friend matches; individually selected stale lists show their last successful import with a notice.
 
+Load, selected-list and action/import errors are kept independently, so successful background
+reads cannot dismiss an unrelated failure. Expired sessions clear cached friend data and refresh
+the account state. All friend/public-page responses are validated before use. A saved mutation
+whose following refresh fails reports the save and failed reload separately; missing mutation
+acknowledgements never produce a success notice. Retry loading friends is available for failed
+reads and unconfirmed writes; temporary import errors keep the handle for another import attempt.
+
 Use a Letterboxd watchlist works for guests and signed-in users. It reads public pages through
 `POST /api/watchlists/public`, validates each page and the complete unique count, and installs a
 filter only after the whole import succeeds. Cancellation and failures discard partial results.

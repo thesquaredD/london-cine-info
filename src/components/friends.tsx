@@ -104,7 +104,8 @@ export function FriendsFeedback() {
       )}
       {m.error && (
         <div class="view-note" role="alert">
-          {m.error} <button onClick={() => void m.reload()}>Retry friends</button>
+          {m.error}{" "}
+          {m.retryable && <button onClick={() => void m.reload()}>Retry loading friends</button>}
         </div>
       )}
       {stale.length > 0 && (
@@ -238,7 +239,12 @@ export function FriendsDialogs({
       }
       className="social-dialog"
     >
-      {m.error && <p role="alert">{m.error}</p>}
+      {m.error && (
+        <p role="alert">
+          {m.error}{" "}
+          {m.retryable && <button onClick={() => void m.reload()}>Retry loading friends</button>}
+        </p>
+      )}
       {m.notice && <p role="status">{m.notice}</p>}
       {m.panel === "friends" && !m.account.user ? (
         <>
