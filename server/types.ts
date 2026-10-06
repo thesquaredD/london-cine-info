@@ -6,6 +6,7 @@ export type Env = {
   RESEND_API_KEY?: string;
   GITHUB_DISPATCH_TOKEN?: string;
   DEV_MAGIC_LINK?: string;
+  POSTHOG_ENABLED?: string;
 };
 export type User = {
   id: string;

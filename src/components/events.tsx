@@ -1,3 +1,4 @@
+import { capture } from "../lib/analytics";
 import { FilmFriends } from "./friends";
 import { Fragment } from "preact";
 import { useState } from "preact/hooks";
@@ -136,6 +137,21 @@ export function Events({
                         <div class="event-actions">
                           <a
                             href={row.bookingUrl}
+                            onClick={() =>
+                              capture(
+                                row.bookingFallback
+                                  ? "screening_details_clicked"
+                                  : "booking_clicked",
+                                {
+                                  film_id: row.filmId,
+                                  venue_id: row.venue,
+                                  sold_out: row.soldOut,
+                                  booking_fallback: row.bookingFallback,
+                                  path: state.path,
+                                  watchlist: !!state.watchlist,
+                                },
+                              )
+                            }
                             target="_blank"
                             rel="noopener noreferrer"
                             aria-label={`${row.bookingFallback ? "Screening details for" : "Book"} ${row.title} at ${venue?.name ?? row.venue} ${row.localTime}`}
@@ -155,7 +171,18 @@ export function Events({
                             <button
                               aria-expanded={expanded === row.id}
                               aria-controls={id}
-                              onClick={() => setExpanded(expanded === row.id ? null : row.id)}
+                              onClick={() => {
+                                if (expanded !== row.id)
+                                  capture("film_opened", {
+                                    film_id: row.filmId,
+                                    path: state.path,
+                                    on_watchlist: !!watched?.has(
+                                      letterboxdSlug(film?.ra.lb?.url) ?? "",
+                                    ),
+                                    watchlist: !!state.watchlist,
+                                  });
+                                setExpanded(expanded === row.id ? null : row.id);
+                              }}
                             >
                               Film details
                             </button>

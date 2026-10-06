@@ -1,3 +1,4 @@
+import type { AnalyticsEvent, AnalyticsProperties } from "../src/shared/analytics";
 import type { Env, User } from "./types";
 import {
   MAX_FRIENDS,
@@ -25,6 +26,7 @@ export async function friendsApi(
   body: Record<string, unknown>,
   user: User,
   env: Env,
+  track?: (event: AnalyticsEvent, properties?: AnalyticsProperties) => void,
 ): Promise<Response | null> {
   const now = Math.floor(Date.now() / 1000);
   if (path === "/api/friends/profile" && method === "PUT") {
@@ -60,6 +62,10 @@ export async function friendsApi(
         return json({ error: "That username is already taken. Choose another." }, 409);
       throw e;
     }
+    if (username !== user.app_username)
+      track?.("app_username_saved", { first_setup: !user.app_username });
+    if (typeof body.friendsDigest === "boolean" && body.friendsDigest !== !!user.friends_digest)
+      track?.("friends_digest_preference_changed", { enabled: body.friendsDigest });
     return json({ ok: true });
   }
   if (path === "/api/friends" && method === "GET") {
@@ -101,6 +107,7 @@ export async function friendsApi(
         },
         409,
       );
+    track?.("friend_request_sent");
     return json({ ok: true }, 201);
   }
   if (path === "/api/friends" && ["PUT", "DELETE"].includes(method)) {
@@ -108,9 +115,19 @@ export async function friendsApi(
       return json({ error: "Choose a valid friend request." }, 400);
     const [low, high] = [user.id, body.id].sort();
     if (method === "DELETE") {
-      await env.DB.prepare("DELETE FROM friendships WHERE user_low=? AND user_high=?")
+      const removed = await env.DB.prepare(
+        "DELETE FROM friendships WHERE user_low=? AND user_high=? RETURNING status,requested_by",
+      )
         .bind(low, high)
-        .run();
+        .first<{ status: string; requested_by: string }>();
+      if (removed)
+        track?.(
+          removed.status === "accepted"
+            ? "friend_removed"
+            : removed.requested_by === user.id
+              ? "friend_request_cancelled"
+              : "friend_request_declined",
+        );
       return json({ ok: true });
     }
     const result = await env.DB.prepare(
@@ -123,6 +140,7 @@ export async function friendsApi(
         { error: "That incoming request is no longer available. Reload your friends." },
         409,
       );
+    track?.("friend_request_accepted");
     return json({ ok: true });
   }
   if (path === "/api/friends/watchlists" && method === "POST") {

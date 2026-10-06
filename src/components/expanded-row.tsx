@@ -1,3 +1,4 @@
+import { capture } from "../lib/analytics";
 import { screeningMatcher } from "../lib/filters";
 import type { ViewState } from "../lib/catalogue";
 import { useEffect, useState } from "preact/hooks";
@@ -41,7 +42,10 @@ export function ExpandedRow({
         if (active) setData(value);
       })
       .catch(() => {
-        if (active) setError(true);
+        if (active) {
+          setError(true);
+          capture("showtimes_load_failed", { film_id: film.id });
+        }
       });
     return () => {
       active = false;
@@ -190,6 +194,21 @@ export function ExpandedRow({
                           <div class="screening-info">
                             <a
                               href={row.bookingUrl}
+                              onClick={() =>
+                                capture(
+                                  row.bookingFallback
+                                    ? "screening_details_clicked"
+                                    : "booking_clicked",
+                                  {
+                                    film_id: film.id,
+                                    venue_id: row.venue,
+                                    sold_out: row.soldOut,
+                                    booking_fallback: row.bookingFallback,
+                                    path: state.path,
+                                    watchlist: state.path === "/watchlist" || !!state.watchlist,
+                                  },
+                                )
+                              }
                               target="_blank"
                               rel="noopener noreferrer"
                               aria-label={`${row.bookingFallback ? "Screening details for" : "Book"} ${film.ti} at ${venue?.name ?? row.venue} ${row.localTime}`}

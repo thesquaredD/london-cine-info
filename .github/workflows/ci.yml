@@ -33,6 +33,7 @@ jobs:
         run: |
           npx playwright install --with-deps chromium
           npm run e2e
+          npm run e2e:analytics
           npx wrangler d1 migrations apply london-cine-info --local
           npm run e2e:accounts
 

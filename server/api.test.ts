@@ -846,3 +846,115 @@ it("handles 500 friends with bounded match summaries and selected-list reads", a
     `500 friends / 50,000 watchlist entries: API reads and summary in ${Math.round(performance.now() - started)} ms`,
   );
 }, 30000);
+
+it("tracks verified signups once, links request context, and never sends account secrets", async () => {
+  const events: { event: string; properties: Record<string, unknown> }[] = [];
+  const deliveries: Promise<unknown>[] = [];
+  const email = "analytics-synthetic@example.com";
+  const visitor = "visitor-12345678";
+  let magic = "";
+  const fetcher = vi.spyOn(globalThis, "fetch").mockImplementation(async (input, options) => {
+    const payload = JSON.parse(String(options?.body));
+    if (String(input) === "https://api.resend.com/emails") {
+      magic = new URL(payload.text.match(/https:\/\/[^\s]+/)[0]).searchParams.get("token")!;
+    } else if (String(input) === "https://eu.i.posthog.com/capture/") events.push(payload);
+    else throw new Error("Unexpected external request");
+    return new Response("{}", { status: 200 });
+  });
+  const call = (path: string, body: unknown) =>
+    onRequest({
+      request: new Request(`https://london-cine.info${path}`, {
+        method: "POST",
+        headers: {
+          Origin: "https://london-cine.info",
+          "X-Analytics-Id": visitor,
+          "X-Analytics-Enabled": "1",
+          "X-Analytics-Context": JSON.stringify({ source: "organic_search", email }),
+        },
+        body: JSON.stringify(body),
+      }),
+      env: {
+        ...env,
+        SITE_URL: "https://london-cine.info",
+        POSTHOG_ENABLED: "true",
+        RESEND_API_KEY: "synthetic",
+      },
+      waitUntil: (promise: Promise<unknown>) => deliveries.push(promise),
+    } as unknown as Parameters<typeof onRequest>[0]);
+  try {
+    expect((await call("/api/auth/request", { email })).status).toBe(200);
+    const originalToken = magic;
+    const confirmations = await Promise.all([
+      call("/api/auth/verify", { token: originalToken }),
+      call("/api/auth/verify", { token: originalToken }),
+    ]);
+    expect(confirmations.map((response) => response.status).sort()).toEqual([200, 400]);
+    expect((await call("/api/auth/request", { email })).status).toBe(200);
+    expect((await call("/api/auth/verify", { token: magic })).status).toBe(200);
+    await Promise.all(deliveries);
+    expect(events.filter((event) => event.event === "signup_completed")).toHaveLength(1);
+    expect(events.filter((event) => event.event === "sign_in_verified")).toHaveLength(2);
+    expect(events.find((event) => event.event === "sign_in_requested")?.properties).toMatchObject({
+      distinct_id: visitor,
+      source: "organic_search",
+    });
+    const signup = events.find((event) => event.event === "signup_completed")!;
+    expect(signup.properties.distinct_id).toMatch(/^account:/);
+    const serialized = JSON.stringify(events);
+    expect(serialized).not.toContain(email);
+    expect(serialized).not.toContain(originalToken);
+    expect(serialized).not.toContain(magic);
+    const stored = await env.DB.prepare(
+      "SELECT analytics_signup_completed FROM users WHERE email=?",
+    )
+      .bind(email)
+      .first<{ analytics_signup_completed: number }>();
+    expect(stored?.analytics_signup_completed).toBe(1);
+  } finally {
+    fetcher.mockRestore();
+  }
+});
+
+it("counts successful social transitions once without sending friend identities", async () => {
+  const a = await socialUser("analytics_sender"),
+    b = await socialUser("analytics_receiver");
+  const events: { event: string; properties: Record<string, unknown> }[] = [];
+  const deliveries: Promise<unknown>[] = [];
+  const fetcher = vi.spyOn(globalThis, "fetch").mockImplementation(async (_input, options) => {
+    events.push(JSON.parse(String(options?.body)));
+    return new Response("{}", { status: 200 });
+  });
+  const call = (method: string, body: unknown, cookie: string) =>
+    onRequest({
+      request: new Request("https://london-cine.info/api/friends", {
+        method,
+        headers: { Origin: "https://london-cine.info", Cookie: cookie },
+        body: JSON.stringify(body),
+      }),
+      env: { ...env, POSTHOG_ENABLED: "true" },
+      waitUntil: (promise: Promise<unknown>) => deliveries.push(promise),
+    } as unknown as Parameters<typeof onRequest>[0]);
+  try {
+    expect((await call("POST", { username: "analytics_receiver" }, a.cookie)).status).toBe(201);
+    expect((await call("POST", { username: "analytics_receiver" }, a.cookie)).status).toBe(409);
+    expect((await call("PUT", { id: a.id }, b.cookie)).status).toBe(200);
+    expect((await call("PUT", { id: a.id }, b.cookie)).status).toBe(409);
+    expect((await call("DELETE", { id: b.id }, a.cookie)).status).toBe(200);
+    expect((await call("DELETE", { id: b.id }, a.cookie)).status).toBe(200);
+    await Promise.all(deliveries);
+    expect(events.map((event) => event.event)).toEqual([
+      "friend_request_sent",
+      "friend_request_accepted",
+      "friend_removed",
+    ]);
+    expect(events[0]?.properties.distinct_id).toBe(`account:${a.id}`);
+    expect(events[1]?.properties.distinct_id).toBe(`account:${b.id}`);
+    for (const event of events) {
+      expect(Object.keys(event.properties)).not.toContain("friend_id");
+      expect(JSON.stringify(event)).not.toContain("analytics_sender");
+      expect(JSON.stringify(event)).not.toContain("analytics_receiver");
+    }
+  } finally {
+    fetcher.mockRestore();
+  }
+});

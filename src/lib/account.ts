@@ -1,3 +1,4 @@
+import { analyticsHeaders, capture, identifyAccount } from "./analytics";
 import { useCallback, useEffect, useState, useRef } from "preact/hooks";
 import type { Account, Watchlist } from "../shared/account";
 export class AccountError extends Error {
@@ -22,10 +23,15 @@ export async function accountApi<T>(
       signal: signal
         ? AbortSignal.any([signal, AbortSignal.timeout(20000)])
         : AbortSignal.timeout(20000),
-      headers: body !== undefined ? { "Content-Type": "application/json" } : {},
+      headers: {
+        ...analyticsHeaders(),
+        ...(body !== undefined ? { "Content-Type": "application/json" } : {}),
+      },
       ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
     });
   } catch {
+    if (!signal?.aborted)
+      capture("api_request_failed", { endpoint: path, method, status: 0, failure_kind: "network" });
     throw new AccountError(
       "We could not reach the account service. Check your connection and try again.",
     );
@@ -35,6 +41,12 @@ export async function accountApi<T>(
     data = await response.json();
     if (!data || typeof data !== "object" || Array.isArray(data)) throw new Error();
   } catch {
+    capture("api_request_failed", {
+      endpoint: path,
+      method,
+      status: response.status,
+      failure_kind: "invalid_response",
+    });
     throw new AccountError(
       "The account service returned an unexpected response. Please try again later.",
       response.status,
@@ -57,6 +69,9 @@ export async function accountApi<T>(
       retryAt && Number.isFinite(retryAt) ? retryAt : null,
     );
   }
+  if (path === "/api/auth/verify" && typeof data.userId === "string") identifyAccount(data.userId);
+  if (path === "/api/auth/logout" || (path === "/api/me" && method === "DELETE"))
+    identifyAccount(null);
   return data as T;
 }
 export type AccountNotice = {
@@ -78,6 +93,7 @@ export function useAccount() {
   const clear = useCallback(() => {
     generation.current++;
     identity.current = null;
+    identifyAccount(null);
     setUser(null);
     setWatchlist(null);
     setError("");
@@ -99,6 +115,7 @@ export function useAccount() {
           setNotice({ kind: "error", message: "Your session has expired. Please sign in again." });
         if (nextIdentity !== identity.current) setWatchlist(null);
         identity.current = nextIdentity;
+        identifyAccount(result.user?.id ?? null);
         setUser(result.user);
         if (!result.user) {
           setWatchlist(null);

@@ -21,11 +21,14 @@
     "dev:accounts": "wrangler pages dev dist --port 4174",
     "e2e:accounts": "playwright test -c playwright.accounts.config.ts",
     "watchlists:refresh": "tsx scripts/refresh-watchlists.ts",
-    "digests:send": "tsx scripts/send-digests.ts"
+    "digests:send": "tsx scripts/send-digests.ts",
+    "e2e:analytics": "playwright test -c playwright.analytics.config.ts",
+    "analytics:dashboard": "tsx scripts/setup-analytics-dashboard.ts"
   },
   "dependencies": {
     "@preact/signals": "^2.11.3",
     "cheerio": "^1.2.0",
+    "posthog-js": "^1.438.1",
     "preact": "^10.29.8",
     "virtual-select-plugin": "^1.1.0",
     "zod": "^4.6.5"
