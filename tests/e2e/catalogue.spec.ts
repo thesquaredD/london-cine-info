@@ -242,7 +242,7 @@ test("multiple choices, correlated screening filters, chips and reset", async ({
   await menu2.getByRole("button", { name: "Reset all filters" }).click();
   await closeFilters(page);
   await expect(page.locator(".film-row")).toHaveCount(6);
-  await expect(page.locator(".active-filters")).toHaveCount(0);
+  await expect(page.locator(".active-filters button")).toHaveCount(0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
 

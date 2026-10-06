@@ -1,3 +1,5 @@
+import { friendsApi } from "../../server/friends";
+import { publicWatchlistApi } from "../../server/public-watchlists";
 import {
   validCalendarInput,
   screeningKey,
@@ -63,6 +65,8 @@ function account(user: User): Account {
   return {
     id: user.id,
     email: user.email,
+    appUsername: user.app_username,
+    friendsDigest: !!user.friends_digest,
     username: user.letterboxd_username,
     digestWeekday: user.digest_weekday,
     fetchedAt: user.fetched_at,
@@ -132,7 +136,14 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
       return json({ error: "Method not allowed" }, 405);
     if (method !== "GET" && !sameOrigin(request))
       return json({ error: "Request origin rejected" }, 403);
-    const bodyLimit = path === "/api/cinemas" ? 180000 : path === "/api/calendar" ? 12000 : 4096;
+    const bodyLimit =
+      path === "/api/friends/matches"
+        ? 1_300_000
+        : path === "/api/cinemas"
+          ? 180_000
+          : path === "/api/calendar"
+            ? 12000
+            : 4096;
     if (Number(request.headers.get("Content-Length") ?? 0) > bodyLimit)
       return json({ error: "Request too large" }, 413);
     let body: Record<string, unknown> = {};
@@ -224,6 +235,8 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
         ? json({ ok: true })
         : json({ error: "Invalid unsubscribe link" }, 400);
     }
+    if (path === "/api/watchlists/public" && method === "POST")
+      return publicWatchlistApi(body, env, request.headers.get("CF-Connecting-IP") ?? "local");
     const auth = await userFor(request, env);
     if (path === "/api/me" && method === "GET") {
       if (!auth) return json({ user: null });
@@ -236,6 +249,12 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
     }
     if (!auth) return json({ error: "Please sign in" }, 401);
     const { user, sessionHash } = auth;
+    if (path.startsWith("/api/friends")) {
+      if (["/api/friends", "/api/friends/profile"].includes(path) && method !== "GET")
+        await quota(env, `friends:${user.id}`, 120, 3600);
+      const response = await friendsApi(path, method, body, user, env);
+      if (response) return response;
+    }
     if (path === "/api/cinemas" && ["GET", "PUT", "POST"].includes(method)) {
       if (method !== "GET") {
         if (

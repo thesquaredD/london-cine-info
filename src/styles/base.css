@@ -987,9 +987,22 @@ h3 {
   display: none;
 }
 .filter-summary {
-  padding: 10px 12px;
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  align-items: center;
+  gap: 0 12px;
+  padding: 6px 12px;
   background: var(--panel);
   border-bottom: 1px solid var(--line);
+}
+.quick-filters-desktop,
+.filter-summary > p:not(.result-status),
+.filter-summary > .event-type-filter {
+  grid-column: 1 / -1;
+}
+.result-status {
+  grid-column: 1;
+  white-space: nowrap;
 }
 .filter-summary > p {
   margin: 0;
@@ -1001,12 +1014,14 @@ h3 {
   color: var(--fg);
 }
 .active-filters {
+  grid-column: 2;
+  min-width: 0;
   display: flex;
   flex-wrap: nowrap;
   overflow-x: auto;
   align-items: center;
   gap: 6px;
-  margin-top: 8px;
+  margin-top: 0;
 }
 .active-filters button {
   font-size: 12px;
@@ -1095,8 +1110,6 @@ h3 {
   width: 5ch;
 }
 .filter-summary strong {
-  display: inline-block;
-  min-width: 12ch;
   font-variant-numeric: tabular-nums;
 }
 
@@ -1458,6 +1471,33 @@ h3 {
 .watchlist-intro h2 {
   margin: 0;
 }
+.watchlist-connected {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 16px;
+  padding: 8px 12px;
+  font-size: 13px;
+}
+.watchlist-connected .import-status {
+  flex: 1 1 280px;
+  min-width: 0;
+  gap: 2px;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+.watchlist-connected .import-status p + p {
+  font-size: 12px;
+  color: var(--muted);
+}
+.watchlist-connected .account-actions {
+  flex-shrink: 0;
+  gap: 6px;
+}
+.watchlist-connected .import-failed > p:first-child {
+  color: var(--sold-out);
+}
 .watchlist-intro button,
 .account-prompt button {
   justify-self: start;
@@ -1790,7 +1830,25 @@ h3 {
   .quick-filters-mobile {
     display: inline-block;
     min-height: 44px;
-    margin-bottom: 10px;
+    grid-column: 1;
+    grid-row: 1;
+    margin: 0;
+  }
+  .filter-summary {
+    grid-template-columns: max-content max-content minmax(0, 1fr);
+    gap: 0 8px;
+    padding: 4px 8px;
+  }
+  .filter-summary .result-status {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .filter-summary .result-context {
+    display: none;
+  }
+  .filter-summary .active-filters {
+    grid-column: 3;
+    grid-row: 1;
   }
   .quick-filter-dialog .quick-days {
     width: 100%;
@@ -1891,7 +1949,8 @@ h3 {
   margin: 0;
 }
 
-.settings-button {
+.settings-button,
+.friends-button {
   width: calc(100% - 24px);
   margin: 0 12px 12px;
 }
@@ -2063,7 +2122,7 @@ h3 {
 
 /* Keep result positions stable as shortcuts and their chips change. */
 .active-filters {
-  height: 42px;
+  height: 36px;
 }
 .shortcut-count {
   display: inline-block;
@@ -2076,6 +2135,6 @@ h3 {
 }
 @media (max-width: 799px) {
   .active-filters {
-    height: 56px;
+    height: 44px;
   }
 }

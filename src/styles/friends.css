@@ -1,18 +1,3 @@
-.prototype-banner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 9px 16px;
-  background: var(--shade);
-  border-bottom: 1px solid var(--line);
-  font-size: 12px;
-  color: var(--muted);
-}
-.prototype-banner button {
-  padding: 3px 8px;
-  font-size: 12px;
-}
 .watchlists-trigger {
   white-space: nowrap;
 }
@@ -181,33 +166,7 @@
   margin: 5px 0 3px 18px;
   line-height: 1.4;
 }
-.social-mail {
-  border: 1px solid var(--line);
-  margin: 16px 0;
-}
-.social-mail-header {
-  background: var(--masthead-bg);
-  color: var(--masthead-fg);
-  padding: 18px;
-  letter-spacing: 0.05em;
-}
-.social-mail-body {
-  padding: 20px;
-}
-.social-mail-body h2 {
-  font-size: 20px;
-}
-.social-mail-body article {
-  padding: 14px 0;
-  border-bottom: 1px solid var(--line);
-}
-.social-mail-body small {
-  display: block;
-  margin-top: 8px;
-}
-.social-mail-body .film-friends {
-  margin-left: 0;
-}
+
 .social-dialog button {
   border-radius: 4px;
 }
@@ -237,9 +196,7 @@
   .watchlists-trigger {
     min-height: 40px;
   }
-  .prototype-banner {
-    align-items: flex-start;
-  }
+
   .film-friends {
     font-size: 12px;
   }
@@ -264,13 +221,7 @@
   padding-left: 12px;
   padding-right: 12px;
 }
-.social-mail-body small {
-  color: var(--muted);
-  line-height: 1.5;
-}
-.social-mail-body article strong {
-  font-size: 16px;
-}
+
 @media (min-width: 370px) and (max-width: 799px) {
   .filter-bar:has(.watchlists-trigger) {
     gap: 6px;
@@ -304,4 +255,68 @@
 }
 .active-filters .watchlist-selections button {
   padding: 5px 8px;
+}
+.social-search {
+  width: 100%;
+  min-width: 0;
+  padding: 9px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--panel);
+  color: var(--fg);
+}
+.social-pagination {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.social-pagination > div {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.social-remove {
+  padding: 16px;
+  margin-top: 16px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+}
+.social-temporary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.social-temporary .watchlist-option {
+  flex: 1;
+  min-width: 0;
+}
+.social-dialog .watchlist-option strong,
+.social-dialog .social-person strong {
+  overflow-wrap: anywhere;
+}
+.social-dialog {
+  padding: 0;
+  background: var(--panel);
+  color: var(--fg);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+}
+.social-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.4);
+}
+.social-dialog form > label {
+  display: block;
+  font-weight: 500;
+}
+.social-dialog .filter-hint {
+  font-size: 12px;
+  color: var(--muted);
+}
+.social-dialog > .account-dialog-body {
+  overflow-y: auto;
 }

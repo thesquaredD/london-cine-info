@@ -1,4 +1,4 @@
-import { WatchlistsButton } from "./friends-prototype";
+import { WatchlistsButton } from "./friends";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { FilterControls, type FilterControlsProps } from "./filter-controls";
 import type { FacetKey } from "../shared/data";

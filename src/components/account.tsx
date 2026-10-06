@@ -467,8 +467,9 @@ export function Privacy() {
       <h2>Privacy</h2>
       <p>
         Browsing screenings does not require an account. If you sign in, we store your email
-        address, Letterboxd username, imported public watchlist, email preferences, saved screenings
-        and a record of films included in screening emails.
+        address, app username, friendships and requests, Letterboxd username, imported public
+        watchlist, email preferences, saved screenings and a record of films included in screening
+        emails.
       </p>
       <p>
         A secure, HttpOnly session cookie keeps you signed in for 90 days after your last visit. It
@@ -477,7 +478,10 @@ export function Privacy() {
         storage. Signed-in favourites are saved to your account, with a receipt preventing repeat
         guest merges. Account favourites stay separate from guest preferences and are removed on
         account deletion. Clear browser site data to remove guest favourites. Shared My cinemas
-        links include the selected venue IDs. We use no advertising or analytics cookies.
+        links include the selected venue IDs. Temporary Letterboxd comparisons and watchlist
+        selections stay in session storage, separately for each signed-in account or guest session.
+        Public watchlist pages are cached on the server for up to one hour. We use no advertising or
+        analytics cookies.
       </p>
       <p>
         Cloudflare hosts the site and account data. Resend delivers sign-in links and any weekly
@@ -488,8 +492,9 @@ export function Privacy() {
       <p>
         Weekly screening emails are optional and off by default. Unsubscribe using a link in any
         email or turn them off in Account. Delete account removes your account, sessions, watchlist
-        saved screenings and alert history from the active database immediately. Hosting providers
-        may retain routine security logs or backups under their own retention policies.
+        friendships, requests, saved screenings and alert history from the active database
+        immediately. Hosting providers may retain routine security logs or backups under their own
+        retention policies.
       </p>
       <p>
         To correct your data, change your username or email preferences in Account. You can sign out

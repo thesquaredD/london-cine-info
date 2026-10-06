@@ -194,21 +194,21 @@ test("all catalogue pages fit phone, tablet and desktop in both themes without c
   expect(errors).toEqual([]);
 });
 
-test("Clear all has no reserved empty row and removes its compact chip row after reset", async ({
-  page,
-}) => {
+test("Clear all keeps the results stable through selection and reset", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator(".film-row")).toHaveCount(6);
-  await expect(page.getByRole("group", { name: "Active filters", exact: true })).toHaveCount(0);
+  await expect(
+    page.getByRole("group", { name: "Active filters", exact: true }).getByRole("button"),
+  ).toHaveCount(0);
   const summary = page.locator(".filter-summary");
   const baseline = (await summary.boundingBox())!.height;
   await page.locator(".bar-search").fill("Fixture Classic");
   const chips = page.getByRole("group", { name: "Active filters", exact: true });
   await expect(chips).toBeVisible();
-  expect((await summary.boundingBox())!.height - baseline).toBeLessThan(60);
+  expect((await summary.boundingBox())!.height).toBe(baseline);
   await page.screenshot({ path: test.info().outputPath("clear-all-active.png") });
   await chips.getByRole("button", { name: "Clear all", exact: true }).click();
-  await expect(chips).toHaveCount(0);
+  await expect(chips.getByRole("button")).toHaveCount(0);
   expect((await summary.boundingBox())!.height).toBe(baseline);
   await page.screenshot({ path: test.info().outputPath("clear-all-reset.png") });
 });

@@ -188,7 +188,10 @@ nested scrolling.
 
 Page navigation stays in a desktop sidebar and a separate Pages drawer on phones. Film filters remain in the results toolbar and mobile filter sheet.
 
-Accounts and Letterboxd watchlists: see [ACCOUNT_SETUP.md](ACCOUNT_SETUP.md) for platform setup, verification and activation.
+For local development with accounts, run `npm run dev:accounts` after a build and local
+migrations, then start Vite with `ACCOUNTS_API_URL=http://localhost:4174 npm run dev`.
+
+Accounts, friends and Letterboxd watchlists: see [ACCOUNT_SETUP.md](ACCOUNT_SETUP.md) for platform setup, verification and activation.
 
 ## Dates, favourite cinemas and Radar
 

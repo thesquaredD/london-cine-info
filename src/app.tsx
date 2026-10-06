@@ -1,9 +1,10 @@
-import { FriendsContext, prototypeEnabled, useFriendsPrototype } from "./lib/friends-prototype";
+import { FriendsContext, useFriendsModel } from "./lib/friends";
 import {
   FriendsDialogs,
+  FriendsFeedback,
   WatchlistsButton,
   WatchlistSelections,
-} from "./components/friends-prototype";
+} from "./components/friends";
 import { Dialog } from "./components/dialog";
 import { DisplayControls } from "./components/display-controls";
 import { useCalendar } from "./lib/calendar";
@@ -161,6 +162,7 @@ function About({ meta }: { meta: DataMeta | null }) {
   );
 }
 
+const EMPTY_FILMS: Film[] = [];
 export function App() {
   const account = useAccount();
   const calendar = useCalendar(account);
@@ -189,12 +191,13 @@ export function App() {
     meta: DataMeta;
     events: EventOccurrence[];
   } | null>(null);
-  const friends = useFriendsPrototype(
-    catalogue?.films ?? [],
+  const friends = useFriendsModel(
+    catalogue?.films ?? EMPTY_FILMS,
     state.path === "/watchlist",
     () => setState((s) => ({ ...s, page: 1 })),
     !!state.watchlist,
     (selected) => change({ watchlist: selected, page: 1 }),
+    account,
   );
   const [error, setError] = useState(false);
   const [attempt, setAttempt] = useState(0);
@@ -220,7 +223,7 @@ export function App() {
     ] ??
     "About";
   const hasActiveChoices = Boolean(
-    (prototypeEnabled && friends.value.selected.length) ||
+    friends.choices.selected.length ||
     state.filmGauge ||
     state.eventType ||
     hasCustomSort(state) ||
@@ -246,12 +249,18 @@ export function App() {
   const baseFilms = useMemo(
     () =>
       (myCinemasUnavailable ? [] : (catalogue?.films ?? [])).filter((film) =>
-        prototypeEnabled
-          ? friends.matches(film)
-          : !(state.path === "/watchlist" || state.watchlist) ||
-            (film.sc.length > 0 && watched.has(letterboxdSlug(film.ra.lb?.url) ?? "")),
+        friends.matchesFilm(film),
       ) ?? [],
-    [catalogue, state.path, state.watchlist, watched, myCinemasUnavailable, friends.value],
+    [
+      catalogue,
+      state.path,
+      state.watchlist,
+      watched,
+      myCinemasUnavailable,
+      friends.choices,
+      friends.listSets,
+      friends.matchMap,
+    ],
   );
   const selected = useMemo(
     () =>
@@ -266,19 +275,24 @@ export function App() {
         : [],
     [catalogue, state, baseFilms, watched, display.titleMode, now],
   );
+  const eventsSource = useMemo(() => {
+    if (!friends.active.length) return catalogue?.events ?? [];
+    const ids = new Set(baseFilms.map((film) => film.id));
+    return (catalogue?.events ?? []).filter((event) => ids.has(event.filmId));
+  }, [catalogue, baseFilms, friends.active.length]);
   const events = useMemo(
     () =>
       catalogue && state.path === "/events"
-        ? matchingEvents(catalogue.events, baseFilms, catalogue.meta, state, now)
+        ? matchingEvents(eventsSource, baseFilms, catalogue.meta, state, now)
         : [],
-    [catalogue, baseFilms, state, now],
+    [catalogue, eventsSource, baseFilms, state, now],
   );
   const resultCount = state.path === "/events" ? events.length : selected.length;
   const counts = useMemo(
     () =>
       catalogue
         ? state.path === "/events"
-          ? eventFacetCounts(catalogue.events, baseFilms, catalogue.meta, state, now)
+          ? eventFacetCounts(eventsSource, baseFilms, catalogue.meta, state, now)
           : facetCounts(
               selectFilms(baseFilms, { ...state, filters: {} }),
               catalogue.meta,
@@ -288,6 +302,7 @@ export function App() {
         : null,
     [
       catalogue,
+      eventsSource,
       baseFilms,
       state.path,
       state.eventType,
@@ -318,7 +333,6 @@ export function App() {
   const myCinemasUpdating = useRef(false);
   function change(changes: Partial<ViewState>, push = false) {
     if (
-      prototypeEnabled &&
       "search" in changes &&
       "excluded" in changes &&
       "filters" in changes &&
@@ -527,13 +541,11 @@ export function App() {
           <Sidebar {...sidebarProps} />
         </dialog>
         <main class="main-column" id="main-content">
-          {prototypeEnabled && (
-            <div class="prototype-banner">
-              <span>Friends prototype · Real catalogue, sample watchlists · Nothing is sent</span>
-              <button onClick={() => friends.setPanel("email")}>Email preview</button>
-            </div>
-          )}
-          <FriendsDialogs onNavigate={() => change({ path: "/watchlist", page: 1 }, true)} />
+          <FriendsDialogs
+            onAccount={openAccount}
+            onNavigate={() => change({ path: "/watchlist", page: 1 }, true)}
+          />
+          {!friends.panel && <FriendsFeedback />}
           <header class="masthead">
             <button
               class="menu-button"
@@ -643,11 +655,7 @@ export function App() {
                   ...calendar,
                   screenings: calendar.screenings.filter((e) => {
                     const film = catalogue?.films.find((f) => f.id === e.filmId);
-                    return (
-                      !prototypeEnabled ||
-                      !friends.active.length ||
-                      (!!film && friends.matches(film))
-                    );
+                    return !friends.active.length || (!!film && friends.matchesFilm(film));
                   }),
                 }}
                 account={account}
@@ -674,8 +682,12 @@ export function App() {
                   </div>
                 )}
               {state.path === "/watchlist" && (
-                <div class="view-note watchlist-intro">
-                  <h2>Your Letterboxd watchlist</h2>
+                <div
+                  class={`view-note watchlist-intro ${account.user?.username ? "watchlist-connected" : ""}`}
+                >
+                  <h2 class={account.user?.username ? "sr-only" : undefined}>
+                    Your Letterboxd watchlist
+                  </h2>
                   {account.loading ? (
                     <p role="status">Checking sign-in…</p>
                   ) : !account.user ? (
@@ -753,11 +765,11 @@ export function App() {
                           id === "evening"
                             ? isEvening(state)
                             : id === "tonight"
-                            ? !!state.tonight
-                            : !state.tonight &&
-                              state.filters.day?.length === 1 &&
-                              state.filters.day[0] === id &&
-                              !state.excluded.day?.length;
+                              ? !!state.tonight
+                              : !state.tonight &&
+                                state.filters.day?.length === 1 &&
+                                state.filters.day[0] === id &&
+                                !state.excluded.day?.length;
                         return (
                           <button
                             key={id}
@@ -769,10 +781,21 @@ export function App() {
                                   : undefined
                             }
                             aria-pressed={active}
-                            onClick={() => change(id === "evening" ? eveningShortcut(state) : dateShortcut(state, id))}
+                            onClick={() =>
+                              change(
+                                id === "evening" ? eveningShortcut(state) : dateShortcut(state, id),
+                              )
+                            }
                           >
                             {label}
-                            {id !== "tonight" && <small> {id === "evening" ? (counts?.time.get("evening") ?? 0) : (counts?.day.get(id) ?? 0)}</small>}
+                            {id !== "tonight" && (
+                              <small>
+                                {" "}
+                                {id === "evening"
+                                  ? (counts?.time.get("evening") ?? 0)
+                                  : (counts?.day.get(id) ?? 0)}
+                              </small>
+                            )}
                           </button>
                         );
                       })}
@@ -829,7 +852,7 @@ export function App() {
                     </p>
                   )}
                   {state.path === "/events" && <EventTypeFilter state={state} onChange={change} />}
-                  <p role="status" aria-live="polite">
+                  <p class="result-status" role="status" aria-live="polite">
                     <strong>
                       {resultCount.toLocaleString("en-GB")}{" "}
                       {state.path === "/events"
@@ -840,7 +863,7 @@ export function App() {
                           ? "film"
                           : "films"}
                     </strong>{" "}
-                    matching your choices
+                    <span class="result-context">matching your choices</span>
                   </p>
                   <div class="active-filters" role="group" aria-label="Active filters">
                     {hasActiveChoices && (
@@ -931,11 +954,6 @@ export function App() {
                           NOT {filterLabel(key, id, catalogue.meta)} ×
                         </button>
                       )),
-                    )}
-                    {state.watchlist && !prototypeEnabled && (
-                      <button onClick={() => change({ watchlist: false, page: 1 })}>
-                        My watchlist ×
-                      </button>
                     )}
                     {state.short && (
                       <button onClick={() => change({ short: false, page: 1 })}>

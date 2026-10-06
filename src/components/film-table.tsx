@@ -1,4 +1,4 @@
-import { FilmFriends } from "./friends-prototype";
+import { FilmFriends } from "./friends";
 import { displayTitle, type DisplayState } from "../lib/display";
 import { letterboxdSlug } from "../shared/account";
 import { clearFilters } from "../lib/filters";

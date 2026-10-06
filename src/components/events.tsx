@@ -1,4 +1,4 @@
-import { FilmFriends } from "./friends-prototype";
+import { FilmFriends } from "./friends";
 import { Fragment } from "preact";
 import { useState } from "preact/hooks";
 import { EVENT_TYPES } from "../data/event-rules";

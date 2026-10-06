@@ -200,3 +200,42 @@ Production deployment applies 0006 automatically. Apply pending migrations to an
 isolated preview before testing it. Replay
 `npm run e2e:accounts -- tests/auth/calendar.spec.ts` for recorded desktop/390px
 save, persistence, failed-save retry, export, removal and account-isolation flows.
+
+## Friends and temporary watchlists
+
+Migration `0007_friends.sql` adds unique, case-insensitive app usernames, pending/accepted
+friendships and the shared-film email preference. App usernames are separate from Letterboxd
+handles. Choose one in Friends beside Account and Settings, then request another app username.
+Only the recipient can accept. Removing a friend or deleting either account revokes access;
+account deletion cascades through both sides of the relationship. Friendships and pending
+requests are capped at 1,000 per account. Lists are searchable and shown 30 friends at a time.
+
+Every film page, including Events, Radar, Release calendar and My calendar, has a Watchlists
+control. Select a friend, your own list, or Any friend's watchlist; select All/Any for multiple
+lists. The Watchlist page always stays inside your own list. Up to 20 individual lists may be
+selected together. Accepted friend metadata and summaries load independently of full lists;
+full slugs are fetched only for selected friends. Film annotations show at most three friend
+usernames and the remaining count. Pending and stale/error imports are excluded from aggregate
+friend matches; individually selected stale lists show their last successful import with a notice.
+
+Use a Letterboxd watchlist works for guests and signed-in users. It reads public pages through
+`POST /api/watchlists/public`, validates each page and the complete unique count, and installs a
+filter only after the whole import succeeds. Cancellation and failures discard partial results.
+Pages are cached for one hour, with a global one-external-fetch-per-second reservation and an
+IP request quota. Temporary slugs and filter choices live in session storage, partitioned by
+account/guest identity. They are never friendships or included in the digest. This is the same
+public HTML source as account imports; Letterboxd may refuse reads, and the UI reports that.
+
+Weekly digests add current shared films with fresh accepted-friend imports, independently of
+normal previously-announced-film suppression. A shared-only digest can therefore be sent even
+when no new personal screening alert exists. The section is optional in Friends and still uses
+the account's existing weekly subscription. It links to `/watchlist?friends=1`, which selects
+Any friend's watchlist within the recipient's own list. New payloads use `digest-v3/` keys;
+existing pending deliveries continue to retry their original stored payload and key.
+
+Replay `npm run e2e:accounts -- tests/auth/friends.spec.ts` after a fixture build. This records
+real local Functions/D1 request acceptance, 500 additional friends, bounded rendering, search,
+filters across all nine pages, cached public guest comparisons, reloads and account isolation
+at desktop and 390px. It uses synthetic users and a locally seeded public-page cache and sends
+no mail or external watchlist request. Server tests also enforce ownership, uniqueness,
+removal, stale matches and selected-list bounds with 500 friends and 50,000 watchlist entries.

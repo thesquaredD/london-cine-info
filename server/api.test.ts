@@ -9,7 +9,7 @@ import {
 import { digestAlertQuery } from "../scripts/lib/digest-store";
 import type { DigestFilm } from "../scripts/lib/digest";
 import { syncQueries, failedSyncQueries } from "../scripts/lib/watchlist-store";
-import { beforeAll, afterAll, it, expect } from "vitest";
+import { beforeAll, afterAll, it, expect, vi } from "vitest";
 import { readdir, readFile } from "node:fs/promises";
 import { Miniflare, convertV4MiniflareOptions } from "miniflare";
 import { onRequest } from "../functions/api/[[path]]";
@@ -372,7 +372,7 @@ it("queued digests freeze retries, complete atomically and respect opt-out/delet
   const first = (await queue("2026-10-04", "first-id", "First version")).results[0]!;
   const rerun = (await queue("2026-10-04", "second-id", "Changed build")).results[0]!;
   expect(rerun.payload).toBe(first.payload);
-  expect(rerun.idempotency_key).toBe("digest-v2/first-id");
+  expect(rerun.idempotency_key).toBe("digest-v3/first-id");
   const attempt = (await run(attemptDigestQuery(rerun, 0, 1100))).results[0]!;
   expect(attempt.attempted_at).toBe(1100);
   expect((await run(attemptDigestQuery(attempt, 0, 1200))).results[0]!.attempted_at).toBe(1100);
@@ -457,7 +457,7 @@ it("an uncertain older delivery survives cleanup and blocks a later day's new se
   await run(pruneDigestQuery(1100 + 8 * 86400));
   const pending = (await run(pendingDigestQuery(user.id, "2026-10-11", "uncertain-test")))
     .results[0]!;
-  expect(pending.idempotency_key).toBe("digest-v2/uncertain-key");
+  expect(pending.idempotency_key).toBe("digest-v3/uncertain-key");
   expect((await run(attemptDigestQuery(pending, 0, 1100 + 8 * 86400))).results).toHaveLength(0);
 });
 
@@ -629,3 +629,220 @@ it("saves deduplicated screenings per account, exports owned events and cascades
       .first("n"),
   ).toBe(0);
 });
+
+async function socialUser(username: string | null) {
+  const id = crypto.randomUUID(),
+    raw = crypto.randomUUID().replaceAll("-", "").padEnd(64, "a");
+  await env.DB.prepare(
+    "INSERT INTO users(id,email,app_username,letterboxd_username,unsubscribe_token,created_at) VALUES (?,?,?,?,?,?)",
+  )
+    .bind(
+      id,
+      `${id}@friends.test`,
+      username,
+      username,
+      crypto.randomUUID(),
+      Math.floor(Date.now() / 1000),
+    )
+    .run();
+  await env.DB.prepare("INSERT INTO sessions(hash,user_id,expires_at) VALUES (?,?,?)")
+    .bind(await hash(raw), id, Math.floor(Date.now() / 1000) + 3600)
+    .run();
+  return { id, cookie: `__Host-session=${raw}` };
+}
+async function socialImport(id: string, slugs: string[], error: string | null = null) {
+  const timestamp = Math.floor(Date.now() / 1000);
+  await env.DB.batch([
+    env.DB.prepare(
+      "INSERT INTO watchlist_sync(user_id,fetched_at,count_parsed,completed_at,error) VALUES (?,?,?,?,?) ON CONFLICT(user_id) DO UPDATE SET fetched_at=excluded.fetched_at,count_parsed=excluded.count_parsed,error=excluded.error",
+    ).bind(id, timestamp, slugs.length, timestamp, error),
+    ...slugs.map((slug) =>
+      env.DB.prepare(
+        "INSERT OR IGNORE INTO watchlist_items(user_id,slug,added_at) VALUES (?,?,?)",
+      ).bind(id, slug, timestamp),
+    ),
+  ]);
+}
+it("claims unique app usernames atomically, including case-insensitive conflicts", async () => {
+  const a = await socialUser(null),
+    b = await socialUser(null);
+  const responses = await Promise.all([
+    request("/api/friends/profile", "PUT", { username: "Cinema_Friend" }, a.cookie),
+    request("/api/friends/profile", "PUT", { username: "cinema_friend" }, b.cookie),
+  ]);
+  expect(responses.map((r) => r.status).sort()).toEqual([200, 409]);
+  expect(
+    (
+      await request(
+        "/api/friends/profile",
+        "PUT",
+        { username: "https://letterboxd.com/test" },
+        a.cookie,
+      )
+    ).status,
+  ).toBe(400);
+});
+it("requires acceptance, protects third-party requests and revokes access after removal", async () => {
+  const a = await socialUser("sender_test"),
+    b = await socialUser("receiver_test"),
+    other = await socialUser("outsider_test");
+  await socialImport(b.id, ["shared-film", "their-film"]);
+  expect(
+    (await request("/api/friends", "POST", { username: "receiver_test" }, a.cookie)).status,
+  ).toBe(201);
+  expect((await request("/api/friends/watchlists", "POST", { ids: [b.id] }, a.cookie)).status).toBe(
+    409,
+  );
+  expect((await request("/api/friends", "PUT", { id: b.id }, a.cookie)).status).toBe(409);
+  expect((await request("/api/friends", "PUT", { id: a.id }, other.cookie)).status).toBe(409);
+  expect((await request("/api/friends", "PUT", { id: a.id }, b.cookie)).status).toBe(200);
+  const lists = (await (
+    await request("/api/friends/watchlists", "POST", { ids: [b.id] }, a.cookie)
+  ).json()) as { watchlists: { slugs: string[] }[] };
+  expect(lists.watchlists[0]?.slugs).toEqual(["shared-film", "their-film"]);
+  expect(
+    (await request("/api/friends/watchlists", "POST", { ids: [b.id] }, other.cookie)).status,
+  ).toBe(409);
+  const overlaps = (await (
+    await request("/api/friends/matches", "POST", { slugs: ["shared-film", "unwatched"] }, a.cookie)
+  ).json()) as { matches: { slug: string; count: number; usernames: string[] }[] };
+  expect(overlaps.matches).toEqual([
+    { slug: "shared-film", count: 1, usernames: ["receiver_test"] },
+  ]);
+  expect((await request("/api/friends", "DELETE", { id: b.id }, other.cookie)).status).toBe(200);
+  expect((await request("/api/friends/watchlists", "POST", { ids: [b.id] }, a.cookie)).status).toBe(
+    200,
+  );
+  expect((await request("/api/friends", "DELETE", { id: a.id }, b.cookie)).status).toBe(200);
+  expect((await request("/api/friends/watchlists", "POST", { ids: [b.id] }, a.cookie)).status).toBe(
+    409,
+  );
+});
+it("keeps pending and stale friends out of shared-film matches and cascades deletions", async () => {
+  const a = await socialUser("stale_owner"),
+    b = await socialUser("stale_friend");
+  await socialImport(b.id, ["shared-film"], "unavailable");
+  await request("/api/friends", "POST", { username: "stale_friend" }, a.cookie);
+  await request("/api/friends", "PUT", { id: a.id }, b.cookie);
+  expect(
+    (
+      (await (
+        await request("/api/friends/matches", "POST", { slugs: ["shared-film"] }, a.cookie)
+      ).json()) as { matches: unknown[] }
+    ).matches,
+  ).toEqual([]);
+  expect((await request("/api/friends/matches", "POST", { slugs: ["shared-film"] })).status).toBe(
+    401,
+  );
+  await request("/api/me", "DELETE", {}, b.cookie);
+  expect(
+    (
+      (await (await request("/api/friends", "GET", undefined, a.cookie)).json()) as {
+        friends: unknown[];
+      }
+    ).friends,
+  ).toEqual([]);
+});
+it("reads public lists without creating friendships, caches pages and reports inaccessible lists", async () => {
+  const external = vi
+    .spyOn(globalThis, "fetch")
+    .mockResolvedValue(
+      new Response(
+        '<span class="js-watchlist-count">2 films</span><div data-item-slug="shared-film" data-target-link="/film/shared-film/"></div><div data-item-slug="other-film" data-target-link="/film/other-film/"></div>',
+      ),
+    );
+  try {
+    expect((await request("/api/watchlists/public", "POST", { username: "../admin" })).status).toBe(
+      400,
+    );
+    expect(external).not.toHaveBeenCalled();
+    const first = await request("/api/watchlists/public", "POST", { username: "Public_Peer" });
+    expect(first.status).toBe(200);
+    expect(await first.json()).toMatchObject({
+      username: "public_peer",
+      count: 2,
+      pages: 1,
+      slugs: ["shared-film", "other-film"],
+    });
+    expect(external).toHaveBeenCalledWith(
+      "https://letterboxd.com/public_peer/watchlist/",
+      expect.objectContaining({ redirect: "error" }),
+    );
+    expect(
+      (await request("/api/watchlists/public", "POST", { username: "public_peer" })).status,
+    ).toBe(200);
+    expect(external).toHaveBeenCalledTimes(1);
+    await env.DB.prepare("UPDATE rate_limits SET expires_at=? WHERE key='letterboxd-public-fetch'")
+      .bind(Math.floor(Date.now() / 1000) + 30)
+      .run();
+    const limited = await request("/api/watchlists/public", "POST", { username: "uncached_peer" });
+    expect(limited.status).toBe(429);
+    expect(limited.headers.get("Retry-After")).toBe("1");
+    await env.DB.prepare("DELETE FROM rate_limits WHERE key='letterboxd-public-fetch'").run();
+    external.mockResolvedValue(new Response("private upstream detail", { status: 403 }));
+    const denied = await request("/api/watchlists/public", "POST", { username: "private_peer" });
+    expect(denied.status).toBe(502);
+    expect(await denied.text()).not.toContain("private upstream detail");
+    expect(
+      await env.DB.prepare(
+        "SELECT payload FROM public_watchlist_pages WHERE username='private_peer'",
+      ).first(),
+    ).toBeNull();
+  } finally {
+    external.mockRestore();
+  }
+});
+it("handles 500 friends with bounded match summaries and selected-list reads", async () => {
+  const owner = await socialUser("stress_owner");
+  const timestamp = Math.floor(Date.now() / 1000);
+  const ids: string[] = [];
+  const stressSlugs = [
+    "stress-shared-film",
+    ...Array.from({ length: 99 }, (_, i) => `stress-film-${i}`),
+  ];
+  for (let offset = 0; offset < 500; offset += 50) {
+    const statements: D1PreparedStatement[] = [];
+    for (let i = offset; i < offset + 50; i++) {
+      const id = crypto.randomUUID();
+      ids.push(id);
+      const username = `stress_friend_${String(i).padStart(3, "0")}`;
+      const [low, high] = [owner.id, id].sort();
+      statements.push(
+        env.DB.prepare(
+          "INSERT INTO users(id,email,app_username,letterboxd_username,unsubscribe_token,created_at) VALUES (?,?,?,?,?,?)",
+        ).bind(id, `${id}@stress.test`, username, username, id, timestamp),
+        env.DB.prepare(
+          "INSERT INTO friendships(user_low,user_high,requested_by,status,created_at,accepted_at) VALUES (?,?,?,'accepted',?,?)",
+        ).bind(low, high, id, timestamp, timestamp),
+        env.DB.prepare(
+          "INSERT INTO watchlist_sync(user_id,fetched_at,count_parsed,completed_at) VALUES (?,?,?,?)",
+        ).bind(id, timestamp, stressSlugs.length, timestamp),
+        env.DB.prepare(
+          "INSERT INTO watchlist_items(user_id,slug,added_at) SELECT ?,value,? FROM json_each(?)",
+        ).bind(id, timestamp, JSON.stringify(stressSlugs)),
+      );
+    }
+    await env.DB.batch(statements);
+  }
+  const started = performance.now();
+  const response = await request("/api/friends", "GET", undefined, owner.cookie);
+  const friends = ((await response.json()) as { friends: unknown[] }).friends;
+  expect(friends).toHaveLength(500);
+  const result = (await (
+    await request("/api/friends/matches", "POST", { slugs: stressSlugs }, owner.cookie)
+  ).json()) as { matches: { count: number; usernames: string[] }[] };
+  expect(result.matches).toHaveLength(100);
+  expect(result.matches.every((m) => m.count === 500 && m.usernames.length === 3)).toBe(true);
+  const lists = (await (
+    await request("/api/friends/watchlists", "POST", { ids: ids.slice(0, 20) }, owner.cookie)
+  ).json()) as { watchlists: { slugs: string[] }[] };
+  expect(lists.watchlists).toHaveLength(20);
+  expect(lists.watchlists.every((w) => w.slugs.length === 100)).toBe(true);
+  expect(
+    (await request("/api/friends/watchlists", "POST", { ids: ids.slice(0, 21) }, owner.cookie))
+      .status,
+  ).toBe(400);
+  console.log(
+    `500 friends / 50,000 watchlist entries: API reads and summary in ${Math.round(performance.now() - started)} ms`,
+  );
+}, 30000);

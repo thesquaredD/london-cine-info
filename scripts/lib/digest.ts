@@ -20,6 +20,7 @@ export type Digest = {
   later: DigestFilm[];
   count: number;
   today: string;
+  shared?: { entry: DigestFilm; usernames: string[]; friendCount: number }[];
 };
 
 // now and alert timestamps are seconds; showtime timestamps are milliseconds.
@@ -169,7 +170,9 @@ function displayFormats(formats: string[]): string[] {
   ];
 }
 export const digestSubject = (digest: Digest) =>
-  `${digest.count} of your watchlist films screen in London this week`;
+  digest.count
+    ? `${digest.count} of your watchlist films screen in London this week`
+    : `${digest.shared?.length ?? 0} films you and your friends can see in London`;
 const filmUrl = (entry: DigestFilm, base: string) =>
   `${base}/watchlist?q=${encodeURIComponent(entry.film.ti)}`;
 const info = (film: Film) =>
@@ -197,6 +200,21 @@ export function digestText(
   unsubscribe: string,
 ): string {
   const parts = [digestSubject(digest), "Screenings in the next ten days:"];
+  if (digest.shared?.length)
+    parts.push(
+      "See something with friends",
+      `${digest.shared.length} films on your watchlist are also on your friends’ lists and screening in the next ten days.`,
+      ...digest.shared.slice(0, 6).map(
+        ({
+          entry,
+          usernames,
+          friendCount,
+        }) => `${entry.film.ti} — with ${usernames.map((u) => `@${u}`).join(", ")}${friendCount > usernames.length ? ` and ${friendCount - usernames.length} more friends` : ""}
+${screeningLines(entry, venues)[0]?.label ?? ""}
+${filmUrl(entry, base)}`,
+      ),
+      `View shared films: ${base}/watchlist?friends=1`,
+    );
   for (const entry of digest.cards) {
     const lines = screeningLines(entry, venues);
     const shown = lines.slice(0, 4);
@@ -246,6 +264,15 @@ export function digestHtml(
   base: string,
   unsubscribe: string,
 ): string {
+  const shared = digest.shared?.length
+    ? `<tr><td style="padding:0 16px 20px"><div style="font-size:18px;font-weight:500">See something with friends</div><p>${digest.shared.length} films you both want to see have screenings in the next ten days.</p>${digest.shared
+        .slice(0, 6)
+        .map(
+          ({ entry, usernames, friendCount }) =>
+            `<div style="padding:8px 0;border-bottom:1px solid #cccccc">${link(entry.film.ti, filmUrl(entry, base))}<div style="font-size:12px;color:#555555">With ${escape(usernames.map((u) => `@${u}`).join(", "))}${friendCount > usernames.length ? ` and ${friendCount - usernames.length} more friends` : ""}</div><div style="font-size:12px">${escape(screeningLines(entry, venues)[0]?.label ?? "")}</div></div>`,
+        )
+        .join("")}<p>${link("View films in common →", `${base}/watchlist?friends=1`)}</p></td></tr>`
+    : "";
   const cards = digest.cards
     .map((entry) => {
       const lines = screeningLines(entry, venues).slice(0, 4);
@@ -269,5 +296,5 @@ export function digestHtml(
   const also = digest.also.length
     ? `<tr><td style="padding:8px 16px"><div style="font-size:16px;font-weight:500;margin-bottom:8px">Also in the next ten days</div><table role="presentation" width="100%" cellspacing="0" cellpadding="0">${digest.also.map((entry) => `<tr><td width="36" valign="top" style="padding:6px 8px 6px 0">${poster(entry.film, 28)}</td><td style="padding:6px 0">${link(entry.film.ti, filmUrl(entry, base))} ${entry.screenings.every((row) => row.soldOut) ? chip("Sold out", true) : ""}<div style="font-size:12px;color:#555555">${escape(screeningLines({ ...entry, screenings: entry.screenings.slice(0, 1) }, venues)[0]!.label)}</div></td></tr>`).join("")}</table></td></tr>`
     : "";
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escape(digestSubject(digest))}</title></head><body style="margin:0;background:#eaeaea;font:14px Arial,Helvetica,sans-serif;color:#222222"><table role="presentation" width="100%" cellspacing="0" cellpadding="0"><tr><td align="center"><table role="presentation" width="600" cellspacing="0" cellpadding="0" style="width:100%;max-width:600px;table-layout:fixed"><tr><td style="background:#000000;color:#ffffff;padding:20px 16px;font-size:22px;font-weight:500">LONDON CINÉ INFO</td></tr><tr><td style="padding:20px 16px"><div style="font-size:20px;font-weight:500">${escape(digestSubject(digest))}</div><p style="margin-bottom:0">Your next ten days at the cinema.</p></td></tr>${cards}${also}<tr><td style="padding:16px;font-size:12px;line-height:1.6;border-top:1px solid #cccccc">${laterText(digest) ? `<p>${escape(laterText(digest))}</p>` : ""}<p>Screening data from ${link("Clusterflick", "https://clusterflick.com")}. Availability can change; confirm with the cinema.</p>${link("Unsubscribe", unsubscribe)} · ${link("Change the day", `${base}/watchlist`)} · ${link("Privacy", `${base}/privacy`)}</td></tr></table></td></tr></table></body></html>`;
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escape(digestSubject(digest))}</title></head><body style="margin:0;background:#eaeaea;font:14px Arial,Helvetica,sans-serif;color:#222222"><table role="presentation" width="100%" cellspacing="0" cellpadding="0"><tr><td align="center"><table role="presentation" width="600" cellspacing="0" cellpadding="0" style="width:100%;max-width:600px;table-layout:fixed"><tr><td style="background:#000000;color:#ffffff;padding:20px 16px;font-size:22px;font-weight:500">LONDON CINÉ INFO</td></tr><tr><td style="padding:20px 16px"><div style="font-size:20px;font-weight:500">${escape(digestSubject(digest))}</div><p style="margin-bottom:0">Your next ten days at the cinema.</p></td></tr>${shared}${cards}${also}<tr><td style="padding:16px;font-size:12px;line-height:1.6;border-top:1px solid #cccccc">${laterText(digest) ? `<p>${escape(laterText(digest))}</p>` : ""}<p>Screening data from ${link("Clusterflick", "https://clusterflick.com")}. Availability can change; confirm with the cinema.</p>${link("Unsubscribe", unsubscribe)} · ${link("Change the day", `${base}/watchlist`)} · ${link("Privacy", `${base}/privacy`)}</td></tr></table></td></tr></table></body></html>`;
 }

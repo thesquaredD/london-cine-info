@@ -164,3 +164,24 @@ it("shows four lines, remaining count, flags, metadata and escapes all untrusted
     digestHtml(tomorrow, venues, "https://example.com", "https://example.com/unsubscribe"),
   ).toContain("Tomorrow");
 });
+
+it("shows current friend overlaps even when the film was already announced, with bounded names", async () => {
+  const films = [film("friend-film")],
+    rows = { "friend-film": [row("2026-10-05T18:00:00Z")] };
+  const baseline = await build(films, rows);
+  const digest = await build(films, rows, [
+    { slug: "friend-film", sent_at: now, last_screening_at: baseline.cards[0]!.lastScreeningAt },
+  ]);
+  expect(digest.count).toBe(0);
+  digest.shared = [
+    { entry: baseline.cards[0]!, usernames: ["alice", "sam", "maya"], friendCount: 500 },
+  ];
+  expect(digestSubject(digest)).toContain("you and your friends");
+  const text = digestText(digest, venues, "https://example.com", "https://example.com/unsubscribe");
+  expect(text).toContain("See something with friends");
+  expect(text).toContain("497 more friends");
+  expect(text).toContain("/watchlist?friends=1");
+  const html = digestHtml(digest, venues, "https://example.com", "https://example.com/unsubscribe");
+  expect(html).toContain("See something with friends");
+  expect(html).toContain("friend-film");
+});

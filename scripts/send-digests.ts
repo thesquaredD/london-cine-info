@@ -1,3 +1,4 @@
+import { friendMatchesSql } from "../server/friend-queries";
 import { readFile } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
 import { hash } from "../server/security";
@@ -41,9 +42,10 @@ const [users] = await d1<{
   email: string;
   unsubscribe_token: string;
   letterboxd_username: string;
+  friends_digest: number;
 }>([
   {
-    sql: `SELECT u.id,u.email,u.unsubscribe_token,u.letterboxd_username FROM users u JOIN watchlist_sync w ON w.user_id=u.id WHERE digest_weekday=? AND letterboxd_username IS NOT NULL AND w.error IS NULL AND w.fetched_at>?`,
+    sql: `SELECT u.id,u.email,u.unsubscribe_token,u.letterboxd_username,u.friends_digest FROM users u JOIN watchlist_sync w ON w.user_id=u.id WHERE digest_weekday=? AND letterboxd_username IS NOT NULL AND w.error IS NULL AND w.fetched_at>?`,
     params: [weekday, now - 2 * 86400],
   },
 ]);
@@ -85,7 +87,22 @@ for (const user of users!) {
       now,
       loadShowtimes,
     );
-    if (!digest.count) continue;
+    if (user.friends_digest) {
+      const slugs = items!.map((row) => row.slug);
+      const [matches] = await d1<{ slug: string; count: number; usernames: string }>([
+        { sql: friendMatchesSql, params: [user.id, now - 2 * 86400, JSON.stringify(slugs)] },
+      ]);
+      if (matches!.length) {
+        const bySlug = new Map(matches!.map((m) => [m.slug, m]));
+        const current = await digestFilms(films, new Set(bySlug.keys()), [], now, loadShowtimes);
+        digest.shared = [...current.cards, ...current.also].map((entry) => ({
+          entry,
+          usernames: JSON.parse(bySlug.get(entry.slug)!.usernames) as string[],
+          friendCount: bySlug.get(entry.slug)!.count,
+        }));
+      }
+    }
+    if (!digest.count && !digest.shared?.length) continue;
     const base = process.env.SITE_URL ?? "https://london-cine.info";
     const unsubscribe = `${base}/unsubscribe?token=${user.unsubscribe_token}`;
     const [queued] = await d1<Delivery>([

@@ -1,5 +1,7 @@
 export type Account = {
   id: string;
+  appUsername?: string | null;
+  friendsDigest?: boolean;
   email: string;
   username: string | null;
   digestWeekday: number | null;

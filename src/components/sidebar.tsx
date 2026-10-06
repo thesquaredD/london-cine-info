@@ -1,4 +1,4 @@
-import { FriendsButton } from "./friends-prototype";
+import { FriendsButton } from "./friends";
 import { AccountPanel } from "./account";
 import type { AccountState } from "../lib/account";
 import type { DataMeta } from "../shared/data";
