@@ -1,3 +1,4 @@
+import { capture } from "../lib/analytics";
 import { FilmFriends } from "./friends";
 import { displayTitle, type DisplayState } from "../lib/display";
 import { letterboxdSlug } from "../shared/account";
@@ -136,7 +137,16 @@ export function FilmTable({
                       class="film-title"
                       aria-expanded={expanded === key}
                       aria-controls={`details-${state.radarSection ?? ""}${key}`}
-                      onClick={() => onExpand(expanded === key ? null : key)}
+                      onClick={() => {
+                        if (expanded !== key)
+                          capture("film_opened", {
+                            film_id: film.id,
+                            path: state.path,
+                            on_watchlist: marked(film),
+                            watchlist: state.path === "/watchlist" || !!state.watchlist,
+                          });
+                        onExpand(expanded === key ? null : key);
+                      }}
                     >
                       <span class="expansion-icon" aria-hidden="true">
                         {expanded === key ? "▾" : "▸"}

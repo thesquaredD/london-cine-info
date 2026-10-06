@@ -490,6 +490,16 @@ export function Privacy() {
         providers.
       </p>
       <p>
+        We use PostHog EU Cloud to understand visitor growth and improve the site. Analytics uses a
+        random identifier stored in your browser and, after sign-in, an opaque account ID to connect
+        visits. We record page visits, referral domains and campaign labels, search text and result
+        counts, filter choices, film views, booking-link clicks, account and friendship milestones,
+        shared-watchlist use and import outcomes. We do not send your email, app or Letterboxd
+        usernames, friend identities or sign-in tokens to PostHog. We do not record your screen or
+        replay sessions. Browser analytics respects Do Not Track. Earlier searches cannot be
+        recovered.
+      </p>
+      <p>
         Weekly screening emails are optional and off by default. Unsubscribe using a link in any
         email or turn them off in Account. Delete account removes your account, sessions, watchlist
         friendships, requests, saved screenings and alert history from the active database

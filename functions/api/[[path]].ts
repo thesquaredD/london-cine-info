@@ -1,3 +1,10 @@
+import {
+  sendAnalytics,
+  requestAnalyticsEnabled,
+  requestAnalyticsId,
+  requestAnalyticsContext,
+} from "../../server/analytics";
+import type { AnalyticsEvent, AnalyticsProperties } from "../../src/shared/analytics";
 import { friendsApi } from "../../server/friends";
 import { publicWatchlistApi } from "../../server/public-watchlists";
 import {
@@ -128,7 +135,18 @@ async function dispatch(env: Env, user: User) {
   );
   if (!response.ok) throw new Error("Refresh could not be scheduled");
 }
-export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
+const handleRequest: PagesFunction<Env> = async ({ request, env, waitUntil }) => {
+  const track = (event: AnalyticsEvent, id: string, properties: AnalyticsProperties = {}) => {
+    const enabled =
+      requestAnalyticsEnabled(request, env.POSTHOG_ENABLED) &&
+      request.headers.get("X-Analytics-Enabled") !== "0";
+    if (!enabled) return;
+    const delivery = sendAnalytics(true, id, event, {
+      ...requestAnalyticsContext(request),
+      ...properties,
+    });
+    if (waitUntil) waitUntil(delivery);
+  };
   try {
     const path = new URL(request.url).pathname,
       method = request.method;
@@ -201,6 +219,7 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
         await env.DB.prepare("DELETE FROM auth_tokens WHERE hash=?").bind(tokenHash).run();
         return json({ error: "Email could not be sent. Please try later." }, 503);
       }
+      track("sign_in_requested", requestAnalyticsId(request) ?? `account:${user!.id}`);
       return json({ ok: true, ...(dev ? { link } : {}) });
     }
     // Confirmation POST keeps email scanners from consuming single-use links.
@@ -212,8 +231,11 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
         sessionHash = await hash(rawSession);
       const result = await env.DB.batch([
         env.DB.prepare(
-          "INSERT INTO sessions(hash,user_id,expires_at) SELECT ?,user_id,? FROM auth_tokens WHERE hash=? AND expires_at>?",
+          "INSERT INTO sessions(hash,user_id,expires_at) SELECT ?,user_id,? FROM auth_tokens WHERE hash=? AND expires_at>? RETURNING user_id",
         ).bind(sessionHash, now() + SESSION_SECONDS, authHash, now()),
+        env.DB.prepare(
+          "UPDATE users SET analytics_signup_completed=1 WHERE analytics_signup_completed=0 AND id=(SELECT user_id FROM sessions WHERE hash=?)",
+        ).bind(sessionHash),
         env.DB.prepare("DELETE FROM auth_tokens WHERE hash=?").bind(authHash),
       ]);
       if (!result[0]?.meta.changes)
@@ -221,7 +243,10 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
           { error: "This sign-in link has expired or was already used. Request a new one." },
           400,
         );
-      return json({ ok: true }, 200, { "Set-Cookie": sessionCookie(rawSession) });
+      const userId = (result[0]!.results[0] as { user_id: string }).user_id;
+      track("sign_in_verified", `account:${userId}`);
+      if (result[1]?.meta.changes) track("signup_completed", `account:${userId}`);
+      return json({ ok: true, userId }, 200, { "Set-Cookie": sessionCookie(rawSession) });
     }
     if (path === "/api/unsubscribe" && method === "POST") {
       if (typeof body.token !== "string" || !/^[a-f0-9]{64}$/.test(body.token))
@@ -252,7 +277,9 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
     if (path.startsWith("/api/friends")) {
       if (["/api/friends", "/api/friends/profile"].includes(path) && method !== "GET")
         await quota(env, `friends:${user.id}`, 120, 3600);
-      const response = await friendsApi(path, method, body, user, env);
+      const response = await friendsApi(path, method, body, user, env, (event, properties) =>
+        track(event, `account:${user.id}`, properties),
+      );
       if (response) return response;
     }
     if (path === "/api/cinemas" && ["GET", "PUT", "POST"].includes(method)) {
@@ -379,6 +406,7 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
     }
     if (path === "/api/me" && method === "DELETE") {
       await env.DB.prepare("DELETE FROM users WHERE id=?").bind(user.id).run();
+      track("account_deleted", `account:${user.id}`);
       return json({ ok: true }, 200, { "Set-Cookie": sessionCookie("", 0) });
     }
     if (path === "/api/me" && method === "PUT") {
@@ -409,6 +437,16 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
         for (const table of ["watchlist_items", "watchlist_sync", "alerts_sent"])
           statements.push(env.DB.prepare(`DELETE FROM ${table} WHERE user_id=?`).bind(user.id));
       await env.DB.batch(statements);
+      if (changed)
+        track(username ? "watchlist_connected" : "watchlist_disconnected", `account:${user.id}`, {
+          connected: !!username,
+        });
+      const nextDay = username ? day : null;
+      if (nextDay !== user.digest_weekday)
+        track("digest_preference_changed", `account:${user.id}`, {
+          enabled: nextDay !== null,
+          weekday: nextDay as number | null,
+        });
       return json({ ok: true });
     }
     if (path === "/api/watchlist" && method === "GET") {
@@ -462,6 +500,11 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
       try {
         if (!localDevelopment(request, env.DEV_MAGIC_LINK)) await dispatch(env, user);
       } catch {
+        track("watchlist_import_failed", `account:${user.id}`, {
+          failure_kind: "dispatch",
+          import_kind: "manual",
+          $insert_id: attempt,
+        });
         await env.DB.batch([
           env.DB.prepare(
             "UPDATE watchlist_sync SET completed_at=?,error=? WHERE user_id=? AND attempt_id=?",
@@ -478,6 +521,10 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
           503,
         );
       }
+      track("watchlist_import_requested", `account:${user.id}`, {
+        import_kind: "manual",
+        $insert_id: attempt,
+      });
       return json({ ok: true }, 202);
     }
     return json({ error: "Not found" }, 404);
@@ -486,4 +533,44 @@ export const onRequest: PagesFunction<Env> = async ({ request, env }) => {
       return json({ error: error.message }, 429, { "Retry-After": String(error.seconds) });
     return json({ error: "The request could not be completed. Please try again later." }, 500);
   }
+};
+
+export const onRequest: PagesFunction<Env> = async (context) => {
+  const response = await handleRequest(context);
+  const id = requestAnalyticsId(context.request);
+  const endpoint = new URL(context.request.url).pathname;
+  const trackedEndpoints = [
+    "/api/auth/request",
+    "/api/auth/verify",
+    "/api/me",
+    "/api/watchlist",
+    "/api/watchlist/refresh",
+    "/api/friends",
+    "/api/friends/profile",
+    "/api/friends/watchlists",
+    "/api/friends/matches",
+    "/api/watchlists/public",
+  ];
+  if (
+    response.status >= 400 &&
+    id &&
+    trackedEndpoints.includes(endpoint) &&
+    requestAnalyticsEnabled(context.request, context.env.POSTHOG_ENABLED) &&
+    context.request.headers.get("X-Analytics-Enabled") !== "0"
+  ) {
+    const delivery = sendAnalytics(true, id, "api_request_failed", {
+      ...requestAnalyticsContext(context.request),
+      endpoint,
+      method: context.request.method,
+      status: response.status,
+      failure_kind:
+        response.status === 429
+          ? "rate_limited"
+          : response.status >= 500
+            ? "unavailable"
+            : "rejected",
+    });
+    if (context.waitUntil) context.waitUntil(delivery);
+  }
+  return response;
 };

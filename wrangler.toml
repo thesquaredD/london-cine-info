@@ -15,10 +15,12 @@ binding = "RATE_LIMITS"
 id = "0021da90682b42eb90751ef2d5e56a0c"
 
 [vars]
+POSTHOG_ENABLED = "true"
 SITE_URL = "https://london-cine.info"
 RESEND_FROM = "London Ciné Info <hello@mail.london-cine.info>"
 
 [env.preview.vars]
+POSTHOG_ENABLED = "false"
 SITE_URL = "https://codex-watchlist.london-cine-info.pages.dev"
 RESEND_FROM = "London Ciné Info <hello@mail.london-cine.info>"
 

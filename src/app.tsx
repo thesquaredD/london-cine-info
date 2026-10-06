@@ -1,3 +1,5 @@
+import { capture } from "./lib/analytics";
+import { useDiscoveryAnalytics } from "./lib/discovery-analytics";
 import { FriendsContext, useFriendsModel } from "./lib/friends";
 import {
   FriendsDialogs,
@@ -288,6 +290,23 @@ export function App() {
     [catalogue, eventsSource, baseFilms, state, now],
   );
   const resultCount = state.path === "/events" ? events.length : selected.length;
+  useDiscoveryAnalytics(
+    state,
+    resultCount,
+    !!catalogue &&
+      PAGES.some((page) => page.path === state.path) &&
+      state.path !== "/my-calendar" &&
+      (!friends.active.length || (!friends.loading && !friends.listLoading && !friends.error)),
+    !!account.user && !!account.watchlist?.fetchedAt && !account.loading && !account.error,
+    {
+      shared_watchlists: friends.active.some((key) => key !== "mine"),
+      selected_friend_count: friends.active.filter((key) => key.startsWith("f:")).length,
+      public_watchlist_count: friends.active.filter((key) => key.startsWith("t:")).length,
+      all_friends: friends.active.includes("friends"),
+      match_mode: friends.choices.mode,
+    },
+    friends.active.join("|"),
+  );
   const counts = useMemo(
     () =>
       catalogue
@@ -381,7 +400,10 @@ export function App() {
     loadCatalogue(controller.signal)
       .then(setCatalogue)
       .catch(() => {
-        if (!controller.signal.aborted) setError(true);
+        if (!controller.signal.aborted) {
+          setError(true);
+          capture("catalogue_load_failed");
+        }
       });
     return () => controller.abort();
   }, [attempt]);
@@ -476,6 +498,7 @@ export function App() {
     setSettingsOpen(true);
   }
   function openAccount() {
+    capture("account_opened");
     closeScreeningCalendar();
     closeQuickFilters();
     // The phone drawer is itself a modal dialog; close it first so dialogs never nest.

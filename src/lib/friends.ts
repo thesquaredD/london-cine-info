@@ -1,3 +1,4 @@
+import { capture } from "./analytics";
 import { createContext } from "preact";
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "preact/hooks";
 import type { Film } from "../shared/data";
@@ -355,16 +356,21 @@ export function useFriendsModel(
   }
   async function addTemporary(raw: string) {
     if (importController.current) return false;
+    const started = Date.now();
+    capture("public_watchlist_import_requested");
     const username = normalizeUsername(raw);
     if (!validLetterboxdUsername(username)) {
+      capture("public_watchlist_import_failed", { failure_kind: "invalid_input" });
       setError("Enter a Letterboxd username, not a profile URL.");
       return false;
     }
     if (choices.temporary.some((t) => t.username === username)) {
+      capture("public_watchlist_import_failed", { failure_kind: "already_loaded" });
       setError("That temporary list is already available.");
       return false;
     }
     if (choices.temporary.length >= 20 || choices.selected.length >= MAX_SELECTED_WATCHLISTS) {
+      capture("public_watchlist_import_failed", { failure_kind: "selection_limit" });
       setError(
         "Remove a list before adding another. Up to 20 temporary or selected lists are supported.",
       );
@@ -437,7 +443,10 @@ export function useFriendsModel(
       }
       if (all.size !== first.count)
         throw new Error("The complete watchlist could not be read. Please try again.");
-      if (controller.signal.aborted || identity.current !== owner) return false;
+      if (controller.signal.aborted || identity.current !== owner) {
+        capture("public_watchlist_import_cancelled", { duration_ms: Date.now() - started });
+        return false;
+      }
       const currentChoices = latestChoices.current;
       if (currentChoices.selected.length >= MAX_SELECTED_WATCHLISTS)
         throw new Error("Remove a selected list before adding another.");
@@ -448,6 +457,10 @@ export function useFriendsModel(
         ],
         selected: [...currentChoices.selected, `t:${username}`],
       });
+      capture("public_watchlist_import_completed", {
+        item_count: all.size,
+        duration_ms: Date.now() - started,
+      });
       setNotice(
         first.count
           ? `@${username} is available for this session.`
@@ -455,6 +468,24 @@ export function useFriendsModel(
       );
       return true;
     } catch (failure) {
+      capture(
+        controller.signal.aborted || identity.current !== owner
+          ? "public_watchlist_import_cancelled"
+          : "public_watchlist_import_failed",
+        {
+          duration_ms: Date.now() - started,
+          failure_kind:
+            failure instanceof AccountError
+              ? failure.status === 429
+                ? "rate_limited"
+                : failure.status === 0
+                  ? "network"
+                  : failure.status >= 500
+                    ? "unavailable"
+                    : "rejected"
+              : "incomplete",
+        },
+      );
       if (!controller.signal.aborted && identity.current === owner)
         setError(failure instanceof Error ? failure.message : "The watchlist could not be read.");
       return false;
