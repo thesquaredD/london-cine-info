@@ -22,7 +22,7 @@ export const RATINGS: { key: RatingKey; name: string; short: string; scale: stri
   { key: "rt", name: "Rotten Tomatoes", short: "RT", scale: "%" },
 ];
 export type SortKey =
-  "title" | "director" | "year" | "watchlist" | "event" | "opportunity" | RatingKey;
+  "title" | "director" | "year" | "runtime" | "watchlist" | "event" | "opportunity" | RatingKey;
 export type ViewState = YearSelection & {
   path: string;
   search: string;
@@ -38,6 +38,8 @@ export type ViewState = YearSelection & {
   filmGauge?: "35mm" | "70mm";
   eventType?: string;
   director: string;
+  /** Explicit default-key sorting still shows its value on mobile. */
+  sortExplicit?: true;
   sort: SortKey;
   direction: "asc" | "desc";
   page: number;
@@ -46,6 +48,7 @@ const sortKeys = [
   "title",
   "director",
   "year",
+  "runtime",
   "watchlist",
   "event",
   "opportunity",
@@ -62,13 +65,20 @@ export function defaultSort(path: string): Pick<ViewState, "sort" | "direction">
 }
 export function hasCustomSort(state: ViewState): boolean {
   const defaults = defaultSort(state.path);
-  return state.sort !== defaults.sort || state.direction !== defaults.direction;
+  return (
+    !!state.sortExplicit || state.sort !== defaults.sort || state.direction !== defaults.direction
+  );
 }
-export function nextSort(state: ViewState, key: SortKey): Pick<ViewState, "sort" | "direction"> {
-  const first = key === "title" || key === "director" || key === "event" ? "asc" : "desc";
-  if (state.sort !== key) return { sort: key, direction: first };
-  if (state.direction === first) return { sort: key, direction: first === "asc" ? "desc" : "asc" };
-  return defaultSort(state.path);
+export function nextSort(
+  state: ViewState,
+  key: SortKey,
+): Pick<ViewState, "sort" | "direction" | "sortExplicit"> {
+  const first =
+    key === "title" || key === "director" || key === "event" || key === "runtime" ? "asc" : "desc";
+  if (state.sort !== key) return { sort: key, direction: first, sortExplicit: undefined };
+  if (state.direction === first)
+    return { sort: key, direction: first === "asc" ? "desc" : "asc", sortExplicit: undefined };
+  return { ...defaultSort(state.path), sortExplicit: undefined };
 }
 export function sortLabel(key: SortKey): string {
   return (
@@ -78,11 +88,12 @@ export function sortLabel(key: SortKey): string {
         title: "Title",
         director: "Director",
         year: "Year",
+        runtime: "Runtime",
         watchlist: "Watchlist",
         event: "Event",
         opportunity: "Radar order",
       } as const
-    )[key as "title" | "director" | "year" | "watchlist" | "event" | "opportunity"]
+    )[key as "title" | "director" | "year" | "runtime" | "watchlist" | "event" | "opportunity"]
   );
 }
 
@@ -175,6 +186,9 @@ export function readView(url: URL): ViewState {
     ...(url.searchParams.get("tonight") === "1" ? { tonight: true } : {}),
     ...(url.searchParams.get("watchlist") === "1" ? { watchlist: true } : {}),
     director: url.searchParams.get("director") ?? "",
+    ...(sort === defaultSort(path).sort && url.searchParams.get("order") !== "asc"
+      ? { sortExplicit: true as const }
+      : {}),
     sort: sortKeys.includes(sort ?? "") ? (sort as SortKey) : defaultSort(path).sort,
     direction: url.searchParams.get("order") === "asc" ? "asc" : "desc",
     page: Math.max(1, Number.parseInt(url.searchParams.get("page") ?? "1", 10) || 1),
@@ -208,7 +222,8 @@ export function viewUrl(state: ViewState): string {
   if (state.tonight) query.set("tonight", "1");
   if (state.watchlist) query.set("watchlist", "1");
   if (state.director) query.set("director", state.director);
-  if (state.sort !== defaultSort(state.path).sort) query.set("sort", state.sort);
+  if (state.sortExplicit || state.sort !== defaultSort(state.path).sort)
+    query.set("sort", state.sort);
   if (state.direction !== "desc") query.set("order", state.direction);
   if (state.page > 1) query.set("page", String(state.page));
   return `${state.path}${query.size ? `?${query}` : ""}`;
@@ -242,6 +257,7 @@ function value(
   if (key === "director")
     return film.di.length ? film.di.map((director) => director.name).join(", ") : null;
   if (key === "year") return film.ye;
+  if (key === "runtime") return film.ru;
   return film.ra[key]?.value ?? null;
 }
 export function sortFilms(

@@ -309,7 +309,10 @@ h3 {
 .director-column {
   width: 24%;
 }
-.film-table th:not(.title-column):not(.director-column):not(.year-column):not(.event-column) {
+.film-table
+  th:not(.title-column):not(.director-column):not(.year-column):not(.event-column):not(
+    .mobile-sort-column
+  ) {
   width: 7%;
 }
 .year-column {
@@ -695,6 +698,19 @@ h3 {
     font-size: 28px;
   }
 }
+.mobile-sort-trigger,
+.mobile-sort-column {
+  display: none;
+}
+.mobile-sort-dialog .account-dialog-body {
+  display: grid;
+  gap: 10px;
+}
+.mobile-sort-dialog select {
+  width: 100%;
+  min-height: 44px;
+  font: inherit;
+}
 @media (max-width: 799px) {
   .app-layout {
     display: block;
@@ -720,6 +736,25 @@ h3 {
   .mobile-hidden {
     display: none;
   }
+  .mobile-sort-trigger {
+    display: block;
+    min-height: 44px;
+    max-width: 100%;
+  }
+  .mobile-sort-column {
+    display: table-cell;
+    width: 35%;
+    font-variant-numeric: tabular-nums;
+  }
+  .film-table th.mobile-sort-column {
+    width: 35%;
+  }
+  .mobile-sort-column .rating-chip small {
+    margin-left: 3px;
+    color: var(--muted);
+    font-size: 11px;
+  }
+
   .title-column {
     width: 65%;
   }
@@ -1428,7 +1463,7 @@ h3 {
   color: var(--muted);
   overflow-wrap: anywhere;
 }
-:is(.account-dialog, .cinema-dialog, .quick-filter-dialog, .settings-dialog) {
+:is(.account-dialog, .mobile-sort-dialog, .cinema-dialog, .quick-filter-dialog, .settings-dialog) {
   width: min(480px, calc(100vw - 32px));
   max-height: 85dvh;
   padding: 0;
@@ -1438,7 +1473,13 @@ h3 {
   color: var(--fg);
   overflow-y: auto;
 }
-:is(.account-dialog, .cinema-dialog, .quick-filter-dialog, .settings-dialog)::backdrop {
+:is(
+  .account-dialog,
+  .mobile-sort-dialog,
+  .cinema-dialog,
+  .quick-filter-dialog,
+  .settings-dialog
+)::backdrop {
   background: rgba(0, 0, 0, 0.45);
 }
 .account-dialog-body {
@@ -1450,22 +1491,28 @@ h3 {
   margin: 0;
   overflow-wrap: anywhere;
 }
-:is(.account-dialog, .cinema-dialog, .quick-filter-dialog, .settings-dialog) form,
-:is(.account-dialog, .cinema-dialog, .quick-filter-dialog, .settings-dialog) fieldset {
+:is(.account-dialog, .mobile-sort-dialog, .cinema-dialog, .quick-filter-dialog, .settings-dialog)
+  form,
+:is(.account-dialog, .mobile-sort-dialog, .cinema-dialog, .quick-filter-dialog, .settings-dialog)
+  fieldset {
   display: grid;
   gap: 8px;
   min-width: 0;
 }
-:is(.account-dialog, .cinema-dialog, .quick-filter-dialog, .settings-dialog) fieldset {
+:is(.account-dialog, .mobile-sort-dialog, .cinema-dialog, .quick-filter-dialog, .settings-dialog)
+  fieldset {
   margin: 0;
   padding: 0;
   border: 0;
 }
-:is(.account-dialog, .cinema-dialog, .quick-filter-dialog, .settings-dialog) label {
+:is(.account-dialog, .mobile-sort-dialog, .cinema-dialog, .quick-filter-dialog, .settings-dialog)
+  label {
   font-weight: 500;
 }
-:is(.account-dialog, .cinema-dialog, .quick-filter-dialog, .settings-dialog) input,
-:is(.account-dialog, .cinema-dialog, .quick-filter-dialog, .settings-dialog) select {
+:is(.account-dialog, .mobile-sort-dialog, .cinema-dialog, .quick-filter-dialog, .settings-dialog)
+  input,
+:is(.account-dialog, .mobile-sort-dialog, .cinema-dialog, .quick-filter-dialog, .settings-dialog)
+  select {
   width: 100%;
   min-width: 0;
   padding: 7px 8px;
@@ -1474,8 +1521,13 @@ h3 {
   background: var(--panel);
   color: inherit;
 }
-:is(.account-dialog, .cinema-dialog, .quick-filter-dialog, .settings-dialog) fieldset p,
-:is(.account-dialog, .cinema-dialog, .quick-filter-dialog, .settings-dialog) .import-status p + p {
+:is(.account-dialog, .mobile-sort-dialog, .cinema-dialog, .quick-filter-dialog, .settings-dialog)
+  fieldset
+  p,
+:is(.account-dialog, .mobile-sort-dialog, .cinema-dialog, .quick-filter-dialog, .settings-dialog)
+  .import-status
+  p
+  + p {
   color: var(--muted);
   font-size: 13px;
 }
@@ -1582,7 +1634,13 @@ h3 {
   justify-self: start;
 }
 @media (max-width: 799px) {
-  :is(.account-dialog, .cinema-dialog, .quick-filter-dialog, .settings-dialog) {
+  :is(
+    .account-dialog,
+    .mobile-sort-dialog,
+    .cinema-dialog,
+    .quick-filter-dialog,
+    .settings-dialog
+  ) {
     position: fixed;
     inset: auto 0 0;
     margin: 0;
@@ -1592,12 +1650,15 @@ h3 {
     border-radius: 4px 4px 0 0;
     padding-bottom: env(safe-area-inset-bottom);
   }
-  :is(.account-dialog, .cinema-dialog, .quick-filter-dialog, .settings-dialog) input,
-  :is(.account-dialog, .cinema-dialog, .quick-filter-dialog, .settings-dialog) select {
+  :is(.account-dialog, .mobile-sort-dialog, .cinema-dialog, .quick-filter-dialog, .settings-dialog)
+    input,
+  :is(.account-dialog, .mobile-sort-dialog, .cinema-dialog, .quick-filter-dialog, .settings-dialog)
+    select {
     font-size: 16px;
     min-height: 44px;
   }
-  :is(.account-dialog, .cinema-dialog, .quick-filter-dialog, .settings-dialog) button,
+  :is(.account-dialog, .mobile-sort-dialog, .cinema-dialog, .quick-filter-dialog, .settings-dialog)
+    button,
   .watchlist-intro button {
     min-height: 44px;
   }
@@ -2053,6 +2114,7 @@ h3 {
   :is(
     .filter-sheet,
     .account-dialog,
+    .mobile-sort-dialog,
     .cinema-dialog,
     .quick-filter-dialog,
     .settings-dialog,

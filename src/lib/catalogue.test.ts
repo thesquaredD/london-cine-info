@@ -192,3 +192,25 @@ it("filters years for films without screenings and constrains other facet counts
   expect(countYears(filterFilms(films, meta, withoutYears))).toEqual(new Map([[2001, 1]]));
   expect(filterFilms(films, meta, { ...state, ...clearFilters("/") })).toHaveLength(3);
 });
+
+it("sorts runtimes in either direction with unknown values last and shares runtime order", () => {
+  const films = [film("unknown"), film("short", { ru: 80 }), film("long", { ru: 150 })];
+  expect(sortFilms(films, "runtime", "asc").map((f) => f.id)).toEqual(["short", "long", "unknown"]);
+  expect(sortFilms(films, "runtime", "desc").map((f) => f.id)).toEqual([
+    "long",
+    "short",
+    "unknown",
+  ]);
+  const state = { ...view, sort: "runtime" as const, direction: "asc" as const };
+  expect(readView(new URL(viewUrl(state), "https://example.com"))).toEqual(state);
+});
+it("preserves explicitly chosen default ranking separately from reset order", async () => {
+  const { hasCustomSort, nextSort } = await import("./catalogue");
+  const explicit = { ...view, sortExplicit: true as const };
+  expect(viewUrl(explicit)).toBe("/?sort=lb");
+  expect(readView(new URL(viewUrl(explicit), "https://example.com"))).toEqual(explicit);
+  expect(hasCustomSort(explicit)).toBe(true);
+  const ascending = { ...explicit, ...nextSort(explicit, "lb") };
+  expect(ascending.direction).toBe("asc");
+  expect(hasCustomSort({ ...ascending, ...nextSort(ascending, "lb") })).toBe(false);
+});

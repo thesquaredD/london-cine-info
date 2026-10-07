@@ -14,6 +14,7 @@ export const FILTERS: { key: FacetKey; label: string }[] = [
   { key: "language", label: "Original language" },
 ];
 export const CLEAR_FILTERS = {
+  sortExplicit: undefined,
   eventType: "",
   filmGauge: undefined,
   decades: [],

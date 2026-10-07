@@ -1,3 +1,4 @@
+import { MobileSort } from "./mobile-sort";
 import { WatchlistsButton } from "./friends";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { FilterControls, type FilterControlsProps } from "./filter-controls";
@@ -135,6 +136,9 @@ export function FilterBar(props: FilterControlsProps & { yearOpenRequest: number
         <span class="desktop-more">More filters</span>
         <span class="mobile-more">Filters</span> ▾
       </button>
+      {!["/events", "/my-calendar"].includes(props.state.path) && (
+        <MobileSort state={props.state} onChange={props.onChange} />
+      )}
       <dialog
         ref={dialog}
         class="filter-sheet"

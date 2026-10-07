@@ -285,3 +285,12 @@ compacted into decade values in shared URLs (`decade=1990&year=2001`). Films wit
 unknown years remain when Year is unrestricted. A single Year chip opens the
 picker for editing or clears the selection. Expansion changes only the picker,
 and counts reflect the other filters while ignoring the current Year choices.
+
+On phones, Sort opens a compact sheet for title, director, year, runtime and the
+four rating sources, with ascending/descending order. A chosen year, runtime or
+rating replaces Director beside Title; filters alone never change the columns.
+Sorting by Title keeps Director. Reset sort restores the page's default order
+and Director column. An explicitly chosen default rating is retained in the URL
+so its mobile column survives sharing and reload. Unknown runtimes sort last.
+Desktop columns stay unchanged. Events keeps its chronological agenda; Release
+calendar sorts films within each date group.
