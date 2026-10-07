@@ -215,7 +215,7 @@ test("multiple choices, correlated screening filters, chips and reset", async ({
   await page.goto("/");
   await expect(page.locator(".film-row")).toHaveCount(6);
   const menu = await openFilters(page);
-  await expect(menu.locator(".filter-picker")).toHaveCount(9);
+  await expect(menu.locator(".filter-picker")).toHaveCount(10);
   await menu.locator("summary").filter({ hasText: /^Day/ }).click();
   await menu
     .locator(".calendar-grid")
@@ -351,6 +351,7 @@ test("filter controls stay stationary through selection, clearing and changing c
     "Format",
     "Genre",
     "Original language",
+    "Year",
   ]) {
     const picker = menu
       .locator(".filter-picker")

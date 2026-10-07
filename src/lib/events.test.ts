@@ -115,3 +115,16 @@ it("matches date, cinema and event type on one occurrence and counts occurrences
   ).toBe(2);
   expect(viewUrl(state)).toContain("eventType=score");
 });
+
+it("year selections exclude events whose film year is unknown or unavailable", () => {
+  const orphan = {
+    ...buildEventIndex(dataset.films, dataset.showtimes)[0]!,
+    id: "missing-film-event",
+    filmId: "missing-film",
+  };
+  const state = readView(new URL("https://test.local/events"));
+  expect(matchingEvents([orphan], dataset.films, dataset.meta, state, now)).toHaveLength(1);
+  expect(
+    matchingEvents([orphan], dataset.films, dataset.meta, { ...state, decades: [1990] }, now),
+  ).toHaveLength(0);
+});

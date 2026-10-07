@@ -1118,6 +1118,84 @@ h3 {
   height: 240px;
 }
 
+/* A single open decade keeps the year picker compact. */
+.year-options {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  max-height: 360px;
+  overflow-y: auto;
+}
+.decade-group + .decade-group {
+  border-top: 1px solid var(--line);
+}
+.decade-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.decade-row label,
+.year-grid label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  cursor: pointer;
+  font-size: 13px;
+}
+.decade-row label {
+  flex: 1;
+}
+.decade-row small {
+  margin-left: auto;
+  color: var(--muted);
+}
+.decade-row button {
+  min-width: 44px;
+  min-height: 44px;
+}
+.year-options input {
+  accent-color: var(--link);
+  width: 16px;
+  height: 16px;
+  margin: 0;
+}
+.year-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 12px;
+  padding: 0 8px 8px;
+}
+.year-grid small {
+  margin-left: auto;
+  color: var(--muted);
+}
+.year-done {
+  width: 100%;
+  margin-top: 8px;
+  min-height: 44px;
+}
+.year-chip {
+  display: inline-flex;
+  max-width: 100%;
+}
+.year-chip button:first-child {
+  border-radius: 4px 0 0 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.year-chip button:last-child {
+  border-radius: 0 4px 4px 0;
+  border-left: 0;
+}
+.filter-sheet .year-done {
+  display: none;
+}
+.filter-sheet .year-options {
+  max-height: none;
+  overflow: visible;
+}
+
 /* Filters belong above the results; pickers can use their own width. */
 .filter-bar {
   display: flex;
@@ -1195,7 +1273,7 @@ h3 {
 .when-content {
   position: absolute;
   top: calc(100% + 8px);
-  right: 0;
+  left: 0;
   width: 390px;
   max-width: calc(100vw - 24px);
   background: var(--panel);

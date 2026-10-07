@@ -20,6 +20,7 @@ import { matchingEvents, eventFacetCounts } from "./lib/events";
 import { EVENT_TYPES } from "./data/event-rules";
 import { Radar } from "./components/radar";
 import { recoverySuggestions } from "./lib/recovery";
+import { catalogueDecades, countYears, hasYears, yearSummary } from "./lib/years";
 import { DEFAULT_DISPLAY, type DisplayState } from "./lib/display";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { useAccount } from "./lib/account";
@@ -218,6 +219,8 @@ export function App() {
   const drawer = useRef<HTMLDialogElement>(null);
   const dark = themeOverride ?? systemDark;
   const meta = catalogue?.meta ?? null;
+  const [yearOpenRequest, setYearOpenRequest] = useState(0);
+  const yearDecades = useMemo(() => catalogueDecades(catalogue?.films ?? []), [catalogue]);
   const pageTitle =
     PAGES.find((page) => page.path === state.path)?.name ??
     { "/privacy": "Privacy", "/auth/verify": "Sign in", "/unsubscribe": "Unsubscribe" }[
@@ -228,6 +231,7 @@ export function App() {
     friends.choices.selected.length ||
     state.filmGauge ||
     state.eventType ||
+    hasYears(state) ||
     hasCustomSort(state) ||
     state.search ||
     state.director ||
@@ -332,6 +336,8 @@ export function App() {
       state.from,
       state.to,
       state.available,
+      state.decades,
+      state.years,
       state.short,
       state.tonight,
       now,
@@ -350,6 +356,39 @@ export function App() {
     }
   }, [account.user?.id]);
   const myCinemasUpdating = useRef(false);
+  const yearCounts = useMemo(() => {
+    if (!catalogue) return new Map<number, number>();
+    const withoutYears = { ...state, decades: [], years: [] };
+    if (state.path === "/events") {
+      const eligible = new Set(
+        matchingEvents(eventsSource, baseFilms, catalogue.meta, withoutYears, now).map(
+          (event) => event.filmId,
+        ),
+      );
+      return countYears(baseFilms.filter((film) => eligible.has(film.id)));
+    }
+    return countYears(
+      filterFilms(selectFilms(baseFilms, withoutYears), catalogue.meta, withoutYears, now),
+    );
+  }, [
+    catalogue,
+    eventsSource,
+    baseFilms,
+    state.path,
+    state.eventType,
+    state.filmGauge,
+    state.radarSection,
+    state.search,
+    state.director,
+    state.filters,
+    state.excluded,
+    state.from,
+    state.to,
+    state.available,
+    state.short,
+    state.tonight,
+    now,
+  ]);
   function change(changes: Partial<ViewState>, push = false) {
     if (
       "search" in changes &&
@@ -529,6 +568,9 @@ export function App() {
     onChange: change,
     counts,
     resultCount,
+    yearDecades,
+    yearCounts,
+    yearOpenRequest,
   };
   return (
     <FriendsContext.Provider value={friends}>
@@ -899,6 +941,22 @@ export function App() {
                     )}
                     <WatchlistSelections />
 
+                    {hasYears(state) && (
+                      <span class="year-chip">
+                        <button
+                          aria-label="Edit year filter"
+                          onClick={() => setYearOpenRequest((value) => value + 1)}
+                        >
+                          Year: {yearSummary(state)}
+                        </button>
+                        <button
+                          aria-label="Remove year filter"
+                          onClick={() => change({ decades: [], years: [], page: 1 })}
+                        >
+                          ×
+                        </button>
+                      </span>
+                    )}
                     {hasCustomSort(state) && (
                       <button
                         onClick={() => change({ ...defaultSort(state.path), page: 1 })}

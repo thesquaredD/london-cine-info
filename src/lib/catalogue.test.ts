@@ -144,3 +144,51 @@ it("sorts original titles using the displayed title and falls back when one is m
   ]);
   expect(sortFilms(films, "title", "asc").map((f) => f.id)).toEqual(["A", "B", "C"]);
 });
+
+// Film-level years must not turn into a requirement for a screening.
+it("filters years for films without screenings and constrains other facet counts", async () => {
+  const { filterFilms, facetCounts, clearFilters } = await import("./filters");
+  const { countYears } = await import("./years");
+  const meta: import("../shared/data").DataMeta = {
+    schemaVersion: 1,
+    generatedAt: "",
+    upstreamGeneratedAt: "",
+    sources: {
+      combined: { repository: "", tag: "", publishedAt: "" },
+      matched: { repository: "", tag: "", publishedAt: "" },
+    },
+    releaseDateSource: "tmdb-original",
+    venues: [],
+    boroughs: [],
+    memberships: [],
+    facets: {
+      day: [],
+      time: [],
+      venue: [],
+      borough: [],
+      membership: [],
+      accessibility: [],
+      format: [],
+      genre: [],
+      language: [],
+    },
+    counts: { films: 3, screenings: 0, venues: 0 },
+    diagnostics: {
+      expiredScreenings: 0,
+      duplicateScreenings: 0,
+      invalidBookingUrls: [],
+      outsideLondonVenues: [],
+    },
+  };
+  const films = [
+    film("a", { ye: 1994, ge: ["drama"] }),
+    film("b", { ye: 2001, ge: ["comedy"] }),
+    film("unknown", { ge: ["drama"] }),
+  ];
+  const state = { ...view, decades: [1990] };
+  expect(filterFilms(films, meta, state).map((f) => f.id)).toEqual(["a"]);
+  expect(facetCounts(films, meta, state).genre).toEqual(new Map([["drama", 1]]));
+  const withoutYears = { ...state, decades: [], years: [], filters: { genre: ["comedy"] } };
+  expect(countYears(filterFilms(films, meta, withoutYears))).toEqual(new Map([[2001, 1]]));
+  expect(filterFilms(films, meta, { ...state, ...clearFilters("/") })).toHaveLength(3);
+});
