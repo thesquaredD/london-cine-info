@@ -1,3 +1,4 @@
+import { yearMatches } from "./years";
 import { isEventScreening, eventTypes } from "../data/event-rules";
 import type { DataMeta, FacetKey, Film, Showtime, Venue } from "../shared/data";
 import { defaultSort, type ViewState } from "./catalogue";
@@ -15,6 +16,8 @@ export const FILTERS: { key: FacetKey; label: string }[] = [
 export const CLEAR_FILTERS = {
   eventType: "",
   filmGauge: undefined,
+  decades: [],
+  years: [],
   watchlist: false,
   short: false,
   tonight: false,
@@ -218,6 +221,7 @@ export function screeningMatcher(meta: DataMeta, state: ViewState, now = new Dat
       ),
     film: (film: Film) =>
       (!state.short || (film.ru !== null && film.ru < 120)) &&
+      yearMatches(film.ye, state) &&
       accepts(state, "genre", film.ge) &&
       accepts(state, "language", [film.la]) &&
       decodedScreenings(film, meta).some(
@@ -271,6 +275,7 @@ export function filterFilms(films: Film[], meta: DataMeta, state: ViewState, now
   const matcher = screeningMatcher(meta, state, now);
   return films.filter((film) => {
     if (state.short && (film.ru === null || film.ru >= 120)) return false;
+    if (!yearMatches(film.ye, state)) return false;
     if (!accepts(state, "genre", film.ge) || !accepts(state, "language", [film.la])) return false;
     return !hasScreeningFilters(state) || matcher.film(film);
   });
@@ -304,6 +309,7 @@ export function facetCounts(
     const counts = new Map<string, number>();
     for (const film of films) {
       if (state.short && (film.ru === null || film.ru >= 120)) continue;
+      if (!yearMatches(film.ye, state)) continue;
       if (!accepts(without, "genre", film.ge) || !accepts(without, "language", [film.la])) continue;
       const ids = new Set<string>();
       if (key === "genre" || key === "language") {

@@ -8,6 +8,10 @@ export function discoveryProperties(state: ViewState): AnalyticsProperties {
   const filterValues = keys.flatMap((key) =>
     (state.filters[key as keyof typeof state.filters] ?? []).map((value) => `${key}:${value}`),
   );
+  filterValues.push(
+    ...(state.decades ?? []).map((value) => `decade:${value}`),
+    ...(state.years ?? []).map((value) => `year:${value}`),
+  );
   const excludedValues = keys.flatMap((key) =>
     (state.excluded[key as keyof typeof state.excluded] ?? []).map((value) => `${key}:${value}`),
   );

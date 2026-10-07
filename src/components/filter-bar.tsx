@@ -3,11 +3,24 @@ import { useEffect, useRef, useState } from "preact/hooks";
 import { FilterControls, type FilterControlsProps } from "./filter-controls";
 import type { FacetKey } from "../shared/data";
 
-export function FilterBar(props: FilterControlsProps) {
-  const [category, setCategory] = useState<FacetKey | "all" | null>(null);
+export function FilterBar(props: FilterControlsProps & { yearOpenRequest: number }) {
+  const [category, setCategory] = useState<FacetKey | "year" | "all" | null>(null);
   const dialog = useRef<HTMLDialogElement>(null);
   const when = useRef<HTMLDetailsElement>(null);
   const bar = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!props.yearOpenRequest) return;
+    if (window.matchMedia("(max-width: 799px)").matches) setCategory("year");
+    else {
+      const picker = bar.current?.querySelector<HTMLDetailsElement>(
+        '.desktop-filters [data-filter="year"]',
+      );
+      if (picker) {
+        picker.open = true;
+        picker.querySelector<HTMLElement>("summary")?.focus();
+      }
+    }
+  }, [props.yearOpenRequest]);
   useEffect(() => {
     const node = dialog.current;
     if (!node) return;
@@ -105,7 +118,7 @@ export function FilterBar(props: FilterControlsProps) {
         <FilterControls
           {...props}
           showSearch={false}
-          filterKeys={["venue", "genre"]}
+          filterKeys={["venue", "genre", "year"]}
           idPrefix="desktop"
         />
       </div>

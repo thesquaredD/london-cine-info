@@ -1,3 +1,4 @@
+import { hasYears } from "./years";
 import type { DataMeta, EventOccurrence, Film, FacetKey } from "../shared/data";
 import type { ViewState } from "./catalogue";
 import { selectFilms } from "./catalogue";
@@ -19,6 +20,7 @@ export function matchingEvents(
       (event) =>
         (eligible.has(event.filmId) ||
           (!allIds.has(event.filmId) &&
+            !hasYears(state) &&
             !state.watchlist &&
             !state.short &&
             !state.director &&

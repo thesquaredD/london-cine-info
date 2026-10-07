@@ -118,7 +118,7 @@ original language and director filters are encoded in the URL. Only one film ope
 at a time. Screening groups use London dates and include format, accessibility,
 sold-out and booking-detail badges.
 
-Filters sit above the table: Search, When, Cinema, Genre and More filters on desktop.
+Filters sit above the table: Search, When, Cinema, Genre, Year and More filters on desktop.
 Below 800px, Search fills a row and When, Cinema and Filters open a full-width bottom
 sheet. The table shows Title and Director at phone widths; expanding a film reveals
 its ratings and year. Desktop retains all seven separately sortable columns. The theme follows the system with an override
@@ -145,7 +145,7 @@ retries, filter sheet keyboard behavior, theme and overflow.
 
 ## Filters
 
-All nine filters are available in More filters (Filters on mobile). Each picker supports multiple choices;
+All filters are available in More filters (Filters on mobile). Each picker supports multiple choices;
 cinemas are grouped by borough and boroughs by inner/outer London. Long lists can
 be searched. Day offers Today, Tomorrow, This weekend, Next 7 days, Later and exact
 dates. Time offers bands and a custom start-time range, including overnight ranges.
@@ -276,3 +276,12 @@ Phone bottom sheets, the sidebar and expanded films have short CSS entrance
 animations (110–140 ms). Only transform/opacity animate; movie contents fade
 without position or size interpolation. Closing and navigation are immediate,
 and reduced-motion preferences disable animations.
+
+Year filters use the film's original release year. Select multiple decades, expand
+a decade to choose individual years, or combine decades with years elsewhere. A
+partial decade has a mixed checkbox; selecting it fills the decade. Removing one
+year from a selected decade retains the other nine. Complete selections are
+compacted into decade values in shared URLs (`decade=1990&year=2001`). Films with
+unknown years remain when Year is unrestricted. A single Year chip opens the
+picker for editing or clears the selection. Expansion changes only the picker,
+and counts reflect the other filters while ignoring the current Year choices.

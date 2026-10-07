@@ -1,3 +1,4 @@
+import { normalizeYears, type YearSelection } from "./years";
 import { displayTitle, type TitleMode } from "./display";
 import { letterboxdSlug } from "../shared/account";
 import type { Film, RatingKey, FacetKey } from "../shared/data";
@@ -22,7 +23,7 @@ export const RATINGS: { key: RatingKey; name: string; short: string; scale: stri
 ];
 export type SortKey =
   "title" | "director" | "year" | "watchlist" | "event" | "opportunity" | RatingKey;
-export type ViewState = {
+export type ViewState = YearSelection & {
   path: string;
   search: string;
   filters: Partial<Record<FacetKey, string[]>>;
@@ -114,6 +115,16 @@ export function readView(url: URL): ViewState {
     )
       ? url.searchParams.get("eventType")!
       : "",
+    ...normalizeYears({
+      decades: url.searchParams
+        .getAll("decade")
+        .filter((v) => /^\d{4}$/.test(v))
+        .map(Number),
+      years: url.searchParams
+        .getAll("year")
+        .filter((v) => /^\d{4}$/.test(v))
+        .map(Number),
+    }),
     filters: Object.fromEntries(
       [
         "day",
@@ -183,6 +194,9 @@ export function viewUrl(state: ViewState): string {
   if (state.search) query.set("q", state.search);
   if (state.path === "/radar" && state.filmGauge) query.set("filmGauge", state.filmGauge);
   if (state.eventType) query.set("eventType", state.eventType);
+  const yearSelection = normalizeYears(state);
+  for (const decade of yearSelection.decades) query.append("decade", String(decade));
+  for (const year of yearSelection.years) query.append("year", String(year));
   for (const [key, values] of Object.entries(state.filters))
     for (const value of values ?? []) query.append(key, value);
   for (const [key, values] of Object.entries(state.excluded))

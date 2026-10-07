@@ -1,3 +1,4 @@
+import { YearPicker } from "./year-picker";
 import type { AccountState } from "../lib/account";
 import { FilterPicker } from "./filter-picker";
 import { clearFilters, FILTERS } from "../lib/filters";
@@ -7,7 +8,9 @@ import type { ViewState } from "../lib/catalogue";
 
 export type FilterControlsProps = {
   account: AccountState;
-  filterKeys?: FacetKey[];
+  filterKeys?: (FacetKey | "year")[];
+  yearDecades: number[];
+  yearCounts: Map<number, number>;
   showSearch?: boolean;
   state: ViewState;
   meta: DataMeta | null;
@@ -19,6 +22,8 @@ export type FilterControlsProps = {
 };
 export function FilterControls({
   filterKeys,
+  yearDecades,
+  yearCounts,
   account,
   showSearch = true,
   state,
@@ -106,6 +111,15 @@ export function FilterControls({
               </FilterPicker>
             ),
           )}
+        {meta && (!filterKeys || filterKeys.includes("year")) && (
+          <YearPicker
+            selection={state}
+            decades={yearDecades}
+            counts={yearCounts}
+            idPrefix={idPrefix}
+            onChange={(selection) => onChange({ ...selection, page: 1 })}
+          />
+        )}
         {!filterKeys && (
           <>
             {account.user && account.watchlist?.fetchedAt && (
