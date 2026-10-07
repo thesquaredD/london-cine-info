@@ -1,6 +1,7 @@
 # Product analytics
 
-PostHog EU project **296412**, ingestion `https://eu.i.posthog.com`.
+PostHog EU project **296412**, ingestion through the managed reverse proxy `https://works.london-cine.info`.
+Browser and server events use this host; the PostHog UI remains `https://eu.posthog.com`.
 The committed `phc_` key is the public ingestion token. No admin key is needed to collect events.
 
 ## Questions this answers
@@ -36,7 +37,10 @@ write succeeds, ignoring stale/replaced jobs. Analytics failures cannot block ap
 
 ## Privacy and environment
 
-No session replay, automatic click capture, heatmaps, performance or exception collection.
+Page-leave events measure visit duration and scroll depth. Web Vitals collect numeric LCP,
+INP, CLS and FCP measurements, linked to sanitized page routes. The Web Vitals dependency is
+bundled locally; attribution (DOM elements/resource URLs) and detailed metric objects are excluded.
+No session replay, automatic click capture, heatmaps or exception collection.
 No emails, app/Letterboxd usernames, friend identities, sign-in tokens, raw URLs or error messages.
 Search text is deliberate, limited to 200 characters, with URLs, emails and common tokens redacted;
 this is not a general personal-data detector. Properties pass a strict allowlist. URLs are rebuilt

@@ -857,7 +857,7 @@ it("tracks verified signups once, links request context, and never sends account
     const payload = JSON.parse(String(options?.body));
     if (String(input) === "https://api.resend.com/emails") {
       magic = new URL(payload.text.match(/https:\/\/[^\s]+/)[0]).searchParams.get("token")!;
-    } else if (String(input) === "https://eu.i.posthog.com/capture/") events.push(payload);
+    } else if (String(input) === "https://works.london-cine.info/capture/") events.push(payload);
     else throw new Error("Unexpected external request");
     return new Response("{}", { status: 200 });
   });

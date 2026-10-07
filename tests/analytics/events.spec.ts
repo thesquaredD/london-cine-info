@@ -2,8 +2,11 @@ import { test, expect, type Page } from "@playwright/test";
 type Event = { event: string; properties: Record<string, unknown> };
 async function intercept(page: Page) {
   const events: Event[] = [];
-  await page.route("https://eu.i.posthog.com/**", async (route) => {
-    const body = route.request().postDataJSON();
+  await page.context().route("https://works.london-cine.info/**", async (route) => {
+    let body = route.request().postDataJSON();
+    // Unload beacons use base64 form data to avoid a CORS preflight.
+    if (typeof body?.data === "string")
+      body = JSON.parse(Buffer.from(body.data, "base64").toString("utf8"));
     if (Array.isArray(body?.batch)) events.push(...body.batch);
     else if (Array.isArray(body)) events.push(...body);
     else if (body?.event) events.push(body);
@@ -137,4 +140,38 @@ test("measures PR 17 public imports and shared filters without usernames", async
     result_count: 0,
   });
   expect(JSON.stringify(events)).not.toContain("private_handle");
+});
+
+test("sends real Web Vitals and page-leave measurements through the proxy", async ({ page }) => {
+  const directRequests: string[] = [];
+  await page.route("https://*.posthog.com/**", async (route) => {
+    directRequests.push(route.request().url());
+    await route.abort();
+  });
+  const events = await intercept(page);
+  await page.goto("/?token=private-token");
+  await expect(page.locator(".film-row")).toHaveCount(6);
+  await page.locator("#bar-search").fill("Titre B");
+  await expect
+    .poll(() => events.some((event) => event.event === "$web_vitals"), { timeout: 15000 })
+    .toBe(true);
+  const vitals = events.find((event) => event.event === "$web_vitals")!;
+  expect(vitals.properties.$web_vitals_FCP_value).toEqual(expect.any(Number));
+  expect(vitals.properties.$current_url).toBe("https://london-cine.info/");
+  const view = events.find((event) => event.event === "$pageview")!;
+  // Exercise the SDK's browser lifecycle handler while keeping the document alive
+  // long enough for Playwright to intercept and acknowledge its unload beacon.
+  await page.evaluate(() => window.dispatchEvent(new PageTransitionEvent("pagehide")));
+  await expect.poll(() => events.some((event) => event.event === "$pageleave")).toBe(true);
+  const leave = events.find((event) => event.event === "$pageleave")!;
+  expect(leave.properties.$prev_pageview_id).toBe(view.properties.$pageview_id);
+  expect(leave.properties.$prev_pageview_duration).toBeGreaterThan(0);
+  expect(leave.properties.$prev_pageview_max_scroll_percentage).toEqual(expect.any(Number));
+  expect(leave.properties.$lib_custom_api_host).toBe("https://works.london-cine.info");
+  expect(JSON.stringify(events)).not.toContain("private-token");
+  expect(events.every((event) => event.properties.environment === "test")).toBe(true);
+  expect(
+    events.some((event) => event.event === "$snapshot" || event.event === "$autocapture"),
+  ).toBe(false);
+  expect(directRequests).toEqual([]);
 });

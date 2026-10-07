@@ -1,4 +1,5 @@
-import posthog, { type CaptureResult } from "posthog-js/dist/module.slim.no-external";
+import "posthog-js/dist/web-vitals";
+import posthog, { type CaptureResult } from "posthog-js/dist/module.no-external";
 import {
   ANALYTICS_EVENTS,
   POSTHOG_HOST,
@@ -27,13 +28,28 @@ export function sanitizeCapture(event: CaptureResult | null): CaptureResult | nu
     event: event.event,
     timestamp: event.timestamp,
     properties: {
-      ...safeAnalyticsProperties(event.properties),
+      ...safeAnalyticsProperties({
+        ...event.properties,
+        // SDK-generated events do not go through our capture() wrapper.
+        // Web Vitals can flush after navigation: retain the measured page's route.
+        ...(["$pageleave", "$web_vitals"].includes(event.event)
+          ? { path: automaticEventPath(event.properties.$current_url) }
+          : {}),
+      }),
       environment,
       token: POSTHOG_TOKEN,
       $geoip_disable: true,
       $ip: null,
     },
   };
+}
+
+function automaticEventPath(url: unknown): string {
+  try {
+    return safePath(new URL(String(url)).pathname);
+  } catch {
+    return safePath(window.location.pathname);
+  }
 }
 
 export function initAnalytics() {
@@ -53,12 +69,12 @@ export function initAnalytics() {
       person_profiles: "identified_only",
       autocapture: false,
       capture_pageview: false,
-      capture_pageleave: false,
+      capture_pageleave: true,
       disable_session_recording: true,
       capture_heatmaps: false,
       capture_dead_clicks: false,
       rageclick: false,
-      capture_performance: false,
+      capture_performance: { web_vitals: true, web_vitals_attribution: false },
       capture_exceptions: false,
       capture_webmcp: false,
       disable_surveys: true,
