@@ -15,11 +15,13 @@ describe("analytics data boundary", () => {
       result_count: 0,
       filter_values: ["genre:drama"],
       $set: { email: "private" },
+      $lib_custom_api_host: "https://private.example/secret",
     });
     expect(safe.$current_url).toBe("https://london-cine.info/auth/verify");
     expect(safe.query).toBe("Amélie [email] [token] [url]");
     expect(JSON.stringify(safe)).not.toContain(token);
     expect(safe).not.toHaveProperty("email");
+    expect(safe).not.toHaveProperty("$lib_custom_api_host");
     expect(safe).not.toHaveProperty("$referrer");
     expect(safe).not.toHaveProperty("$set");
     expect(safe.filter_values).toEqual(["genre:drama"]);

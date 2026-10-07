@@ -8,7 +8,7 @@ const sdk = vi.hoisted(() => ({
   get_session_id: vi.fn(() => "session-12345678"),
   has_opted_out_capturing: vi.fn(() => false),
 }));
-vi.mock("posthog-js/dist/module.slim.no-external", () => ({ default: sdk }));
+vi.mock("posthog-js/dist/module.no-external", () => ({ default: sdk }));
 beforeEach(() => {
   vi.resetModules();
   vi.clearAllMocks();
@@ -37,6 +37,9 @@ it("uses explicit events, labels tests, strips accidental properties and resets 
     autocapture: false,
     disable_session_recording: true,
     capture_pageview: false,
+    capture_pageleave: true,
+    capture_performance: { web_vitals: true, web_vitals_attribution: false },
+    api_host: "https://works.london-cine.info",
     advanced_disable_flags: true,
   });
   analytics.identifyAccount("user-one");
@@ -75,4 +78,52 @@ it("does not throw when the SDK fails or capturing is opted out", async () => {
   expect(() => analytics.capture("$pageview")).not.toThrow();
   sdk.has_opted_out_capturing.mockReturnValueOnce(true);
   expect(analytics.analyticsHeaders()).toEqual({ "X-Analytics-Enabled": "0" });
+});
+
+it("keeps automatic measurements and their original route while stripping URLs and attribution", async () => {
+  const { sanitizeCapture } = await import("./analytics");
+  const result = sanitizeCapture({
+    uuid: "vitals-one",
+    event: "$web_vitals",
+    properties: {
+      $current_url: "https://london-cine.info/classics?token=private-token",
+      $web_vitals_LCP_value: 1234,
+      $web_vitals_INP_value: 80,
+      $web_vitals_CLS_value: 0.02,
+      $web_vitals_FCP_value: 500,
+      $web_vitals_LCP_event: { attribution: { url: "private-token" } },
+      $pageview_id: "page-one",
+      $session_id: "session-one",
+    },
+  });
+  expect(result?.properties).toMatchObject({
+    path: "/classics",
+    $current_url: "https://london-cine.info/classics",
+    $web_vitals_LCP_value: 1234,
+    $web_vitals_INP_value: 80,
+    $web_vitals_CLS_value: 0.02,
+    $web_vitals_FCP_value: 500,
+    $pageview_id: "page-one",
+    $session_id: "session-one",
+  });
+  expect(JSON.stringify(result)).not.toContain("private-token");
+  expect(result?.properties).not.toHaveProperty("$web_vitals_LCP_event");
+  const leave = sanitizeCapture({
+    uuid: "leave-one",
+    event: "$pageleave",
+    properties: {
+      $current_url: "https://london-cine.info/new?token=private-token",
+      $prev_pageview_pathname: "/private/secret",
+      $prev_pageview_id: "page-one",
+      $prev_pageview_duration: 12,
+      $prev_pageview_max_scroll_percentage: 0.5,
+    },
+  });
+  expect(leave?.properties).toMatchObject({
+    path: "/new",
+    $prev_pageview_pathname: "/",
+    $prev_pageview_id: "page-one",
+    $prev_pageview_duration: 12,
+    $prev_pageview_max_scroll_percentage: 0.5,
+  });
 });

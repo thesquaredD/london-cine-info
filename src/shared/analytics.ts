@@ -1,11 +1,13 @@
 // This is a public ingestion token, not a personal/admin API key.
 export const POSTHOG_TOKEN = "phc_CzvNQdZeADVcaVpa2uH5svsvUPbNbFrwHUsHaTmjPZH3";
-export const POSTHOG_HOST = "https://eu.i.posthog.com";
+export const POSTHOG_HOST = "https://works.london-cine.info";
 export const SITE_HOST = "london-cine.info";
 export const ANALYTICS_VERSION = 1;
 
 export const ANALYTICS_EVENTS = [
   "$pageview",
+  "$pageleave",
+  "$web_vitals",
   "search_performed",
   "filters_changed",
   "watchlist_used",
@@ -50,8 +52,25 @@ const propertyNames = new Set([
   "$is_identified",
   "$session_id",
   "$window_id",
+  "$pageview_id",
+  "$prev_pageview_id",
+  "$prev_pageview_pathname",
+  "$prev_pageview_duration",
+  "$prev_pageview_last_scroll",
+  "$prev_pageview_last_scroll_percentage",
+  "$prev_pageview_max_scroll",
+  "$prev_pageview_max_scroll_percentage",
+  "$prev_pageview_last_content",
+  "$prev_pageview_last_content_percentage",
+  "$prev_pageview_max_content",
+  "$prev_pageview_max_content_percentage",
+  "$web_vitals_LCP_value",
+  "$web_vitals_INP_value",
+  "$web_vitals_CLS_value",
+  "$web_vitals_FCP_value",
   "$lib",
   "$lib_version",
+  "$lib_custom_api_host",
   "$process_person_profile",
   "$current_url",
   "$pathname",
@@ -124,6 +143,9 @@ export function safeAnalyticsProperties(properties: Record<string, unknown>): An
     else if (Array.isArray(value) && value.every((item) => typeof item === "string"))
       safe[key] = value.slice(0, 100).map((item) => analyticsText(item, 160));
   }
+  // Preserve only our configured proxy hostname, never an arbitrary URL.
+  if (properties.$lib_custom_api_host === POSTHOG_HOST) safe.$lib_custom_api_host = POSTHOG_HOST;
+  else delete safe.$lib_custom_api_host;
   // Never take these from browser URLs or user input.
   if (typeof properties.path === "string") {
     const path = safePath(properties.path);
@@ -134,6 +156,8 @@ export function safeAnalyticsProperties(properties: Record<string, unknown>): An
     delete safe.$current_url;
     delete safe.$pathname;
   }
+  if (typeof safe.$prev_pageview_pathname === "string")
+    safe.$prev_pageview_pathname = safePath(safe.$prev_pageview_pathname);
   if (typeof safe.landing_path === "string") safe.landing_path = safePath(safe.landing_path);
   safe.analytics_version = ANALYTICS_VERSION;
   return safe;
