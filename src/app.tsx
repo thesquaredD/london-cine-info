@@ -959,7 +959,9 @@ export function App() {
                     )}
                     {hasCustomSort(state) && (
                       <button
-                        onClick={() => change({ ...defaultSort(state.path), page: 1 })}
+                        onClick={() =>
+                          change({ ...defaultSort(state.path), sortExplicit: undefined, page: 1 })
+                        }
                         aria-label="Clear sort"
                       >
                         Sort: {sortLabel(state.sort)} ×

@@ -6,6 +6,8 @@ import { clearFilters } from "../lib/filters";
 import { Fragment } from "preact";
 import type { DataMeta, Film } from "../shared/data";
 import {
+  hasCustomSort,
+  sortLabel,
   PAGE_SIZE,
   RATINGS,
   tableRows,
@@ -47,18 +49,25 @@ export function FilmTable({
   onCalendar,
   showEmpty = true,
 }: Props) {
+  const mobileColumn =
+    hasCustomSort(state) &&
+    state.sort !== "title" &&
+    state.sort !== "director" &&
+    state.sort !== "opportunity"
+      ? state.sort
+      : null;
   const marked = (film: Film) => !!watched?.has(letterboxdSlug(film.ra.lb?.url) ?? "");
   const ratings = display.ratingOrder.map((key) => RATINGS.find((rating) => rating.key === key)!);
   const rows = tableRows(films, state);
   const pageCount = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
   const page = Math.min(state.page, pageCount);
   const start = (page - 1) * PAGE_SIZE;
-  function heading(key: SortKey, label: string, compact = false) {
+  function heading(key: SortKey, label: string, compact = false, extraClass = "") {
     const selected = state.sort === key;
     return (
       <th
         scope="col"
-        class={`${key}-column ${compact ? "mobile-hidden" : ""}`}
+        class={`${key}-column ${compact ? "mobile-hidden" : ""} ${extraClass}`}
         aria-sort={selected ? (state.direction === "asc" ? "ascending" : "descending") : "none"}
       >
         <button
@@ -94,7 +103,9 @@ export function FilmTable({
             <tr>
               {watched && heading("watchlist", "▣")}
               {heading("title", "Title")}
-              {heading("director", "Director")}
+              {mobileColumn &&
+                heading(mobileColumn, sortLabel(mobileColumn), false, "mobile-sort-column")}
+              {heading("director", "Director", !!mobileColumn)}
               {ratings.map((rating) => heading(rating.key, rating.short, true))}
               {state.path === "/events"
                 ? heading("event", "Event", true)
@@ -106,7 +117,7 @@ export function FilmTable({
               <Fragment key={key}>
                 {group && (index === 0 || group.id !== rows[start + index - 1]?.group?.id) && (
                   <tr class={state.path === "/calendar" ? "release-group" : "director-group"}>
-                    <td colSpan={watched ? 8 : 7}>
+                    <td colSpan={(watched ? 8 : 7) + (mobileColumn ? 1 : 0)}>
                       <h3>{group.name}</h3>{" "}
                       <small>
                         {group.count} {group.count === 1 ? "film" : "films"}
@@ -164,7 +175,40 @@ export function FilmTable({
                       </div>
                     )}
                   </td>
-                  <td class="director-column">
+                  {mobileColumn && (
+                    <td class="mobile-sort-column">
+                      {mobileColumn === "year" ? (
+                        (film.ye ?? <span class="missing">?</span>)
+                      ) : mobileColumn === "runtime" ? (
+                        film.ru === null ? (
+                          <span class="missing">?</span>
+                        ) : (
+                          `${film.ru} min`
+                        )
+                      ) : mobileColumn === "watchlist" ? (
+                        marked(film) ? (
+                          "▣"
+                        ) : (
+                          "—"
+                        )
+                      ) : mobileColumn === "event" ? (
+                        film.ev?.join(" · ") || "Special screening"
+                      ) : (
+                        <span
+                          class={`rating-chip ${film.ra[mobileColumn]?.value == null ? "missing" : ""}`}
+                          aria-label={`${sortLabel(mobileColumn)}: ${film.ra[mobileColumn]?.value ?? "unrated"}`}
+                        >
+                          {film.ra[mobileColumn]?.value ?? "?"}
+                          {film.ra[mobileColumn]?.value != null && (
+                            <small>
+                              {RATINGS.find((rating) => rating.key === mobileColumn)?.scale}
+                            </small>
+                          )}
+                        </span>
+                      )}
+                    </td>
+                  )}
+                  <td class={`director-column ${mobileColumn ? "mobile-hidden" : ""}`}>
                     {film.di.length ? (
                       film.di.map((director, index) => (
                         <Fragment key={director.id}>
@@ -236,7 +280,7 @@ export function FilmTable({
                     now={now}
                     calendar={calendar}
                     onCalendar={onCalendar}
-                    columns={watched ? 8 : 7}
+                    columns={(watched ? 8 : 7) + (mobileColumn ? 1 : 0)}
                     film={film}
                     ratingOrder={display.ratingOrder}
                     meta={meta}
