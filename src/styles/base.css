@@ -2494,3 +2494,18 @@ h3 {
     max-height: 40dvh;
   }
 }
+
+.mobile-sort-score {
+  display: none;
+}
+@media (max-width: 799px) {
+  .mobile-sort-score {
+    display: block;
+    margin: 2px 0 0 19px;
+    color: var(--muted);
+    font-size: 11px;
+  }
+  .mobile-sort-score strong {
+    color: var(--rating);
+  }
+}

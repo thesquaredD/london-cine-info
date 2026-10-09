@@ -45,6 +45,7 @@ test("remembered watchlist preference removes every rating surface and rating so
   await settings.getByLabel("Hide ratings in my watchlist").check();
   await page.keyboard.press("Escape");
   await expect(page.locator(".rating-column")).toHaveCount(0);
+  await expect(page.locator(".mobile-sort-score")).toHaveCount(0);
   await expect(page.locator("th.title-column")).toHaveAttribute("aria-sort", "ascending");
   await expect(page.getByRole("button", { name: "Clear sort", exact: true })).toHaveText(
     "Sort: Title ×",

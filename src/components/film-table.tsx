@@ -56,6 +56,11 @@ export function FilmTable({
     state.sort !== "opportunity"
       ? state.sort
       : null;
+  const inlineRating = !mobileColumn
+    ? RATINGS.find(
+        (rating) => rating.key === state.sort && display.ratingOrder.includes(rating.key),
+      )
+    : undefined;
   const marked = (film: Film) => !!watched?.has(letterboxdSlug(film.ra.lb?.url) ?? "");
   const ratings = display.ratingOrder.map((key) => RATINGS.find((rating) => rating.key === key)!);
   const rows = tableRows(films, state);
@@ -169,6 +174,19 @@ export function FilmTable({
                     </button>
                     <FilmFriends film={film} />
                     {labels?.has(film.id) && <p class="radar-label">{labels.get(film.id)}</p>}
+                    {inlineRating && (
+                      <div class="mobile-sort-score">
+                        <span>{inlineRating.short}</span>{" "}
+                        {film.ra[inlineRating.key]?.value != null ? (
+                          <strong>
+                            {film.ra[inlineRating.key]!.value}
+                            {inlineRating.scale}
+                          </strong>
+                        ) : (
+                          <span>Unrated</span>
+                        )}
+                      </div>
+                    )}
                     {state.path === "/events" && (
                       <div class="mobile-event-labels">
                         {(film.ev?.length ? film.ev : ["Special screening"]).join(" · ")}

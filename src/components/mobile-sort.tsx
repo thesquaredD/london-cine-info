@@ -63,8 +63,7 @@ export function MobileSort({
         aria-expanded={open}
         onClick={() => setOpen(true)}
       >
-        Sort:{" "}
-        {active ? `${sortLabel(state.sort)} ${state.direction === "asc" ? "↑" : "↓"}` : "Default"}
+        Sort: {sortLabel(state.sort)} · {orderLabels[state.direction === "asc" ? 0 : 1]}
       </button>
       <Dialog
         open={open}
@@ -79,7 +78,9 @@ export function MobileSort({
           value={active ? state.sort : "default"}
           onChange={(event) => choose(event.currentTarget.value)}
         >
-          <option value="default">Default order</option>
+          <option value="default">
+            Default · {sortLabel(hideRatings ? "title" : defaultSort(state.path).sort)}
+          </option>
           {keys.map((key) => (
             <option key={key} value={key}>
               {sortLabel(key)}
