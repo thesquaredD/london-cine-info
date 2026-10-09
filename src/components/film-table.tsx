@@ -57,7 +57,9 @@ export function FilmTable({
       ? state.sort
       : null;
   const inlineRating = !mobileColumn
-    ? RATINGS.find((rating) => rating.key === state.sort)
+    ? RATINGS.find(
+        (rating) => rating.key === state.sort && display.ratingOrder.includes(rating.key),
+      )
     : undefined;
   const marked = (film: Film) => !!watched?.has(letterboxdSlug(film.ra.lb?.url) ?? "");
   const ratings = display.ratingOrder.map((key) => RATINGS.find((rating) => rating.key === key)!);
@@ -120,7 +122,7 @@ export function FilmTable({
               <Fragment key={key}>
                 {group && (index === 0 || group.id !== rows[start + index - 1]?.group?.id) && (
                   <tr class={state.path === "/calendar" ? "release-group" : "director-group"}>
-                    <td colSpan={(watched ? 8 : 7) + (mobileColumn ? 1 : 0)}>
+                    <td colSpan={(watched ? 4 : 3) + ratings.length + (mobileColumn ? 1 : 0)}>
                       <h3>{group.name}</h3>{" "}
                       <small>
                         {group.count} {group.count === 1 ? "film" : "films"}
@@ -296,7 +298,7 @@ export function FilmTable({
                     now={now}
                     calendar={calendar}
                     onCalendar={onCalendar}
-                    columns={(watched ? 8 : 7) + (mobileColumn ? 1 : 0)}
+                    columns={(watched ? 4 : 3) + ratings.length + (mobileColumn ? 1 : 0)}
                     film={film}
                     ratingOrder={display.ratingOrder}
                     meta={meta}

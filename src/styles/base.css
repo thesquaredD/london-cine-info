@@ -2280,6 +2280,221 @@ h3 {
   }
 }
 
+.cinema-context {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 0.75rem 0;
+}
+.cinema-geography {
+  display: grid;
+  gap: 0.65rem;
+  margin: 1rem 0;
+}
+.cinema-geography .account-actions {
+  flex-wrap: wrap;
+}
+.cinema-geography input:not([type="checkbox"]) {
+  min-width: 0;
+  max-width: 100%;
+}
+.borough-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.5rem;
+  margin: 0.75rem 0;
+}
+.sidebar-content nav > section {
+  margin-bottom: 1rem;
+}
+
+.cinema-geography label.checkbox-choice,
+.display-controls label.checkbox-choice {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+}
+.cinema-geography .checkbox-choice input[type="checkbox"],
+.display-controls .checkbox-choice input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  min-height: 18px;
+  margin: 0;
+  padding: 0;
+}
+
+/* Cinema browsing keeps the search and results together; tools overlay the list. */
+.cinema-dialog[open] {
+  display: flex;
+  flex-direction: column;
+  width: min(600px, calc(100vw - 32px));
+  height: min(760px, 85dvh);
+  overflow: hidden;
+}
+.cinema-dialog .sheet-heading {
+  flex-shrink: 0;
+}
+.cinema-dialog .account-dialog-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-height: 0;
+  flex: 1;
+  padding: 0;
+  overflow: hidden;
+}
+.cinema-dialog .account-dialog-body > [role="alert"],
+.cinema-dialog .account-dialog-body > [role="status"] {
+  padding: 8px 16px;
+  flex-shrink: 0;
+}
+.cinema-browse-controls {
+  position: relative;
+  padding: 12px 16px;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--line);
+}
+.cinema-browse-controls > label {
+  display: block;
+  margin: 0 0 6px;
+}
+.cinema-tools {
+  position: relative;
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.cinema-tools > select {
+  width: auto;
+  flex: 1;
+}
+.cinema-tools summary {
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 7px 8px;
+  cursor: pointer;
+}
+.cinema-tool-panel {
+  position: absolute;
+  top: var(--cinema-panel-top, calc(100% + 4px));
+  left: min(var(--cinema-panel-left, 0px), max(0px, calc(100% - 360px)));
+  right: auto;
+  width: min(360px, 100%);
+  z-index: 2;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 12px;
+  box-shadow: 0 6px 18px var(--line);
+  max-height: 45dvh;
+  overflow: auto;
+}
+.cinema-tool-panel.cinema-geography {
+  margin: 0;
+}
+.cinema-postcode-row {
+  display: flex;
+  gap: 8px;
+}
+.cinema-postcode-row input {
+  flex: 1;
+  width: 0;
+}
+.cinema-postcode-row button {
+  flex-shrink: 0;
+}
+.cinema-dialog .favourite-options {
+  display: block;
+  flex: 1;
+  min-height: 0;
+  max-height: none;
+  overflow-y: auto;
+  padding: 0 16px;
+  margin: 0;
+}
+.cinema-dialog .favourite-options h3 {
+  margin: 12px 0 2px;
+}
+.cinema-selection-footer {
+  padding: 12px 16px;
+  flex-shrink: 0;
+  border-top: 1px solid var(--line);
+}
+.cinema-selection-footer .selected-cinemas ul {
+  flex-wrap: nowrap;
+  max-height: none;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+.cinema-selection-footer .selected-cinemas li {
+  flex-shrink: 0;
+  max-width: 90%;
+}
+.cinema-selection-footer .selected-cinemas button {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cinema-done-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 8px;
+}
+.cinema-save-status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  font-size: 12px;
+  color: var(--muted);
+}
+.cinema-save-status p {
+  color: var(--fg);
+}
+.cinema-geography label.checkbox-choice,
+.cinema-tool-panel label.checkbox-choice {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+}
+.cinema-tool-panel .checkbox-choice input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  min-height: 18px;
+  margin: 0;
+  padding: 0;
+}
+@media (max-width: 799px) {
+  .cinema-dialog[open] {
+    width: 100%;
+    height: 90dvh;
+  }
+  .cinema-tools summary {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+  .cinema-browse-controls,
+  .cinema-selection-footer {
+    padding: 10px 12px;
+  }
+  .cinema-dialog .favourite-options {
+    padding: 0 12px;
+  }
+  .cinema-tool-panel {
+    max-height: 40dvh;
+  }
+}
+
 .mobile-sort-score {
   display: none;
 }
