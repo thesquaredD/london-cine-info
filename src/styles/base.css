@@ -17,21 +17,7 @@
   --masthead-fg: #fff;
   --sidebar-width: 214px;
 }
-:root[data-theme="dark"] {
-  color-scheme: dark;
-  --bg: #121820;
-  --panel: #19212c;
-  --shade: #242e3b;
-  --fg: #e5e7eb;
-  --muted: #aab5c1;
-  --line: #414c5b;
-  --strong-line: #aab5c1;
-  --link: #a9c8f3;
-  --original: #8ac2dd;
-  --rating: #85d08c;
-  --sold-out: #ff9e93;
-  --active-bg: #385271;
-}
+
 * {
   box-sizing: border-box;
 }

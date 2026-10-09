@@ -1,0 +1,4 @@
+League Spartan — The League of Moveable Type.
+https://www.theleagueofmoveabletype.com/league-spartan
+https://github.com/theleagueof/league-spartan
+Upstream commit 27341b9bf93a2c7faa140538a64ce342486c5fb5. Unmodified webfonts, regular400 and medium500. SIL Open Font License included.

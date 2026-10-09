@@ -43,14 +43,12 @@ test("calendar keyboard, separate dates and exclusion preserve shared URLs", asy
   await expect(excluded).toHaveText("5");
   const colours = await next.evaluate((node) => {
     const selected = getComputedStyle(node);
-    const unselected = getComputedStyle(document.body);
     return {
       background: selected.backgroundColor,
       foreground: selected.color,
-      normalForeground: unselected.color,
     };
   });
-  expect(colours.background).toBe(colours.normalForeground);
+  expect(colours.background).toBe("rgb(139, 36, 52)");
   expect(colours.background).not.toBe(colours.foreground);
   await picker.getByRole("button", { name: "Next month", exact: true }).click();
   await expect(picker.locator(".calendar-heading")).toContainText("November 2026");
@@ -60,14 +58,14 @@ test("calendar keyboard, separate dates and exclusion preserve shared URLs", asy
   await page.screenshot({ path: join(evidence, `calendar-${testInfo.project.name}.png`) });
   expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
 });
-test("Tonight leaves no hidden time constraint, runtime recovery has an accurate count", async ({
+test("Legacy Tonight links leave no hidden time constraint, runtime recovery has an accurate count", async ({
   page,
 }) => {
-  await page.goto("/?genre=drama");
+  await page.goto("/?genre=drama&tonight=1&from=18%3A00");
   if (page.viewportSize()!.width < 800)
     await page.getByRole("button", { name: /^Quick filters/ }).click();
   const quick = page.locator(".quick-days");
-  await quick.getByRole("button", { name: "Tonight", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Tonight", exact: true })).toHaveCount(0);
   expect(new URL(page.url()).searchParams.get("from")).toBe("18:00");
   await quick.getByRole("button", { name: /^Tomorrow/ }).click();
   expect(new URL(page.url()).searchParams.get("from")).toBeNull();
@@ -199,13 +197,13 @@ test("mobile quick filters collapse into one button and sheet restores keyboard 
   await page.goto("/");
   const opener = page.getByRole("button", { name: /^Quick filters/ });
   await expect(opener).toBeVisible();
-  await expect(page.getByRole("button", { name: "Tonight", exact: true })).toBeHidden();
+  await expect(page.getByRole("button", { name: "Tonight", exact: true })).toHaveCount(0);
   await opener.click();
   const sheet = page.getByRole("dialog", { name: "Quick filters", exact: true });
   await expect(sheet).toBeVisible();
   expect(await page.locator("dialog[open]").count()).toBe(1);
   await page.screenshot({ path: join(evidenceDirectory, "quick-filters-mobile-sheet.png") });
-  await sheet.getByRole("button", { name: "Tonight", exact: true }).click();
+  await sheet.getByRole("button", { name: /^Tomorrow/ }).click();
   await sheet.getByRole("button", { name: /^Show/ }).click();
   await expect(sheet).toBeHidden();
   await expect(opener).toBeFocused();

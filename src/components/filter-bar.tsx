@@ -75,6 +75,17 @@ export function FilterBar(
       0,
     );
   const whenCount = count(["day", "time"]) + (props.state.from || props.state.to ? 1 : 0);
+  const cinemaCount = count(["venue"]);
+  const moreCount =
+    count(["genre", "language", "borough", "format", "accessibility", "membership"]) +
+    (props.state.years?.length ?? 0) +
+    (props.state.decades?.length ?? 0);
+  const countLabel = (value: number) => (
+    <span class="shortcut-count" style={{ visibility: value ? "visible" : "hidden" }}>
+      {" "}
+      · {value || 0}
+    </span>
+  );
   return (
     <div class="filter-bar" ref={bar}>
       <label class="sr-only" for="bar-search">
@@ -92,6 +103,7 @@ export function FilterBar(
         <details
           ref={when}
           class="when-picker"
+          data-active={whenCount > 0}
           name="desktop-filters"
           onToggle={(event) => {
             if (event.currentTarget.open) {
@@ -101,7 +113,7 @@ export function FilterBar(
             }
           }}
         >
-          <summary>When{whenCount ? ` · ${whenCount}` : ""} ▾</summary>
+          <summary>When{countLabel(whenCount)} ▾</summary>
           <div class="when-content">
             <FilterControls
               {...props}
@@ -126,15 +138,20 @@ export function FilterBar(
         />
       </div>
       <div class="mobile-filters">
-        <button onClick={() => setCategory("day")}>
-          When{whenCount ? ` · ${whenCount}` : ""} ▾
+        <button data-active={whenCount > 0} onClick={() => setCategory("day")}>
+          When{countLabel(whenCount)} ▾
         </button>
-        <button onClick={() => setCategory("venue")}>
-          Cinema{count(["venue"]) ? ` · ${count(["venue"])}` : ""} ▾
+        <button data-active={cinemaCount > 0} onClick={() => setCategory("venue")}>
+          Cinema{countLabel(cinemaCount)} ▾
         </button>
       </div>
       <WatchlistsButton />
-      <button class="all-filters" aria-haspopup="dialog" onClick={() => setCategory("all")}>
+      <button
+        class="all-filters"
+        data-active={moreCount > 0}
+        aria-haspopup="dialog"
+        onClick={() => setCategory("all")}
+      >
         <span class="desktop-more">More filters</span>
         <span class="mobile-more">Filters</span> ▾
       </button>

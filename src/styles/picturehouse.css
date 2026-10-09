@@ -1,0 +1,966 @@
+/* Picturehouse: walnut, curtain red, brass trim and ivory cinema signage. */
+.design-view-label {
+  display: none;
+}
+:root {
+  --sidebar-width: 178px;
+}
+:root body {
+  font-family: Arial, Helvetica, sans-serif;
+}
+:root button {
+  border-radius: 2px;
+}
+:root .desktop-sidebar {
+  border: 0;
+  background: var(--bg);
+}
+:root .sidebar-content {
+  padding: 8px 0 0;
+}
+:root .section-label {
+  border: 0;
+  padding: 12px 12px 5px;
+  font:
+    700 10px Arial,
+    sans-serif;
+  text-transform: uppercase;
+}
+:root .sidebar-content nav a {
+  border: 0;
+  padding: 8px 12px;
+}
+:root .sidebar-content nav section + section {
+  margin-top: 12px;
+}
+:root .account-panel {
+  border: 0;
+  padding: 6px 12px;
+}
+:root .account-panel > button,
+:root .settings-button,
+:root .friends-button,
+:root .theme-button {
+  border: 0;
+  background: transparent;
+  text-align: left;
+  justify-content: start;
+  font-size: 12px;
+  padding: 7px 12px;
+}
+:root .account-panel > button {
+  padding-left: 0;
+}
+:root .sidebar-bottom {
+  padding: 8px 12px;
+}
+:root .sidebar-bottom a,
+:root .update-note {
+  text-align: left;
+  font-size: 11px;
+  margin-top: 10px;
+}
+:root .masthead {
+  height: 48px;
+  justify-content: start;
+  padding: 0 14px 0 46px;
+  position: sticky;
+}
+:root .masthead h1 span {
+  font-weight: 800;
+}
+:root .menu-button {
+  font-size: 19px;
+  left: 6px;
+}
+:root .design-view-label {
+  display: block;
+  margin-left: auto;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+:root .tagline {
+  display: none;
+}
+:root .filter-bar {
+  padding: 10px 12px 7px;
+  gap: 6px;
+  border: 0;
+  align-items: center;
+}
+:root .bar-search {
+  flex: 1 1 180px;
+  min-width: 140px;
+  padding: 7px 10px;
+  font-size: 12px;
+  background: var(--shade);
+  border: 0;
+  border-radius: 2px;
+  height: 32px;
+}
+:root .desktop-filters,
+:root .desktop-filters .filter-fields {
+  gap: 5px;
+}
+:root .desktop-filters .filter-picker {
+  min-width: 80px;
+  border: 0;
+  background: var(--shade);
+  border-radius: 2px;
+}
+:root .desktop-filters .filter-picker summary {
+  padding: 8px 24px 8px 9px;
+  font-size: 12px;
+}
+:root .desktop-filters .filter-picker summary::after {
+  top: 8px;
+}
+:root .when-picker {
+  border: 0;
+  border-radius: 2px;
+  background: var(--shade);
+}
+:root .when-picker > summary {
+  padding: 8px 10px;
+  font-size: 12px;
+}
+:root .all-filters,
+:root .watchlists-trigger {
+  padding: 8px 10px;
+  font-size: 12px;
+  border: 0;
+  background: var(--shade);
+}
+:root .filter-summary {
+  padding: 0 12px 7px;
+  gap: 4px 10px;
+  border: 0;
+}
+:root .quick-days {
+  gap: 2px;
+}
+:root .quick-days button {
+  border: 0;
+  background: transparent;
+  padding: 5px 7px;
+  font-size: 11px;
+  min-height: 28px;
+}
+:root .quick-days small {
+  font-size: 9px;
+  margin-left: 3px;
+}
+:root .quick-days button[aria-pressed="true"] {
+  background: var(--active-bg);
+  color: var(--active-fg);
+  font-weight: 700;
+}
+:root .filter-summary .result-status {
+  font-size: 11px;
+}
+:root .active-filters button {
+  padding: 3px 6px;
+  font-size: 11px;
+}
+:root .film-table th {
+  top: 48px;
+  border: 0;
+}
+:root .film-table th button {
+  min-height: 32px;
+  padding: 6px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  background: transparent;
+}
+:root .film-row td {
+  border: 0;
+  padding: 7px 10px;
+  font-size: 13px;
+  line-height: 1.3;
+}
+:root .film-title {
+  min-height: 28px;
+}
+:root .film-title i {
+  font-size: 11px;
+  margin-top: 2px;
+  font-style: normal;
+}
+:root .director-column a {
+  color: var(--muted);
+  font-weight: 400;
+}
+:root .rating-chip {
+  border: 0;
+  background: transparent;
+  padding: 2px;
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+:root .rating-chip.missing {
+  color: var(--muted);
+  font-weight: 400;
+}
+:root .pagination {
+  padding: 7px 12px;
+  border: 0;
+  background: var(--shade);
+  font-size: 11px;
+}
+:root .film-expanded {
+  padding: 12px;
+  gap: 12px;
+}
+:root .rating-card,
+:root .showtimes,
+:root .poster {
+  border: 0;
+}
+:root .rating-card {
+  background: var(--panel);
+}
+:root .desktop-sidebar,
+:root .sidebar-drawer {
+  --panel: #292b2d;
+  --shade: #373a3c;
+  --fg: #f4f0e9;
+  --muted: #b4b5b3;
+  --link: #ff9d8c;
+  --line: #45494b;
+  background: #292b2d;
+  color: var(--fg);
+}
+:root .sidebar-content nav a[aria-current="page"] {
+  background: transparent;
+}
+@media (max-width: 799px) {
+  :root .masthead {
+    height: 44px;
+    padding-left: 40px;
+  }
+  :root .masthead h1 {
+    font-size: 20px;
+  }
+  :root .design-view-label {
+    font-size: 9px;
+    letter-spacing: 0;
+  }
+  :root .film-table th {
+    top: 44px;
+  }
+  :root .filter-bar {
+    padding: 8px 9px 4px;
+    gap: 5px;
+  }
+  :root .bar-search {
+    flex-basis: 100%;
+  }
+  :root .mobile-filters {
+    gap: 4px;
+  }
+  :root .mobile-filters button,
+  :root .mobile-sort-trigger,
+  :root .quick-filters-mobile {
+    padding: 7px 8px;
+    border: 0;
+    background: var(--shade);
+    font-size: 11px;
+    min-height: 32px;
+  }
+  :root .filter-summary {
+    padding: 2px 9px 6px;
+    gap: 4px 8px;
+  }
+  :root .film-row td {
+    padding: 8px;
+  }
+  :root .film-title {
+    font-size: 14px;
+  }
+  :root .sidebar-drawer .sidebar-content {
+    padding-top: 35px;
+  }
+}
+:root .quick-days {
+  margin-bottom: 0;
+}
+:root .active-filters:empty {
+  display: none;
+}
+:root .film-table th + th {
+  border-left: 0;
+}
+:root .masthead h1 a {
+  display: flex;
+  align-items: center;
+}
+:root .masthead .brand-info {
+  font:
+    700 10px Arial,
+    sans-serif;
+}
+:root .showtime-day h3 {
+  text-align: left;
+}
+:root .showtime-day li {
+  padding: 8px 10px;
+  gap: 8px;
+}
+:root .screening-info > a {
+  font-size: 14px;
+  font-weight: 600;
+}
+:root .film-row td {
+  border-bottom: 1px solid #e4dfd3;
+}
+:root .film-expanded {
+  background: #eae5d9;
+}
+:root .showtime-day h3 {
+  font:
+    600 11px "Space Grotesk",
+    sans-serif;
+}
+:root .showtime-day time {
+  font:
+    600 15px "Space Grotesk",
+    sans-serif;
+}
+:root .time-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 0;
+}
+:root .film-expanded,
+:root .film-row.is-expanded {
+  background: var(--shade);
+}
+:root .showtime-day h3,
+:root .showtime-day time {
+  color: #ffa488;
+}
+@media (max-width: 760px) {
+  :root .masthead h1 {
+    font-size: 20px;
+  }
+  :root .masthead h1 a {
+    gap: 5px;
+  }
+}
+:root .film-expanded {
+  grid-template-columns: 160px minmax(0, 1fr);
+  align-items: start;
+}
+:root .poster {
+  max-width: 120px;
+  margin-bottom: 8px;
+}
+:root .rating-card {
+  padding: 5px 3px;
+  gap: 3px;
+  min-height: 0;
+}
+:root .rating-card strong {
+  font-size: 16px;
+}
+@media (max-width: 760px) {
+  :root .film-expanded {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  :root .poster {
+    max-width: 110px;
+    margin-bottom: 0;
+  }
+}
+:root {
+  --strong-line: var(--line);
+  --accent-ink: #fff7eb;
+  --active-fg: #fff7eb;
+  --programme-brass: #a58953;
+}
+:root,
+:root {
+  --bg: #1e1917;
+  --panel: #28211e;
+  --shade: #342a25;
+  --fg: #f0e8d8;
+  --muted: #c3b6a6;
+  --original: #c3b6a6;
+  --line: #493a31;
+  --rating: #f0e8d8;
+  --link: #e9a09d;
+  --accent: #b6565e;
+  --active-bg: #843239;
+  --masthead-bg: #64272e;
+  --masthead-fg: #fff3e1;
+  --programme-rule: #a58953;
+  --programme-side: #1e1917;
+  color-scheme: dark;
+}
+:root .masthead .brand-info {
+  border-color: currentColor;
+  transform: none;
+}
+:root :is(.desktop-sidebar, .sidebar-drawer) {
+  --panel: var(--programme-side);
+  --fg: var(--programme-side-fg);
+  --muted: var(--programme-side-muted);
+  background: var(--programme-side);
+  color: var(--programme-side-fg);
+}
+:root .sidebar-content nav a[aria-current="page"] {
+  color: var(--programme-side-fg);
+  box-shadow: inset 3px 0 var(--accent);
+}
+:root .film-title i {
+  letter-spacing: 0;
+}
+:root .film-table th {
+  background: var(--shade);
+  color: var(--fg);
+  border-bottom: 1px solid var(--line);
+}
+:root .film-table th[aria-sort]:not([aria-sort="none"]) button {
+  color: var(--link);
+}
+:root .film-row:nth-child(even) {
+  background: transparent;
+}
+:root :is(.film-expanded, .film-row.is-expanded, .film-row:hover) {
+  background: var(--shade);
+}
+:root .showtimes {
+  background: var(--panel);
+}
+:root .showtime-day time {
+  color: var(--link);
+}
+:root .showtime-day li {
+  border-bottom-color: var(--line);
+}
+:root .time-dot {
+  background: var(--accent);
+}
+@media (max-width: 760px) {
+  :root .film-title {
+    font-size: 15px;
+  }
+}
+:root {
+  --deco-red: #843239;
+  --deco-wood: #36241f;
+}
+:root .masthead h1 {
+  line-height: 1;
+}
+:root .masthead h1 a {
+  gap: 12px;
+}
+:root .masthead .brand-info {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  border: 0;
+  border-left: 1px solid var(--sign-line);
+  padding: 5px 0 5px 12px;
+}
+:root .showtime-day h3 {
+  text-transform: uppercase;
+  padding: 8px 10px;
+}
+:root .showtime-day time {
+  font-family: "Barlow Condensed", Arial, sans-serif;
+  line-height: 1.1;
+}
+:root .showtime-day li {
+  grid-template-columns: 46px 4px minmax(0, 1fr);
+}
+:root .masthead {
+  border-bottom: 3px double var(--deco-brass);
+}
+:root .masthead h1 a::before {
+  flex-shrink: 0;
+}
+:root .film-row.is-expanded :is(.film-title, .rating-chip, .director-column a) {
+  color: var(--sign-ink);
+}
+@media (max-width: 760px) {
+  :root .masthead h1 {
+    font-size: 18px;
+    letter-spacing: 0.045em;
+  }
+  :root .masthead h1 a {
+    gap: 6px;
+  }
+  :root .masthead .brand-info {
+    padding-left: 6px;
+    font-size: 8px;
+  }
+  :root .film-title {
+    font-size: 14px;
+  }
+}
+:root .masthead h1 a::before {
+  width: 14px;
+  height: 15px;
+  background:
+    linear-gradient(currentColor, currentColor) left top / 6px 1px no-repeat,
+    linear-gradient(currentColor, currentColor) left center / 10px 1px no-repeat,
+    linear-gradient(currentColor, currentColor) left bottom / 14px 1px no-repeat;
+}
+:root .film-row.is-expanded .film-title i {
+  text-transform: none;
+  letter-spacing: 0;
+}
+:root {
+  --cinema-display: "Josefin Sans", Arial, sans-serif;
+  --cinema-weight: 600;
+}
+:root .masthead h1 a::before {
+  content: none;
+}
+:root .masthead h1 {
+  font-size: 25px;
+  font-style: normal;
+  letter-spacing: 0.075em;
+}
+:root .masthead h1 .brand-name {
+  font-weight: var(--cinema-weight);
+}
+:root .film-title {
+  font-family: "Josefin Sans", Arial, sans-serif;
+  font-weight: 600;
+  font-size: 16px;
+  letter-spacing: 0.005em;
+}
+:root .film-title i {
+  font-family: Arial, Helvetica, sans-serif;
+  font-weight: 400;
+}
+:root .sidebar-content nav a,
+:root .sidebar-content .friends-button {
+  padding-block: 8px;
+}
+:root .sidebar-content nav a[aria-current="page"] {
+  font-weight: 600;
+}
+:root .theme-button {
+  display: none;
+}
+:root .showtime-day h3 {
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+  font-weight: 600;
+}
+:root .film-row.is-expanded .film-title {
+  font-family: var(--cinema-display);
+  font-weight: var(--cinema-weight);
+  font-size: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+@media (max-width: 760px) {
+  :root .masthead h1 {
+    font-size: 19px;
+    letter-spacing: 0.04em;
+  }
+  :root .film-title {
+    font-size: 15px;
+  }
+  :root .film-row.is-expanded .film-title {
+    font-size: 17px;
+  }
+}
+:root {
+  --bg: #171310;
+  --panel: #211b17;
+  --shade: #2c231d;
+  --fg: #faf7ef;
+  --muted: #c4b8a8;
+  --original: #c4b8a8;
+  --line: #514335;
+  --rating: #faf7ef;
+  --link: #ffffff;
+  --accent: #c94451;
+  --active-bg: #8b2434;
+  --masthead-bg: #8b2434;
+  --masthead-fg: #ffffff;
+  --programme-rule: #ad915c;
+  --programme-side: #201712;
+  --programme-side-fg: #faf7ef;
+  --programme-side-muted: #c4b8a8;
+  --deco-brass: #ad915c;
+  --brass: #c3a771;
+  --sign-paper: #fffdf5;
+  --sign-ink: #151517;
+  --sign-line: #c8bfad;
+  --board-paper: #fffdf5;
+  --board-ink: #151517;
+  --board-groove: #e8e3d8;
+  --board-edge: #c8bfad;
+  --board-surface:
+    repeating-linear-gradient(to bottom, transparent 0 7px, var(--board-groove) 7px 8px),
+    var(--board-paper);
+  color-scheme: dark;
+}
+:root .masthead h1 {
+  font-family: "Josefin Sans", Arial, sans-serif;
+  font-weight: 600;
+}
+:root .masthead .brand-info {
+  font-family: "Josefin Sans", Arial, sans-serif;
+}
+:root :is(.desktop-sidebar, .sidebar-drawer) {
+  --shade: #34271f;
+  --link: #faf7ef;
+  border-right: 1px solid #8c714344;
+}
+:root .sidebar-content nav a,
+:root .sidebar-content .friends-button {
+  font-family: "Space Grotesk", Arial, sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+:root .section-label {
+  font-family: "Space Grotesk", Arial, sans-serif;
+  font-weight: 500;
+  font-size: 10px;
+  letter-spacing: 0.09em;
+  color: var(--brass);
+}
+:root .film-title,
+:root .film-row.is-expanded .film-title {
+  font-family: "Space Grotesk", Arial, sans-serif;
+  text-transform: none;
+}
+:root .film-row.is-expanded {
+  --fg: #151517;
+  --rating: #151517;
+  --muted: #55555b;
+  --link: #151517;
+  color: var(--fg);
+}
+:root .film-row.is-expanded td {
+  background: transparent;
+}
+:root .film-row.is-expanded .film-title {
+  background: transparent;
+  color: var(--board-ink);
+  border: 0;
+  padding: 0;
+  min-height: 0;
+  width: auto;
+}
+:root .film-row.is-expanded :is(.rating-chip, .director-column a) {
+  color: var(--board-ink);
+}
+:root .film-row.is-expanded .film-title i {
+  font-family: Arial, sans-serif;
+  color: #55555b;
+}
+:root .showtime-day h3 {
+  font-family: "Space Grotesk", Arial, sans-serif;
+  font-size: 12px;
+  letter-spacing: 0.03em;
+  color: var(--fg);
+  border-bottom-color: #ad915c70;
+}
+@media (max-width: 760px) {
+  :root .masthead h1 {
+    font-size: 19px;
+  }
+  :root .film-title,
+  :root .film-row.is-expanded .film-title {
+    font-size: 15px;
+  }
+}
+:root .masthead h1 a {
+  background: var(--board-surface);
+  color: var(--board-ink);
+  padding: 7px 12px 4px;
+  min-height: 35px;
+}
+:root .masthead .brand-info {
+  color: var(--board-ink);
+  border-left-color: var(--board-edge);
+}
+:root .film-row {
+  transition: none;
+}
+:root .film-row.is-expanded {
+  background: var(--board-paper);
+}
+:root .film-row td {
+  border-bottom-color: #c3a7711c;
+}
+:root .film-row.is-expanded td {
+  border-bottom-color: var(--board-edge);
+}
+:root dialog {
+  border: 0;
+  box-shadow: 0 20px 70px #00000080;
+}
+:root dialog::backdrop {
+  background: #090705b3;
+  opacity: 1;
+}
+:root dialog .sheet-heading {
+  border: 0;
+  background: var(--shade);
+}
+:root dialog :is(button, input:not([type="checkbox"]):not([type="radio"]), select),
+:root .cinema-tools summary {
+  border: 0;
+  background: var(--shade);
+}
+:root dialog .sheet-heading button {
+  background: transparent;
+}
+:root dialog :is(input, select, button):focus-visible {
+  outline: 1px solid var(--brass);
+  outline-offset: 2px;
+}
+:root dialog :is(.cinema-browse-controls, .cinema-selection-footer) {
+  border-color: #c3a77120;
+}
+:root .cinema-tool-panel {
+  border: 0;
+  box-shadow: 0 10px 30px #00000070;
+}
+:root .add-calendar {
+  border: 0;
+  background: var(--shade);
+}
+@media (max-width: 760px) {
+  :root .masthead h1 a {
+    padding: 6px 7px 3px;
+    min-height: 29px;
+  }
+  :root .masthead h1 {
+    font-size: 18px;
+    letter-spacing: 0.025em;
+  }
+}
+@font-face {
+  font-family: "Clash Display";
+  src: url("/fonts/fontshare/clash-display-500.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "League Spartan";
+  src: url("/fonts/league-spartan/LeagueSpartan-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "League Spartan";
+  src: url("/fonts/league-spartan/LeagueSpartan-Medium.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+:root body,
+:root :is(button, input, select, textarea),
+:root .film-title,
+:root .film-row.is-expanded .film-title,
+:root .sidebar-content nav a,
+:root .sidebar-content .friends-button,
+:root .section-label,
+:root .showtime-day h3,
+:root .showtime-day time,
+:root .masthead .brand-info {
+  font-family: "League Spartan", Arial, sans-serif;
+  font-weight: 400;
+}
+:root body {
+  font-size: 15px;
+}
+:root :is(button, input, select, textarea) {
+  font-size: 14px;
+}
+:root .masthead h1,
+:root .masthead h1 .brand-name {
+  font-family: "Clash Display", Arial, sans-serif;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+}
+:root .showtime-day time {
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+:root .film-title,
+:root .film-row.is-expanded .film-title {
+  font-size: 15px;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+:root .sidebar-content nav a {
+  font-size: 14px;
+  font-weight: 400;
+}
+:root
+  :is(.rating-chip, .mobile-sort-score, .screening-info > a, .showtime-day h3, th button, strong) {
+  font-weight: 500;
+}
+@media (max-width: 760px) {
+  :root .masthead h1 {
+    font-size: 17px;
+    letter-spacing: 0.025em;
+  }
+}
+/* Clicks change state without moving the controls or the selected film title. */
+html {
+  scrollbar-gutter: stable;
+}
+:root .film-row {
+  cursor: pointer;
+}
+:root .film-title,
+:root .film-row.is-expanded .film-title {
+  width: 100%;
+  min-height: 28px;
+}
+:root .quick-days button,
+:root .quick-days button[aria-pressed="true"] {
+  font-weight: 400;
+}
+:root .active-filters:empty {
+  display: flex;
+}
+:root .filter-summary {
+  min-height: 68px;
+}
+:root .filter-summary .result-status {
+  min-width: 8ch;
+  font-variant-numeric: tabular-nums;
+}
+:root
+  .filter-bar
+  :is(
+    .when-picker > summary,
+    .filter-picker > summary,
+    .watchlists-trigger,
+    .all-filters,
+    .mobile-filters button
+  ) {
+  display: flex;
+  align-items: center;
+  height: 36px;
+  min-height: 36px;
+  padding: 0 10px;
+  line-height: 1;
+  font-size: 14px;
+  font-weight: 400;
+  white-space: nowrap;
+}
+:root .desktop-filters .filter-picker > summary {
+  padding-right: 24px;
+}
+:root .when-picker {
+  width: 110px;
+  flex-shrink: 0;
+}
+:root .watchlists-trigger {
+  width: 124px;
+  flex-shrink: 0;
+}
+:root .all-filters {
+  width: 108px;
+  flex-shrink: 0;
+}
+:root .shortcut-count {
+  width: 3ch;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+:root .filter-bar [data-active="true"],
+:root .filter-bar .filter-picker.has-selection > summary,
+:root dialog button[aria-pressed="true"],
+:root dialog .filter-picker.has-selection > summary,
+:root dialog .filter-options label:has(input:checked) {
+  background: var(--active-bg);
+  color: var(--active-fg);
+}
+:root .filter-picker.has-selection > summary > span {
+  color: inherit;
+}
+:root dialog .filter-options label:has(input:checked) {
+  opacity: 1;
+}
+:root dialog .filter-options label:has(input:checked) small {
+  color: inherit;
+}
+@media (max-width: 799px) {
+  :root .filter-bar {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  :root .bar-search {
+    grid-column: 1 / -1;
+    min-width: 0;
+    height: 36px;
+    font-size: 16px;
+  }
+  :root .mobile-filters {
+    display: contents;
+  }
+  :root .filter-bar :is(.mobile-filters button, .watchlists-trigger, .all-filters) {
+    width: 100%;
+    min-width: 0;
+    height: 44px;
+    min-height: 44px;
+    padding: 0 6px;
+    justify-content: center;
+    font-size: 13px;
+  }
+  :root .mobile-sort-trigger {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+  :root .filter-summary {
+    min-height: 50px;
+  }
+  :root dialog .quick-days button {
+    min-height: 44px;
+  }
+}
+
+:root dialog button[aria-pressed="true"]:not(:disabled),
+:root dialog :is(.date-shortcuts, .calendar-grid, .quick-days) button[aria-pressed="true"] {
+  background: var(--active-bg);
+  color: var(--active-fg);
+}
+
+:root .sidebar-content nav a[aria-current="page"] {
+  font-weight: 400;
+}
+:root .filter-summary .result-status {
+  width: 260px;
+}
+@media (max-width: 799px) {
+  :root .filter-summary .result-status {
+    width: 9ch;
+  }
+}
+
+:root {
+  --sold-out: #ff9e93;
+}
+:root :is(.calendar-grid, .date-shortcuts, .quick-days) button[aria-pressed="true"] {
+  background: var(--active-bg);
+  color: var(--active-fg);
+  border-color: transparent;
+}
+/* Keep a searchable option list's scroll range stable as matches change. */
+:root .filter-sheet .filter-options.searchable {
+  height: 240px;
+  overflow-y: auto;
+}

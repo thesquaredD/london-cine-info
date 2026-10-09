@@ -67,6 +67,16 @@ export function FilmTable({
   const pageCount = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
   const page = Math.min(state.page, pageCount);
   const start = (page - 1) * PAGE_SIZE;
+  function toggleFilm(film: Film, key: string) {
+    if (expanded !== key)
+      capture("film_opened", {
+        film_id: film.id,
+        path: state.path,
+        on_watchlist: marked(film),
+        watchlist: state.path === "/watchlist" || !!state.watchlist,
+      });
+    onExpand(expanded === key ? null : key);
+  }
   function heading(key: SortKey, label: string, compact = false, extraClass = "") {
     const selected = state.sort === key;
     return (
@@ -133,7 +143,24 @@ export function FilmTable({
                     </td>
                   </tr>
                 )}
-                <tr class={`film-row ${expanded === key ? "is-expanded" : ""}`}>
+                <tr
+                  class={`film-row ${expanded === key ? "is-expanded" : ""}`}
+                  onClick={(event) => {
+                    if (
+                      event.button ||
+                      event.metaKey ||
+                      event.ctrlKey ||
+                      event.shiftKey ||
+                      event.altKey ||
+                      (event.target as Element).closest(
+                        "a, button, input, select, textarea, label, [role='button']",
+                      ) ||
+                      window.getSelection()?.toString()
+                    )
+                      return;
+                    toggleFilm(film, key);
+                  }}
+                >
                   {watched && (
                     <td class="watchlist-column">
                       {marked(film) && (
@@ -153,16 +180,7 @@ export function FilmTable({
                       class="film-title"
                       aria-expanded={expanded === key}
                       aria-controls={`details-${state.radarSection ?? ""}${key}`}
-                      onClick={() => {
-                        if (expanded !== key)
-                          capture("film_opened", {
-                            film_id: film.id,
-                            path: state.path,
-                            on_watchlist: marked(film),
-                            watchlist: state.path === "/watchlist" || !!state.watchlist,
-                          });
-                        onExpand(expanded === key ? null : key);
-                      }}
+                      onClick={() => toggleFilm(film, key)}
                     >
                       <span class="expansion-icon" aria-hidden="true">
                         {expanded === key ? "▾" : "▸"}

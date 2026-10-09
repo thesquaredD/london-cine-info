@@ -226,12 +226,7 @@ export function App() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
-  const [systemDark, setSystemDark] = useState(
-    () => window.matchMedia("(prefers-color-scheme: dark)").matches,
-  );
-  const [themeOverride, setThemeOverride] = useState<boolean | null>(null);
   const drawer = useRef<HTMLDialogElement>(null);
-  const dark = themeOverride ?? systemDark;
   const meta = catalogue?.meta ?? null;
   const [yearOpenRequest, setYearOpenRequest] = useState(0);
   const yearDecades = useMemo(() => catalogueDecades(catalogue?.films ?? []), [catalogue]);
@@ -471,15 +466,6 @@ export function App() {
     return () => window.removeEventListener("popstate", onPop);
   }, []);
   useEffect(() => {
-    const media = window.matchMedia("(prefers-color-scheme: dark)");
-    const changed = () => setSystemDark(media.matches);
-    media.addEventListener("change", changed);
-    return () => media.removeEventListener("change", changed);
-  }, []);
-  useEffect(() => {
-    document.documentElement.dataset.theme = dark ? "dark" : "light";
-  }, [dark]);
-  useEffect(() => {
     document.title = `${pageTitle} — London Ciné Info`;
   }, [pageTitle]);
   useEffect(() => {
@@ -572,8 +558,6 @@ export function App() {
     onAccount: openAccount,
     meta,
     onChange: change,
-    dark,
-    onTheme: () => setThemeOverride(!dark),
   };
   const filterProps = {
     state,
@@ -653,9 +637,10 @@ export function App() {
                   change({ ...clearFilters("/"), path: "/" }, true);
                 }}
               >
-                <span>LONDON CINÉ</span> INFO
+                <span class="brand-name">LONDON CINÉ</span> <span class="brand-info">INFO</span>
               </a>
             </h1>
+            <span class="design-view-label">{pageTitle}</span>
           </header>
           <div class="tagline">The database of London cinema screenings</div>
           <h2 class="sr-only">{pageTitle}</h2>
@@ -843,7 +828,6 @@ export function App() {
                       {[
                         { id: "today", label: "Today" },
                         { id: "tomorrow", label: "Tomorrow" },
-                        { id: "tonight", label: "Tonight" },
                         { id: "evening", label: "Evening" },
                         { id: "weekend", label: "This weekend" },
                         { id: "this-week", label: "This week" },
@@ -852,12 +836,10 @@ export function App() {
                         const active =
                           id === "evening"
                             ? isEvening(state)
-                            : id === "tonight"
-                              ? !!state.tonight
-                              : !state.tonight &&
-                                state.filters.day?.length === 1 &&
-                                state.filters.day[0] === id &&
-                                !state.excluded.day?.length;
+                            : !state.tonight &&
+                              state.filters.day?.length === 1 &&
+                              state.filters.day[0] === id &&
+                              !state.excluded.day?.length;
                         return (
                           <button
                             key={id}
@@ -876,14 +858,12 @@ export function App() {
                             }
                           >
                             {label}
-                            {id !== "tonight" && (
-                              <small>
-                                {" "}
-                                {id === "evening"
-                                  ? (counts?.time.get("evening") ?? 0)
-                                  : (counts?.day.get(id) ?? 0)}
-                              </small>
-                            )}
+                            <small>
+                              {" "}
+                              {id === "evening"
+                                ? (counts?.time.get("evening") ?? 0)
+                                : (counts?.day.get(id) ?? 0)}
+                            </small>
                           </button>
                         );
                       })}

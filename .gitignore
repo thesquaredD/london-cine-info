@@ -13,3 +13,6 @@ playwright-report/
 .DS_Store
 
 .dev.vars*
+
+# Fontshare files are licensed for this website, not public repository redistribution.
+public/fonts/fontshare/*.woff2
