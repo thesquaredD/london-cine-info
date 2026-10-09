@@ -26,7 +26,7 @@ async function manage(page: Page) {
   await expect(account).toBeVisible();
   await account.getByRole("button", { name: "Manage my cinemas", exact: true }).click();
   const dialog = page.getByRole("dialog", { name: "Manage my cinemas", exact: true });
-  await expect(dialog.getByRole("button", { name: "Save my cinemas", exact: true })).toBeEnabled();
+  await expect(dialog.getByRole("button", { name: "Done", exact: true })).toBeEnabled();
   await expect(account).toBeHidden();
   await expect(page.locator("dialog[open]")).toHaveCount(1);
   return dialog;
@@ -54,7 +54,8 @@ test("real favourite union, cross-device removal, failed save, sign-out and acco
   await expect(bfi).not.toBeChecked();
   await bfi.check();
   await page.screenshot({ path: info.outputPath("cinema-selection.png") });
-  await dialog.getByRole("button", { name: "Save my cinemas", exact: true }).click();
+  await expect(dialog.getByRole("status").filter({ hasText: /^Saved$/ })).toBeVisible();
+  await dialog.getByRole("button", { name: "Done", exact: true }).click();
   await login(page, email);
   await page.reload();
   dialog = await manage(page);
@@ -74,13 +75,13 @@ test("real favourite union, cross-device removal, failed save, sign-out and acco
       remote.getByRole("checkbox", { name: "BFI Southbank", exact: true }),
     ).toBeChecked();
     await remote.getByRole("checkbox", { name: "BFI Southbank", exact: true }).uncheck();
-    await remote.getByRole("button", { name: "Save my cinemas", exact: true }).click();
+    await expect(remote.getByRole("status").filter({ hasText: /^Saved$/ })).toBeVisible();
+    await remote.getByRole("button", { name: "Done", exact: true }).click();
     await page.reload();
     dialog = await manage(page);
     await expect(
       dialog.getByRole("checkbox", { name: "BFI Southbank", exact: true }),
     ).not.toBeChecked();
-    await dialog.getByRole("checkbox", { name: "Prince Charles Cinema", exact: true }).check();
     await page.route("**/api/cinemas", (route) =>
       route.request().method() === "PUT"
         ? route.fulfill({
@@ -89,13 +90,15 @@ test("real favourite union, cross-device removal, failed save, sign-out and acco
           })
         : route.fallback(),
     );
-    await dialog.getByRole("button", { name: "Save my cinemas", exact: true }).click();
+    await dialog.getByRole("checkbox", { name: "Prince Charles Cinema", exact: true }).check();
     await expect(dialog.getByRole("alert")).toContainText("Cinema sync is unavailable");
     await expect(
       dialog.getByRole("checkbox", { name: "Prince Charles Cinema", exact: true }),
     ).toBeChecked();
     await page.unroute("**/api/cinemas");
-    await dialog.getByRole("button", { name: "Save my cinemas", exact: true }).click();
+    await dialog.getByRole("button", { name: "Retry", exact: true }).click();
+    await expect(dialog.getByRole("status").filter({ hasText: /^Saved$/ })).toBeVisible();
+    await dialog.getByRole("button", { name: "Done", exact: true }).click();
     await expect(dialog).toBeHidden();
     await page.request.post("/api/auth/logout", {
       data: {},
@@ -118,7 +121,8 @@ test("real favourite union, cross-device removal, failed save, sign-out and acco
       dialog.getByRole("checkbox", { name: "Prince Charles Cinema", exact: true }),
     ).not.toBeChecked();
     await dialog.getByRole("checkbox", { name: "BFI Southbank", exact: true }).uncheck();
-    await dialog.getByRole("button", { name: "Save my cinemas", exact: true }).click();
+    await expect(dialog.getByRole("status").filter({ hasText: /^Saved$/ })).toBeVisible();
+    await dialog.getByRole("button", { name: "Done", exact: true }).click();
     const account = page.locator(".account-dialog");
     await expect(account).toBeVisible();
     await account.getByRole("button", { name: "Close account", exact: true }).click();
@@ -145,7 +149,8 @@ test("real favourite union, cross-device removal, failed save, sign-out and acco
       dialog.getByRole("checkbox", { name: "BFI Southbank", exact: true }),
     ).not.toBeChecked();
     await dialog.getByRole("checkbox", { name: "BFI Southbank", exact: true }).check();
-    await dialog.getByRole("button", { name: "Save my cinemas", exact: true }).click();
+    await expect(dialog.getByRole("status").filter({ hasText: /^Saved$/ })).toBeVisible();
+    await dialog.getByRole("button", { name: "Done", exact: true }).click();
     await expect(page.locator(".film-row")).toHaveCount(2);
     await expect(
       page.getByRole("heading", { name: "Set up my cinemas", exact: true }),

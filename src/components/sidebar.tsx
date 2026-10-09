@@ -28,40 +28,56 @@ export function Sidebar({
 }: Props) {
   return (
     <div class="sidebar-content">
-      <h2 class="section-label">Pages</h2>
       <nav aria-label="Film pages">
-        {PAGES.map((page) => (
-          <a
-            key={page.path}
-            href={viewUrl({
-              ...state,
-              path: page.path,
-              page: 1,
-              director: "",
-              ...(!hasCustomSort(state) ? defaultSort(page.path) : {}),
-            })}
-            aria-current={state.path === page.path ? "page" : undefined}
-            onClick={(event) => {
-              if (event.button || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)
-                return;
-              event.preventDefault();
-              onChange(
-                {
-                  path: page.path,
-                  page: 1,
-                  director: "",
-                  ...(!hasCustomSort(state) ? defaultSort(page.path) : {}),
-                },
-                true,
-              );
-            }}
-          >
-            {page.name}
-          </a>
+        {["Discover", "For you"].map((group) => (
+          <section key={group} aria-label={group}>
+            <h2 class="section-label">{group}</h2>
+            <div>
+              {PAGES.filter(
+                (page) =>
+                  ["/watchlist", "/my-calendar"].includes(page.path) === (group === "For you"),
+              ).map((page) => (
+                <a
+                  key={page.path}
+                  href={viewUrl({
+                    ...state,
+                    path: page.path,
+                    page: 1,
+                    director: "",
+                    ...(!hasCustomSort(state) ? defaultSort(page.path) : {}),
+                  })}
+                  aria-current={state.path === page.path ? "page" : undefined}
+                  onClick={(event) => {
+                    if (
+                      event.button ||
+                      event.metaKey ||
+                      event.ctrlKey ||
+                      event.shiftKey ||
+                      event.altKey
+                    )
+                      return;
+                    event.preventDefault();
+                    onChange(
+                      {
+                        path: page.path,
+                        page: 1,
+                        director: "",
+                        ...(!hasCustomSort(state) ? defaultSort(page.path) : {}),
+                      },
+                      true,
+                    );
+                  }}
+                >
+                  {page.name}
+                </a>
+              ))}
+            </div>
+            {group === "For you" && <FriendsButton onOpen={onFriends} />}
+          </section>
         ))}
       </nav>
+      <h2 class="section-label">Preferences</h2>
       <AccountPanel account={account} onOpen={onAccount} />
-      <FriendsButton onOpen={onFriends} />
       <button class="settings-button" aria-haspopup="dialog" onClick={onSettings}>
         Settings
       </button>

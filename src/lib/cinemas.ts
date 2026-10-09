@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
-import { accountApi, type AccountState } from "./account";
+import { accountApi, AccountError, type AccountState } from "./account";
 export const CINEMA_STORAGE = "london-cine.cinemas.v1";
 type Guest = { browserId: string; venues: string[] };
 type Preferences = { venues: string[]; version: number };
@@ -30,51 +30,83 @@ export function useCinemas(account: AccountState) {
   guestRef.current = guest;
   const id = account.user?.id ?? null;
   const identity = useRef(id);
+  const identityEpoch = useRef(0);
+  if (identity.current !== id) identityEpoch.current++;
   identity.current = id;
   const generation = useRef(0);
-  const lock = useRef(false);
+  const lock = useRef<number | undefined>(undefined);
+  const desired = useRef<{ id: string | null; venues: string[] } | null>(null);
+  const acknowledged = useRef<(Preferences & { userId: string }) | null>(null);
+  const [pending, setPending] = useState<{ id: string | null; venues: string[] } | null>(null);
+  const [conflict, setConflict] = useState(false);
+  const [saved, setSaved] = useState(false);
   function persist(value: Guest) {
     try {
       localStorage.setItem(CINEMA_STORAGE, JSON.stringify(value));
       setStorageError("");
+      return true;
     } catch {
       setStorageError(
         "Browser storage is unavailable. Your guest cinemas will last only for this visit.",
       );
+      return false;
     }
   }
-  const reload = useCallback(async () => {
-    const current = ++generation.current;
-    if (!id) {
-      setRemote(null);
-      setError("");
-      setLoading(false);
-      return true;
-    }
-    setLoading(true);
-    try {
-      const value = guestRef.current;
-      // Persist the browser identity even when no guest cinemas have been chosen yet.
-      persist(value);
-      const result = await accountApi<Preferences>("/api/cinemas", "POST", {
-        browserId: value.browserId,
-        venues: value.venues,
-      });
-      if (!validVenues(result.venues) || !Number.isInteger(result.version))
-        throw new Error("Saved cinemas could not be read. Please retry.");
-      if (current !== generation.current || identity.current !== id) return;
-      setRemote({ ...result, userId: id });
-      setError("");
-      return result;
-    } catch (failure) {
-      if (current === generation.current && identity.current === id)
-        setError(failure instanceof Error ? failure.message : "Your cinemas could not be loaded.");
-      return false;
-    } finally {
-      if (current === generation.current) setLoading(false);
-    }
-  }, [id]);
+  const reload = useCallback(
+    async (replacePending = false) => {
+      const current = ++generation.current;
+      if (!id) {
+        setRemote(null);
+        setError("");
+        setLoading(false);
+        return true;
+      }
+      setLoading(true);
+      try {
+        const value = guestRef.current;
+        // Persist the browser identity even when no guest cinemas have been chosen yet.
+        persist(value);
+        const result = await accountApi<Preferences>("/api/cinemas", "POST", {
+          browserId: value.browserId,
+          venues: value.venues,
+        });
+        if (!validVenues(result.venues) || !Number.isInteger(result.version))
+          throw new Error("Saved cinemas could not be read. Please retry.");
+        if (
+          current !== generation.current ||
+          identity.current !== id ||
+          (desired.current?.id === id && !replacePending)
+        )
+          return;
+        if (replacePending) {
+          desired.current = null;
+          setPending(null);
+          setConflict(false);
+          setSaved(false);
+        }
+        acknowledged.current = { ...result, userId: id };
+        setRemote({ ...result, userId: id });
+        setError("");
+        return result;
+      } catch (failure) {
+        if (current === generation.current && identity.current === id)
+          setError(
+            failure instanceof Error ? failure.message : "Your cinemas could not be loaded.",
+          );
+        return false;
+      } finally {
+        if (current === generation.current) setLoading(false);
+      }
+    },
+    [id],
+  );
   useEffect(() => {
+    desired.current = null;
+    setPending(null);
+    setConflict(false);
+    setError("");
+    setSaved(false);
+    setBusy(false);
     void reload();
     return () => {
       generation.current++;
@@ -82,10 +114,10 @@ export function useCinemas(account: AccountState) {
   }, [reload]);
   useEffect(() => {
     const focus = () => {
-      if (!lock.current) void reload();
+      if (lock.current === undefined && !desired.current) void reload();
     };
     const storage = (event: StorageEvent) => {
-      if (event.key === CINEMA_STORAGE) {
+      if (event.key === CINEMA_STORAGE && !desired.current) {
         setGuest(readGuest());
       }
     };
@@ -96,50 +128,88 @@ export function useCinemas(account: AccountState) {
       window.removeEventListener("storage", storage);
     };
   }, [reload]);
-  const save = async (venues: string[]) => {
-    if (lock.current || account.loading) return false;
-    if (!validVenues(venues)) {
-      setError("Choose up to 1000 cinemas.");
-      return false;
-    }
-    lock.current = true;
+  const flush = async () => {
+    const savingId = identity.current;
+    const epoch = identityEpoch.current;
+    if (lock.current === epoch || account.loading || conflict) return false;
+    lock.current = epoch;
     setBusy(true);
     setError("");
-    const savingId = id;
     try {
-      if (id) {
-        if (!remote || remote.userId !== id)
-          throw new Error("Reload your saved cinemas before saving.");
-        const result = await accountApi<Preferences>("/api/cinemas", "PUT", {
-          venues,
-          version: remote.version,
-        });
-        if (identity.current !== savingId) return false;
-        generation.current++;
-        setRemote({ ...result, userId: id });
-      } else {
-        const value = { ...guestRef.current, venues: [...new Set(venues)] };
-        setGuest(value);
-        persist(value);
+      while (desired.current?.id === savingId && identityEpoch.current === epoch) {
+        const target = desired.current;
+        if (savingId) {
+          const previous = acknowledged.current;
+          if (!previous || previous.userId !== savingId)
+            throw new Error("Reload your saved cinemas before saving.");
+          const result = await accountApi<Preferences>("/api/cinemas", "PUT", {
+            venues: target.venues,
+            version: previous.version,
+          });
+          if (identityEpoch.current !== epoch) return false;
+          if (!validVenues(result.venues) || !Number.isInteger(result.version))
+            throw new Error("Saved cinemas could not be read. Please retry.");
+          generation.current++;
+          acknowledged.current = { ...result, userId: savingId };
+          setRemote(acknowledged.current);
+        } else {
+          const value = { ...guestRef.current, venues: target.venues };
+          guestRef.current = value;
+          setGuest(value);
+          if (!persist(value)) return false;
+        }
+        if (desired.current === target) {
+          desired.current = null;
+          setPending(null);
+          setSaved(true);
+        }
       }
       return true;
     } catch (failure) {
-      if (identity.current === savingId)
+      if (identityEpoch.current === epoch) {
+        setConflict(failure instanceof AccountError && failure.status === 409);
         setError(failure instanceof Error ? failure.message : "Your cinemas could not be saved.");
+      }
       return false;
     } finally {
-      lock.current = false;
-      setBusy(false);
+      if (lock.current === epoch) lock.current = undefined;
+      if (identityEpoch.current === epoch) setBusy(false);
     }
   };
+  const save = (venues: string[]) => {
+    if (
+      account.loading ||
+      loading ||
+      (id && acknowledged.current?.userId !== id) ||
+      !validVenues(venues)
+    )
+      return Promise.resolve(false);
+    const value = { id, venues: [...new Set(venues)] };
+    desired.current = value;
+    setPending(value);
+    setSaved(false);
+    return flush();
+  };
+  const discardAndReload = () => reload(true);
+  const retry = () => (desired.current ? flush() : reload());
   return {
-    venues: id ? (remote?.userId === id ? remote.venues : []) : guest.venues,
-    loading: account.loading || loading,
+    venues:
+      pending?.id === id
+        ? pending.venues
+        : id
+          ? remote?.userId === id
+            ? remote.venues
+            : []
+          : guest.venues,
+    loading: account.loading || loading || (!!id && remote?.userId !== id),
     busy,
     error,
     storageError,
     save,
-    reload,
+    reload: discardAndReload,
+    retry,
+    conflict,
+    saved,
     signedIn: !!id,
   };
 }

@@ -33,6 +33,16 @@ export function DisplayControls({
           <option value="original">Original title</option>
         </select>
       </label>
+      <label class="checkbox-choice">
+        <input
+          type="checkbox"
+          checked={!!value.hideWatchlistRatings}
+          onChange={(event) =>
+            onChange({ ...value, hideWatchlistRatings: event.currentTarget.checked })
+          }
+        />{" "}
+        Hide ratings in my watchlist
+      </label>
       <h3>Rating column order</h3>
       <p>Drag or use the arrows to reorder.</p>
       <ol aria-label="Rating column order">

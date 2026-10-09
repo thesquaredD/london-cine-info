@@ -101,39 +101,43 @@ export function ExpandedRow({
                 {data?.details.overview && <p class="overview">{data.details.overview}</p>}
               </div>
             </figure>
-            <div class="rating-cards">
-              {ratingOrder.map((key) => {
-                const source = RATINGS.find((rating) => rating.key === key)!;
-                const rating = film.ra[source.key];
-                const content = (
-                  <>
-                    <span>{source.name}</span>
-                    <strong>
-                      {rating?.value ?? "?"}
-                      <small>
-                        {rating?.value !== null && rating?.value !== undefined ? source.scale : ""}
-                      </small>
-                    </strong>
-                  </>
-                );
-                return rating ? (
-                  <a
-                    key={source.key}
-                    class="rating-card"
-                    href={rating.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={`${source.name} rating for ${film.ti}`}
-                  >
-                    {content}
-                  </a>
-                ) : (
-                  <div key={source.key} class="rating-card missing">
-                    {content}
-                  </div>
-                );
-              })}
-            </div>
+            {ratingOrder.length > 0 && (
+              <div class="rating-cards">
+                {ratingOrder.map((key) => {
+                  const source = RATINGS.find((rating) => rating.key === key)!;
+                  const rating = film.ra[source.key];
+                  const content = (
+                    <>
+                      <span>{source.name}</span>
+                      <strong>
+                        {rating?.value ?? "?"}
+                        <small>
+                          {rating?.value !== null && rating?.value !== undefined
+                            ? source.scale
+                            : ""}
+                        </small>
+                      </strong>
+                    </>
+                  );
+                  return rating ? (
+                    <a
+                      key={source.key}
+                      class="rating-card"
+                      href={rating.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={`${source.name} rating for ${film.ti}`}
+                    >
+                      {content}
+                    </a>
+                  ) : (
+                    <div key={source.key} class="rating-card missing">
+                      {content}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
             {film.tr && (
               <a class="trailer-link" href={film.tr} target="_blank" rel="noopener noreferrer">
                 Watch trailer ↗

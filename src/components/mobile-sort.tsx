@@ -11,9 +11,11 @@ import {
 
 export function MobileSort({
   state,
+  hideRatings = false,
   onChange,
 }: {
   state: ViewState;
+  hideRatings?: boolean;
   onChange: (changes: Partial<ViewState>) => void;
 }) {
   const [open, setOpen] = useState(false);
@@ -23,7 +25,7 @@ export function MobileSort({
     "director",
     "year",
     "runtime",
-    ...RATINGS.map((rating) => rating.key),
+    ...(hideRatings ? [] : RATINGS.map((rating) => rating.key)),
   ];
   const orderLabels =
     state.sort === "runtime"
@@ -35,7 +37,13 @@ export function MobileSort({
           : ["Lowest first", "Highest first"];
   function choose(key: string) {
     if (key === "default")
-      onChange({ ...defaultSort(state.path), sortExplicit: undefined, page: 1 });
+      onChange({
+        ...(hideRatings
+          ? { sort: "title" as const, direction: "asc" as const }
+          : defaultSort(state.path)),
+        sortExplicit: undefined,
+        page: 1,
+      });
     else {
       const sort = key as SortKey;
       onChange({
