@@ -330,3 +330,48 @@ test("Evening quick filter preserves dates, shares its URL, and toggles off", as
       .click();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
+
+test("mobile My cinemas keeps Clear all and the cinema context inside the results toolbar", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    localStorage.setItem(
+      "london-cine.cinemas.v1",
+      JSON.stringify({
+        browserId: "12345678-1234-1234-1234-123456789abc",
+        venues: ["bfi.org.uk-southbank"],
+      }),
+    );
+  });
+  for (const colorScheme of ["light", "dark"] as const) {
+    await page.emulateMedia({ colorScheme });
+    for (const width of [320, 390, 799]) {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto("/");
+      await page.getByRole("button", { name: /^Quick filters/ }).click();
+      const dialog = page.getByRole("dialog", { name: "Quick filters", exact: true });
+      await dialog.getByRole("button", { name: "My cinemas", exact: true }).click();
+      await dialog.getByRole("button", { name: /^Show/ }).click();
+      await expect(page.locator(".cinema-context")).toContainText("My cinemas · 1 selected");
+      const chips = page.locator(".active-filters");
+      const clear = chips.getByRole("button", { name: "Clear all", exact: true });
+      await expect(clear).toBeVisible();
+      const clipping = await chips.boundingBox();
+      const bounds = await clear.boundingBox();
+      expect(bounds!.x).toBeGreaterThanOrEqual(clipping!.x);
+      expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(clipping!.x + clipping!.width);
+      for (const control of [
+        page.locator(".quick-filters-mobile"),
+        page.locator(".result-status"),
+        page.locator(".cinema-context"),
+      ]) {
+        const box = (await control.boundingBox())!;
+        expect(box.x).toBeGreaterThanOrEqual(0);
+        expect(box.x + box.width).toBeLessThanOrEqual(width);
+      }
+      await clear.click();
+      await expect(page.locator(".cinema-context")).toHaveCount(0);
+      await expect(page.getByRole("button", { name: "Edit cinemas", exact: true })).toHaveCount(0);
+    }
+  }
+});
