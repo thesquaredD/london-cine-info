@@ -15,6 +15,8 @@ test("sort controls replace only the mobile secondary column and preserve URL st
   await expect(headers).toHaveCount(2);
   await expect(headers.nth(1)).toContainText("Director");
   const trigger = page.getByRole("button", { name: /^Sort:/ });
+  await expect(trigger).toHaveText("Sort: Letterboxd · Highest first");
+  await expect(page.locator(".mobile-sort-score").first()).toContainText("LB");
   await trigger.click();
   const dialog = page.getByRole("dialog", { name: "Sort films", exact: true });
   const field = dialog.getByLabel("Sort by", { exact: true });
@@ -30,6 +32,7 @@ test("sort controls replace only the mobile secondary column and preserve URL st
     await field.selectOption(key);
     await expect(headers).toHaveCount(2);
     await expect(headers.nth(1)).toContainText(label);
+    await expect(page.locator(".mobile-sort-score")).toHaveCount(0);
     const bounds = await headers.nth(1).boundingBox();
     expect(bounds!.width).toBeGreaterThan(100);
     expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(page.viewportSize()!.width);
@@ -58,6 +61,8 @@ test("sort controls replace only the mobile secondary column and preserve URL st
   await dialog.getByRole("button", { name: "Reset sort", exact: true }).click();
   await expect(headers.nth(1)).toContainText("Director");
   await expect(page).toHaveURL(/\/$/);
+  await expect(trigger).toHaveText("Sort: Letterboxd · Highest first");
+  await expect(page.locator(".mobile-sort-score").first()).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(trigger).toBeFocused();
   for (const width of [320, 390, 799]) {
