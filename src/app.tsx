@@ -21,7 +21,13 @@ import { EVENT_TYPES } from "./data/event-rules";
 import { Radar } from "./components/radar";
 import { recoverySuggestions } from "./lib/recovery";
 import { catalogueDecades, countYears, hasYears, yearSummary } from "./lib/years";
-import { DEFAULT_DISPLAY, type DisplayState } from "./lib/display";
+import {
+  DEFAULT_DISPLAY,
+  readHideRatings,
+  HIDE_RATINGS_STORAGE,
+  watchlistDisplay,
+  type DisplayState,
+} from "./lib/display";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { useAccount } from "./lib/account";
 import {
@@ -206,8 +212,16 @@ export function App() {
   const [attempt, setAttempt] = useState(0);
   const [display, setDisplay] = useState<DisplayState>(() => ({
     ...DEFAULT_DISPLAY,
+    hideWatchlistRatings: readHideRatings(),
     ratingOrder: [...DEFAULT_DISPLAY.ratingOrder],
   }));
+  const effectiveDisplay = watchlistDisplay(display, state);
+  const hideRatings = effectiveDisplay.ratingOrder.length === 0;
+  const effectiveState: ViewState =
+    hideRatings && ["lb", "im", "mc", "rt"].includes(state.sort)
+      ? { ...state, sort: "title", direction: "asc", sortExplicit: true }
+      : state;
+  const [displayError, setDisplayError] = useState("");
   const [expanded, setExpanded] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
@@ -250,7 +264,7 @@ export function App() {
       ).length ?? 0,
     [catalogue, watched],
   );
-  const myCinemasUnavailable = myCinemasActive && (!!cinemas.error || !cinemas.venues.length);
+  const myCinemasUnavailable = myCinemasActive && !cinemas.venues.length;
   const returnToAccount = useRef(false);
   const baseFilms = useMemo(
     () =>
@@ -273,13 +287,13 @@ export function App() {
       catalogue
         ? sortFilms(
             filterFilms(selectFilms(baseFilms, state), catalogue.meta, state, now),
-            state.sort,
-            state.direction,
+            effectiveState.sort,
+            effectiveState.direction,
             watched,
             display.titleMode,
           )
         : [],
-    [catalogue, state, baseFilms, watched, display.titleMode, now],
+    [catalogue, state, baseFilms, watched, display.titleMode, hideRatings, now],
   );
   const eventsSource = useMemo(() => {
     if (!friends.active.length) return catalogue?.events ?? [];
@@ -490,7 +504,7 @@ export function App() {
       setExpanded(null);
   }, [expanded, selected, state]);
   useEffect(() => {
-    if (!myCinemasActive || cinemas.loading || cinemas.error) return;
+    if (!myCinemasActive || cinemas.loading) return;
     myCinemasUpdating.current = true;
     change({
       filters: { ...state.filters, venue: [...cinemas.venues] },
@@ -660,9 +674,18 @@ export function App() {
               value={display}
               onChange={(value) => {
                 setDisplay(value);
+                try {
+                  localStorage.setItem(HIDE_RATINGS_STORAGE, String(!!value.hideWatchlistRatings));
+                  setDisplayError("");
+                } catch {
+                  setDisplayError(
+                    "Browser storage is unavailable. This preference lasts only for this visit.",
+                  );
+                }
                 change({ page: 1 });
               }}
             />
+            {displayError && <p role="status">{displayError}</p>}
           </Dialog>
           <AccountDialogs
             account={account}
@@ -797,7 +820,7 @@ export function App() {
               )}
               {catalogue && (
                 <>
-                  <FilterBar {...filterProps} />
+                  <FilterBar {...filterProps} state={effectiveState} hideRatings={hideRatings} />
                 </>
               )}
               {catalogue && (
@@ -901,22 +924,44 @@ export function App() {
                       </button>
                     </div>
                   </QuickFilters>
+                  {myCinemasActive && (
+                    <div class="cinema-context">
+                      <span>My cinemas · {cinemas.venues.length} selected</span>
+                      <button onClick={() => openCinemas()}>Edit cinemas</button>
+                      {!cinemasOpen && (
+                        <span role="status">
+                          {cinemas.busy
+                            ? "Saving…"
+                            : cinemas.saved && !cinemas.storageError && !cinemas.error
+                              ? "Saved"
+                              : ""}
+                        </span>
+                      )}
+                    </div>
+                  )}
                   {cinemas.storageError && !cinemasOpen && (
-                    <p role="status">{cinemas.storageError}</p>
+                    <p role="status">
+                      {cinemas.storageError}{" "}
+                      <button onClick={() => void cinemas.retry()}>Retry cinema storage</button>
+                    </p>
                   )}
                   {cinemas.error && myCinemasActive && !cinemasOpen && (
                     <p role="alert">
                       {cinemas.error}{" "}
                       <button
                         onClick={() => {
-                          void cinemas.reload();
+                          void (cinemas.conflict ? cinemas.reload() : cinemas.retry());
                         }}
                       >
-                        Retry cinema sync
+                        {cinemas.conflict
+                          ? "Use saved choices (discard pending edits)"
+                          : "Retry cinema sync"}
                       </button>
                     </p>
                   )}
-                  {state.path === "/events" && <EventTypeFilter state={state} onChange={change} />}
+                  {state.path === "/events" && (
+                    <EventTypeFilter state={effectiveState} onChange={change} />
+                  )}
                   <p class="result-status" role="status" aria-live="polite">
                     <strong>
                       {resultCount.toLocaleString("en-GB")}{" "}
@@ -957,14 +1002,14 @@ export function App() {
                         </button>
                       </span>
                     )}
-                    {hasCustomSort(state) && (
+                    {hasCustomSort(effectiveState) && (
                       <button
                         onClick={() =>
                           change({ ...defaultSort(state.path), sortExplicit: undefined, page: 1 })
                         }
                         aria-label="Clear sort"
                       >
-                        Sort: {sortLabel(state.sort)} ×
+                        Sort: {sortLabel(effectiveState.sort)} ×
                       </button>
                     )}
                     {state.filmGauge && state.path === "/radar" && (
@@ -1113,9 +1158,9 @@ export function App() {
                   <Radar
                     films={baseFilms}
                     meta={catalogue.meta}
-                    state={state}
+                    state={effectiveState}
                     now={now}
-                    display={display}
+                    display={effectiveDisplay}
                     watched={account.user ? watched : undefined}
                     calendar={calendar}
                     onCalendar={openScreeningCalendar}
@@ -1128,8 +1173,8 @@ export function App() {
                     events={events}
                     films={baseFilms}
                     meta={catalogue.meta}
-                    state={state}
-                    display={display}
+                    state={effectiveState}
+                    display={effectiveDisplay}
                     watched={account.user ? watched : undefined}
                     calendar={calendar}
                     onCalendar={openScreeningCalendar}
@@ -1142,10 +1187,10 @@ export function App() {
                     calendar={calendar}
                     onCalendar={openScreeningCalendar}
                     now={now}
-                    display={display}
+                    display={effectiveDisplay}
                     watched={account.user ? watched : undefined}
                     meta={catalogue.meta}
-                    state={state}
+                    state={effectiveState}
                     expanded={expanded}
                     onExpand={setExpanded}
                     onChange={change}

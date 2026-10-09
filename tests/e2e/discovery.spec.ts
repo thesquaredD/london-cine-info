@@ -107,7 +107,7 @@ test("guest favourites use Account management and missing cinemas offer setup", 
   const dialog = page.getByRole("dialog", { name: "Manage my cinemas", exact: true });
   await expect(dialog).toBeVisible();
   await dialog.getByRole("checkbox", { name: "BFI Southbank", exact: true }).check();
-  await dialog.getByRole("button", { name: "Save my cinemas", exact: true }).click();
+  await dialog.getByRole("button", { name: "Done", exact: true }).click();
   await expect(page.locator(".film-row")).toHaveCount(2);
   expect(new URL(page.url()).searchParams.getAll("venue")).toEqual(["bfi.org.uk-southbank"]);
   await page.reload();

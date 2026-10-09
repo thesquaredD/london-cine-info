@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 test.use({ video: "on" });
 test.beforeEach(async ({ page }) => {
+  await page.clock.setFixedTime(new Date("2026-10-03T09:00:00Z"));
   await page.route("**/api/me", (route) => route.fulfill({ json: { user: null } }));
 });
 test("sort controls replace only the mobile secondary column and preserve URL state", async ({

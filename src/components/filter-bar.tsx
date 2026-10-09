@@ -4,7 +4,9 @@ import { useEffect, useRef, useState } from "preact/hooks";
 import { FilterControls, type FilterControlsProps } from "./filter-controls";
 import type { FacetKey } from "../shared/data";
 
-export function FilterBar(props: FilterControlsProps & { yearOpenRequest: number }) {
+export function FilterBar(
+  props: FilterControlsProps & { yearOpenRequest: number; hideRatings?: boolean },
+) {
   const [category, setCategory] = useState<FacetKey | "year" | "all" | null>(null);
   const dialog = useRef<HTMLDialogElement>(null);
   const when = useRef<HTMLDetailsElement>(null);
@@ -137,7 +139,7 @@ export function FilterBar(props: FilterControlsProps & { yearOpenRequest: number
         <span class="mobile-more">Filters</span> ▾
       </button>
       {!["/events", "/my-calendar"].includes(props.state.path) && (
-        <MobileSort state={props.state} onChange={props.onChange} />
+        <MobileSort hideRatings={props.hideRatings} state={props.state} onChange={props.onChange} />
       )}
       <dialog
         ref={dialog}
