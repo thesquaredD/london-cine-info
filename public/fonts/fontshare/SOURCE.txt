@@ -1,0 +1,4 @@
+Clash Display 500 — Indian Type Foundry / Fontshare.
+https://www.fontshare.com/fonts/clash-display
+https://www.fontshare.com/licenses
+Free personal and commercial website use; own-site self-hosting permitted. Not open source: do not redistribute font files in this public repository. scripts/fetch-display-font.mjs downloads the reviewed font from the official CDN for development and site builds.

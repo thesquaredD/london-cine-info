@@ -152,7 +152,7 @@ test("official TMDB attribution loads locally in About", async ({ page }) => {
     "This product uses the TMDB API but is not endorsed or certified by TMDB.",
   );
 });
-test("all catalogue pages fit phone, tablet and desktop in both themes without console errors", async ({
+test("all catalogue pages fit phone, tablet and desktop in dark mode under either system theme without console errors", async ({
   page,
 }) => {
   const errors: string[] = [];
@@ -178,7 +178,7 @@ test("all catalogue pages fit phone, tablet and desktop in both themes without c
       ]) {
         await page.goto(route);
         await expect(page.locator(".catalogue-status")).toHaveCount(0);
-        await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+        await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
         expect(
           await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
           `${theme} ${width}px ${route}`,

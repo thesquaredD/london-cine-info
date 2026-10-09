@@ -23,7 +23,9 @@
     "watchlists:refresh": "tsx scripts/refresh-watchlists.ts",
     "digests:send": "tsx scripts/send-digests.ts",
     "e2e:analytics": "playwright test -c playwright.analytics.config.ts",
-    "analytics:dashboard": "tsx scripts/setup-analytics-dashboard.ts"
+    "analytics:dashboard": "tsx scripts/setup-analytics-dashboard.ts",
+    "prebuild": "node scripts/fetch-display-font.mjs",
+    "predev": "node scripts/fetch-display-font.mjs"
   },
   "dependencies": {
     "@preact/signals": "^2.11.3",

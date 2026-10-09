@@ -160,10 +160,10 @@ test("load retries, system theme, sheet keyboard and no persistent storage", asy
   await expect(page.getByRole("button", { name: /^(More filters|Filters) ▾$/ })).toBeFocused();
   if ((page.viewportSize()?.width ?? 1200) < 800)
     await page.getByRole("button", { name: "Toggle pages" }).click();
-  await page.getByRole("button", { name: /Light mode/ }).click();
+  await expect(page.getByRole("button", { name: /Light mode/ })).toHaveCount(0);
   if ((page.viewportSize()?.width ?? 1200) < 800)
     await page.getByRole("button", { name: "Close pages" }).click();
-  await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   if ((page.viewportSize()?.width ?? 1200) < 800) {
     await expect(page.locator("th:visible")).toHaveCount(2);
   }

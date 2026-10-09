@@ -11,6 +11,7 @@ export function WatchlistsButton() {
   return (
     <button
       class="watchlists-trigger"
+      data-active={m.active.length > 0}
       aria-haspopup="dialog"
       onClick={() => m.setPanel("watchlists")}
     >

@@ -12,15 +12,11 @@ type Props = {
   state: ViewState;
   meta: DataMeta | null;
   onChange: (changes: Partial<ViewState>, push?: boolean) => void;
-  dark: boolean;
-  onTheme: () => void;
 };
 export function Sidebar({
   state,
   meta,
   onChange,
-  dark,
-  onTheme,
   account,
   onAccount,
   onSettings,
@@ -82,9 +78,6 @@ export function Sidebar({
         Settings
       </button>
       <div class="sidebar-bottom">
-        <button class="theme-button" onClick={onTheme}>
-          {dark ? "☀" : "☾"} <span>{dark ? "Light mode" : "Dark mode"}</span>
-        </button>
         <a
           class="about-link"
           href="/about"
