@@ -1,12 +1,9 @@
 import { test, expect, type Page } from "@playwright/test";
 test.use({ video: "on" });
 async function openYear(page: Page) {
-  const mobile = !(await page.locator(".desktop-filters").isVisible());
-  if (mobile) {
-    await page.locator(".all-filters").click();
-    await page.locator('.filter-sheet [data-filter="year"] > summary').click();
-  } else await page.locator('.desktop-filters [data-filter="year"] > summary').click();
-  return page.locator(`${mobile ? ".filter-sheet" : ".desktop-filters"} [data-filter="year"]`);
+  await page.locator(".all-filters").click();
+  await page.locator('.filter-sheet [data-filter="year"] > summary').click();
+  return page.locator('.filter-sheet [data-filter="year"]');
 }
 test.beforeEach(async ({ page }) => {
   await page.route("**/api/me", (route) => route.fulfill({ json: { user: null } }));

@@ -206,7 +206,7 @@ test("Clear all uses space only for active mobile filters and collapses on reset
   const baseline = (await summary.boundingBox())!.height;
   if (page.viewportSize()!.width < 800) {
     await expect(page.locator(".active-filters")).toBeHidden();
-    expect(baseline).toBeLessThanOrEqual(60);
+    expect(baseline).toBeLessThanOrEqual(120);
   }
   await page.locator(".bar-search").fill("Fixture Classic");
   const chips = page.getByRole("group", { name: "Active filters", exact: true });

@@ -1,6 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 async function openFilters(page: Page) {
-  await page.getByRole("button", { name: /^(More filters|All filters)$/ }).click();
+  await page.getByRole("button", { name: /^Filters(?:\s|$)/ }).click();
   return page.getByRole("dialog", { name: "Filters", exact: true });
 }
 async function closeFilters(page: Page) {
@@ -157,7 +157,7 @@ test("load retries, system theme, sheet keyboard and no persistent storage", asy
   const menu = await openFilters(page);
   await expect(menu).toBeVisible();
   await closeFilters(page);
-  await expect(page.getByRole("button", { name: /^(More filters|All filters)$/ })).toBeFocused();
+  await expect(page.getByRole("button", { name: /^Filters(?:\s|$)/ })).toBeFocused();
   if ((page.viewportSize()?.width ?? 1200) < 800)
     await page.getByRole("button", { name: "Toggle pages" }).click();
   await expect(page.getByRole("button", { name: /Light mode/ })).toHaveCount(0);
@@ -295,10 +295,8 @@ test("Today and Tomorrow shortcuts replace day filters while preserving other ch
 }) => {
   await page.clock.setFixedTime(new Date("2026-10-03T09:00:00Z"));
   await page.goto("/?day=beyond&not_day=today&language=fr");
-  if (page.viewportSize()!.width < 800)
-    await page.getByRole("button", { name: /^Quick filters/ }).click();
-  const today = page.locator(".quick-days").getByRole("button", { name: /^Today/ });
-  const tomorrow = page.locator(".quick-days").getByRole("button", { name: /^Tomorrow/ });
+  const today = page.locator(".shortcut-strip").getByRole("button", { name: /^Today/ });
+  const tomorrow = page.locator(".shortcut-strip").getByRole("button", { name: /^Tomorrow/ });
   await today.click();
   await expect(today).toHaveAttribute("aria-pressed", "true");
   await expect(page).toHaveURL(/day=today/);
@@ -335,10 +333,7 @@ test("filter controls stay stationary through selection, clearing and changing c
   await expect(page.locator(".film-row")).toHaveCount(6);
   const summary = page.locator(".filter-summary");
   const baselineHeight = (await summary.boundingBox())!.height;
-  const quick =
-    page.viewportSize()!.width < 800
-      ? page.getByRole("button", { name: /^Quick filters/ })
-      : page.locator(".quick-days").getByRole("button", { name: /^Tomorrow/ });
+  const quick = page.locator(".shortcut-strip").getByRole("button", { name: /^Tomorrow/ });
   const quickX = (await quick.boundingBox())!.x;
   const menu = await openFilters(page);
   for (const name of [

@@ -1,4 +1,3 @@
-import type { ComponentChildren } from "preact";
 import { WatchlistsButton } from "./friends";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { FilterControls, type FilterControlsProps } from "./filter-controls";
@@ -8,25 +7,14 @@ export function FilterBar(
   props: FilterControlsProps & {
     yearOpenRequest: number;
     hideRatings?: boolean;
-    quickFilters?: ComponentChildren;
   },
 ) {
   const [category, setCategory] = useState<FacetKey | "year" | "all" | null>(null);
   const dialog = useRef<HTMLDialogElement>(null);
-  const when = useRef<HTMLDetailsElement>(null);
   const bar = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!props.yearOpenRequest) return;
-    if (window.matchMedia("(max-width: 799px)").matches) setCategory("year");
-    else {
-      const picker = bar.current?.querySelector<HTMLDetailsElement>(
-        '.desktop-filters [data-filter="year"]',
-      );
-      if (picker) {
-        picker.open = true;
-        picker.querySelector<HTMLElement>("summary")?.focus();
-      }
-    }
+    setCategory("year");
   }, [props.yearOpenRequest]);
   useEffect(() => {
     const node = dialog.current;
@@ -78,12 +66,24 @@ export function FilterBar(
         n + (props.state.filters[key]?.length ?? 0) + (props.state.excluded[key]?.length ?? 0),
       0,
     );
-  const whenCount = count(["day", "time"]) + (props.state.from || props.state.to ? 1 : 0);
-  const cinemaCount = count(["venue"]);
   const moreCount =
-    count(["genre", "language", "borough", "format", "accessibility", "membership"]) +
+    count([
+      "day",
+      "time",
+      "venue",
+      "genre",
+      "language",
+      "borough",
+      "format",
+      "accessibility",
+      "membership",
+    ]) +
     (props.state.years?.length ?? 0) +
-    (props.state.decades?.length ?? 0);
+    (props.state.decades?.length ?? 0) +
+    Number(!!(props.state.from || props.state.to)) +
+    Number(!!props.state.short) +
+    Number(!!props.state.available) +
+    Number(!!props.state.watchlist);
   const countLabel = (value: number) => (
     <span class="shortcut-count" style={{ visibility: value ? "visible" : "hidden" }}>
       {" "}
@@ -104,79 +104,26 @@ export function FilterBar(
         onInput={(event) => props.onChange({ search: event.currentTarget.value, page: 1 })}
       />
       <div class="desktop-filters">
-        <details
-          ref={when}
-          class="when-picker"
-          data-active={whenCount > 0}
-          name="desktop-filters"
-          onToggle={(event) => {
-            if (event.currentTarget.open) {
-              const day =
-                event.currentTarget.querySelector<HTMLDetailsElement>('[data-filter="day"]');
-              if (day) day.open = true;
-            }
-          }}
-        >
-          <summary>
-            <span>When</span>
-            {countLabel(whenCount)}
-            <span class="control-caret" aria-hidden="true">
-              ▾
-            </span>
-          </summary>
-          <div class="when-content">
-            <FilterControls
-              {...props}
-              showSearch={false}
-              filterKeys={["day", "time"]}
-              idPrefix="when"
-            />
-            <button
-              onClick={() => {
-                if (when.current) when.current.open = false;
-              }}
-            >
-              Done
-            </button>
-          </div>
-        </details>
         <FilterControls
           {...props}
           showSearch={false}
-          filterKeys={["venue", "genre", "year"]}
+          filterKeys={["venue", "genre"]}
           idPrefix="desktop"
         />
       </div>
-      <div class="mobile-filters">
-        <button data-active={whenCount > 0} onClick={() => setCategory("day")}>
-          <span>When</span>
-          {countLabel(whenCount)}
-          <span class="control-caret" aria-hidden="true">
-            ▾
-          </span>
-        </button>
-        <button data-active={cinemaCount > 0} onClick={() => setCategory("venue")}>
-          <span>Cinema</span>
-          {countLabel(cinemaCount)}
-          <span class="control-caret" aria-hidden="true">
-            ▾
-          </span>
-        </button>
-      </div>
-      <WatchlistsButton />
       <button
         class="all-filters"
+        aria-label="Filters"
         data-active={moreCount > 0}
         aria-haspopup="dialog"
         onClick={() => setCategory("all")}
       >
-        <span class="desktop-more">More filters</span>
-        <span class="mobile-more">All filters</span>
+        <span>Filters</span>
+        {countLabel(moreCount)}
         <span class="control-caret" aria-hidden="true">
           ▾
         </span>
       </button>
-      {props.quickFilters}
       <dialog
         ref={dialog}
         class="filter-sheet"
@@ -200,7 +147,7 @@ export function FilterBar(
             ×
           </button>
         </div>
-        <div class="mobile-watchlists" onClickCapture={() => setCategory(null)}>
+        <div class="sheet-watchlists" onClickCapture={() => setCategory(null)}>
           <WatchlistsButton />
         </div>
         <FilterControls {...props} idPrefix="sheet" onDone={() => setCategory(null)} />

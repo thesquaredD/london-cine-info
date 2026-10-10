@@ -118,8 +118,7 @@ test("measures PR 17 public imports and shared filters without usernames", async
   );
   await page.goto("/");
   await expect(page.locator(".film-row")).toHaveCount(6);
-  if (await page.locator(".all-filters .mobile-more").isVisible())
-    await page.getByRole("button", { name: "All filters", exact: true }).click();
+  await page.getByRole("button", { name: /^Filters(?:\s|$)/ }).click();
   await page
     .getByRole("button", { name: /^Watchlists/ })
     .filter({ visible: true })

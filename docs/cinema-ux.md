@@ -4,7 +4,7 @@ Cinema search and borough/radius filters operate on available options, independe
 
 Cinema edits update the active filter immediately. The application-level hook retains desired choices outside the dialog lifecycle, serializes account writes and coalesces interactions while a request is pending. Only acknowledged writes show Saved. Failed browser storage retains guest choices in memory and explicitly reports the persistence failure. Account writes use the last acknowledged version; conflicts retain local choices and offer a deliberate **Use saved choices** recovery. That recovery discards pending edits only after successfully loading the saved state. Identity epochs prevent old writes from updating state after sign-out or account switching. Guest merge and server-side version protection are unchanged.
 
-**Edit cinemas** is contextual to the active My cinemas filter, including an empty selection, and remains outside the phone Quick filters dialog. Navigation uses the existing Film pages landmark, with Discover and For you groups followed by Preferences.
+**Edit cinemas** is contextual to the active My cinemas filter, including an empty selection, and appears in the cinema context row beneath the shortcut strip. Navigation uses the existing Film pages landmark, with Discover and For you groups followed by Preferences.
 
 ## Chooser layout
 

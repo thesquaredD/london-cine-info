@@ -34,16 +34,12 @@ test("filter selection keeps trigger dimensions, with red active states and comp
   await page.clock.setFixedTime(new Date("2026-10-03T09:00:00Z"));
   await page.goto("/");
   const mobile = info.project.name === "mobile";
-  const trigger = mobile
-    ? page.getByRole("button", { name: "All filters", exact: true })
-    : page.locator(".when-picker > summary");
+  const trigger = page.locator(".all-filters");
   const before = await trigger.boundingBox();
   const tableBefore = await page.locator(".film-table").boundingBox();
   await trigger.click();
-  const picker = mobile
-    ? page.getByRole("dialog", { name: "Filters", exact: true })
-    : page.locator(".when-content");
-  if (mobile) await picker.locator('[data-filter="day"] > summary').click();
+  const picker = page.getByRole("dialog", { name: "Filters", exact: true });
+  await picker.locator('[data-filter="day"] > summary').click();
   const selected = picker.getByRole("button", { name: /^Today / });
   await selected.click();
   await expect(selected).toHaveAttribute("aria-pressed", "true");
@@ -69,9 +65,9 @@ test("filter selection keeps trigger dimensions, with red active states and comp
     expect(tableAfter?.y).toBe(tableBefore?.y);
   }
   const controls = mobile
-    ? page.locator(".quick-filters-mobile:visible, .all-filters:visible")
+    ? page.locator(".all-filters:visible")
     : page.locator(
-        ".desktop-filters > .when-picker > summary, .desktop-filters > .filter-controls > .filter-fields > .filter-picker > summary, .watchlists-trigger, .all-filters",
+        ".desktop-filters > .filter-controls > .filter-fields > .filter-picker > summary, .all-filters",
       );
   const sizes = await controls.filter({ visible: true }).evaluateAll((elements) =>
     elements.map((e) => ({

@@ -33,11 +33,13 @@ export function FilterPicker({
   const options =
     filterKey === "day"
       ? [
-          ...["today", "tomorrow", "weekend", "week", "beyond"].map((id) => ({
-            id,
-            label: filterLabel(filterKey, id, meta),
-            count: 0,
-          })),
+          ...["today", "tomorrow", "weekend", "this-week", "next-week", "week", "beyond"].map(
+            (id) => ({
+              id,
+              label: filterLabel(filterKey, id, meta),
+              count: 0,
+            }),
+          ),
           ...meta.facets.day.map((option) => ({
             ...option,
             label: filterLabel(filterKey, option.id, meta),

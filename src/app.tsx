@@ -14,7 +14,7 @@ import { useCalendar } from "./lib/calendar";
 import { MyCalendar, ScreeningCalendarDialog } from "./components/screening-calendar";
 import type { CalendarInput } from "./shared/calendar";
 import { useCinemas } from "./lib/cinemas";
-import { QuickFilters, QuickFilterTrigger } from "./components/quick-filters";
+import { ShortcutStrip } from "./components/shortcut-strip";
 import { MyCinemas } from "./components/my-cinemas";
 import { Events, EventTypeFilter } from "./components/events";
 import { matchingEvents, eventFacetCounts } from "./lib/events";
@@ -50,8 +50,6 @@ import {
   FILTERS,
   filterLabel,
   dateShortcut,
-  eveningShortcut,
-  isEvening,
 } from "./lib/filters";
 import { loadCatalogue } from "./lib/data";
 import {
@@ -179,7 +177,6 @@ export function App() {
   const [calendarEvent, setCalendarEvent] = useState<CalendarInput | null>(null);
   const cinemas = useCinemas(account);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [quickOpen, setQuickOpen] = useState(false);
   const [cinemasOpen, setCinemasOpen] = useState(false);
   const [nearbyOpen, setNearbyOpen] = useState(false);
   const [now, setNow] = useState(() => new Date());
@@ -524,13 +521,8 @@ export function App() {
       (account.user && account.watchlist?.fetchedAt && !account.error))
       ? recoverySuggestions(baseFilms, catalogue.meta, state, now)
       : [];
-  function closeQuickFilters() {
-    document.querySelector<HTMLDialogElement>(".quick-filter-dialog")?.close();
-    setQuickOpen(false);
-  }
   function openCinemas(fromAccount = false) {
     returnToAccount.current = fromAccount;
-    closeQuickFilters();
     document.querySelector<HTMLDialogElement>(".account-dialog")?.close();
     setAccountOpen(false);
     setCinemasOpen(true);
@@ -555,7 +547,6 @@ export function App() {
   function openAccount() {
     capture("account_opened");
     closeScreeningCalendar();
-    closeQuickFilters();
     // The phone drawer is itself a modal dialog; close it first so dialogs never nest.
     if (drawer.current?.open) drawer.current.close();
     setDrawerOpen(false);
@@ -586,93 +577,6 @@ export function App() {
     yearCounts,
     yearOpenRequest,
   };
-  const shortcuts = (
-    <div class="quick-days" role="group" aria-label="Quick filters">
-      {[
-        { id: "today", label: "Today" },
-        { id: "tomorrow", label: "Tomorrow" },
-        { id: "evening", label: "Evening" },
-        { id: "weekend", label: "This weekend" },
-        { id: "this-week", label: "This week" },
-        { id: "next-week", label: "Next week" },
-      ].map(({ id, label }) => {
-        const active =
-          id === "evening"
-            ? isEvening(state)
-            : !state.tonight &&
-              state.filters.day?.length === 1 &&
-              state.filters.day[0] === id &&
-              !state.excluded.day?.length;
-        return (
-          <button
-            key={id}
-            title={
-              id === "this-week"
-                ? "Next 7 days, including today"
-                : id === "next-week"
-                  ? "The 7 days after that"
-                  : undefined
-            }
-            aria-pressed={active}
-            onClick={() =>
-              change(id === "evening" ? eveningShortcut(state) : dateShortcut(state, id))
-            }
-          >
-            {label}
-            <small>
-              {" "}
-              {id === "evening" ? (counts?.time.get("evening") ?? 0) : (counts?.day.get(id) ?? 0)}
-            </small>
-          </button>
-        );
-      })}
-      <button
-        data-shortcut="films"
-        aria-pressed={!!state.watchlist}
-        onClick={() => {
-          change({ watchlist: !state.watchlist, page: 1 });
-          if (!state.watchlist && (!account.user || !account.watchlist?.fetchedAt)) openAccount();
-        }}
-      >
-        My watchlist
-      </button>
-      <button
-        data-shortcut="cinemas"
-        aria-pressed={myCinemasActive}
-        disabled={cinemas.loading}
-        onClick={() => {
-          myCinemasUpdating.current = true;
-          change({
-            myCinemas: !myCinemasActive,
-            filters: {
-              ...state.filters,
-              venue: myCinemasActive ? [] : [...cinemas.venues],
-            },
-            excluded: { ...state.excluded, venue: [] },
-            page: 1,
-          });
-          myCinemasUpdating.current = false;
-        }}
-      >
-        My cinemas
-      </button>
-      <button
-        onClick={() => {
-          setQuickOpen(false);
-          setNearbyOpen(true);
-        }}
-      >
-        Near me
-      </button>
-      <button
-        data-shortcut="films"
-        aria-pressed={!!state.short}
-        onClick={() => change({ short: !state.short, page: 1 })}
-      >
-        Under 2 hours
-      </button>
-    </div>
-  );
   return (
     <FriendsContext.Provider value={friends}>
       <div class={`app-layout ${collapsed ? "sidebar-collapsed" : ""}`}>
@@ -927,45 +831,23 @@ export function App() {
               )}
               {catalogue && (
                 <>
-                  <FilterBar
-                    {...filterProps}
-                    state={effectiveState}
-                    hideRatings={hideRatings}
-                    quickFilters={
-                      <QuickFilterTrigger
-                        open={quickOpen}
-                        onOpen={() => setQuickOpen(true)}
-                        activeCount={
-                          Number(!!state.filters.day?.length) +
-                          Number(isEvening(state)) +
-                          Number(!!state.watchlist) +
-                          Number(myCinemasActive) +
-                          Number(!!state.short)
-                        }
-                      />
-                    }
-                  />
+                  <FilterBar {...filterProps} state={effectiveState} hideRatings={hideRatings} />
                 </>
               )}
               {catalogue && (
                 <div class="filter-summary">
-                  <QuickFilters
-                    hideMobileTrigger
-                    open={quickOpen}
-                    onOpen={() => setQuickOpen(true)}
-                    onClose={() => setQuickOpen(false)}
-                    resultCount={resultCount}
-                    resultLabel={state.path === "/events" ? "event" : "film"}
-                    activeCount={
-                      Number(!!state.filters.day?.length) +
-                      Number(isEvening(state)) +
-                      Number(!!state.watchlist) +
-                      Number(myCinemasActive) +
-                      Number(!!state.short)
-                    }
-                  >
-                    {shortcuts}
-                  </QuickFilters>
+                  <ShortcutStrip
+                    account={account}
+                    cinemas={cinemas}
+                    state={state}
+                    counts={counts}
+                    onChange={(changes) => {
+                      myCinemasUpdating.current = changes.myCinemas !== undefined;
+                      change(changes);
+                      myCinemasUpdating.current = false;
+                    }}
+                    onNearby={() => setNearbyOpen(true)}
+                  />
                   {myCinemasActive && (
                     <div class="cinema-context">
                       <span>My cinemas · {cinemas.venues.length} selected</span>

@@ -1017,7 +1017,6 @@ h3 {
   background: var(--panel);
   border-bottom: 1px solid var(--line);
 }
-.quick-filters-desktop,
 .filter-summary > p:not(.result-status),
 .filter-summary > .event-type-filter {
   grid-column: 1 / -1;
@@ -1083,24 +1082,6 @@ h3 {
   font: inherit;
   margin: 0;
 }
-.quick-days {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 10px;
-}
-.quick-days button {
-  padding: 8px 14px;
-  border-radius: 4px;
-}
-.quick-days button[aria-pressed="true"] {
-  background: var(--active-bg);
-  color: var(--active-fg);
-  border-color: var(--active-bg);
-}
-.quick-days small {
-  margin-left: 6px;
-  opacity: 0.8;
-}
 .not-label {
   font-weight: 500;
   color: var(--sold-out);
@@ -1122,14 +1103,9 @@ h3 {
 .not-label.inactive {
   visibility: hidden;
 }
-.filter-options small,
-.quick-days small {
+.filter-options small {
   font-variant-numeric: tabular-nums;
   text-align: right;
-}
-.quick-days small {
-  display: inline-block;
-  width: 5ch;
 }
 .filter-summary strong {
   font-variant-numeric: tabular-nums;
@@ -1278,49 +1254,8 @@ h3 {
   border-radius: 4px;
   padding: 14px;
 }
-.when-picker {
-  position: relative;
-  border: 1px solid var(--line);
-  border-radius: 4px;
-}
-.when-picker > summary {
-  list-style: none;
-  padding: 10px 12px;
-  cursor: pointer;
-}
-.when-picker > summary::-webkit-details-marker {
-  display: none;
-}
-.when-content {
-  position: absolute;
-  top: calc(100% + 8px);
-  left: 0;
-  width: 390px;
-  max-width: calc(100vw - 24px);
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 4px;
-  padding: 14px;
-}
-.when-content .filter-fields {
-  display: grid;
-}
-.when-content .filter-picker {
-  width: 100%;
-}
-.when-content .filter-picker summary > small {
-  display: block;
-}
-.when-content > button {
-  width: 100%;
-  margin-top: 8px;
-}
 .all-filters {
   padding: 10px 12px;
-}
-.mobile-filters,
-.mobile-more {
-  display: none;
 }
 .filter-sheet {
   width: min(580px, calc(100vw - 32px));
@@ -1389,18 +1324,9 @@ h3 {
     width: 100%;
     font-size: 16px;
   }
-  .desktop-filters,
-  .desktop-more {
+  .desktop-filters {
     display: none;
   }
-  .mobile-filters {
-    display: flex;
-    gap: 10px;
-  }
-  .mobile-more {
-    display: inline;
-  }
-  .mobile-filters button,
   .all-filters {
     min-height: 44px;
   }
@@ -1449,7 +1375,7 @@ h3 {
   color: var(--muted);
   overflow-wrap: anywhere;
 }
-:is(.account-dialog, .mobile-sort-dialog, .cinema-dialog, .quick-filter-dialog, .settings-dialog) {
+:is(.account-dialog, .mobile-sort-dialog, .cinema-dialog, .settings-dialog) {
   width: min(480px, calc(100vw - 32px));
   max-height: 85dvh;
   padding: 0;
@@ -1459,13 +1385,7 @@ h3 {
   color: var(--fg);
   overflow-y: auto;
 }
-:is(
-  .account-dialog,
-  .mobile-sort-dialog,
-  .cinema-dialog,
-  .quick-filter-dialog,
-  .settings-dialog
-)::backdrop {
+:is(.account-dialog, .mobile-sort-dialog, .cinema-dialog, .settings-dialog)::backdrop {
   background: rgba(0, 0, 0, 0.45);
 }
 .account-dialog-body {
@@ -1477,28 +1397,22 @@ h3 {
   margin: 0;
   overflow-wrap: anywhere;
 }
-:is(.account-dialog, .mobile-sort-dialog, .cinema-dialog, .quick-filter-dialog, .settings-dialog)
-  form,
-:is(.account-dialog, .mobile-sort-dialog, .cinema-dialog, .quick-filter-dialog, .settings-dialog)
-  fieldset {
+:is(.account-dialog, .mobile-sort-dialog, .cinema-dialog, .settings-dialog) form,
+:is(.account-dialog, .mobile-sort-dialog, .cinema-dialog, .settings-dialog) fieldset {
   display: grid;
   gap: 8px;
   min-width: 0;
 }
-:is(.account-dialog, .mobile-sort-dialog, .cinema-dialog, .quick-filter-dialog, .settings-dialog)
-  fieldset {
+:is(.account-dialog, .mobile-sort-dialog, .cinema-dialog, .settings-dialog) fieldset {
   margin: 0;
   padding: 0;
   border: 0;
 }
-:is(.account-dialog, .mobile-sort-dialog, .cinema-dialog, .quick-filter-dialog, .settings-dialog)
-  label {
+:is(.account-dialog, .mobile-sort-dialog, .cinema-dialog, .settings-dialog) label {
   font-weight: 500;
 }
-:is(.account-dialog, .mobile-sort-dialog, .cinema-dialog, .quick-filter-dialog, .settings-dialog)
-  input,
-:is(.account-dialog, .mobile-sort-dialog, .cinema-dialog, .quick-filter-dialog, .settings-dialog)
-  select {
+:is(.account-dialog, .mobile-sort-dialog, .cinema-dialog, .settings-dialog) input,
+:is(.account-dialog, .mobile-sort-dialog, .cinema-dialog, .settings-dialog) select {
   width: 100%;
   min-width: 0;
   padding: 7px 8px;
@@ -1507,13 +1421,8 @@ h3 {
   background: var(--panel);
   color: inherit;
 }
-:is(.account-dialog, .mobile-sort-dialog, .cinema-dialog, .quick-filter-dialog, .settings-dialog)
-  fieldset
-  p,
-:is(.account-dialog, .mobile-sort-dialog, .cinema-dialog, .quick-filter-dialog, .settings-dialog)
-  .import-status
-  p
-  + p {
+:is(.account-dialog, .mobile-sort-dialog, .cinema-dialog, .settings-dialog) fieldset p,
+:is(.account-dialog, .mobile-sort-dialog, .cinema-dialog, .settings-dialog) .import-status p + p {
   color: var(--muted);
   font-size: 13px;
 }
@@ -1620,13 +1529,7 @@ h3 {
   justify-self: start;
 }
 @media (max-width: 799px) {
-  :is(
-    .account-dialog,
-    .mobile-sort-dialog,
-    .cinema-dialog,
-    .quick-filter-dialog,
-    .settings-dialog
-  ) {
+  :is(.account-dialog, .mobile-sort-dialog, .cinema-dialog, .settings-dialog) {
     position: fixed;
     inset: auto 0 0;
     margin: 0;
@@ -1636,15 +1539,12 @@ h3 {
     border-radius: 4px 4px 0 0;
     padding-bottom: env(safe-area-inset-bottom);
   }
-  :is(.account-dialog, .mobile-sort-dialog, .cinema-dialog, .quick-filter-dialog, .settings-dialog)
-    input,
-  :is(.account-dialog, .mobile-sort-dialog, .cinema-dialog, .quick-filter-dialog, .settings-dialog)
-    select {
+  :is(.account-dialog, .mobile-sort-dialog, .cinema-dialog, .settings-dialog) input,
+  :is(.account-dialog, .mobile-sort-dialog, .cinema-dialog, .settings-dialog) select {
     font-size: 16px;
     min-height: 44px;
   }
-  :is(.account-dialog, .mobile-sort-dialog, .cinema-dialog, .quick-filter-dialog, .settings-dialog)
-    button,
+  :is(.account-dialog, .mobile-sort-dialog, .cinema-dialog, .settings-dialog) button,
   .watchlist-intro button {
     min-height: 44px;
   }
@@ -1842,9 +1742,6 @@ h3 {
 .calendar-grid button[aria-current="date"] {
   text-decoration: underline;
 }
-.quick-days {
-  flex-wrap: wrap;
-}
 .favourite-options {
   max-height: 48vh;
   overflow: auto;
@@ -1928,38 +1825,7 @@ h3 {
   text-decoration: line-through;
   text-decoration-thickness: 2px;
 }
-.quick-filters-mobile {
-  display: none;
-}
-.quick-filter-dialog .quick-days {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-}
-.quick-filter-dialog .quick-days button {
-  min-height: 44px;
-  text-align: left;
-}
-.quick-filter-dialog .quick-days button[aria-pressed="true"] {
-  background: var(--fg);
-  color: var(--bg);
-}
-.quick-filter-dialog .view-results {
-  width: 100%;
-  margin-top: 16px;
-  min-height: 44px;
-}
 @media (max-width: 799px) {
-  .quick-filters-desktop {
-    display: none;
-  }
-  .quick-filters-mobile {
-    display: inline-block;
-    min-height: 44px;
-    grid-column: 1;
-    grid-row: 1;
-    margin: 0;
-  }
   .filter-summary {
     grid-template-columns: max-content minmax(0, 1fr);
     gap: 0 8px;
@@ -1975,9 +1841,6 @@ h3 {
   .filter-summary .active-filters {
     grid-column: 1 / -1;
     grid-row: 2;
-  }
-  .quick-filter-dialog .quick-days {
-    width: 100%;
   }
 }
 .screening-calendar-dialog {
@@ -2102,7 +1965,6 @@ h3 {
     .account-dialog,
     .mobile-sort-dialog,
     .cinema-dialog,
-    .quick-filter-dialog,
     .settings-dialog,
     .screening-calendar-dialog
   )[open] {
