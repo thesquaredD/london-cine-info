@@ -24,6 +24,8 @@ export const RATINGS: { key: RatingKey; name: string; short: string; scale: stri
 export type SortKey =
   "title" | "director" | "year" | "runtime" | "watchlist" | "event" | "opportunity" | RatingKey;
 export type ViewState = YearSelection & {
+  myCinemas?: boolean;
+  film?: string;
   path: string;
   search: string;
   filters: Partial<Record<FacetKey, string[]>>;
@@ -116,12 +118,14 @@ export function readView(url: URL): ViewState {
     ? url.pathname
     : "/";
   const state: ViewState = {
+    myCinemas: url.searchParams.get("cinemas") === "mine",
+    film: url.searchParams.get("film") || undefined,
     path,
     search: url.searchParams.get("q") ?? "",
     filmGauge: ["35mm", "70mm"].includes(url.searchParams.get("filmGauge") ?? "")
       ? (url.searchParams.get("filmGauge") as "35mm" | "70mm")
       : undefined,
-    eventType: ["qa", "score", "programme", "talk", "other"].includes(
+    eventType: ["highlights", "qa", "score", "programme", "talk", "other"].includes(
       url.searchParams.get("eventType") ?? "",
     )
       ? url.searchParams.get("eventType")!
@@ -205,6 +209,8 @@ export function readView(url: URL): ViewState {
 }
 export function viewUrl(state: ViewState): string {
   const query = new URLSearchParams();
+  if (state.myCinemas) query.set("cinemas", "mine");
+  if (state.film) query.set("film", state.film);
   if (state.search) query.set("q", state.search);
   if (state.path === "/radar" && state.filmGauge) query.set("filmGauge", state.filmGauge);
   if (state.eventType) query.set("eventType", state.eventType);
@@ -286,13 +292,14 @@ export function sortFilms(
     );
   });
 }
+const dateFormatter = new Intl.DateTimeFormat("en-GB", {
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+  timeZone: "Europe/London",
+});
 export function formatDate(date: string): string {
-  return new Intl.DateTimeFormat("en-GB", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-    timeZone: "Europe/London",
-  }).format(new Date(`${date}T12:00:00Z`));
+  return dateFormatter.format(new Date(`${date}T12:00:00Z`));
 }
 export function runtime(minutes: number | null): string {
   if (minutes === null) return "Runtime unknown";

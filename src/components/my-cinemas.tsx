@@ -8,7 +8,9 @@ export function MyCinemas({
   meta,
   open,
   onClose,
+  nearby,
 }: {
+  nearby?: { onApply: (venues: string[]) => void };
   cinemas: CinemasState;
   meta: DataMeta;
   open: boolean;
@@ -22,7 +24,11 @@ export function MyCinemas({
   useEffect(() => {
     if (open) {
       setSearch("");
-      setLocationOpen(false);
+      setLocationOpen(!!nearby);
+      if (nearby)
+        requestAnimationFrame(() => {
+          if (locationTrigger.current) positionTool(locationTrigger.current);
+        });
     }
   }, [open]);
   const [boroughs, setBoroughs] = useState<string[]>([]);
@@ -37,7 +43,7 @@ export function MyCinemas({
   const [locationError, setLocationError] = useState("");
   const [locating, setLocating] = useState(false);
   const [nearest, setNearest] = useState(false);
-  const [radius, setRadius] = useState(0);
+  const [radius, setRadius] = useState(nearby ? 3 : 0);
   const [locationOpen, setLocationOpen] = useState(false);
   const locationRequest = useRef(0);
   function positionTool(trigger: HTMLElement) {
@@ -147,9 +153,9 @@ export function MyCinemas({
   }
   return (
     <Dialog
-      className="cinema-dialog"
+      className={nearby ? "cinema-dialog nearby-dialog" : "cinema-dialog"}
       open={open}
-      title="Manage my cinemas"
+      title={nearby ? "Find nearby cinemas" : "Manage my cinemas"}
       onClose={onClose}
       restoreTo={() =>
         document.querySelector<HTMLElement>(".empty-state button") ??
@@ -157,8 +163,8 @@ export function MyCinemas({
         document.querySelector<HTMLElement>(".menu-button")
       }
     >
-      {cinemas.loading && <p role="status">Loading saved cinemas…</p>}
-      {(cinemas.error || cinemas.storageError) && (
+      {!nearby && cinemas.loading && <p role="status">Loading saved cinemas…</p>}
+      {!nearby && (cinemas.error || cinemas.storageError) && (
         <div role="alert">
           <p>{cinemas.error || cinemas.storageError}</p>
           {cinemas.conflict ? (
@@ -223,7 +229,7 @@ export function MyCinemas({
                 setLocationOpen(!locationOpen);
               }}
             >
-              {origin ? `Near ${originLabel}` : "Near me"} ▾
+              {origin ? `Near ${originLabel}` : "Location"} ▾
             </button>
             {locationOpen && (
               <div
@@ -274,7 +280,7 @@ export function MyCinemas({
                       onClick={() => {
                         locationRequest.current++;
                         setOrigin(null);
-                        setRadius(0);
+                        setRadius(nearby ? 3 : 0);
                         setNearest(false);
                         setLocationOpen(false);
                       }}
@@ -353,92 +359,114 @@ export function MyCinemas({
       </div>
       <fieldset class="favourite-options" disabled={cinemas.loading}>
         <legend class="sr-only">All cinemas</legend>
-        {[...groups]
-          .sort(([a], [b]) => a.localeCompare(b))
-          .map(([borough, venues]) => (
-            <div key={borough}>
-              <h3>{borough}</h3>
-              {venues
-                .sort(
-                  (a, b) =>
-                    (nearest && origin
-                      ? (distances.get(a.id) ?? Infinity) - (distances.get(b.id) ?? Infinity)
-                      : 0) ||
-                    a.name.localeCompare(b.name) ||
-                    a.id.localeCompare(b.id),
-                )
-                .map((venue) => (
-                  <label key={venue.id}>
-                    <input
-                      type="checkbox"
-                      checked={draft.includes(venue.id)}
-                      onChange={() =>
-                        setDraft(
-                          draft.includes(venue.id)
-                            ? draft.filter((id) => id !== venue.id)
-                            : [...draft, venue.id],
-                        )
-                      }
-                    />{" "}
-                    <span>
-                      {venue.name}
-                      {origin && (
-                        <small>
-                          {" "}
-                          ·{" "}
-                          {distances.get(venue.id) === null
-                            ? "Distance unavailable"
-                            : `${distances.get(venue.id)!.toFixed(1)} miles`}
-                        </small>
-                      )}
-                    </span>
-                  </label>
-                ))}
-            </div>
-          ))}
-        {!groups.size && <p>No listed cinemas match these filters.</p>}
+        {(!nearby || origin) &&
+          [...groups]
+            .sort(([a], [b]) => a.localeCompare(b))
+            .map(([borough, venues]) => (
+              <div key={borough}>
+                <h3>{borough}</h3>
+                {venues
+                  .sort(
+                    (a, b) =>
+                      (nearest && origin
+                        ? (distances.get(a.id) ?? Infinity) - (distances.get(b.id) ?? Infinity)
+                        : 0) ||
+                      a.name.localeCompare(b.name) ||
+                      a.id.localeCompare(b.id),
+                  )
+                  .map((venue) => (
+                    <label key={venue.id}>
+                      <input
+                        type="checkbox"
+                        style={nearby ? { display: "none" } : undefined}
+                        checked={!nearby && draft.includes(venue.id)}
+                        onChange={() =>
+                          !nearby &&
+                          setDraft(
+                            draft.includes(venue.id)
+                              ? draft.filter((id) => id !== venue.id)
+                              : [...draft, venue.id],
+                          )
+                        }
+                      />{" "}
+                      <span>
+                        {venue.name}
+                        {origin && (
+                          <small>
+                            {" "}
+                            ·{" "}
+                            {distances.get(venue.id) === null
+                              ? "Distance unavailable"
+                              : `${distances.get(venue.id)!.toFixed(1)} miles`}
+                          </small>
+                        )}
+                      </span>
+                    </label>
+                  ))}
+              </div>
+            ))}
+        {(!nearby || origin) && !groups.size && <p>No listed cinemas match these filters.</p>}
       </fieldset>
       <div class="cinema-selection-footer">
-        <section class="selected-cinemas" aria-label="Selected cinemas">
-          <h3>Selected cinemas · {draft.length}</h3>
-          {draft.length ? (
-            <ul>
-              {draft.map((id) => {
-                const venue = meta.venues.find((value) => value.id === id);
-                const name = venue?.name ?? `${id} · not in current listings`;
-                return (
-                  <li key={id}>
-                    <button
-                      type="button"
-                      disabled={cinemas.loading}
-                      aria-label={`Remove ${name}`}
-                      onClick={() =>
-                        setDraft((value) => value.filter((selected) => selected !== id))
-                      }
-                    >
-                      {name} <span aria-hidden="true">×</span>
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          ) : (
-            <p>No cinemas selected yet.</p>
-          )}
-        </section>
-        <div class="cinema-done-row">
-          <div class="cinema-save-status">
-            <p role="status">
-              {cinemas.busy
-                ? "Saving…"
-                : cinemas.saved && !cinemas.storageError && !cinemas.error
-                  ? "Saved"
-                  : "Changes save automatically."}
+        {nearby ? (
+          <div class="nearby-apply">
+            <p>
+              {origin
+                ? `${[...groups.values()].flat().length} cinemas within ${radius || "any"} ${radius === 1 ? "mile" : "miles"}`
+                : "Choose a postcode or use your location."}
             </p>
-            <span>{cinemas.signedIn ? "Synced to your account" : "In this browser"}</span>
+            <button
+              class="booking-action"
+              disabled={!origin || !groups.size}
+              onClick={() => nearby.onApply([...groups.values()].flat().map((venue) => venue.id))}
+            >
+              Show films at these cinemas
+            </button>
           </div>
-          <button onClick={onClose}>Done</button>
-        </div>
+        ) : (
+          <>
+            <section class="selected-cinemas" aria-label="Selected cinemas">
+              <h3>Selected cinemas · {draft.length}</h3>
+              {draft.length ? (
+                <ul>
+                  {draft.map((id) => {
+                    const venue = meta.venues.find((value) => value.id === id);
+                    const name = venue?.name ?? `${id} · not in current listings`;
+                    return (
+                      <li key={id}>
+                        <button
+                          type="button"
+                          disabled={cinemas.loading}
+                          aria-label={`Remove ${name}`}
+                          onClick={() =>
+                            setDraft((value) => value.filter((selected) => selected !== id))
+                          }
+                        >
+                          {name} <span aria-hidden="true">×</span>
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              ) : (
+                <p>No cinemas selected yet.</p>
+              )}
+            </section>
+            <div class="cinema-done-row">
+              <div class="cinema-save-status">
+                <p role="status">
+                  {cinemas.busy
+                    ? "Saving…"
+                    : cinemas.saved && !cinemas.storageError && !cinemas.error
+                      ? "Saved"
+                      : "Changes save automatically."}
+                </p>
+                <span>{cinemas.signedIn ? "Synced to your account" : "In this browser"}</span>
+              </div>
+              <button onClick={onClose}>Done</button>
+            </div>
+          </>
+        )}
       </div>
     </Dialog>
   );

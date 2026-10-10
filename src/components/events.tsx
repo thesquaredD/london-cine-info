@@ -21,6 +21,20 @@ export function EventTypeFilter({
 }) {
   return (
     <div class="event-type-filter">
+      <div class="event-discovery-tabs" role="group" aria-label="Events view">
+        <button
+          aria-pressed={state.eventType === "highlights"}
+          onClick={() => onChange({ eventType: "highlights", page: 1 })}
+        >
+          Q&As, scores & talks
+        </button>
+        <button
+          aria-pressed={!state.eventType}
+          onClick={() => onChange({ eventType: "", page: 1 })}
+        >
+          All experiences
+        </button>
+      </div>
       <label for="event-type">Event type</label>
       <select
         id="event-type"
@@ -28,6 +42,7 @@ export function EventTypeFilter({
         onChange={(event) => onChange({ eventType: event.currentTarget.value, page: 1 })}
       >
         <option value="">All cinema experiences</option>
+        <option value="highlights">Q&As, live scores & talks</option>
         {EVENT_TYPES.map((type) => (
           <option key={type.id} value={type.id}>
             {type.label}
@@ -156,7 +171,7 @@ export function Events({
                             rel="noopener noreferrer"
                             aria-label={`${row.bookingFallback ? "Screening details for" : "Book"} ${row.title} at ${venue?.name ?? row.venue} ${row.localTime}`}
                           >
-                            {row.bookingFallback ? "Screening details ↗" : "Book ↗"}
+                            {row.bookingFallback || row.soldOut ? "Details ↗" : "Book ↗"}
                           </a>
                           {onCalendar && (
                             <button

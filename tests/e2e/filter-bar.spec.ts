@@ -9,12 +9,13 @@ test.describe("filter bar and mobile sheet", () => {
     await expect(page.locator(".film-row")).toHaveCount(6);
     const mobile = (page.viewportSize()?.width ?? 1200) < 800;
     const cinema = mobile
-      ? page.locator(".mobile-filters").getByRole("button", { name: /^Cinema/ })
+      ? page.getByRole("button", { name: "All filters", exact: true })
       : page.locator(".desktop-filters summary").filter({ hasText: /^Cinema/ });
     await cinema.click();
     const picker = mobile
       ? page.getByRole("dialog", { name: "Filters", exact: true })
       : page.locator('.desktop-filters [data-filter="venue"]');
+    if (mobile) await picker.locator('[data-filter="venue"] > summary').click();
     const choice = picker.getByRole("checkbox", { name: /BFI Southbank/ });
     await choice.click();
     await expect(choice).toBeChecked();
@@ -35,12 +36,13 @@ test.describe("filter bar and mobile sheet", () => {
       await done.click();
       await expect(picker).not.toBeVisible();
       await expect(cinema).toBeFocused();
-      await page.locator(".mobile-filters").getByRole("button", { name: /^When/ }).click();
+      await page.getByRole("button", { name: "All filters", exact: true }).click();
+      await page.locator('.filter-sheet [data-filter="day"] > summary').click();
       await expect(page.locator('.filter-sheet [data-filter="day"]')).toHaveAttribute("open", "");
       await page.keyboard.press("Escape");
       await page.getByRole("button", { name: "Fixture Classic A", exact: true }).click();
       await expect(page.locator(".rating-cards")).toBeVisible();
-      await expect(page.locator(".poster figcaption")).toContainText("1977");
+      await expect(page.locator(".film-facts")).toContainText("1977");
     } else {
       await page.keyboard.press("Escape");
       await expect(picker).not.toHaveAttribute("open", "");
@@ -59,7 +61,7 @@ test("filter bar and choosers fit phone, tablet and desktop widths", async ({ pa
   for (const width of [320, 390, 799, 800, 1000, 1440]) {
     await page.setViewportSize({ width, height: 900 });
     await expect(page.locator("th:visible")).toHaveCount(width < 800 ? 2 : 7);
-    if (width >= 800) {
+    if (width >= 1100) {
       await page.locator(".when-picker > summary").click();
       await expect(page.locator('.when-picker [data-filter="day"]')).toHaveAttribute("open", "");
       const box = await page.locator(".when-content").boundingBox();
@@ -73,6 +75,13 @@ test("filter bar and choosers fit phone, tablet and desktop widths", async ({ pa
       expect(cinemaBox!.x + cinemaBox!.width).toBeLessThanOrEqual(width);
       await page.getByRole("heading", { name: "LONDON CINÉ INFO" }).click();
       await expect(cinema).not.toHaveAttribute("open", "");
+    }
+    if (width < 1100) {
+      await page.getByRole("button", { name: "All filters", exact: true }).click();
+      const sheet = page.getByRole("dialog", { name: "Filters", exact: true });
+      await sheet.locator('[data-filter="venue"] > summary').click();
+      await expect(sheet.getByRole("checkbox", { name: /BFI Southbank/ })).toBeVisible();
+      await page.keyboard.press("Escape");
     }
     expect(
       await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),

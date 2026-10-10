@@ -118,8 +118,13 @@ test("measures PR 17 public imports and shared filters without usernames", async
   );
   await page.goto("/");
   await expect(page.locator(".film-row")).toHaveCount(6);
-  await page.getByRole("button", { name: /^Watchlists/ }).click();
-  const dialog = page.getByRole("dialog");
+  if (await page.locator(".all-filters .mobile-more").isVisible())
+    await page.getByRole("button", { name: "All filters", exact: true }).click();
+  await page
+    .getByRole("button", { name: /^Watchlists/ })
+    .filter({ visible: true })
+    .click();
+  const dialog = page.getByRole("dialog", { name: "Watchlists", exact: true });
   await dialog.getByRole("button", { name: "+ Use a Letterboxd watchlist" }).click();
   await dialog.getByLabel("Letterboxd username", { exact: true }).fill("private_handle");
   await dialog.getByRole("button", { name: "Use watchlist", exact: true }).click();

@@ -34,9 +34,10 @@ test("Radar preserves full lists and collapse controls independently restore on 
   await page.goto("/radar");
   const film = page.getByRole("region", { name: "On film", exact: true });
   const imax = page.getByRole("region", { name: "IMAX", exact: true });
-  const limited = page.getByRole("region", { name: "Limited opportunity", exact: true });
-  await expect(film.locator(".film-row")).toHaveCount(12);
+  const limited = page.getByRole("region", { name: "Few screenings soon", exact: true });
   await expect(limited.locator(".film-row")).toHaveCount(12);
+  await page.getByRole("button", { name: "35mm & 70mm", exact: true }).click();
+  await expect(film.locator(".film-row")).toHaveCount(12);
   const toggle = film.getByRole("button", { name: /On film.*12 films/ });
   await toggle.focus();
   await toggle.press("Enter");
@@ -51,12 +52,15 @@ test("Radar preserves full lists and collapse controls independently restore on 
     path: join(evidence, `collapsed-radar-${info.project.name}.png`),
     fullPage: true,
   });
+  await page.getByRole("button", { name: "Few screenings soon", exact: true }).click();
   await expect(limited.locator(".film-row").first()).toBeVisible();
+  await page.getByRole("button", { name: "IMAX", exact: true }).click();
   await expect(imax.getByRole("button", { name: /IMAX.*0 films/ })).toHaveAttribute(
     "aria-expanded",
     "true",
   );
   await page.reload();
+  await page.getByRole("button", { name: "35mm & 70mm", exact: true }).click();
   await expect(toggle).toHaveAttribute("aria-expanded", "false");
   await toggle.focus();
   await toggle.press("Space");
@@ -64,7 +68,9 @@ test("Radar preserves full lists and collapse controls independently restore on 
   await expect(film.locator(".film-row")).toHaveCount(12);
   await film.getByLabel("Film format").selectOption("70mm");
   await expect(film.locator(".film-row")).toHaveCount(0);
+  await page.getByRole("button", { name: "Few screenings soon", exact: true }).click();
   await expect(limited.locator(".film-row")).toHaveCount(12);
+  await page.getByRole("button", { name: "35mm & 70mm", exact: true }).click();
   await film.getByLabel("Film format").selectOption("");
   const ids = await page.locator("[id]").evaluateAll((nodes) => nodes.map((node) => node.id));
   expect(new Set(ids).size).toBe(ids.length);
@@ -94,14 +100,14 @@ test("Events agenda has immediate booking, date/type filters and calendar action
   });
   await page.goto("/events");
   await expect(page.locator(".event-row")).toHaveCount(2);
-  await expect(page.locator(".filter-summary > [role=status]")).toContainText("2 events");
+  await expect(page.locator(".filter-summary [role=status]")).toContainText("2 events");
   await expect(page.locator(".event-row").first()).toContainText("14:00");
   await expect(page.locator(".event-row").first()).toContainText("Prince Charles Cinema");
   await expect(page.getByRole("link", { name: /^Book/ }).first()).toBeVisible();
   expect(showtimeRequests).toBe(0);
   await page.getByLabel("Event type", { exact: true }).selectOption("score");
   await expect(page.locator(".event-row")).toHaveCount(1);
-  await expect(page.locator(".filter-summary > [role=status]")).toContainText("1 event");
+  await expect(page.locator(".filter-summary [role=status]")).toContainText("1 event");
   await page.reload();
   await expect(page.getByLabel("Event type", { exact: true })).toHaveValue("score");
   await page.getByRole("button", { name: "Add to calendar", exact: true }).click();
@@ -220,21 +226,28 @@ test("format sections overlap legitimately and expanded bookings stay screening-
   await page.goto("/radar");
   const film = page.getByRole("region", { name: "On film", exact: true });
   const imax = page.getByRole("region", { name: "IMAX", exact: true });
-  await expect(film.locator(".film-row")).toHaveCount(2);
+  await page.getByRole("button", { name: "IMAX", exact: true }).click();
   await expect(imax.locator(".film-row")).toHaveCount(3);
+  await page.getByRole("button", { name: "35mm & 70mm", exact: true }).click();
+  await expect(film.locator(".film-row")).toHaveCount(2);
   await expect(film.locator(".film-row").filter({ hasText: "Generic IMAX" })).toHaveCount(0);
   await film.getByRole("button", { name: "Fixture Classic A", exact: true }).click();
   await expect(film.locator(".showtime-day")).toHaveCount(1);
   await expect(film.locator(".showtime-day")).toContainText("35mm");
+  await page.getByRole("button", { name: "IMAX", exact: true }).click();
   await imax.getByRole("button", { name: "Fixture Classic A", exact: true }).click();
   await expect(imax.locator(".showtime-day")).toHaveCount(1);
   await expect(imax.locator(".showtime-day")).toContainText("imax");
   await expect(imax.locator(".showtime-day")).not.toContainText("35mm");
+  await page.getByRole("button", { name: "35mm & 70mm", exact: true }).click();
   await film.getByLabel("Film format").selectOption("70mm");
   await expect(film.locator(".film-row")).toHaveCount(1);
+  await page.getByRole("button", { name: "IMAX", exact: true }).click();
   await expect(imax.locator(".film-row")).toHaveCount(3);
   await page.goto("/radar?day=2026-10-04");
+  await page.getByRole("button", { name: "35mm & 70mm", exact: true }).click();
   await expect(film.locator(".film-row")).toHaveCount(0);
+  await page.getByRole("button", { name: "IMAX", exact: true }).click();
   await expect(imax.locator(".film-row")).toHaveCount(1);
 });
 
@@ -251,6 +264,7 @@ test("Radar tolerates corrupt and unavailable local storage", async ({ page }) =
     };
   });
   await page.goto("/radar");
+  await page.getByRole("button", { name: "35mm & 70mm", exact: true }).click();
   const toggle = page
     .getByRole("region", { name: "On film", exact: true })
     .getByRole("button", { name: /On film.*1 film/ });

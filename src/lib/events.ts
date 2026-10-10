@@ -29,7 +29,10 @@ export function matchingEvents(
             !state.excluded.genre?.length &&
             !state.excluded.language?.length &&
             event.title.toLowerCase().includes(state.search.trim().toLowerCase()))) &&
-        (!state.eventType || event.types.includes(state.eventType)) &&
+        (!state.eventType ||
+          (state.eventType === "highlights"
+            ? event.types.some((type) => ["qa", "score", "talk"].includes(type))
+            : event.types.includes(state.eventType))) &&
         matcher.showtime(event.date, event),
     )
     .sort((a, b) => a.time - b.time || a.title.localeCompare(b.title) || a.id.localeCompare(b.id));

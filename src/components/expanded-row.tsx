@@ -1,7 +1,7 @@
 import { capture } from "../lib/analytics";
 import { screeningMatcher } from "../lib/filters";
 import type { ViewState } from "../lib/catalogue";
-import { useEffect, useState } from "preact/hooks";
+import { useEffect, useRef, useState } from "preact/hooks";
 import type { DataMeta, Film, FilmShowtimes, RatingKey } from "../shared/data";
 import { RATINGS, formatDate, runtime } from "../lib/catalogue";
 import { loadShowtimes } from "../lib/data";
@@ -33,6 +33,19 @@ export function ExpandedRow({
   const [error, setError] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const [posterFailed, setPosterFailed] = useState(false);
+  const [shareMessage, setShareMessage] = useState("");
+  const [overviewExpanded, setOverviewExpanded] = useState(false);
+  const [overviewOverflow, setOverviewOverflow] = useState(false);
+  const synopsis = useRef<HTMLParagraphElement>(null);
+  useEffect(() => {
+    const node = synopsis.current;
+    if (!node || overviewExpanded) return;
+    const measure = () => setOverviewOverflow(node.scrollHeight > node.clientHeight + 1);
+    const observer = new ResizeObserver(measure);
+    observer.observe(node);
+    measure();
+    return () => observer.disconnect();
+  }, [data, overviewExpanded]);
   useEffect(() => {
     let active = true;
     setData(null);
@@ -66,7 +79,7 @@ export function ExpandedRow({
       <td colSpan={columns}>
         <section id={detailId} class="film-expanded" aria-label={`Screenings for ${film.ti}`}>
           <div class="film-info">
-            <figure class="poster" tabIndex={0} aria-label={`Film information for ${film.ti}`}>
+            <figure class="poster" aria-label={`${film.ti} poster`}>
               {film.po && !posterFailed ? (
                 <img
                   src={film.po}
@@ -80,69 +93,89 @@ export function ExpandedRow({
                   <span>Poster unavailable</span>
                 </div>
               )}
-              <figcaption>
-                {film.rd ? formatDate(film.rd) : (film.ye ?? "Year unknown")}
-                <br />
-                {runtime(film.ru)}
-                {film.cl && ` · ${film.cl}`}
-              </figcaption>
-              <div class="poster-overlay">
-                {data?.details.actors.length ? (
-                  <p>{data.details.actors.map((actor) => actor.name).join(", ")}</p>
-                ) : null}
-                <div class="genre-pills">
-                  <span>
-                    {meta.facets.language.find((option) => option.id === film.la)?.label ?? film.la}
-                  </span>
-                  {genres.map((genre) => (
-                    <span key={genre}>{genre}</span>
-                  ))}
-                </div>
-                {data?.details.overview && <p class="overview">{data.details.overview}</p>}
-              </div>
             </figure>
-            {ratingOrder.length > 0 && (
-              <div class="rating-cards">
-                {ratingOrder.map((key) => {
-                  const source = RATINGS.find((rating) => rating.key === key)!;
-                  const rating = film.ra[source.key];
-                  const content = (
-                    <>
-                      <span>{source.name}</span>
-                      <strong>
-                        {rating?.value ?? "?"}
-                        <small>
-                          {rating?.value !== null && rating?.value !== undefined
-                            ? source.scale
-                            : ""}
-                        </small>
-                      </strong>
-                    </>
-                  );
-                  return rating ? (
-                    <a
-                      key={source.key}
-                      class="rating-card"
-                      href={rating.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      aria-label={`${source.name} rating for ${film.ti}`}
-                    >
-                      {content}
-                    </a>
-                  ) : (
-                    <div key={source.key} class="rating-card missing">
-                      {content}
-                    </div>
-                  );
-                })}
+            <div class="film-description">
+              <h3 class="film-detail-title">{film.ti}</h3>
+              <p class="film-facts">
+                {film.ye ?? "Year unknown"} · {runtime(film.ru)}
+                {film.cl && ` · ${film.cl}`}
+              </p>
+              <p class="film-genres">
+                {[
+                  meta.facets.language.find((option) => option.id === film.la)?.label ?? film.la,
+                  ...genres,
+                ].join(" · ")}
+              </p>
+              {ratingOrder.length > 0 && (
+                <div class="rating-cards">
+                  {ratingOrder.map((key) => {
+                    const source = RATINGS.find((rating) => rating.key === key)!;
+                    const rating = film.ra[source.key];
+                    const content = (
+                      <>
+                        <span>{source.short}</span>
+                        <strong>
+                          {rating?.value ?? "?"}
+                          <small>
+                            {rating?.value !== null && rating?.value !== undefined
+                              ? source.scale
+                              : ""}
+                          </small>
+                        </strong>
+                      </>
+                    );
+                    return rating ? (
+                      <a
+                        key={source.key}
+                        class="rating-card"
+                        href={rating.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={`${source.name} rating for ${film.ti}`}
+                      >
+                        {content}
+                      </a>
+                    ) : (
+                      <div key={source.key} class="rating-card missing">
+                        {content}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+              <div class="film-links">
+                {film.tr && (
+                  <a class="trailer-link" href={film.tr} target="_blank" rel="noopener noreferrer">
+                    Watch trailer ↗
+                  </a>
+                )}
+                <button
+                  class="share-film"
+                  onClick={async () => {
+                    try {
+                      const url = new URL(window.location.href);
+                      if (url.pathname === "/events") {
+                        url.pathname = "/";
+                        url.searchParams.delete("eventType");
+                        url.searchParams.set("film", film.id);
+                      } else if (!url.searchParams.has("film"))
+                        url.searchParams.set("film", film.id);
+                      await navigator.clipboard.writeText(url.href);
+                      setShareMessage("Film link copied");
+                    } catch {
+                      setShareMessage("Copy this page’s address to share the film.");
+                    }
+                  }}
+                >
+                  Share film
+                </button>
+                {shareMessage && (
+                  <span role="status" class="share-status">
+                    {shareMessage}
+                  </span>
+                )}
               </div>
-            )}
-            {film.tr && (
-              <a class="trailer-link" href={film.tr} target="_blank" rel="noopener noreferrer">
-                Watch trailer ↗
-              </a>
-            )}
+            </div>
           </div>
           <div class="showtimes">
             {!data && !error && (
@@ -196,7 +229,9 @@ export function ExpandedRow({
                           <time dateTime={new Date(row.time).toISOString()}>{row.localTime}</time>
                           <span class="time-dot" aria-hidden="true" />
                           <div class="screening-info">
+                            <span class="screening-venue">{venue?.name ?? row.venue}</span>
                             <a
+                              class="booking-action"
                               href={row.bookingUrl}
                               onClick={() =>
                                 capture(
@@ -215,11 +250,10 @@ export function ExpandedRow({
                               }
                               target="_blank"
                               rel="noopener noreferrer"
-                              aria-label={`${row.bookingFallback ? "Screening details for" : "Book"} ${film.ti} at ${venue?.name ?? row.venue} ${row.localTime}`}
+                              aria-label={`${row.bookingFallback || row.soldOut ? "Screening details for" : "Book"} ${film.ti} at ${venue?.name ?? row.venue} ${row.localTime}`}
                             >
-                              {venue?.name ?? row.venue}
+                              {row.bookingFallback || row.soldOut ? "Details ↗" : "Book ↗"}
                             </a>
-                            {row.bookingFallback && <span class="badge">Screening details</span>}
                             {row.soldOut && <span class="badge sold-out-badge">Sold out</span>}
                             {row.formats
                               .filter((format) => format !== "standard")
@@ -260,6 +294,33 @@ export function ExpandedRow({
                 </section>
               ))}
           </div>
+          <details class="film-about">
+            <summary>More details</summary>
+            <div class="film-description">
+              {data?.details.overview && (
+                <>
+                  <p ref={synopsis} class={`film-synopsis ${overviewExpanded ? "full" : ""}`}>
+                    {data.details.overview}
+                  </p>
+                  {(overviewOverflow || overviewExpanded) && (
+                    <button
+                      class="synopsis-toggle"
+                      aria-expanded={overviewExpanded}
+                      onClick={() => setOverviewExpanded(!overviewExpanded)}
+                    >
+                      {overviewExpanded ? "Less" : "Read more"}
+                    </button>
+                  )}
+                </>
+              )}
+              {data?.details.actors.length ? (
+                <details class="film-cast">
+                  <summary>Cast</summary>
+                  <p>{data.details.actors.map((actor) => actor.name).join(", ")}</p>
+                </details>
+              ) : null}
+            </div>
+          </details>
         </section>
       </td>
     </tr>

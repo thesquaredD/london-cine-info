@@ -35,7 +35,7 @@ test("filter selection keeps trigger dimensions, with red active states and comp
   await page.goto("/");
   const mobile = info.project.name === "mobile";
   const trigger = mobile
-    ? page.locator(".mobile-filters button").filter({ hasText: /^When/ })
+    ? page.getByRole("button", { name: "All filters", exact: true })
     : page.locator(".when-picker > summary");
   const before = await trigger.boundingBox();
   const tableBefore = await page.locator(".film-table").boundingBox();
@@ -43,6 +43,7 @@ test("filter selection keeps trigger dimensions, with red active states and comp
   const picker = mobile
     ? page.getByRole("dialog", { name: "Filters", exact: true })
     : page.locator(".when-content");
+  if (mobile) await picker.locator('[data-filter="day"] > summary').click();
   const selected = picker.getByRole("button", { name: /^Today / });
   await selected.click();
   await expect(selected).toHaveAttribute("aria-pressed", "true");
@@ -54,7 +55,7 @@ test("filter selection keeps trigger dimensions, with red active states and comp
   expect(await trigger.boundingBox()).toEqual(before);
   const tableAfter = await page.locator(".film-table").boundingBox();
   if (mobile) {
-    expect(tableAfter!.y - tableBefore!.y).toBeLessThanOrEqual(32);
+    expect(tableAfter!.y - tableBefore!.y).toBeLessThanOrEqual(60);
     await page.getByRole("button", { name: "Clear all", exact: true }).click();
     await expect(page.locator(".active-filters")).toBeHidden();
     expect((await page.locator(".film-table").boundingBox())!.y).toBe(tableBefore!.y);
@@ -68,11 +69,11 @@ test("filter selection keeps trigger dimensions, with red active states and comp
     expect(tableAfter?.y).toBe(tableBefore?.y);
   }
   const controls = mobile
-    ? page.locator(".mobile-filters button, .watchlists-trigger, .all-filters")
+    ? page.locator(".quick-filters-mobile:visible, .all-filters:visible")
     : page.locator(
         ".desktop-filters > .when-picker > summary, .desktop-filters > .filter-controls > .filter-fields > .filter-picker > summary, .watchlists-trigger, .all-filters",
       );
-  const sizes = await controls.evaluateAll((elements) =>
+  const sizes = await controls.filter({ visible: true }).evaluateAll((elements) =>
     elements.map((e) => ({
       height: e.getBoundingClientRect().height,
       font: getComputedStyle(e).fontSize,

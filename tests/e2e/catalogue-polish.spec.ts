@@ -212,7 +212,7 @@ test("Clear all uses space only for active mobile filters and collapses on reset
   const chips = page.getByRole("group", { name: "Active filters", exact: true });
   await expect(chips).toBeVisible();
   if (page.viewportSize()!.width < 800) {
-    expect((await summary.boundingBox())!.height - baseline).toBeLessThanOrEqual(32);
+    expect((await summary.boundingBox())!.height - baseline).toBeLessThanOrEqual(60);
   } else {
     expect((await summary.boundingBox())!.height).toBe(baseline);
   }

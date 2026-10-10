@@ -5,10 +5,10 @@ test.beforeEach(async ({ page }) => {
 async function enable(page: Page) {
   if (page.viewportSize()!.width < 800)
     await page.getByRole("button", { name: /^Quick filters/ }).click();
-  await page
+  const mine = page
     .locator(page.viewportSize()!.width < 800 ? ".quick-filter-dialog" : ".quick-filters-desktop")
-    .getByRole("button", { name: "My cinemas", exact: true })
-    .click();
+    .getByRole("button", { name: "My cinemas", exact: true });
+  if ((await mine.getAttribute("aria-pressed")) !== "true") await mine.click();
   if (page.viewportSize()!.width < 800)
     await page.getByRole("button", { name: /^Show \d/ }).click();
   await page.getByRole("button", { name: "Edit cinemas", exact: true }).click();
@@ -55,7 +55,7 @@ test("guest search, distance, dismissal and contextual editing preserve selectio
   await page.route("https://api.postcodes.io/**", (route) =>
     route.fulfill({ json: { result: { latitude: 51.5074, longitude: -0.1278 } } }),
   );
-  await dialog.getByRole("button", { name: /^Near me/ }).click();
+  await dialog.getByRole("button", { name: /^Location/ }).click();
   await dialog.getByLabel("Your postcode").fill("SW1A 2AA");
   await dialog.getByRole("button", { name: "Find location", exact: true }).click();
   await expect(dialog.getByRole("button", { name: /^Near SW1A/ })).toBeVisible();
@@ -207,7 +207,7 @@ test("postcode failures, denied location and borough filters keep selected cinem
   await page.goto("/");
   const dialog = await enable(page);
   await dialog.getByRole("checkbox", { name: "BFI Southbank", exact: true }).check();
-  await dialog.getByRole("button", { name: /^Near me/ }).click();
+  await dialog.getByRole("button", { name: /^Location/ }).click();
   await dialog.getByRole("button", { name: "Use my location", exact: true }).click();
   await expect(dialog.getByRole("alert")).toContainText("Location permission was denied");
   await page.route("https://api.postcodes.io/**", (route) =>
@@ -227,7 +227,7 @@ test("postcode failures, denied location and borough filters keep selected cinem
 test("compact cinema tools dismiss without closing the chooser", async ({ page }) => {
   await page.goto("/");
   const dialog = await enable(page);
-  const near = dialog.getByRole("button", { name: /^Near me/ });
+  const near = dialog.getByRole("button", { name: /^Location/ });
   await near.click();
   await expect(dialog.getByLabel("Your postcode")).toBeVisible();
   const triggerBox = await near.boundingBox();
@@ -251,7 +251,7 @@ test("dropdowns stay attached to their buttons when the toolbar wraps", async ({
   await page.route("https://api.postcodes.io/**", (route) =>
     route.fulfill({ json: { result: { latitude: 51.5074, longitude: -0.1278 } } }),
   );
-  await dialog.getByRole("button", { name: /^Near me/ }).click();
+  await dialog.getByRole("button", { name: /^Location/ }).click();
   await dialog.getByLabel("Your postcode").fill("SW1A 2AA");
   await dialog.getByRole("button", { name: "Find location", exact: true }).click();
   const near = dialog.getByRole("button", { name: /^Near SW1A/ });

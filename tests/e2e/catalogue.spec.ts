@@ -71,7 +71,7 @@ test("showtimes are lazy, cached, single-expanded and recover from failure", asy
   await title.click();
   await expect(page.getByRole("alert")).toContainText("Screening details could not be loaded");
   await page.getByRole("button", { name: "Try again" }).click();
-  await expect(page.getByText("Screening details", { exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: /^Screening details for/ }).first()).toBeVisible();
   await expect(page.getByText("Sold out", { exact: true })).toBeVisible();
   await expect(page.locator(".showtime-day")).toHaveCount(3);
   await title.click();
