@@ -15,12 +15,14 @@ export function WatchlistsButton() {
       aria-haspopup="dialog"
       onClick={() => m.setPanel("watchlists")}
     >
-      Watchlists
+      <span>Watchlists</span>
       <span class="shortcut-count" style={{ visibility: m.active.length ? "visible" : "hidden" }}>
         {" "}
         · {m.active.length || 0}
-      </span>{" "}
-      ▾
+      </span>
+      <span class="control-caret" aria-hidden="true">
+        ▾
+      </span>
     </button>
   );
 }

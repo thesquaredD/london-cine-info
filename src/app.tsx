@@ -13,7 +13,7 @@ import { useCalendar } from "./lib/calendar";
 import { MyCalendar, ScreeningCalendarDialog } from "./components/screening-calendar";
 import type { CalendarInput } from "./shared/calendar";
 import { useCinemas } from "./lib/cinemas";
-import { QuickFilters } from "./components/quick-filters";
+import { QuickFilters, QuickFilterTrigger } from "./components/quick-filters";
 import { MyCinemas } from "./components/my-cinemas";
 import { Events, EventTypeFilter } from "./components/events";
 import { matchingEvents, eventFacetCounts } from "./lib/events";
@@ -570,6 +570,85 @@ export function App() {
     yearCounts,
     yearOpenRequest,
   };
+  const shortcuts = (
+    <div class="quick-days" role="group" aria-label="Quick filters">
+      {[
+        { id: "today", label: "Today" },
+        { id: "tomorrow", label: "Tomorrow" },
+        { id: "evening", label: "Evening" },
+        { id: "weekend", label: "This weekend" },
+        { id: "this-week", label: "This week" },
+        { id: "next-week", label: "Next week" },
+      ].map(({ id, label }) => {
+        const active =
+          id === "evening"
+            ? isEvening(state)
+            : !state.tonight &&
+              state.filters.day?.length === 1 &&
+              state.filters.day[0] === id &&
+              !state.excluded.day?.length;
+        return (
+          <button
+            key={id}
+            title={
+              id === "this-week"
+                ? "Next 7 days, including today"
+                : id === "next-week"
+                  ? "The 7 days after that"
+                  : undefined
+            }
+            aria-pressed={active}
+            onClick={() =>
+              change(id === "evening" ? eveningShortcut(state) : dateShortcut(state, id))
+            }
+          >
+            {label}
+            <small>
+              {" "}
+              {id === "evening" ? (counts?.time.get("evening") ?? 0) : (counts?.day.get(id) ?? 0)}
+            </small>
+          </button>
+        );
+      })}
+      <button
+        data-shortcut="films"
+        aria-pressed={!!state.watchlist}
+        onClick={() => {
+          change({ watchlist: !state.watchlist, page: 1 });
+          if (!state.watchlist && (!account.user || !account.watchlist?.fetchedAt)) openAccount();
+        }}
+      >
+        My watchlist
+      </button>
+      <button
+        data-shortcut="cinemas"
+        aria-pressed={myCinemasActive}
+        disabled={cinemas.loading}
+        onClick={() => {
+          myCinemasUpdating.current = true;
+          change({
+            filters: {
+              ...state.filters,
+              venue: myCinemasActive ? [] : [...cinemas.venues],
+            },
+            excluded: { ...state.excluded, venue: [] },
+            page: 1,
+          });
+          myCinemasUpdating.current = false;
+          setMyCinemasActive(!myCinemasActive);
+        }}
+      >
+        My cinemas
+      </button>
+      <button
+        data-shortcut="films"
+        aria-pressed={!!state.short}
+        onClick={() => change({ short: !state.short, page: 1 })}
+      >
+        Under 2 hours
+      </button>
+    </div>
+  );
   return (
     <FriendsContext.Provider value={friends}>
       <div class={`app-layout ${collapsed ? "sidebar-collapsed" : ""}`}>
@@ -805,12 +884,30 @@ export function App() {
               )}
               {catalogue && (
                 <>
-                  <FilterBar {...filterProps} state={effectiveState} hideRatings={hideRatings} />
+                  <FilterBar
+                    {...filterProps}
+                    state={effectiveState}
+                    hideRatings={hideRatings}
+                    quickFilters={
+                      <QuickFilterTrigger
+                        open={quickOpen}
+                        onOpen={() => setQuickOpen(true)}
+                        activeCount={
+                          Number(!!state.filters.day?.length) +
+                          Number(isEvening(state)) +
+                          Number(!!state.watchlist) +
+                          Number(myCinemasActive) +
+                          Number(!!state.short)
+                        }
+                      />
+                    }
+                  />
                 </>
               )}
               {catalogue && (
                 <div class="filter-summary">
                   <QuickFilters
+                    hideMobileTrigger
                     open={quickOpen}
                     onOpen={() => setQuickOpen(true)}
                     onClose={() => setQuickOpen(false)}
@@ -824,85 +921,7 @@ export function App() {
                       Number(!!state.short)
                     }
                   >
-                    <div class="quick-days" role="group" aria-label="Quick filters">
-                      {[
-                        { id: "today", label: "Today" },
-                        { id: "tomorrow", label: "Tomorrow" },
-                        { id: "evening", label: "Evening" },
-                        { id: "weekend", label: "This weekend" },
-                        { id: "this-week", label: "This week" },
-                        { id: "next-week", label: "Next week" },
-                      ].map(({ id, label }) => {
-                        const active =
-                          id === "evening"
-                            ? isEvening(state)
-                            : !state.tonight &&
-                              state.filters.day?.length === 1 &&
-                              state.filters.day[0] === id &&
-                              !state.excluded.day?.length;
-                        return (
-                          <button
-                            key={id}
-                            title={
-                              id === "this-week"
-                                ? "Next 7 days, including today"
-                                : id === "next-week"
-                                  ? "The 7 days after that"
-                                  : undefined
-                            }
-                            aria-pressed={active}
-                            onClick={() =>
-                              change(
-                                id === "evening" ? eveningShortcut(state) : dateShortcut(state, id),
-                              )
-                            }
-                          >
-                            {label}
-                            <small>
-                              {" "}
-                              {id === "evening"
-                                ? (counts?.time.get("evening") ?? 0)
-                                : (counts?.day.get(id) ?? 0)}
-                            </small>
-                          </button>
-                        );
-                      })}
-                      <button
-                        aria-pressed={!!state.watchlist}
-                        onClick={() => {
-                          change({ watchlist: !state.watchlist, page: 1 });
-                          if (!state.watchlist && (!account.user || !account.watchlist?.fetchedAt))
-                            openAccount();
-                        }}
-                      >
-                        My watchlist
-                      </button>
-                      <button
-                        aria-pressed={myCinemasActive}
-                        disabled={cinemas.loading}
-                        onClick={() => {
-                          myCinemasUpdating.current = true;
-                          change({
-                            filters: {
-                              ...state.filters,
-                              venue: myCinemasActive ? [] : [...cinemas.venues],
-                            },
-                            excluded: { ...state.excluded, venue: [] },
-                            page: 1,
-                          });
-                          myCinemasUpdating.current = false;
-                          setMyCinemasActive(!myCinemasActive);
-                        }}
-                      >
-                        My cinemas
-                      </button>
-                      <button
-                        aria-pressed={!!state.short}
-                        onClick={() => change({ short: !state.short, page: 1 })}
-                      >
-                        Under 2 hours
-                      </button>
-                    </div>
+                    {shortcuts}
                   </QuickFilters>
                   {myCinemasActive && (
                     <div class="cinema-context">

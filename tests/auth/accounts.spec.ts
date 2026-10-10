@@ -117,7 +117,7 @@ test("real Functions sign-in, dialog settings, watchlist, shared filter and acco
   )
     .getByRole("link", { name: "All movies", exact: true })
     .click();
-  await page.getByRole("button", { name: /^(More filters|Filters) ▾$/ }).click();
+  await page.getByRole("button", { name: /^(More filters|All filters)$/ }).click();
   const filters = page.getByRole("dialog", { name: "Filters", exact: true });
   await filters.getByRole("checkbox", { name: "Only my watchlist" }).check();
   await filters.getByRole("button", { name: /^Show/ }).click();
