@@ -214,3 +214,18 @@ it("preserves explicitly chosen default ranking separately from reset order", as
   expect(ascending.direction).toBe("asc");
   expect(hasCustomSort({ ...ascending, ...nextSort(ascending, "lb") })).toBe(false);
 });
+
+it("shares an expanded film and saved-cinema mode without losing search or venue filters", () => {
+  const state = {
+    ...readView(new URL("https://example.com/?q=classic&venue=bfi.org.uk")),
+    film: "classic-a",
+    myCinemas: true,
+  };
+  expect(readView(new URL(viewUrl(state), "https://example.com"))).toEqual(state);
+});
+it("preserves Radar film links and the Events highlights view", () => {
+  for (const query of ["/radar?film=film%3Aclassic-a", "/events?eventType=highlights"]) {
+    const state = readView(new URL(query, "https://example.com"));
+    expect(readView(new URL(viewUrl(state), "https://example.com"))).toEqual(state);
+  }
+});

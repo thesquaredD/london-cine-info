@@ -1,5 +1,4 @@
 import type { ComponentChildren } from "preact";
-import { MobileSort } from "./mobile-sort";
 import { WatchlistsButton } from "./friends";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { FilterControls, type FilterControlsProps } from "./filter-controls";
@@ -100,7 +99,7 @@ export function FilterBar(
         id="bar-search"
         class="bar-search"
         type="search"
-        placeholder="Film or director…"
+        placeholder="What do you want to see?"
         value={props.state.search}
         onInput={(event) => props.onChange({ search: event.currentTarget.value, page: 1 })}
       />
@@ -177,9 +176,6 @@ export function FilterBar(
           ▾
         </span>
       </button>
-      {!["/events", "/my-calendar"].includes(props.state.path) && (
-        <MobileSort hideRatings={props.hideRatings} state={props.state} onChange={props.onChange} />
-      )}
       {props.quickFilters}
       <dialog
         ref={dialog}
@@ -203,6 +199,9 @@ export function FilterBar(
           <button aria-label="Close filters" onClick={() => setCategory(null)}>
             ×
           </button>
+        </div>
+        <div class="mobile-watchlists" onClickCapture={() => setCategory(null)}>
+          <WatchlistsButton />
         </div>
         <FilterControls {...props} idPrefix="sheet" onDone={() => setCategory(null)} />
       </dialog>

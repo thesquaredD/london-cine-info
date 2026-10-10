@@ -14,10 +14,10 @@ test.beforeEach(async ({ page }) => {
   );
 });
 async function when(page: import("@playwright/test").Page) {
-  if (page.viewportSize()!.width < 800) {
-    await page.locator(".mobile-filters").getByRole("button", { name: /^When/ }).click();
+  if (!(await page.locator(".desktop-filters").isVisible())) {
+    await page.getByRole("button", { name: "All filters", exact: true }).click();
+    await page.locator('.filter-sheet [data-filter="day"] > summary').click();
     const picker = page.locator('.filter-sheet [data-filter="day"]');
-    await expect(picker.locator(":scope > summary")).toBeFocused();
     return picker;
   }
   await page.locator(".when-picker > summary").click();
@@ -129,7 +129,8 @@ test("Radar shows explicit formats and global counts, themes fit 390px", async (
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("/radar");
-  await expect(page.getByRole("heading", { name: /Limited opportunity/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Few screenings soon/ })).toBeVisible();
+  await page.getByRole("button", { name: "35mm & 70mm", exact: true }).click();
   await expect(page.getByRole("heading", { name: /On film/ })).toBeVisible();
   const special = page.getByRole("region", { name: "On film", exact: true });
   await expect(special.locator(".film-row")).toHaveCount(1);
@@ -179,7 +180,7 @@ test("Radar expires screenings and relative Today moves at London midnight witho
     await route.fulfill({ json: meta });
   });
   await page.goto("/radar?day=today");
-  const limited = page.getByRole("region", { name: "Limited opportunity", exact: true });
+  const limited = page.getByRole("region", { name: "Few screenings soon", exact: true });
   await expect(limited.locator(".radar-label")).toContainText("Only 2 screenings listed");
   await page.clock.fastForward(15001);
   await expect(limited.locator(".film-row")).toHaveCount(0);

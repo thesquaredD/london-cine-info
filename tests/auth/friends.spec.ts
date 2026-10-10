@@ -34,9 +34,15 @@ async function openFriends(page: Page) {
       .locator(".desktop-sidebar")
       .getByRole("button", { name: /^Friends/ })
       .click();
-  const dialog = page.getByRole("dialog", { name: "Friends", exact: true });
+  const dialog = page.getByRole("dialog", { name: "Find a film together", exact: true });
+  await dialog.getByRole("button", { name: "Keep friends for next time", exact: true }).click();
   await expect(dialog).toBeVisible();
   return dialog;
+}
+async function watchlistsButton(page: Page) {
+  if (await page.locator(".all-filters .mobile-more").isVisible())
+    await page.getByRole("button", { name: "All filters", exact: true }).click();
+  return page.getByRole("button", { name: /^Watchlists/ }).filter({ visible: true });
 }
 const sqlQuote = (v: string) => `'${v.replaceAll("'", "''")}'`;
 function execute(sql: string, path: string) {
@@ -76,12 +82,14 @@ test("real friendship lifecycle, 500-friend search and filters, guest comparison
   const suffix = `${info.project.name}_${Date.now()}`;
   const owner = await login(page, `owner-${suffix}@friends.test`);
   await page.goto("/");
-  await expect(page.getByRole("button", { name: /^Watchlists/ })).toBeVisible();
+  await expect(
+    page.locator(".all-filters, .watchlists-trigger").filter({ visible: true }).first(),
+  ).toBeVisible();
   let dialog = await openFriends(page);
   await dialog.getByLabel("Your app username").fill(`owner_${suffix}`);
   await dialog.getByRole("button", { name: "Save username" }).click();
   await expect(dialog.getByRole("status")).toContainText("username was saved");
-  await dialog.getByRole("button", { name: "Close friends", exact: true }).click();
+  await dialog.getByRole("button", { name: "Close find a film together", exact: true }).click();
   const peerContext = await browser.newContext({ baseURL: origin, viewport: page.viewportSize()! });
   const peer = await peerContext.newPage();
   try {
@@ -106,7 +114,7 @@ test("real friendship lifecycle, 500-friend search and filters, guest comparison
     dialog = await openFriends(page);
     await dialog.getByRole("button", { name: "Accept", exact: true }).click();
     await expect(dialog.getByRole("status")).toContainText("now friends");
-    await dialog.getByRole("button", { name: "Close friends", exact: true }).click();
+    await dialog.getByRole("button", { name: "Close find a film together", exact: true }).click();
     const timestamp = Math.floor(Date.now() / 1000);
     const quote = sqlQuote;
     const statements: string[] = [];
@@ -150,8 +158,8 @@ test("real friendship lifecycle, 500-friend search and filters, guest comparison
     await dialog.getByLabel("Search friends", { exact: true }).fill("");
     await dialog.getByRole("button", { name: "Next", exact: true }).click();
     await expect(dialog.getByText("2 / 84", { exact: true })).toBeVisible();
-    await dialog.getByRole("button", { name: "Close friends", exact: true }).click();
-    await page.getByRole("button", { name: /^Watchlists/ }).click();
+    await dialog.getByRole("button", { name: "Close find a film together", exact: true }).click();
+    await (await watchlistsButton(page)).click();
     const lists = page.getByRole("dialog", { name: "Watchlists", exact: true });
     expect(await lists.locator(".watchlist-option").count()).toBeLessThanOrEqual(8);
     await lists.getByRole("checkbox", { name: /Any friend’s watchlist/ }).check();
@@ -175,10 +183,12 @@ test("real friendship lifecycle, 500-friend search and filters, guest comparison
         await page.locator(".sidebar-drawer").getByRole("link", { name, exact: true }).click();
       } else
         await page.locator(".desktop-sidebar").getByRole("link", { name, exact: true }).click();
-      await expect(page.getByRole("button", { name: /^Watchlists/ })).toBeVisible();
+      await expect(
+        page.locator(".all-filters, .watchlists-trigger").filter({ visible: true }).first(),
+      ).toBeVisible();
       await expect(page.locator(".watchlist-selections")).toContainText("Any friend");
     }
-    await page.getByRole("button", { name: /^Watchlists/ }).click();
+    await (await watchlistsButton(page)).click();
     await lists.getByRole("checkbox", { name: /Any friend’s watchlist/ }).uncheck();
     await lists
       .getByLabel("Friends’ watchlists", { exact: true })
@@ -195,7 +205,7 @@ test("real friendship lifecycle, 500-friend search and filters, guest comparison
     await page.request.post("/api/auth/logout", { data: {}, headers: { Origin: origin } });
     await page.reload();
     await expect(page.locator(".watchlist-selections")).toHaveCount(0);
-    await page.getByRole("button", { name: /^Watchlists/ }).click();
+    await (await watchlistsButton(page)).click();
     await lists.getByRole("button", { name: "+ Use a Letterboxd watchlist" }).click();
     await lists.getByLabel("Letterboxd username", { exact: true }).fill(tempUsername);
     await lists.getByRole("button", { name: "Use watchlist", exact: true }).click();
@@ -210,7 +220,7 @@ test("real friendship lifecycle, 500-friend search and filters, guest comparison
     await expect(page.locator(".watchlist-selections")).toHaveCount(0);
     dialog = await openFriends(page);
     await expect(dialog.getByRole("heading", { name: "Your friends · 0" })).toBeVisible();
-    await dialog.getByRole("button", { name: "Close friends", exact: true }).click();
+    await dialog.getByRole("button", { name: "Close find a film together", exact: true }).click();
     expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(
       false,
     );

@@ -1,3 +1,4 @@
+import { MobileSort } from "./components/mobile-sort";
 import { capture } from "./lib/analytics";
 import { useDiscoveryAnalytics } from "./lib/discovery-analytics";
 import { FriendsContext, useFriendsModel } from "./lib/friends";
@@ -180,7 +181,7 @@ export function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [quickOpen, setQuickOpen] = useState(false);
   const [cinemasOpen, setCinemasOpen] = useState(false);
-  const [myCinemasActive, setMyCinemasActive] = useState(false);
+  const [nearbyOpen, setNearbyOpen] = useState(false);
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
     const update = () => setNow(new Date());
@@ -195,6 +196,7 @@ export function App() {
   }, []);
   const watched = useMemo(() => new Set(account.watchlist?.slugs ?? []), [account.watchlist]);
   const [state, setState] = useState(() => readView(new URL(window.location.href)));
+  const myCinemasActive = !!state.myCinemas;
   const [catalogue, setCatalogue] = useState<{
     films: Film[];
     meta: DataMeta;
@@ -222,7 +224,10 @@ export function App() {
       ? { ...state, sort: "title", direction: "asc", sortExplicit: true }
       : state;
   const [displayError, setDisplayError] = useState("");
-  const [expanded, setExpanded] = useState<string | null>(null);
+  const expanded = state.film ?? null;
+  function setExpanded(key: string | null) {
+    change({ film: key ?? undefined }, true);
+  }
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
@@ -277,18 +282,26 @@ export function App() {
       friends.matchMap,
     ],
   );
+  // Opening a film changes the URL but not the catalogue's filters or ordering.
+  const catalogueKey = viewUrl({ ...effectiveState, film: undefined });
+  const catalogueState = useMemo(() => ({ ...effectiveState, film: undefined }), [catalogueKey]);
   const selected = useMemo(
     () =>
       catalogue
         ? sortFilms(
-            filterFilms(selectFilms(baseFilms, state), catalogue.meta, state, now),
-            effectiveState.sort,
-            effectiveState.direction,
+            filterFilms(
+              selectFilms(baseFilms, catalogueState),
+              catalogue.meta,
+              catalogueState,
+              now,
+            ),
+            catalogueState.sort,
+            catalogueState.direction,
             watched,
             display.titleMode,
           )
         : [],
-    [catalogue, state, baseFilms, watched, display.titleMode, hideRatings, now],
+    [catalogue, catalogueState, baseFilms, watched, display.titleMode, now],
   );
   const eventsSource = useMemo(() => {
     if (!friends.active.length) return catalogue?.events ?? [];
@@ -356,11 +369,11 @@ export function App() {
   useEffect(() => {
     const id = account.user?.id ?? null;
     if (id !== previousCinemaAccount.current) {
+      const previous = previousCinemaAccount.current;
       previousCinemaAccount.current = id;
       setCinemasOpen(false);
-      if (myCinemasActive) {
-        setMyCinemasActive(false);
-        change({ filters: { ...state.filters, venue: [] }, page: 1 });
+      if (myCinemasActive && previous !== null) {
+        change({ myCinemas: false, filters: { ...state.filters, venue: [] }, page: 1 });
       }
     }
   }, [account.user?.id]);
@@ -398,7 +411,7 @@ export function App() {
     state.tonight,
     now,
   ]);
-  function change(changes: Partial<ViewState>, push = false) {
+  function change(changes: Partial<ViewState>, push = !("search" in changes)) {
     if (
       "search" in changes &&
       "excluded" in changes &&
@@ -412,7 +425,7 @@ export function App() {
       changes.filters.venue !== state.filters.venue &&
       !myCinemasUpdating.current
     )
-      setMyCinemasActive(false);
+      changes.myCinemas ??= false;
     // Any explicit date/time edit leaves Tonight and clears the time range it supplied.
     if (
       state.tonight &&
@@ -428,16 +441,17 @@ export function App() {
     ) {
       changes = { ...changes, tonight: false, from: changes.from ?? "", to: changes.to ?? "" };
     }
-    const next = { ...state, ...changes };
+    const navigates = changes.path !== undefined && changes.path !== state.path;
+    const resetsFilm =
+      navigates || changes.sort || (changes.page !== undefined && changes.page !== state.page);
+    const next = { ...state, ...changes, ...(resetsFilm ? { film: undefined } : {}) };
     const url = viewUrl(next);
     if (url !== `${window.location.pathname}${window.location.search}`) {
       if (push) window.history.pushState(null, "", url);
       else window.history.replaceState(null, "", url);
     }
     setState(next);
-    if (push || changes.sort || (changes.page !== undefined && changes.page !== 1))
-      setExpanded(null);
-    if (push) {
+    if (navigates) {
       setDrawerOpen(false);
       window.scrollTo({ top: 0 });
     }
@@ -457,9 +471,7 @@ export function App() {
   }, [attempt]);
   useEffect(() => {
     const onPop = () => {
-      setMyCinemasActive(false);
       setState(readView(new URL(window.location.href)));
-      setExpanded(null);
       setDrawerOpen(false);
     };
     window.addEventListener("popstate", onPop);
@@ -483,20 +495,24 @@ export function App() {
   }, [catalogue, selected.length, state]);
   useEffect(() => {
     if (
+      catalogue &&
       state.path !== "/radar" &&
       expanded &&
       !tableRows(selected, state).some((row) => row.key === expanded)
     )
-      setExpanded(null);
-  }, [expanded, selected, state]);
+      change({ film: undefined }, false);
+  }, [expanded, selected, state, catalogue]);
   useEffect(() => {
     if (!myCinemasActive || cinemas.loading) return;
     myCinemasUpdating.current = true;
-    change({
-      filters: { ...state.filters, venue: [...cinemas.venues] },
-      excluded: { ...state.excluded, venue: [] },
-      page: 1,
-    });
+    change(
+      {
+        filters: { ...state.filters, venue: [...cinemas.venues] },
+        excluded: { ...state.excluded, venue: [] },
+        page: 1,
+      },
+      false,
+    );
     myCinemasUpdating.current = false;
   }, [cinemas.venues.join("|"), cinemas.loading, cinemas.error, myCinemasActive]);
   const suggestions =
@@ -627,6 +643,7 @@ export function App() {
         onClick={() => {
           myCinemasUpdating.current = true;
           change({
+            myCinemas: !myCinemasActive,
             filters: {
               ...state.filters,
               venue: myCinemasActive ? [] : [...cinemas.venues],
@@ -635,10 +652,17 @@ export function App() {
             page: 1,
           });
           myCinemasUpdating.current = false;
-          setMyCinemasActive(!myCinemasActive);
         }}
       >
         My cinemas
+      </button>
+      <button
+        onClick={() => {
+          setQuickOpen(false);
+          setNearbyOpen(true);
+        }}
+      >
+        Near me
       </button>
       <button
         data-shortcut="films"
@@ -685,7 +709,7 @@ export function App() {
         <main class="main-column" id="main-content">
           <FriendsDialogs
             onAccount={openAccount}
-            onNavigate={() => change({ path: "/watchlist", page: 1 }, true)}
+            onNavigate={() => change({ path: "/", watchlist: false, page: 1 }, true)}
           />
           {!friends.panel && <FriendsFeedback />}
           <header class="masthead">
@@ -765,7 +789,26 @@ export function App() {
             }
           />
           {meta && (
-            <MyCinemas cinemas={cinemas} meta={meta} open={cinemasOpen} onClose={closeCinemas} />
+            <>
+              <MyCinemas cinemas={cinemas} meta={meta} open={cinemasOpen} onClose={closeCinemas} />
+              <MyCinemas
+                cinemas={cinemas}
+                meta={meta}
+                open={nearbyOpen}
+                onClose={() => setNearbyOpen(false)}
+                nearby={{
+                  onApply: (venues) => {
+                    change({
+                      myCinemas: false,
+                      filters: { ...state.filters, venue: venues },
+                      excluded: { ...state.excluded, venue: [] },
+                      page: 1,
+                    });
+                    setNearbyOpen(false);
+                  },
+                }}
+              />
+            </>
           )}
           <ScreeningCalendarDialog
             event={calendarEvent}
@@ -961,19 +1004,26 @@ export function App() {
                   {state.path === "/events" && (
                     <EventTypeFilter state={effectiveState} onChange={change} />
                   )}
-                  <p class="result-status" role="status" aria-live="polite">
-                    <strong>
-                      {resultCount.toLocaleString("en-GB")}{" "}
-                      {state.path === "/events"
-                        ? resultCount === 1
-                          ? "event"
-                          : "events"
-                        : resultCount === 1
-                          ? "film"
-                          : "films"}
-                    </strong>{" "}
-                    <span class="result-context">matching your choices</span>
-                  </p>
+                  <div class="results-heading">
+                    <p class="result-status" role="status" aria-live="polite">
+                      <strong>
+                        {resultCount.toLocaleString("en-GB")}{" "}
+                        {state.path === "/events"
+                          ? resultCount === 1
+                            ? "event"
+                            : "events"
+                          : resultCount === 1
+                            ? "film"
+                            : "films"}
+                      </strong>{" "}
+                      <span class="result-context">matching your choices</span>
+                    </p>
+                    <MobileSort
+                      hideRatings={hideRatings}
+                      state={effectiveState}
+                      onChange={change}
+                    />
+                  </div>
                   <div
                     class="active-filters"
                     role="group"
@@ -1018,7 +1068,10 @@ export function App() {
                     )}
                     {state.eventType && (
                       <button onClick={() => change({ eventType: "", page: 1 })}>
-                        Event type: {EVENT_TYPES.find((type) => type.id === state.eventType)?.label}{" "}
+                        Event type:{" "}
+                        {state.eventType === "highlights"
+                          ? "Q&As, scores & talks"
+                          : EVENT_TYPES.find((type) => type.id === state.eventType)?.label}{" "}
                         ×
                       </button>
                     )}
@@ -1145,7 +1198,7 @@ export function App() {
                   ) : (
                     <>
                       <h2>Set up my cinemas</h2>
-                      <p>Choose your favourite cinemas in Account to see their screenings here.</p>
+                      <p>Choose your favourite cinemas to see their screenings here.</p>
                       <button onClick={() => openCinemas()}>Set up my cinemas</button>
                     </>
                   )}
@@ -1182,7 +1235,13 @@ export function App() {
                 ) : (
                   <FilmTable
                     films={selected}
-                    showEmpty={!suggestions.length}
+                    showEmpty={
+                      !suggestions.length &&
+                      !(
+                        state.path === "/watchlist" &&
+                        (!account.user?.username || !account.watchlist?.fetchedAt)
+                      )
+                    }
                     calendar={calendar}
                     onCalendar={openScreeningCalendar}
                     now={now}

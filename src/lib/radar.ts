@@ -1,6 +1,8 @@
 import type { TitleMode } from "./display";
 import type { DataMeta, Film } from "../shared/data";
 import {
+  addDays,
+  londonDate,
   upcomingScreenings,
   filterFilms,
   isSpecialFormat,
@@ -27,7 +29,9 @@ export function radarFilms(
 ): Film[] {
   const qualifying = entries.filter((entry) =>
     section === "limited"
-      ? entry.screenings.length >= 1 && entry.screenings.length <= 3
+      ? entry.screenings.length >= 1 &&
+        entry.screenings.length <= 3 &&
+        entry.screenings.some((row) => row.date <= addDays(londonDate(now), 6) && !row.soldOut)
       : entry.special.some((row) =>
           section === "film"
             ? isFilmFormat(row.formats, state.filmGauge)

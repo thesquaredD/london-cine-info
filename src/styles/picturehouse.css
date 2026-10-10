@@ -712,7 +712,9 @@
   border: 0;
   background: var(--shade);
 }
-:root dialog :is(button, input:not([type="checkbox"]):not([type="radio"]), select),
+:root
+  dialog:where(:not(.sidebar-drawer))
+  :is(button, input:not([type="checkbox"]):not([type="radio"]), select),
 :root .cinema-tools summary {
   border: 0;
   background: var(--shade);

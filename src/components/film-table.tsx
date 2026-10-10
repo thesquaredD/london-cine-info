@@ -185,7 +185,7 @@ export function FilmTable({
                       <span class="expansion-icon" aria-hidden="true">
                         {expanded === key ? "▾" : "▸"}
                       </span>
-                      <span>
+                      <span class="film-title-text" title={displayTitle(film, display.titleMode)}>
                         {displayTitle(film, display.titleMode)}
                         {display.titleMode === "both" && film.o_ti && <i>{film.o_ti}</i>}
                       </span>
@@ -244,34 +244,41 @@ export function FilmTable({
                       )}
                     </td>
                   )}
-                  <td class={`director-column ${mobileColumn ? "mobile-hidden" : ""}`}>
-                    {film.di.length ? (
-                      film.di.map((director, index) => (
-                        <Fragment key={director.id}>
-                          {index > 0 && ", "}
-                          <a
-                            class={film.retro.includes(director.id) ? "retrospective-director" : ""}
-                            href={`/?director=${encodeURIComponent(director.id)}`}
-                            onClick={(event) => {
-                              if (
-                                event.button ||
-                                event.metaKey ||
-                                event.ctrlKey ||
-                                event.shiftKey ||
-                                event.altKey
-                              )
-                                return;
-                              event.preventDefault();
-                              onChange({ path: "/", director: director.id, page: 1 }, true);
-                            }}
-                          >
-                            {director.name}
-                          </a>
-                        </Fragment>
-                      ))
-                    ) : (
-                      <span class="missing">Unknown</span>
-                    )}
+                  <td
+                    class={`director-column ${mobileColumn ? "mobile-hidden" : ""}`}
+                    title={film.di.map((d) => d.name).join(", ")}
+                  >
+                    <div class="director-text">
+                      {film.di.length ? (
+                        film.di.map((director, index) => (
+                          <Fragment key={director.id}>
+                            {index > 0 && ", "}
+                            <a
+                              class={
+                                film.retro.includes(director.id) ? "retrospective-director" : ""
+                              }
+                              href={`/?director=${encodeURIComponent(director.id)}`}
+                              onClick={(event) => {
+                                if (
+                                  event.button ||
+                                  event.metaKey ||
+                                  event.ctrlKey ||
+                                  event.shiftKey ||
+                                  event.altKey
+                                )
+                                  return;
+                                event.preventDefault();
+                                onChange({ path: "/", director: director.id, page: 1 }, true);
+                              }}
+                            >
+                              {director.name}
+                            </a>
+                          </Fragment>
+                        ))
+                      ) : (
+                        <span class="missing">Unknown</span>
+                      )}
+                    </div>
                   </td>
                   {ratings.map((source) => {
                     const rating = film.ra[source.key];

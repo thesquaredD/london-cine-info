@@ -133,6 +133,11 @@ export function FriendsDialogs({
   onAccount: () => void;
 }) {
   const m = useFriendContext();
+  const [ownHandle, setOwnHandle] = useState("");
+  const [partnerHandle, setPartnerHandle] = useState("");
+  const [planning, setPlanning] = useState(false);
+  const [planningError, setPlanningError] = useState("");
+  const [manageFriends, setManageFriends] = useState(false);
   const [handle, setHandle] = useState(""),
     [username, setUsername] = useState(""),
     [query, setQuery] = useState(""),
@@ -144,6 +149,10 @@ export function FriendsDialogs({
   }, [m?.value.appUsername]);
   useEffect(() => {
     setHandle("");
+    setOwnHandle(m?.account.user?.username ?? "");
+    setPartnerHandle("");
+    setPlanningError("");
+    setManageFriends(false);
     setQuery("");
     setPage(1);
     setAddList(false);
@@ -151,7 +160,7 @@ export function FriendsDialogs({
   }, [m?.panel]);
   if (!m) return null;
   const close = () => m.setPanel(null);
-  const title = m.panel === "friends" ? "Friends" : "Watchlists";
+  const title = m.panel === "friends" ? "Find a film together" : "Watchlists";
   const filtered = m.accepted.filter((f) => f.username.toLowerCase().includes(query.toLowerCase()));
   const pages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const current = Math.min(page, pages);
@@ -249,7 +258,81 @@ export function FriendsDialogs({
         </p>
       )}
       {m.notice && <p role="status">{m.notice}</p>}
-      {m.panel === "friends" && !m.account.user ? (
+      {m.panel === "friends" && (
+        <section class="social-plan">
+          {import.meta.env.VITE_UX_PREVIEW === "1" && (
+            <p class="preview-notice">Design preview: username imports use sample watchlists.</p>
+          )}
+          <p>Find London screenings for films on both your public Letterboxd watchlists.</p>
+          <form
+            class="social-plan-form"
+            onSubmit={async (e) => {
+              e.preventDefault();
+              const first = normalizeUsername(ownHandle),
+                second = normalizeUsername(partnerHandle);
+              if (!first || !second || first === second) {
+                setPlanningError("Enter two different Letterboxd usernames.");
+                return;
+              }
+              setPlanning(true);
+              setPlanningError("");
+              try {
+                for (const name of [first, second]) {
+                  if (
+                    !m.choices.temporary.some((t) => t.username === name) &&
+                    !(await m.addTemporary(name))
+                  )
+                    return;
+                }
+                m.update({ selected: [`t:${first}`, `t:${second}`], mode: "all" });
+                close();
+                onNavigate();
+              } finally {
+                setPlanning(false);
+              }
+            }}
+          >
+            <label>
+              Your Letterboxd username
+              <input
+                data-initial-focus
+                value={ownHandle}
+                disabled={planning}
+                placeholder="e.g. alex_films"
+                onInput={(e) => setOwnHandle(e.currentTarget.value)}
+              />
+            </label>
+            <label>
+              Their Letterboxd username
+              <input
+                value={partnerHandle}
+                disabled={planning}
+                placeholder="e.g. zoe_films"
+                onInput={(e) => setPartnerHandle(e.currentTarget.value)}
+              />
+            </label>
+            {planningError && <p role="alert">{planningError}</p>}
+            {planning && <p role="status">{m.progress || "Reading watchlists…"}</p>}
+            <button
+              class="booking-action"
+              disabled={planning || !ownHandle.trim() || !partnerHandle.trim()}
+            >
+              {planning ? "Finding shared films…" : "Find films in common"}
+            </button>
+            <p class="filter-hint">
+              No account or friend request needed. These lists last for this session.
+            </p>
+          </form>
+          <button
+            class="social-manage-toggle"
+            aria-expanded={manageFriends}
+            onClick={() => setManageFriends(!manageFriends)}
+          >
+            {manageFriends ? "Hide saved friends" : "Keep friends for next time"}
+          </button>
+        </section>
+      )}
+      {m.panel === "friends" && !manageFriends ? null : m.panel === "friends" && !m.account.user ? (
         <>
           <p>Sign in to choose a username and connect with friends.</p>
           <button
@@ -328,7 +411,7 @@ export function FriendsDialogs({
           )}
           <section class="social-section">
             <h3>Your friends · {m.accepted.length}</h3>
-            <div class="social-list-toolbar">
+            <div class="social-list-toolbar" hidden={!m.accepted.length}>
               <label class="sr-only" for="friends-search">
                 Search friends
               </label>

@@ -1,7 +1,7 @@
 import { test, expect, type Page } from "@playwright/test";
 test.use({ video: "on" });
 async function openYear(page: Page) {
-  const mobile = (page.viewportSize()?.width ?? 1200) < 800;
+  const mobile = !(await page.locator(".desktop-filters").isVisible());
   if (mobile) {
     await page.locator(".all-filters").click();
     await page.locator('.filter-sheet [data-filter="year"] > summary').click();

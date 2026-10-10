@@ -4,6 +4,7 @@ import { App } from "./app";
 import "./styles/base.css";
 import "./styles/friends.css";
 import "./styles/picturehouse.css";
+import "./styles/discovery.css";
 
 document.documentElement.dataset.theme = "dark";
 initAnalytics();

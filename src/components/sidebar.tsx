@@ -38,6 +38,7 @@ export function Sidebar({
                   href={viewUrl({
                     ...state,
                     path: page.path,
+                    eventType: page.path === "/events" ? "highlights" : "",
                     page: 1,
                     director: "",
                     ...(!hasCustomSort(state) ? defaultSort(page.path) : {}),
@@ -56,6 +57,7 @@ export function Sidebar({
                     onChange(
                       {
                         path: page.path,
+                        eventType: page.path === "/events" ? "highlights" : "",
                         page: 1,
                         director: "",
                         ...(!hasCustomSort(state) ? defaultSort(page.path) : {}),

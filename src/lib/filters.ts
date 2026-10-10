@@ -14,6 +14,8 @@ export const FILTERS: { key: FacetKey; label: string }[] = [
   { key: "language", label: "Original language" },
 ];
 export const CLEAR_FILTERS = {
+  myCinemas: false,
+  film: undefined,
   sortExplicit: undefined,
   eventType: "",
   filmGauge: undefined,
@@ -200,17 +202,27 @@ export function screeningMatcher(meta: DataMeta, state: ViewState, now = new Dat
     if (!film) return false;
     let limited = opportunities.get(film);
     if (limited === undefined) {
-      const count = upcomingScreenings(film, meta, now).length;
-      limited = count >= 1 && count <= 3;
+      const upcoming = upcomingScreenings(film, meta, now);
+      const count = upcoming.length;
+      limited =
+        count >= 1 &&
+        count <= 3 &&
+        upcoming.some(
+          (screening) => screening.date <= addDays(londonDate(now), 6) && !screening.soldOut,
+        );
       opportunities.set(film, limited);
     }
     return limited || isSpecialFormat(row.formats);
   }
+  const eventMatches = (types: string[] = []) =>
+    !state.eventType ||
+    (state.eventType === "highlights"
+      ? types.some((type) => ["qa", "score", "talk"].includes(type))
+      : types.includes(state.eventType));
   return {
     row: (row: ScreeningView, film?: Film) =>
       radarRow(row, film) &&
-      (state.path !== "/events" ||
-        (row.event && (!state.eventType || row.eventTypes?.includes(state.eventType)))) &&
+      (state.path !== "/events" || (row.event && eventMatches(row.eventTypes))) &&
       match(
         row.date,
         row.minute,
@@ -228,8 +240,7 @@ export function screeningMatcher(meta: DataMeta, state: ViewState, now = new Dat
       decodedScreenings(film, meta).some(
         (row) =>
           radarRow(row, film) &&
-          (state.path !== "/events" ||
-            (row.event && (!state.eventType || row.eventTypes?.includes(state.eventType)))) &&
+          (state.path !== "/events" || (row.event && eventMatches(row.eventTypes))) &&
           match(
             row.date,
             row.minute,
@@ -243,8 +254,7 @@ export function screeningMatcher(meta: DataMeta, state: ViewState, now = new Dat
     showtime: (date: string, row: Showtime) =>
       (state.path !== "/events" ||
         (isEventScreening(row.category, row.notes, row.eventTitle) &&
-          (!state.eventType ||
-            eventTypes(row.category, row.notes, row.eventTitle).includes(state.eventType)))) &&
+          eventMatches(eventTypes(row.category, row.notes, row.eventTitle)))) &&
       match(
         date,
         minuteOf(row.localTime),
@@ -338,6 +348,12 @@ export function facetCounts(
   }
   return result;
 }
+const filterDateFormatter = new Intl.DateTimeFormat("en-GB", {
+  weekday: "short",
+  day: "numeric",
+  month: "short",
+  timeZone: "Europe/London",
+});
 export function filterLabel(key: FacetKey, id: string, meta: DataMeta): string {
   if (key === "day") {
     const quick: Record<string, string> = {
@@ -351,12 +367,7 @@ export function filterLabel(key: FacetKey, id: string, meta: DataMeta): string {
     };
     if (quick[id]) return quick[id];
     if (/^\d{4}-\d{2}-\d{2}$/.test(id))
-      return new Intl.DateTimeFormat("en-GB", {
-        weekday: "short",
-        day: "numeric",
-        month: "short",
-        timeZone: "Europe/London",
-      }).format(new Date(`${id}T12:00:00Z`));
+      return filterDateFormatter.format(new Date(`${id}T12:00:00Z`));
   }
   return meta.facets[key].find((option) => option.id === id)?.label ?? id;
 }
