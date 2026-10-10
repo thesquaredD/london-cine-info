@@ -28,7 +28,7 @@ test("film row space toggles details without changing the title layout; links st
   await expect(page.locator(".film-row.is-expanded")).toHaveCount(0);
 });
 
-test("filter selection keeps trigger dimensions and table position, with red active states", async ({
+test("filter selection keeps trigger dimensions, with red active states and compact mobile reset", async ({
   page,
 }, info) => {
   await page.clock.setFixedTime(new Date("2026-10-03T09:00:00Z"));
@@ -53,7 +53,20 @@ test("filter selection keeps trigger dimensions and table position, with red act
   else await page.keyboard.press("Escape");
   expect(await trigger.boundingBox()).toEqual(before);
   const tableAfter = await page.locator(".film-table").boundingBox();
-  expect(tableAfter?.y).toBe(tableBefore?.y);
+  if (mobile) {
+    expect(tableAfter!.y - tableBefore!.y).toBeLessThanOrEqual(32);
+    await page.getByRole("button", { name: "Clear all", exact: true }).click();
+    await expect(page.locator(".active-filters")).toBeHidden();
+    expect((await page.locator(".film-table").boundingBox())!.y).toBe(tableBefore!.y);
+    expect(
+      await page
+        .locator(".film-title")
+        .first()
+        .evaluate((e) => getComputedStyle(e).fontSize),
+    ).toBe("20px");
+  } else {
+    expect(tableAfter?.y).toBe(tableBefore?.y);
+  }
   const controls = mobile
     ? page.locator(".mobile-filters button, .watchlists-trigger, .all-filters")
     : page.locator(

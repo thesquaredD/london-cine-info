@@ -194,7 +194,9 @@ test("all catalogue pages fit phone, tablet and desktop in dark mode under eithe
   expect(errors).toEqual([]);
 });
 
-test("Clear all keeps the results stable through selection and reset", async ({ page }) => {
+test("Clear all uses space only for active mobile filters and collapses on reset", async ({
+  page,
+}) => {
   await page.goto("/");
   await expect(page.locator(".film-row")).toHaveCount(6);
   await expect(
@@ -202,10 +204,18 @@ test("Clear all keeps the results stable through selection and reset", async ({ 
   ).toHaveCount(0);
   const summary = page.locator(".filter-summary");
   const baseline = (await summary.boundingBox())!.height;
+  if (page.viewportSize()!.width < 800) {
+    await expect(page.locator(".active-filters")).toBeHidden();
+    expect(baseline).toBeLessThanOrEqual(60);
+  }
   await page.locator(".bar-search").fill("Fixture Classic");
   const chips = page.getByRole("group", { name: "Active filters", exact: true });
   await expect(chips).toBeVisible();
-  expect((await summary.boundingBox())!.height).toBe(baseline);
+  if (page.viewportSize()!.width < 800) {
+    expect((await summary.boundingBox())!.height - baseline).toBeLessThanOrEqual(32);
+  } else {
+    expect((await summary.boundingBox())!.height).toBe(baseline);
+  }
   await page.screenshot({ path: test.info().outputPath("clear-all-active.png") });
   await chips.getByRole("button", { name: "Clear all", exact: true }).click();
   await expect(chips.getByRole("button")).toHaveCount(0);

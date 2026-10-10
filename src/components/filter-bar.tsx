@@ -1,3 +1,4 @@
+import type { ComponentChildren } from "preact";
 import { MobileSort } from "./mobile-sort";
 import { WatchlistsButton } from "./friends";
 import { useEffect, useRef, useState } from "preact/hooks";
@@ -5,7 +6,11 @@ import { FilterControls, type FilterControlsProps } from "./filter-controls";
 import type { FacetKey } from "../shared/data";
 
 export function FilterBar(
-  props: FilterControlsProps & { yearOpenRequest: number; hideRatings?: boolean },
+  props: FilterControlsProps & {
+    yearOpenRequest: number;
+    hideRatings?: boolean;
+    quickFilters?: ComponentChildren;
+  },
 ) {
   const [category, setCategory] = useState<FacetKey | "year" | "all" | null>(null);
   const dialog = useRef<HTMLDialogElement>(null);
@@ -113,7 +118,13 @@ export function FilterBar(
             }
           }}
         >
-          <summary>When{countLabel(whenCount)} ▾</summary>
+          <summary>
+            <span>When</span>
+            {countLabel(whenCount)}
+            <span class="control-caret" aria-hidden="true">
+              ▾
+            </span>
+          </summary>
           <div class="when-content">
             <FilterControls
               {...props}
@@ -139,10 +150,18 @@ export function FilterBar(
       </div>
       <div class="mobile-filters">
         <button data-active={whenCount > 0} onClick={() => setCategory("day")}>
-          When{countLabel(whenCount)} ▾
+          <span>When</span>
+          {countLabel(whenCount)}
+          <span class="control-caret" aria-hidden="true">
+            ▾
+          </span>
         </button>
         <button data-active={cinemaCount > 0} onClick={() => setCategory("venue")}>
-          Cinema{countLabel(cinemaCount)} ▾
+          <span>Cinema</span>
+          {countLabel(cinemaCount)}
+          <span class="control-caret" aria-hidden="true">
+            ▾
+          </span>
         </button>
       </div>
       <WatchlistsButton />
@@ -153,11 +172,15 @@ export function FilterBar(
         onClick={() => setCategory("all")}
       >
         <span class="desktop-more">More filters</span>
-        <span class="mobile-more">Filters</span> ▾
+        <span class="mobile-more">All filters</span>
+        <span class="control-caret" aria-hidden="true">
+          ▾
+        </span>
       </button>
       {!["/events", "/my-calendar"].includes(props.state.path) && (
         <MobileSort hideRatings={props.hideRatings} state={props.state} onChange={props.onChange} />
       )}
+      {props.quickFilters}
       <dialog
         ref={dialog}
         class="filter-sheet"

@@ -61,9 +61,14 @@ export function MobileSort({
         type="button"
         aria-haspopup="dialog"
         aria-expanded={open}
+        aria-label={`Sort: ${sortLabel(state.sort)} · ${orderLabels[state.direction === "asc" ? 0 : 1]}`}
         onClick={() => setOpen(true)}
       >
-        Sort: {sortLabel(state.sort)} · {orderLabels[state.direction === "asc" ? 0 : 1]}
+        <span>Sort: {sortLabel(state.sort)}</span>
+        <span class="mobile-sort-order"> · {orderLabels[state.direction === "asc" ? 0 : 1]}</span>
+        <span class="control-caret" aria-hidden="true">
+          ▾
+        </span>
       </button>
       <Dialog
         open={open}
