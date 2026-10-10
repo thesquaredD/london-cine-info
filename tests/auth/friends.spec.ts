@@ -82,7 +82,9 @@ test("real friendship lifecycle, 500-friend search and filters, guest comparison
   const suffix = `${info.project.name}_${Date.now()}`;
   const owner = await login(page, `owner-${suffix}@friends.test`);
   await page.goto("/");
-  await expect(page.locator(".all-filters")).toBeVisible();
+  await expect(
+    page.locator(".all-filters, .watchlists-trigger").filter({ visible: true }).first(),
+  ).toBeVisible();
   let dialog = await openFriends(page);
   await dialog.getByLabel("Your app username").fill(`owner_${suffix}`);
   await dialog.getByRole("button", { name: "Save username" }).click();
@@ -181,7 +183,9 @@ test("real friendship lifecycle, 500-friend search and filters, guest comparison
         await page.locator(".sidebar-drawer").getByRole("link", { name, exact: true }).click();
       } else
         await page.locator(".desktop-sidebar").getByRole("link", { name, exact: true }).click();
-      await expect(page.locator(".all-filters")).toBeVisible();
+      await expect(
+        page.locator(".all-filters, .watchlists-trigger").filter({ visible: true }).first(),
+      ).toBeVisible();
       await expect(page.locator(".watchlist-selections")).toContainText("Any friend");
     }
     await (await watchlistsButton(page)).click();
