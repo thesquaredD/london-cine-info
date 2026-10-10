@@ -5,16 +5,8 @@ test.beforeEach(async ({ page }) => {
   await page.route("**/api/me", (route) => route.fulfill({ json: { user: null } }));
   await page.route("**/image.tmdb.org/**", (route) => route.fulfill({ status: 404 }));
 });
-async function quickFilters(page: Page) {
-  if (await page.locator(".quick-filters-mobile").isVisible()) {
-    await page.getByRole("button", { name: /^Quick filters/ }).click();
-    return page.getByRole("dialog", { name: "Quick filters", exact: true });
-  }
-  return page.locator(".quick-filters-desktop");
-}
-async function closeQuickFilters(page: Page) {
-  if (await page.getByRole("dialog", { name: "Quick filters", exact: true }).isVisible())
-    await page.getByRole("button", { name: "Close quick filters", exact: true }).click();
+function strip(page: Page) {
+  return page.getByRole("group", { name: "Shortcuts" });
 }
 
 test("film links survive refresh and Back; compact details remain visible", async ({ page }) => {
@@ -32,8 +24,9 @@ test("film links survive refresh and Back; compact details remain visible", asyn
   await expect(page.locator(".film-about")).not.toHaveAttribute("open", "");
   await page.getByText("More details", { exact: true }).click();
   await expect(page.locator(".film-synopsis")).toBeVisible();
-  await (await quickFilters(page)).getByRole("button", { name: /^Tomorrow/ }).click();
-  await closeQuickFilters(page);
+  await strip(page)
+    .getByRole("button", { name: /^Tomorrow/ })
+    .click();
   await page.goBack();
   await expect(page).toHaveURL(filmUrl);
   await expect(page.locator(".expanded-row")).toHaveCount(1);
@@ -55,11 +48,10 @@ test("Nearby applies temporary cinemas without replacing saved choices", async (
     }),
   );
   await page.goto("/");
-  await (await quickFilters(page)).getByRole("button", { name: "My cinemas", exact: true }).click();
-  await closeQuickFilters(page);
+  await strip(page).getByRole("button", { name: "My cinemas", exact: true }).click();
   await page.reload();
   await expect(
-    (await quickFilters(page)).getByRole("button", { name: "My cinemas", exact: true }),
+    strip(page).getByRole("button", { name: "My cinemas", exact: true }),
   ).toHaveAttribute("aria-pressed", "true");
   const saved = await page.evaluate(() => localStorage.getItem("london-cine.cinemas.v1"));
   await page.getByRole("button", { name: "Near me", exact: true }).click();

@@ -46,3 +46,5 @@ uses a 110 ms opacity fade. The animation does not change internal layout or wai
 before rendering/navigation; close is immediate. Reduced-motion preferences
 suppress these animations. Existing populated cinema results remain visible
 during background preference reloads.
+
+10 October 2026: The shortcut rows and phone shortcut dialog above are superseded by the quiet, personalised shortcut strip. Search and Filters share one row; date and applicable personal shortcuts wrap beneath it. Next week and Under 2 hours remain in the Filters sheet. Implementation follows `docs/filter-strip-plan.md`.

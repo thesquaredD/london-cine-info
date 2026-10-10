@@ -116,15 +116,6 @@
 :root .desktop-filters .filter-picker summary::after {
   top: 8px;
 }
-:root .when-picker {
-  border: 0;
-  border-radius: 2px;
-  background: var(--shade);
-}
-:root .when-picker > summary {
-  padding: 8px 10px;
-  font-size: 12px;
-}
 :root .all-filters,
 :root .watchlists-trigger {
   padding: 8px 10px;
@@ -136,25 +127,6 @@
   padding: 0 12px 7px;
   gap: 4px 10px;
   border: 0;
-}
-:root .quick-days {
-  gap: 2px;
-}
-:root .quick-days button {
-  border: 0;
-  background: transparent;
-  padding: 5px 7px;
-  font-size: 11px;
-  min-height: 28px;
-}
-:root .quick-days small {
-  font-size: 9px;
-  margin-left: 3px;
-}
-:root .quick-days button[aria-pressed="true"] {
-  background: var(--active-bg);
-  color: var(--active-fg);
-  font-weight: 700;
 }
 :root .filter-summary .result-status {
   font-size: 11px;
@@ -258,12 +230,7 @@
   :root .bar-search {
     flex-basis: 100%;
   }
-  :root .mobile-filters {
-    gap: 4px;
-  }
-  :root .mobile-filters button,
-  :root .mobile-sort-trigger,
-  :root .quick-filters-mobile {
+  :root .mobile-sort-trigger {
     padding: 7px 8px;
     border: 0;
     background: var(--shade);
@@ -283,9 +250,6 @@
   :root .sidebar-drawer .sidebar-content {
     padding-top: 35px;
   }
-}
-:root .quick-days {
-  margin-bottom: 0;
 }
 :root .active-filters:empty {
   display: none;
@@ -830,10 +794,6 @@ html {
   width: 100%;
   min-height: 28px;
 }
-:root .quick-days button,
-:root .quick-days button[aria-pressed="true"] {
-  font-weight: 400;
-}
 :root .active-filters:empty {
   display: flex;
 }
@@ -844,15 +804,7 @@ html {
   min-width: 8ch;
   font-variant-numeric: tabular-nums;
 }
-:root
-  .filter-bar
-  :is(
-    .when-picker > summary,
-    .filter-picker > summary,
-    .watchlists-trigger,
-    .all-filters,
-    .mobile-filters button
-  ) {
+:root .filter-bar :is(.filter-picker > summary, .watchlists-trigger, .all-filters) {
   display: flex;
   align-items: center;
   height: 36px;
@@ -865,10 +817,6 @@ html {
 }
 :root .desktop-filters .filter-picker > summary {
   padding-right: 24px;
-}
-:root .when-picker {
-  width: 110px;
-  flex-shrink: 0;
 }
 :root .watchlists-trigger {
   width: 124px;
@@ -911,10 +859,7 @@ html {
     height: 36px;
     font-size: 16px;
   }
-  :root .mobile-filters {
-    display: contents;
-  }
-  :root .filter-bar :is(.mobile-filters button, .watchlists-trigger, .all-filters) {
+  :root .filter-bar :is(.watchlists-trigger, .all-filters) {
     width: 100%;
     min-width: 0;
     height: 44px;
@@ -930,13 +875,10 @@ html {
   :root .filter-summary {
     min-height: 50px;
   }
-  :root dialog .quick-days button {
-    min-height: 44px;
-  }
 }
 
 :root dialog button[aria-pressed="true"]:not(:disabled),
-:root dialog :is(.date-shortcuts, .calendar-grid, .quick-days) button[aria-pressed="true"] {
+:root dialog :is(.date-shortcuts, .calendar-grid) button[aria-pressed="true"] {
   background: var(--active-bg);
   color: var(--active-fg);
 }
@@ -956,7 +898,7 @@ html {
 :root {
   --sold-out: #ff9e93;
 }
-:root :is(.calendar-grid, .date-shortcuts, .quick-days) button[aria-pressed="true"] {
+:root :is(.calendar-grid, .date-shortcuts) button[aria-pressed="true"] {
   background: var(--active-bg);
   color: var(--active-fg);
   border-color: transparent;
@@ -989,12 +931,12 @@ html {
     height: 44px;
     font-size: 17px;
   }
-  :root .filter-bar :is(.mobile-filters button, .watchlists-trigger, .all-filters) {
+  :root .filter-bar :is(.watchlists-trigger, .all-filters) {
     font-size: 16px;
     justify-content: flex-start;
     padding-inline: 12px;
   }
-  :root :is(.mobile-sort-trigger, .quick-filters-mobile) {
+  :root :is(.mobile-sort-trigger) {
     font-size: 16px;
     min-height: 44px;
     padding: 8px 10px;
@@ -1086,22 +1028,6 @@ html {
 }
 
 @media (max-width: 799px) {
-  :root .filter-bar .mobile-sort-trigger {
-    grid-column: 1;
-    width: 100%;
-    justify-self: stretch;
-    padding-inline: 10px;
-  }
-  :root .filter-bar .quick-filters-mobile {
-    grid-column: 2;
-    grid-row: auto;
-    width: 100%;
-    margin: 0;
-    padding-inline: 6px;
-  }
-  :root .filter-bar:not(:has(.mobile-sort-trigger)) .quick-filters-mobile {
-    grid-column: 1 / -1;
-  }
   :root .mobile-sort-order {
     display: none;
   }
@@ -1124,16 +1050,7 @@ html {
 }
 
 /* One control grammar: label, value/count, then a fixed arrow column. */
-:root
-  .filter-bar
-  :is(
-    .when-picker > summary,
-    .mobile-filters button,
-    .watchlists-trigger,
-    .all-filters,
-    .mobile-sort-trigger,
-    .quick-filters-mobile
-  ),
+:root .filter-bar :is(.watchlists-trigger, .all-filters, .mobile-sort-trigger),
 :root .watchlists-trigger {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 3ch 10px;
@@ -1159,25 +1076,16 @@ html {
   width: auto;
   text-align: right;
 }
-:root
-  .filter-bar
-  :is(
-    .watchlists-trigger,
-    .all-filters,
-    .mobile-sort-trigger,
-    .quick-filters-mobile,
-    .mobile-filters button
-  ),
-:root .filter-bar .when-picker > summary {
+:root .filter-bar :is(.watchlists-trigger, .all-filters, .mobile-sort-trigger) {
   padding-inline: 12px;
 }
-:root :is(dialog, .when-content) .filter-picker {
+:root :is(dialog) .filter-picker {
   border: 0;
   border-bottom: 1px solid var(--line);
   border-radius: 0;
   background: transparent;
 }
-:root :is(dialog, .when-content) .filter-picker > summary {
+:root :is(dialog) .filter-picker > summary {
   display: grid;
   grid-template-columns: minmax(0, 44%) minmax(0, 1fr) 10px;
   gap: 10px;
@@ -1185,19 +1093,19 @@ html {
   min-height: 48px;
   padding: 10px 12px;
 }
-:root :is(dialog, .when-content) .filter-picker > summary > span {
+:root :is(dialog) .filter-picker > summary > span {
   padding: 0;
   font-weight: 400;
   line-height: 1.25;
 }
-:root :is(dialog, .when-content) .filter-picker > summary > small {
+:root :is(dialog) .filter-picker > summary > small {
   margin: 0;
   padding: 0;
   height: auto;
   line-height: 1.25;
   font-size: 14px;
 }
-:root :is(dialog, .when-content) .filter-picker > summary::after,
+:root :is(dialog) .filter-picker > summary::after,
 :root .desktop-filters > .filter-controls .filter-picker > summary::after {
   content: "";
   position: static;
@@ -1208,7 +1116,7 @@ html {
   transform: translateY(-2px) rotate(45deg);
   justify-self: end;
 }
-:root :is(dialog, .when-content) .filter-picker[open] > summary::after {
+:root :is(dialog) .filter-picker[open] > summary::after {
   transform: translateY(2px) rotate(225deg);
 }
 :root .desktop-filters > .filter-controls .filter-picker > summary {
@@ -1231,14 +1139,8 @@ html {
   padding: 0;
 }
 @media (max-width: 799px) {
-  :root .filter-bar .mobile-sort-trigger {
-    grid-template-columns: minmax(0, 1fr) 10px;
-  }
   :root .mobile-sort-trigger .control-caret {
     grid-column: 2;
-  }
-  :root .filter-bar .quick-filters-mobile {
-    padding-inline: 12px;
   }
   :root dialog .filter-picker > summary {
     min-height: 52px;
@@ -1247,66 +1149,7 @@ html {
     font-size: 16px;
   }
 }
-@media (max-width: 799px) {
-  :root .filter-bar {
-    grid-template-areas: "search search" "when cinema" "watchlists sort" "quick all";
-  }
-  :root .bar-search {
-    grid-area: search;
-  }
-  :root .mobile-filters button:first-child {
-    grid-area: when;
-  }
-  :root .mobile-filters button:last-child {
-    grid-area: cinema;
-  }
-  :root .watchlists-trigger {
-    grid-area: watchlists;
-  }
-  :root .filter-bar .mobile-sort-trigger {
-    grid-area: sort;
-  }
-  :root .filter-bar .quick-filters-mobile {
-    grid-area: quick;
-  }
-  :root .filter-bar .all-filters {
-    grid-area: all;
-  }
-  :root .filter-bar:not(:has(.mobile-sort-trigger)) {
-    grid-template-areas: "search search" "when cinema" "watchlists all" "quick quick";
-  }
-  :root dialog.quick-filter-dialog .quick-days button {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    padding: 10px 12px;
-    min-height: 44px;
-    background: var(--shade);
-    font-size: 16px;
-    text-align: left;
-  }
-  :root dialog.quick-filter-dialog .quick-days small {
-    width: 3ch;
-    margin: 0;
-    font-size: 14px;
-    text-align: right;
-  }
-  :root dialog.quick-filter-dialog .quick-days button[aria-pressed="true"] {
-    background: var(--active-bg);
-    color: var(--active-fg);
-  }
-}
-
-@media (min-width: 800px) {
-  :root .when-content {
-    left: auto;
-    right: 0;
-  }
-}
-:root
-  .filter-bar
-  :is(.when-picker > summary, .mobile-filters button, .watchlists-trigger, .quick-filters-mobile) {
+:root .filter-bar :is(.watchlists-trigger) {
   grid-template-columns: minmax(0, 1fr) 2ch 10px;
 }
 :root .filter-bar .all-filters {
@@ -1315,8 +1158,98 @@ html {
 :root .all-filters .control-caret {
   grid-column: 2;
 }
-@media (min-width: 800px) {
-  :root .filter-bar button:is(.mobile-sort-trigger, .quick-filters-mobile) {
+
+/* Search and pickers above a quiet, wrapping shortcut strip. */
+:root .filter-bar {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 8px;
+}
+:root .filter-bar .bar-search {
+  flex: 1;
+  min-width: 0;
+  height: 36px;
+}
+:root .filter-bar .desktop-filters {
+  display: flex;
+}
+:root .filter-bar button.all-filters {
+  width: 124px;
+  flex: none;
+  grid-template-columns: minmax(0, 1fr) 3ch 10px;
+}
+:root .all-filters .control-caret {
+  grid-column: 3;
+}
+:root .filter-summary {
+  min-height: 56px;
+}
+:root .shortcut-strip {
+  grid-column: 1 / -1;
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 14px;
+  padding: 2px 0 8px;
+  min-height: 30px;
+}
+:root .shortcut-strip button {
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 18px;
+  color: var(--muted);
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid transparent;
+  border-radius: 0;
+  padding: 0;
+  min-height: 19px;
+}
+:root .shortcut-strip button:hover,
+:root .shortcut-strip button[aria-pressed="true"] {
+  color: var(--fg);
+}
+:root .shortcut-strip button[aria-pressed="true"] {
+  border-bottom-color: var(--brass);
+}
+:root .strip-sep {
+  height: 12px;
+  width: 1px;
+  background: var(--line);
+}
+:root .sheet-watchlists {
+  display: block;
+  padding: 12px;
+}
+@media (max-width: 799px) {
+  :root .filter-bar .desktop-filters {
     display: none;
+  }
+  :root .filter-bar .bar-search {
+    height: 44px;
+    font-size: 16px;
+  }
+  :root .filter-bar button.all-filters {
+    width: 112px;
+    height: 44px;
+    min-height: 44px;
+    font-size: 16px;
+    padding-inline: 10px;
+  }
+  :root .filter-summary {
+    min-height: 0;
+  }
+  :root .shortcut-strip {
+    flex-basis: 100%;
+    gap: 4px 12px;
+    padding-bottom: 0;
+    min-height: 38px;
+  }
+  :root .shortcut-strip button {
+    font-size: 13px;
+    min-height: 36px;
+    padding-block: 8px;
   }
 }

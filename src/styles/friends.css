@@ -231,31 +231,6 @@
   padding-right: 12px;
 }
 
-@media (min-width: 370px) and (max-width: 799px) {
-  .filter-bar:has(.watchlists-trigger) {
-    gap: 6px;
-  }
-  .filter-bar:has(.watchlists-trigger) .mobile-filters {
-    gap: 6px;
-  }
-  .filter-bar:has(.watchlists-trigger) button {
-    padding-left: 7px;
-    padding-right: 7px;
-  }
-  .filter-bar:has(.watchlists-trigger) .watchlists-trigger {
-    min-height: 44px;
-  }
-}
-@media (max-width: 369px) {
-  .filter-bar:has(.watchlists-trigger) .mobile-filters {
-    display: contents;
-  }
-  .filter-bar:has(.watchlists-trigger) > button,
-  .filter-bar:has(.watchlists-trigger) .mobile-filters button {
-    width: calc(50% - 4px);
-    min-height: 44px;
-  }
-}
 .active-filters .watchlist-selections {
   flex-wrap: nowrap;
   flex-shrink: 0;

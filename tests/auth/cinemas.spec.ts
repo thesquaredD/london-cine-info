@@ -126,17 +126,12 @@ test("real favourite union, cross-device removal, failed save, sign-out and acco
     const account = page.locator(".account-dialog");
     await expect(account).toBeVisible();
     await account.getByRole("button", { name: "Close account", exact: true }).click();
-    if (page.viewportSize()!.width < 800)
-      await page.getByRole("button", { name: /^Quick filters/ }).click();
-    await page
-      .locator(".quick-days")
-      .getByRole("button", { name: "My cinemas", exact: true })
-      .click();
-    if (page.viewportSize()!.width < 800)
-      await page
-        .getByRole("dialog", { name: "Quick filters", exact: true })
-        .getByRole("button", { name: /^Show/ })
-        .click();
+    await expect(
+      page
+        .getByRole("group", { name: "Shortcuts" })
+        .getByRole("button", { name: "My cinemas", exact: true }),
+    ).toHaveCount(0);
+    await page.goto("/?cinemas=mine");
     await expect(
       page.getByRole("heading", { name: "Set up my cinemas", exact: true }),
     ).toBeVisible();

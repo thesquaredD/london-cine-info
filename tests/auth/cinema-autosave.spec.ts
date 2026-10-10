@@ -3,14 +3,15 @@ test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-03T09:00:00Z"));
 });
 async function enable(page: Page) {
-  if (page.viewportSize()!.width < 800)
-    await page.getByRole("button", { name: /^Quick filters/ }).click();
   const mine = page
-    .locator(page.viewportSize()!.width < 800 ? ".quick-filter-dialog" : ".quick-filters-desktop")
+    .locator(".shortcut-strip")
     .getByRole("button", { name: "My cinemas", exact: true });
+  if (!(await mine.count())) {
+    const current = new URL(page.url());
+    current.searchParams.set("cinemas", "mine");
+    await page.goto(current.href);
+  }
   if ((await mine.getAttribute("aria-pressed")) !== "true") await mine.click();
-  if (page.viewportSize()!.width < 800)
-    await page.getByRole("button", { name: /^Show \d/ }).click();
   await page.getByRole("button", { name: "Edit cinemas", exact: true }).click();
   return page.getByRole("dialog", { name: "Manage my cinemas", exact: true });
 }
@@ -30,15 +31,9 @@ test("guest search, distance, dismissal and contextual editing preserve selectio
 }) => {
   await page.goto("/");
   await expect(page.getByRole("button", { name: "Edit cinemas", exact: true })).toBeHidden();
-  if (page.viewportSize()!.width < 800)
-    await page.getByRole("button", { name: /^Quick filters/ }).click();
-  const quick = page.locator(
-    page.viewportSize()!.width < 800 ? ".quick-filter-dialog" : ".quick-filters-desktop",
-  );
+  const quick = page.locator(".shortcut-strip");
   await quick.getByRole("button", { name: /^Tomorrow/ }).click();
   await quick.getByRole("button", { name: /^Evening/ }).click();
-  if (page.viewportSize()!.width < 800)
-    await page.getByRole("button", { name: /^Show \d/ }).click();
   const prior = new URL(page.url()).searchParams;
   const dialog = await enable(page);
   await expect(dialog.getByRole("button", { name: "Done", exact: true })).toBeInViewport();

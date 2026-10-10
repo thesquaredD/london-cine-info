@@ -64,14 +64,10 @@ test("remembered watchlist preference removes every rating surface and rating so
   await expect(page.locator(".rating-column")).toHaveCount(0);
   await page.goto("/");
   await expect(page.locator(".rating-column").first()).toBeAttached();
-  if (page.viewportSize()!.width < 800)
-    await page.getByRole("button", { name: /^Quick filters/ }).click();
   await page
-    .locator(page.viewportSize()!.width < 800 ? ".quick-filter-dialog" : ".quick-filters-desktop")
+    .locator(".shortcut-strip")
     .getByRole("button", { name: "My watchlist", exact: true })
     .click();
-  if (page.viewportSize()!.width < 800)
-    await page.getByRole("button", { name: /^Show \d/ }).click();
   await expect(page.locator(".rating-column")).toHaveCount(0);
   if (page.viewportSize()!.width < 800)
     await page.getByRole("button", { name: "Toggle pages" }).click();

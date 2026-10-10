@@ -40,8 +40,7 @@ async function openFriends(page: Page) {
   return dialog;
 }
 async function watchlistsButton(page: Page) {
-  if (await page.locator(".all-filters .mobile-more").isVisible())
-    await page.getByRole("button", { name: "All filters", exact: true }).click();
+  await page.getByRole("button", { name: /^Filters(?:\s|$)/ }).click();
   return page.getByRole("button", { name: /^Watchlists/ }).filter({ visible: true });
 }
 const sqlQuote = (v: string) => `'${v.replaceAll("'", "''")}'`;

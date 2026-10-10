@@ -142,6 +142,14 @@ export function FilterControls({
               />{" "}
               Hide sold-out screenings
             </label>
+            <label class="availability-filter">
+              <input
+                type="checkbox"
+                checked={!!state.short}
+                onChange={(event) => onChange({ short: event.currentTarget.checked, page: 1 })}
+              />{" "}
+              Under 2 hours
+            </label>
             <button class="reset-button" onClick={() => onChange(clearFilters(state.path))}>
               Reset all filters
             </button>
