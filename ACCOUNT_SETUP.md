@@ -85,14 +85,16 @@ POST `/api/auth/request` with an email and matching Origin header. The JSON retu
 a test sign-in link **only on localhost**. The website never exposes test links on
 public preview or production hosts, even if the flag is accidentally set there.
 
-## Account dialogs and import status
+## Account page and import status
 
-Account actions live in one modal dialog opened from the compact **Sign in** /
-**Account** button in the sidebar (or the phone Pages drawer, which closes first so
-dialogs never nest). The dialog holds sign-in, Letterboxd username, weekly email
-weekday, import, sign out and a separate **Delete account** confirmation view.
-Entered values survive failures; conflicting actions are disabled while a request
-is in flight. Notices move to the top of the page when the dialog closes.
+Account actions live on `/account`, reached through the **Sign in** / **Account**
+link in the sidebar or phone Pages drawer. Signed-in sections are Profile (app and
+Letterboxd usernames), Watchlist, Emails, Favourite cinemas and Delete account.
+Profile and Emails each save only their changed fields, with notices and unsaved
+status beside the relevant form. Entered values survive failures; conflicting
+actions are disabled while a request is in flight. Deletion is confirmed inline.
+Sign out stays in the sidebar. Links to `/account#profile` and `/account#emails`
+scroll to and focus their sections; the My cinemas picker stays a dialog.
 
 Migration `0003_import_status.sql` adds `started_at` and `attempt_id` to
 `watchlist_sync`. The API derives one of five states from the row: `idle`,

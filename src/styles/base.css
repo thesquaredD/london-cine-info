@@ -63,7 +63,8 @@ a:focus-visible,
 input:focus-visible,
 select:focus-visible,
 .poster:focus-visible,
-.active-filters:focus-visible {
+.active-filters:focus-visible,
+.pref-page :is(h2, section, p[tabindex]):focus-visible {
   outline: 2px solid var(--original);
   outline-offset: 3px;
 }
@@ -642,6 +643,152 @@ h3 {
   font-size: 18px;
   margin-top: 28px;
 }
+.pref-page {
+  width: 100%;
+  max-width: 640px;
+  padding: 30px 24px;
+  margin: 0 auto;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.pref-page h2 {
+  margin: 0 0 12px;
+  font-size: 24px;
+  font-weight: 500;
+}
+.pref-lede {
+  margin: 0 0 20px;
+  color: var(--muted);
+}
+.pref-section {
+  border-top: 1px solid var(--line);
+  padding: 16px 0;
+  scroll-margin-top: 16px;
+  display: grid;
+  gap: 12px;
+}
+.pref-section:first-of-type {
+  border-top: 0;
+}
+.pref-section h3 {
+  margin: 0;
+  color: var(--brass);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.pref-section h3 small {
+  display: inline-block;
+  margin-left: 8px;
+  color: var(--muted);
+  font: inherit;
+  letter-spacing: normal;
+  text-transform: none;
+}
+.pref-page p {
+  margin: 0;
+}
+.pref-page > .pref-lede {
+  margin-bottom: 20px;
+}
+.pref-page form,
+.pref-page fieldset,
+.pref-field {
+  min-width: 0;
+  display: grid;
+  gap: 8px;
+}
+.pref-page fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.pref-page label {
+  font-weight: 500;
+}
+.pref-page input:not([type="checkbox"]),
+.pref-page select {
+  width: 100%;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--panel);
+  color: inherit;
+  font: inherit;
+}
+.profile-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 16px;
+}
+.pref-save {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-top: 8px;
+}
+.pref-save [role="status"],
+.pref-hint {
+  font-size: 13px;
+  color: var(--muted);
+}
+.pref-page .pref-checkbox {
+  display: flex;
+  align-items: start;
+  gap: 8px;
+  margin-block: 8px;
+}
+.pref-checkbox input {
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+.pref-page > form + .account-notice {
+  margin-top: 12px;
+}
+.pref-page button {
+  justify-self: start;
+}
+.pref-page > .account-notice {
+  margin-bottom: 12px;
+}
+:root .sidebar-content .signout-button {
+  display: block;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  padding: 4px 12px 8px;
+  text-align: left;
+}
+.account-import {
+  display: block;
+  color: var(--muted);
+  padding: 0 12px 8px;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 799px) {
+  .pref-page {
+    padding: 24px 18px;
+    font-size: 18px;
+  }
+  .profile-fields {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+  }
+  .pref-page input:not([type="checkbox"]),
+  .pref-page select,
+  .pref-page button {
+    font-size: 18px;
+    min-height: 44px;
+  }
+  .pref-hint,
+  .pref-save [role="status"] {
+    font-size: 16px;
+  }
+}
 .source-status {
   display: grid;
   grid-template-columns: 150px minmax(0, 1fr);
@@ -688,7 +835,7 @@ h3 {
 .mobile-sort-column {
   display: none;
 }
-.mobile-sort-dialog .account-dialog-body {
+.mobile-sort-dialog .dialog-body {
   display: grid;
   gap: 10px;
 }
@@ -1359,23 +1506,7 @@ h3 {
   overflow: visible;
 }
 
-.account-panel {
-  border-top: 1px solid var(--line);
-  padding: 12px;
-  font-size: 14px;
-  display: grid;
-  gap: 8px;
-}
-.account-panel > button {
-  width: 100%;
-  border-radius: 4px;
-}
-.account-panel p {
-  margin: 0;
-  color: var(--muted);
-  overflow-wrap: anywhere;
-}
-:is(.account-dialog, .mobile-sort-dialog, .cinema-dialog, .settings-dialog) {
+:is(.modal-dialog, .mobile-sort-dialog, .cinema-dialog, .settings-dialog) {
   width: min(480px, calc(100vw - 32px));
   max-height: 85dvh;
   padding: 0;
@@ -1385,34 +1516,34 @@ h3 {
   color: var(--fg);
   overflow-y: auto;
 }
-:is(.account-dialog, .mobile-sort-dialog, .cinema-dialog, .settings-dialog)::backdrop {
+:is(.modal-dialog, .mobile-sort-dialog, .cinema-dialog, .settings-dialog)::backdrop {
   background: rgba(0, 0, 0, 0.45);
 }
-.account-dialog-body {
+.dialog-body {
   display: grid;
   gap: 12px;
   padding: 16px;
 }
-.account-dialog-body p {
+.dialog-body p {
   margin: 0;
   overflow-wrap: anywhere;
 }
-:is(.account-dialog, .mobile-sort-dialog, .cinema-dialog, .settings-dialog) form,
-:is(.account-dialog, .mobile-sort-dialog, .cinema-dialog, .settings-dialog) fieldset {
+:is(.modal-dialog, .mobile-sort-dialog, .cinema-dialog, .settings-dialog) form,
+:is(.modal-dialog, .mobile-sort-dialog, .cinema-dialog, .settings-dialog) fieldset {
   display: grid;
   gap: 8px;
   min-width: 0;
 }
-:is(.account-dialog, .mobile-sort-dialog, .cinema-dialog, .settings-dialog) fieldset {
+:is(.modal-dialog, .mobile-sort-dialog, .cinema-dialog, .settings-dialog) fieldset {
   margin: 0;
   padding: 0;
   border: 0;
 }
-:is(.account-dialog, .mobile-sort-dialog, .cinema-dialog, .settings-dialog) label {
+:is(.modal-dialog, .mobile-sort-dialog, .cinema-dialog, .settings-dialog) label {
   font-weight: 500;
 }
-:is(.account-dialog, .mobile-sort-dialog, .cinema-dialog, .settings-dialog) input,
-:is(.account-dialog, .mobile-sort-dialog, .cinema-dialog, .settings-dialog) select {
+:is(.modal-dialog, .mobile-sort-dialog, .cinema-dialog, .settings-dialog) input,
+:is(.modal-dialog, .mobile-sort-dialog, .cinema-dialog, .settings-dialog) select {
   width: 100%;
   min-width: 0;
   padding: 7px 8px;
@@ -1421,8 +1552,8 @@ h3 {
   background: var(--panel);
   color: inherit;
 }
-:is(.account-dialog, .mobile-sort-dialog, .cinema-dialog, .settings-dialog) fieldset p,
-:is(.account-dialog, .mobile-sort-dialog, .cinema-dialog, .settings-dialog) .import-status p + p {
+:is(.modal-dialog, .mobile-sort-dialog, .cinema-dialog, .settings-dialog) fieldset p,
+:is(.modal-dialog, .mobile-sort-dialog, .cinema-dialog, .settings-dialog) .import-status p + p {
   color: var(--muted);
   font-size: 13px;
 }
@@ -1529,7 +1660,7 @@ h3 {
   justify-self: start;
 }
 @media (max-width: 799px) {
-  :is(.account-dialog, .mobile-sort-dialog, .cinema-dialog, .settings-dialog) {
+  :is(.modal-dialog, .mobile-sort-dialog, .cinema-dialog, .settings-dialog) {
     position: fixed;
     inset: auto 0 0;
     margin: 0;
@@ -1539,12 +1670,12 @@ h3 {
     border-radius: 4px 4px 0 0;
     padding-bottom: env(safe-area-inset-bottom);
   }
-  :is(.account-dialog, .mobile-sort-dialog, .cinema-dialog, .settings-dialog) input,
-  :is(.account-dialog, .mobile-sort-dialog, .cinema-dialog, .settings-dialog) select {
+  :is(.modal-dialog, .mobile-sort-dialog, .cinema-dialog, .settings-dialog) input,
+  :is(.modal-dialog, .mobile-sort-dialog, .cinema-dialog, .settings-dialog) select {
     font-size: 16px;
     min-height: 44px;
   }
-  :is(.account-dialog, .mobile-sort-dialog, .cinema-dialog, .settings-dialog) button,
+  :is(.modal-dialog, .mobile-sort-dialog, .cinema-dialog, .settings-dialog) button,
   .watchlist-intro button {
     min-height: 44px;
   }
@@ -1962,7 +2093,7 @@ h3 {
 @media (max-width: 799px) and (prefers-reduced-motion: no-preference) {
   :is(
     .filter-sheet,
-    .account-dialog,
+    .modal-dialog,
     .mobile-sort-dialog,
     .cinema-dialog,
     .settings-dialog,
@@ -2186,7 +2317,7 @@ h3 {
 .cinema-dialog .sheet-heading {
   flex-shrink: 0;
 }
-.cinema-dialog .account-dialog-body {
+.cinema-dialog .dialog-body {
   display: flex;
   flex-direction: column;
   gap: 0;
@@ -2195,8 +2326,8 @@ h3 {
   padding: 0;
   overflow: hidden;
 }
-.cinema-dialog .account-dialog-body > [role="alert"],
-.cinema-dialog .account-dialog-body > [role="status"] {
+.cinema-dialog .dialog-body > [role="alert"],
+.cinema-dialog .dialog-body > [role="status"] {
   padding: 8px 16px;
   flex-shrink: 0;
 }

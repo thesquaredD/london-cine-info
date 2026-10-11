@@ -1,20 +1,14 @@
 import { test, expect, type Page } from "@playwright/test";
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
-const phone = (page: Page) => (page.viewportSize()?.width ?? 1200) < 800;
-/** Opens the account dialog from the sidebar (desktop) or the Pages drawer (phone). */
-async function openAccount(page: Page) {
-  if (phone(page)) {
-    await page.getByRole("button", { name: "Toggle pages" }).click();
-    const drawer = page.getByRole("dialog", { name: "Pages", exact: true });
-    await drawer.getByRole("button", { name: /^(Sign in|Account)$/ }).click();
-    await expect(drawer).toBeHidden();
-  } else await page.locator(".desktop-sidebar .account-panel button").click();
-  const dialog = page.locator(".account-dialog");
-  await expect(dialog).toBeVisible();
-  return dialog;
+async function visitAccount(page: Page) {
+  await page.goto("/account");
+  const account = page.getByRole("article", { name: /^(Sign in|Account)$/ });
+  await expect(account).toBeVisible();
+  return account;
 }
-test("real Functions sign-in, dialog settings, watchlist, shared filter and account deletion", async ({
+
+test("real Functions sign-in, account settings, watchlist, shared filter and account deletion", async ({
   page,
   context,
 }, info) => {
@@ -23,9 +17,9 @@ test("real Functions sign-in, dialog settings, watchlist, shared filter and acco
   await page.goto("/watchlist");
   await expect(page.getByText("Sign in to import your public Letterboxd watchlist.")).toBeVisible();
   const email = `browser-${info.project.name}-${Date.now()}@example.com`;
-  let dialog = await openAccount(page);
+  let dialog = await visitAccount(page);
   await expect(dialog).toHaveAccessibleName("Sign in");
-  await expect(dialog.getByLabel("Email", { exact: true })).toBeFocused();
+  await expect(dialog.getByRole("heading", { name: "Sign in", exact: true })).toBeFocused();
   await dialog.getByLabel("Email", { exact: true }).fill(email);
   const sent = page.waitForResponse((response) => response.url().endsWith("/api/auth/request"));
   await dialog.getByRole("button", { name: "Send sign-in link" }).click();
@@ -33,12 +27,6 @@ test("real Functions sign-in, dialog settings, watchlist, shared filter and acco
   expect(response.ok()).toBe(true);
   const { link } = await response.json();
   await expect(dialog.getByRole("status")).toContainText("Check your email");
-  await page.keyboard.press("Escape");
-  await expect(dialog).toBeHidden();
-  // The notice stays visible on the page after the dialog closes.
-  await expect(page.locator(".page-notices").getByRole("status")).toContainText("Check your email");
-  if (!phone(page))
-    await expect(page.locator(".desktop-sidebar .account-panel button")).toBeFocused();
   await page.goto(link);
   await page.getByRole("button", { name: "Confirm sign-in" }).click();
   await expect(page).toHaveURL("/watchlist");
@@ -48,20 +36,28 @@ test("real Functions sign-in, dialog settings, watchlist, shared filter and acco
   await expect(
     page.getByText("Set your Letterboxd username to import your public watchlist."),
   ).toBeVisible();
-  dialog = await openAccount(page);
+  dialog = await visitAccount(page);
   await expect(dialog).toHaveAccessibleName("Account");
   await expect(dialog.getByText(`Signed in as ${email}`)).toBeVisible();
-  await expect(dialog.getByRole("button", { name: "Save account" })).toBeDisabled();
+  await expect(dialog.getByRole("button", { name: "Save profile" })).toBeDisabled();
   await dialog.getByLabel("Letterboxd username").fill("synthetic-user");
   await dialog.getByLabel("Weekly screening email").selectOption("3");
-  await expect(dialog.getByText("You have unsaved changes.")).toBeVisible();
-  await page.screenshot({ path: info.outputPath("account-dialog.png") });
-  await dialog.getByRole("button", { name: "Save account" }).click();
-  await expect(dialog.getByRole("status").filter({ hasText: "Account saved." })).toBeVisible();
+  await expect(
+    dialog.getByRole("region", { name: "Profile", exact: true }).getByRole("status"),
+  ).toHaveText("Unsaved changes");
+  await page.screenshot({ path: info.outputPath("account-page.png") });
+  await dialog.getByRole("button", { name: "Save profile" }).click();
+  await expect(dialog.getByRole("status").filter({ hasText: "Profile saved." })).toBeVisible();
+  await dialog.getByRole("button", { name: "Save emails" }).click();
+  await expect(
+    dialog
+      .getByRole("region", { name: "Emails", exact: true })
+      .getByRole("status")
+      .filter({ hasText: "Email preferences saved." }),
+  ).toBeVisible();
   await expect(dialog.getByText("has not been imported yet")).toBeVisible();
   await expect(dialog.getByRole("button", { name: "Import watchlist" })).toBeEnabled();
-  await dialog.getByRole("button", { name: "Close account" }).click();
-  await expect(dialog).toBeHidden();
+  await page.goto("/watchlist");
   const { user } = await (await page.request.get("/api/me")).json();
   // Seed synthetic imported data locally, never scrape or email a real user.
   const manifest = JSON.parse(readFileSync("src/generated/manifest.json", "utf8"));
@@ -106,12 +102,12 @@ test("real Functions sign-in, dialog settings, watchlist, shared filter and acco
   await expect(intro.getByRole("status").filter({ hasText: "Import queued" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Import in progress" })).toBeDisabled();
   await expect(page.locator(".film-row")).toHaveCount(1);
-  dialog = await openAccount(page);
+  dialog = await visitAccount(page);
   await expect(dialog.getByText("Import queued", { exact: false })).toBeVisible();
-  await dialog.getByRole("button", { name: "Close account" }).click();
-  if (phone(page)) await page.getByRole("button", { name: "Toggle pages" }).click();
+  if (info.project.name === "mobile")
+    await page.getByRole("button", { name: "Toggle pages" }).click();
   await (
-    phone(page)
+    info.project.name === "mobile"
       ? page.getByRole("dialog", { name: "Pages", exact: true })
       : page.locator(".desktop-sidebar")
   )
@@ -125,18 +121,20 @@ test("real Functions sign-in, dialog settings, watchlist, shared filter and acco
   await expect(page).toHaveURL(/watchlist=1/);
   await page.reload();
   await expect(page.locator(".film-row")).toHaveCount(1);
-  dialog = await openAccount(page);
-  await dialog.getByRole("button", { name: "Delete account", exact: true }).click();
-  await expect(dialog).toHaveAccessibleName("Delete account");
+  dialog = await visitAccount(page);
+  await dialog.getByRole("button", { name: "Delete account…", exact: true }).click();
+  await expect(page.locator("dialog[open]")).toHaveCount(0);
+  await expect(dialog.locator("#delete p[tabindex]")).toBeFocused();
   await expect(dialog.getByText("This cannot be undone.")).toBeVisible();
   await page.screenshot({ path: info.outputPath("delete-confirmation.png") });
   await dialog.getByRole("button", { name: "Cancel" }).click();
   await expect(dialog).toHaveAccessibleName("Account");
-  await dialog.getByRole("button", { name: "Delete account", exact: true }).click();
+  await dialog.getByRole("button", { name: "Delete account…", exact: true }).click();
   await dialog.getByRole("button", { name: "Confirm deletion" }).click();
   await expect(dialog).toBeHidden();
   await expect(page.locator(".page-notices").getByRole("status")).toContainText("were deleted");
   expect((await (await page.request.get("/api/me")).json()).user).toBeNull();
-  await expect(page.getByText("Sign in to view your watchlist", { exact: false })).toBeVisible();
+  await expect(page).toHaveURL("/");
+  await expect(page.locator(".film-row")).toHaveCount(6);
   expect(errors).toEqual([]);
 });

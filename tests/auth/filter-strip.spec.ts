@@ -40,19 +40,14 @@ test("connected watchlist and chosen cinemas appear immediately and all eight sh
   );
   await page.evaluate(() => window.dispatchEvent(new Event("focus")));
   await expect(strip.getByRole("button", { name: "My watchlist", exact: true })).toBeVisible();
-  if (info.project.name === "mobile")
-    await page.getByRole("button", { name: "Toggle pages" }).click();
-  await page
-    .getByRole("button", { name: "Account", exact: true })
-    .filter({ visible: true })
-    .click();
-  const account = page.locator(".account-dialog");
-  await account.getByRole("button", { name: "Manage my cinemas", exact: true }).click();
+  await page.goto("/account");
+  const account = page.getByRole("article", { name: "Account", exact: true });
+  await account.getByRole("button", { name: "Manage cinemas", exact: true }).click();
   const cinemas = page.getByRole("dialog", { name: "Manage my cinemas", exact: true });
   await cinemas.getByRole("checkbox", { name: "BFI Southbank", exact: true }).check();
   await expect(cinemas.getByRole("status").filter({ hasText: /^Saved$/ })).toBeVisible();
   await cinemas.getByRole("button", { name: "Done", exact: true }).click();
-  await account.getByRole("button", { name: "Close account", exact: true }).click();
+  await page.goto("/");
   await expect(strip.getByRole("button")).toHaveCount(8);
   const width = info.project.name === "mobile" ? 390 : 1280;
   await page.setViewportSize({ width, height: 900 });

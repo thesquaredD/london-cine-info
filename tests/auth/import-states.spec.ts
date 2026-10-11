@@ -1,18 +1,12 @@
 import { test, expect, type Page } from "@playwright/test";
 import { IMPORT_ERRORS, type Account, type SyncStatus } from "../../src/shared/account";
-const phone = (page: Page) => (page.viewportSize()?.width ?? 1200) < 800;
-async function openAccount(page: Page) {
-  if (phone(page)) {
-    await page.getByRole("button", { name: "Toggle pages" }).click();
-    await page
-      .getByRole("dialog", { name: "Pages", exact: true })
-      .getByRole("button", { name: /^(Sign in|Account)$/ })
-      .click();
-  } else await page.locator(".desktop-sidebar .account-panel button").click();
-  const dialog = page.locator(".account-dialog");
-  await expect(dialog).toBeVisible();
-  return dialog;
+async function visitAccount(page: Page) {
+  await page.goto("/account");
+  const account = page.getByRole("article", { name: /^(Sign in|Account)$/ });
+  await expect(account).toBeVisible();
+  return account;
 }
+
 const now = () => Math.floor(Date.now() / 1000);
 function sync(state: SyncStatus["state"], extra: Partial<SyncStatus> = {}): SyncStatus {
   return {
@@ -43,6 +37,12 @@ function user(overrides: Partial<Account> = {}): Account {
 async function mockAccount(page: Page, account: Account | null, slugs: string[] = []) {
   await page.unroute("**/api/me");
   await page.unroute("**/api/watchlist");
+  await page.unroute("**/api/friends");
+  await page.unroute("**/api/friends/matches");
+  await page.route("**/api/friends/matches", (route) => route.fulfill({ json: { matches: [] } }));
+  await page.route("**/api/friends", (route) =>
+    route.fulfill({ json: { friends: [], appUsername: null, friendsDigest: true } }),
+  );
   await page.route("**/api/me", (route) =>
     route.request().method() === "GET"
       ? route.fulfill({ json: { user: account } })
@@ -97,7 +97,7 @@ test("account service failures stay out of the way of browsing and can be retrie
   await expect(page.getByRole("alert")).toHaveCount(0);
   await expect(page.getByText("Sign in to import your public Letterboxd watchlist.")).toBeVisible();
 });
-test("import lifecycle states are honest on the watchlist page and in the dialog", async ({
+test("import lifecycle states are honest on the watchlist page and on Account", async ({
   page,
 }) => {
   const stamp = now() - 3600;
@@ -111,18 +111,18 @@ test("import lifecycle states are honest on the watchlist page and in the dialog
   await expect(status).not.toContainText("%");
   await expect(page.getByRole("button", { name: "Import in progress" })).toBeDisabled();
   // The compact sidebar entry point also announces a running import.
-  if (phone(page)) {
+  if (page.viewportSize()!.width < 800) {
     await page.getByRole("button", { name: "Toggle pages" }).click();
     const drawer = page.getByRole("dialog", { name: "Pages", exact: true });
-    await expect(drawer.locator(".account-panel").getByRole("status")).toContainText(
+    await expect(drawer.locator(".preferences-nav").getByRole("status")).toContainText(
       "Import queued",
     );
     await page.keyboard.press("Escape");
     await expect(drawer).toBeHidden();
   } else {
-    await expect(page.locator(".desktop-sidebar .account-panel").getByRole("status")).toContainText(
-      "Import queued",
-    );
+    await expect(
+      page.locator(".desktop-sidebar .preferences-nav").getByRole("status"),
+    ).toContainText("Import queued");
   }
   await mockAccount(
     page,
@@ -154,10 +154,10 @@ test("import lifecycle states are honest on the watchlist page and in the dialog
     page.locator(".watchlist-intro").getByText(/Next import available after/),
   ).toBeVisible();
   await expect(page.getByRole("button", { name: "Refresh now" })).toBeDisabled();
-  let dialog = await openAccount(page);
+  let dialog = await visitAccount(page);
   await expect(dialog.getByRole("alert")).toContainText(IMPORT_ERRORS.not_found);
   await expect(dialog.getByLabel("Letterboxd username")).toHaveValue("synthetic-user");
-  await page.keyboard.press("Escape");
+  await page.goto("/watchlist");
   // A stalled job is reported as failed, never as an endless refresh.
   await mockAccount(
     page,
@@ -205,7 +205,7 @@ test("import lifecycle states are honest on the watchlist page and in the dialog
   );
   await page.reload();
   await expect(status).toContainText("overdue for an update");
-  dialog = await openAccount(page);
+  dialog = await visitAccount(page);
   await expect(dialog.getByRole("link", { name: "View your watchlist" })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   expect(await dialog.evaluate((node) => node.getBoundingClientRect().width <= innerWidth)).toBe(
@@ -222,14 +222,15 @@ test("save, cooldown and dispatch failures keep input, explain retry and never e
       : route.fallback(),
   );
   await page.goto("/");
-  let dialog = await openAccount(page);
+  let dialog = await visitAccount(page);
   await dialog.getByLabel("Letterboxd username").fill("typed-user");
-  await dialog.getByRole("button", { name: "Save account" }).click();
-  await expect(dialog.getByRole("alert")).toContainText("Settings could not be saved right now.");
+  await dialog.getByRole("button", { name: "Save profile" }).click();
+  await expect(
+    dialog.getByRole("region", { name: "Profile", exact: true }).getByRole("alert"),
+  ).toContainText("Settings could not be saved right now.");
   await expect(dialog.getByLabel("Letterboxd username")).toHaveValue("typed-user");
-  await expect(dialog.getByRole("button", { name: "Save account" })).toBeEnabled();
-  await page.keyboard.press("Escape");
-  await expect(dialog).toBeHidden();
+  await expect(dialog.getByRole("button", { name: "Save profile" })).toBeEnabled();
+  await page.locator(".masthead h1 a").click();
   await expect(page.locator(".page-notices").getByRole("alert")).toContainText(
     "Settings could not be saved",
   );
@@ -288,7 +289,7 @@ test("save, cooldown and dispatch failures keep input, explain retry and never e
   const alert = page.locator(".page-notices").getByRole("alert");
   await expect(alert).toContainText("unexpected response");
   await expect(alert).not.toContainText("stack trace");
-  dialog = await openAccount(page);
+  dialog = await visitAccount(page);
   await expect(dialog).toHaveAccessibleName("Account");
-  await expect(dialog.getByLabel("Letterboxd username")).toBeFocused();
+  await expect(dialog.getByRole("heading", { name: "Account", exact: true })).toBeFocused();
 });

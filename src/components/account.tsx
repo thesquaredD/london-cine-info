@@ -1,6 +1,12 @@
-import { useEffect, useState } from "preact/hooks";
+import { useEffect, useRef, useState } from "preact/hooks";
+import type { ComponentChildren } from "preact";
 import { accountApi, type AccountState } from "../lib/account";
-import { Dialog } from "./dialog";
+import { useFriendContext } from "../lib/friends";
+import { normalizeUsername } from "../shared/friends";
+import type { CinemasState } from "../lib/cinemas";
+import type { DataMeta } from "../shared/data";
+import { usePreferenceFocus } from "../lib/preference-focus";
+import { PageLink } from "./page-link";
 function time(stamp: number) {
   return new Intl.DateTimeFormat("en-GB", {
     dateStyle: "medium",
@@ -19,9 +25,11 @@ function useNow() {
 export function AccountFeedback({
   account,
   showError = true,
+  showNotice = true,
 }: {
   account: AccountState;
   showError?: boolean;
+  showNotice?: boolean;
 }) {
   return (
     <>
@@ -33,7 +41,7 @@ export function AccountFeedback({
           </button>
         </div>
       )}
-      {account.notice && (
+      {account.notice && showNotice && (
         <div class="account-notice" role={account.notice.kind === "error" ? "alert" : "status"}>
           <p>{account.notice.message}</p>
           {account.notice.retryAt && (
@@ -59,8 +67,7 @@ export function ImportStatus({ account, matches }: { account: AccountState; matc
         (user.pending ? "queued" : user.stale ? "failed" : user.fetchedAt ? "completed" : "idle"));
   const message = {
     submitting: "Requesting your import…",
-    queued:
-      "Import queued. Waiting for a place in the import queue. You can close Account and keep browsing.",
+    queued: "Import queued. Waiting for a place in the import queue. You can keep browsing.",
     importing:
       "Importing your public Letterboxd watchlist. You can keep browsing; results update when it finishes.",
     completed:
@@ -148,136 +155,280 @@ export function RefreshButton({
     </div>
   );
 }
-export function AccountPanel({ account, onOpen }: { account: AccountState; onOpen: () => void }) {
+function PreferenceSection({
+  id,
+  title,
+  children,
+}: {
+  id: string;
+  title: ComponentChildren;
+  children: ComponentChildren;
+}) {
   return (
-    <section class="account-panel" aria-label="Account">
-      <button aria-haspopup="dialog" onClick={onOpen}>
-        {account.user ? "Account" : "Sign in"}
-      </button>
-      {account.user?.pending && (
-        <p role="status">
-          {account.user.sync?.state === "importing" ? "Importing watchlist…" : "Import queued…"}
-        </p>
-      )}
+    <section class="pref-section" id={id} tabIndex={-1} aria-labelledby={`${id}-h`}>
+      <h3 id={`${id}-h`}>{title}</h3>
+      {children}
     </section>
   );
 }
-export function AccountDialogs({
+
+export function AccountPage({
   account,
-  open,
   matches,
-  onClose,
   onNavigate,
   onManageCinemas,
-  restoreTo,
+  cinemas,
+  meta,
 }: {
   account: AccountState;
-  open: boolean;
   matches?: number;
-  onClose: () => void;
   onNavigate: (path: string) => void;
   onManageCinemas: () => void;
-  restoreTo: () => HTMLElement | null;
+  cinemas: CinemasState;
+  meta: DataMeta | null;
 }) {
+  const friends = useFriendContext();
+  const article = usePreferenceFocus(!account.loading);
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
+  const [appUsername, setAppUsername] = useState("");
   const [weekday, setWeekday] = useState("off");
+  const [friendsDigest, setFriendsDigest] = useState(true);
   const [deleting, setDeleting] = useState(false);
+  const [saving, setSaving] = useState("");
+  const saveLock = useRef(false);
+  const [friendOwner, setFriendOwner] = useState<"save" | "emails" | null>(null);
+  const confirmation = useRef<HTMLParagraphElement>(null);
+  const deleteButton = useRef<HTMLButtonElement>(null);
+  const wasDeleting = useRef(false);
   const now = useNow();
+  useEffect(
+    () => setUsername(account.user?.username ?? ""),
+    [account.user?.id, account.user?.username],
+  );
+  useEffect(
+    () =>
+      setWeekday(account.user?.digestWeekday == null ? "off" : String(account.user.digestWeekday)),
+    [account.user?.id, account.user?.digestWeekday],
+  );
+  useEffect(
+    () => setAppUsername(friends?.value.appUsername ?? ""),
+    [account.user?.id, friends?.value.appUsername],
+  );
+  useEffect(
+    () => setFriendsDigest(friends?.value.friendsDigest ?? true),
+    [account.user?.id, friends?.value.friendsDigest],
+  );
   useEffect(() => {
-    setUsername(account.user?.username ?? "");
-    setWeekday(account.user?.digestWeekday == null ? "off" : String(account.user.digestWeekday));
-  }, [account.user?.id, account.user?.username, account.user?.digestWeekday]);
+    setDeleting(false);
+    setFriendOwner(null);
+  }, [account.user?.id]);
   useEffect(() => {
-    if (!open || !account.user) setDeleting(false);
-  }, [open, account.user?.id]);
-  const dirty =
-    username.trim() !== (account.user?.username ?? "") ||
+    if (deleting) confirmation.current?.focus();
+    else if (wasDeleting.current) deleteButton.current?.focus();
+    wasDeleting.current = deleting;
+  }, [deleting]);
+  const appDirty =
+    !!friends && normalizeUsername(appUsername) !== (friends.value.appUsername ?? "");
+  const usernameDirty = username.trim() !== (account.user?.username ?? "");
+  const profileDirty = appDirty || usernameDirty;
+  const weekdayDirty =
     weekday !== (account.user?.digestWeekday == null ? "off" : String(account.user.digestWeekday));
+  const digestDirty = !!friends && friendsDigest !== friends.value.friendsDigest;
+  const emailsDirty = weekdayDirty || digestDirty;
+  const busy = !!account.busy || !!friends?.busy || !!saving;
   const cooling = (account.notice?.retryAt ?? 0) > now;
+  const owned =
+    account.user && ["save", "emails", "refresh", "delete"].includes(account.notice?.action ?? "");
+  const feedback = (action: string) => (
+    <>
+      <AccountFeedback
+        account={account}
+        showError={false}
+        showNotice={account.notice?.action === action}
+      />
+      {friendOwner === action && friends?.error && <p role="alert">{friends.error}</p>}
+      {friendOwner === action && friends?.notice && <p role="status">{friends.notice}</p>}
+    </>
+  );
+  async function saveProfile() {
+    if (saveLock.current || busy || !profileDirty) return;
+    saveLock.current = true;
+    setSaving("save");
+    setFriendOwner(null);
+    account.dismissNotice();
+    try {
+      if (appDirty && friends) {
+        setFriendOwner("save");
+        if (
+          !(await friends.perform(
+            "/api/friends/profile",
+            "PUT",
+            { username: normalizeUsername(appUsername) },
+            "",
+          ))
+        )
+          return;
+      }
+      await account.perform(
+        "save",
+        async () => {
+          if (usernameDirty) {
+            await accountApi("/api/me", "PUT", { username: username.trim() });
+            await account.reload();
+          }
+        },
+        usernameDirty && username.trim() && !account.user?.fetchedAt
+          ? "Profile saved. Choose Import watchlist below to fetch your public list."
+          : "Profile saved.",
+      );
+    } finally {
+      saveLock.current = false;
+      setSaving("");
+    }
+  }
+  async function saveEmails() {
+    if (saveLock.current || busy || !emailsDirty) return;
+    saveLock.current = true;
+    setSaving("emails");
+    setFriendOwner(null);
+    account.dismissNotice();
+    try {
+      // Finish the first partial update before attempting the second.
+      if (
+        weekdayDirty &&
+        !(await account.perform(
+          "emails",
+          async () => {
+            await accountApi("/api/me", "PUT", {
+              digestWeekday: weekday === "off" ? null : Number(weekday),
+            });
+            await account.reload();
+          },
+          "Email preferences saved.",
+        ))
+      )
+        return;
+      if (digestDirty && friends) {
+        setFriendOwner("emails");
+        account.dismissNotice();
+        if (!(await friends.perform("/api/friends/profile", "PUT", { friendsDigest }, ""))) return;
+        await account.perform("emails", async () => {}, "Email preferences saved.");
+      }
+    } finally {
+      saveLock.current = false;
+      setSaving("");
+    }
+  }
+  const venueNames = cinemas.venues
+    .map((id) => meta?.venues.find((venue) => venue.id === id)?.name)
+    .filter(Boolean);
   return (
-    <Dialog
-      open={open}
-      focusKey={deleting ? "delete" : account.user ? "account" : "signin"}
-      title={deleting ? "Delete account" : account.user ? "Account" : "Sign in"}
-      onClose={onClose}
-      restoreTo={restoreTo}
-    >
-      <AccountFeedback account={account} />
+    <article ref={article} class="pref-page" aria-labelledby="pref-title">
+      <h2 id="pref-title" tabIndex={-1}>
+        {account.loading || account.user ? "Account" : "Sign in"}
+      </h2>
+      <AccountFeedback
+        account={account}
+        showNotice={!owned && account.notice?.action !== "signin"}
+      />
+      {!friendOwner && friends?.error && (
+        <div role="alert">
+          <p>{friends.error}</p>
+          <button disabled={busy} onClick={() => void friends.reload()}>
+            Try loading friends again
+          </button>
+        </div>
+      )}
       {account.loading ? (
         <p role="status">Checking sign-in…</p>
       ) : account.user ? (
-        deleting ? (
-          <>
-            <p data-initial-focus tabIndex={-1}>
-              Permanently delete your account, saved screenings, favourite cinemas, imported
-              watchlist and email settings? This cannot be undone.
-            </p>
-            <div class="account-actions">
-              <button
-                data-initial-focus
-                disabled={!!account.busy}
-                onClick={() => setDeleting(false)}
-              >
-                Cancel
-              </button>
-              <button
-                class="danger-action"
-                disabled={!!account.busy}
-                onClick={() =>
-                  void account.perform(
-                    "delete",
-                    async () => {
-                      await accountApi("/api/me", "DELETE", {});
-                      account.clear();
-                      setDeleting(false);
-                      onClose();
-                    },
-                    "Your account and watchlist were deleted.",
-                  )
-                }
-              >
-                {account.busy === "delete" ? "Deleting…" : "Confirm deletion"}
-              </button>
-            </div>
-          </>
-        ) : (
-          <>
-            <p class="account-email">Signed in as {account.user.email}</p>
+        <>
+          <p class="pref-lede">Signed in as {account.user.email}</p>
+          <PreferenceSection id="profile" title="Profile">
             <form
               onSubmit={(event) => {
                 event.preventDefault();
-                void account.perform(
-                  "save",
-                  async () => {
-                    await accountApi("/api/me", "PUT", {
-                      username,
-                      digestWeekday: weekday === "off" ? null : Number(weekday),
-                    });
-                    await account.reload();
-                  },
-                  username.trim() && !account.user?.fetchedAt
-                    ? "Account saved. Choose Import watchlist to fetch your public list."
-                    : "Account saved.",
-                );
+                void saveProfile();
               }}
             >
-              <fieldset disabled={!!account.busy}>
-                <label for="account-username">Letterboxd username</label>
-                <input
-                  data-initial-focus
-                  id="account-username"
-                  value={username}
-                  maxLength={30}
-                  placeholder="Your public profile"
-                  autoComplete="off"
-                  aria-describedby="username-help"
-                  onInput={(event) => setUsername(event.currentTarget.value)}
-                />
-                <p id="username-help">
-                  Use your username, not a profile URL. Your watchlist must be public. Changing
-                  usernames removes the previous imported list.
-                </p>
+              <fieldset disabled={busy || !!friends?.loading}>
+                <div class="profile-fields">
+                  {friends && (
+                    <div class="pref-field">
+                      <label for="app-username">App username</label>
+                      <input
+                        id="app-username"
+                        value={appUsername}
+                        maxLength={30}
+                        autoComplete="off"
+                        aria-describedby="app-username-help"
+                        onInput={(event) => setAppUsername(event.currentTarget.value)}
+                      />
+                      <p class="pref-hint" id="app-username-help">
+                        Friends add you by this name.
+                      </p>
+                    </div>
+                  )}
+                  <div class="pref-field">
+                    <label for="account-username">Letterboxd username</label>
+                    <input
+                      id="account-username"
+                      value={username}
+                      maxLength={30}
+                      autoComplete="off"
+                      aria-describedby="username-help"
+                      onInput={(event) => setUsername(event.currentTarget.value)}
+                    />
+                    <p class="pref-hint" id="username-help">
+                      Your public profile name, not a URL. Changing it removes the previous imported
+                      list.
+                    </p>
+                  </div>
+                </div>
+                <div class="pref-save">
+                  <button
+                    disabled={!profileDirty || (cooling && account.notice?.action === "save")}
+                  >
+                    {saving === "save" ? "Saving…" : "Save profile"}
+                  </button>
+                  <span role="status">
+                    {profileDirty ? "Unsaved changes" : "No unsaved changes"}
+                  </span>
+                </div>
+              </fieldset>
+            </form>
+            {feedback("save")}
+          </PreferenceSection>
+          <PreferenceSection
+            id="watchlist"
+            title={
+              <>
+                Watchlist <small>Public Letterboxd list</small>
+              </>
+            }
+          >
+            {feedback("refresh")}
+            <ImportStatus account={account} matches={matches} />
+            {account.user.username ? (
+              <RefreshButton account={account} disabled={profileDirty || busy} />
+            ) : (
+              <p>Choose a Letterboxd username above to import your public watchlist.</p>
+            )}
+            {account.user.fetchedAt && (
+              <PageLink href="/watchlist" onNavigate={onNavigate}>
+                View your watchlist
+              </PageLink>
+            )}
+          </PreferenceSection>
+          <PreferenceSection id="emails" title="Emails">
+            <form
+              onSubmit={(event) => {
+                event.preventDefault();
+                void saveEmails();
+              }}
+            >
+              <fieldset disabled={busy || !!friends?.loading}>
                 <label for="account-digest">Weekly screening email</label>
                 <select
                   id="account-digest"
@@ -299,115 +450,169 @@ export function AccountDialogs({
                     </option>
                   ))}
                 </select>
-                <p>
-                  Optional emails about watchlist films screening in London. A saved username is
-                  required.
-                </p>
-                <button disabled={!dirty || (cooling && account.notice?.action === "save")}>
-                  {account.busy === "save" ? "Saving…" : "Save account"}
-                </button>
+                {!account.user.username && (
+                  <p class="pref-hint">
+                    A saved Letterboxd username is required for weekly emails.
+                  </p>
+                )}
+                {friends && (
+                  <>
+                    <label class="pref-checkbox">
+                      <input
+                        type="checkbox"
+                        checked={friendsDigest}
+                        disabled={!friends.value.appUsername}
+                        aria-describedby={
+                          !friends.value.appUsername ? "friends-digest-help" : undefined
+                        }
+                        onChange={(event) => setFriendsDigest(event.currentTarget.checked)}
+                      />
+                      Include films in common with friends
+                    </label>
+                    {!friends.value.appUsername && (
+                      <p class="pref-hint" id="friends-digest-help">
+                        Choose an app username above to enable this.
+                      </p>
+                    )}
+                  </>
+                )}
+                <div class="pref-save">
+                  <button
+                    disabled={!emailsDirty || (cooling && account.notice?.action === "emails")}
+                  >
+                    {saving === "emails" ? "Saving…" : "Save emails"}
+                  </button>
+                  <span role="status">
+                    {emailsDirty ? "Unsaved changes" : "No unsaved changes"}
+                  </span>
+                </div>
               </fieldset>
-              {dirty && <p role="status">You have unsaved changes. Save before importing.</p>}
             </form>
-            <ImportStatus account={account} matches={matches} />
-            {account.user.username && <RefreshButton account={account} disabled={dirty} />}
-            {account.user.fetchedAt && (
-              <a
-                href="/watchlist"
-                onClick={(event) => {
-                  if (
-                    event.button ||
-                    event.metaKey ||
-                    event.ctrlKey ||
-                    event.shiftKey ||
-                    event.altKey
-                  )
-                    return;
-                  event.preventDefault();
-                  onClose();
-                  onNavigate("/watchlist");
-                }}
-              >
-                View your watchlist
-              </a>
-            )}
-            <div class="account-actions">
-              <button
-                disabled={!!account.busy}
-                onClick={() =>
-                  void account.perform(
-                    "logout",
-                    async () => {
-                      await accountApi("/api/auth/logout", "POST", {});
-                      account.clear();
-                      onClose();
-                    },
-                    "You are signed out.",
-                  )
-                }
-              >
-                {account.busy === "logout" ? "Signing out…" : "Sign out"}
+            {feedback("emails")}
+            <p class="pref-hint">
+              Sent to {account.user.email}. Every email has an unsubscribe link.
+            </p>
+          </PreferenceSection>
+        </>
+      ) : (
+        <>
+          <p class="pref-lede">A link in your email signs you in. No password.</p>
+          <form
+            onSubmit={(event) => {
+              event.preventDefault();
+              void account.perform(
+                "signin",
+                async () => {
+                  await accountApi("/api/auth/request", "POST", { email });
+                },
+                "Check your email for a sign-in link. It expires in 15 minutes. Check your spam folder if it does not arrive.",
+              );
+            }}
+          >
+            <fieldset disabled={busy}>
+              <label for="account-email">Email</label>
+              <input
+                id="account-email"
+                type="email"
+                autoComplete="email"
+                required
+                value={email}
+                onInput={(event) => setEmail(event.currentTarget.value)}
+              />
+              <button disabled={cooling && account.notice?.action === "signin"}>
+                {account.busy === "signin" ? "Sending link…" : "Send sign-in link"}
               </button>
+            </fieldset>
+          </form>
+          <AccountFeedback
+            account={account}
+            showError={false}
+            showNotice={account.notice?.action === "signin"}
+          />
+          <PreferenceSection id="benefits" title="With an account">
+            <p>Import your public Letterboxd watchlist to see what is screening in London.</p>
+            <p>Keep friends for next time and find films in common.</p>
+            <p>Choose an optional weekly email with screenings from your watchlist.</p>
+          </PreferenceSection>
+        </>
+      )}
+      {!account.loading && (
+        <PreferenceSection id="cinemas" title="Favourite cinemas">
+          {account.user ? (
+            <>
+              <p>
+                {cinemas.venues.length} {cinemas.venues.length === 1 ? "cinema" : "cinemas"}{" "}
+                selected.
+              </p>
+              {venueNames.length > 0 && (
+                <p>
+                  {venueNames.slice(0, 3).join(", ")}
+                  {venueNames.length > 3 ? ` and ${venueNames.length - 3} more` : ""}
+                </p>
+              )}
+            </>
+          ) : (
+            <p>Chosen for this browser. Sign in to keep them on your account.</p>
+          )}
+          <button aria-haspopup="dialog" disabled={busy || !meta} onClick={onManageCinemas}>
+            Manage cinemas
+          </button>
+        </PreferenceSection>
+      )}
+      {!account.loading && account.user && (
+        <PreferenceSection id="delete" title="Delete account">
+          {feedback("delete")}
+          {deleting ? (
+            <>
+              <p ref={confirmation} tabIndex={-1}>
+                Permanently delete your account, saved screenings, favourite cinemas, imported
+                watchlist and email settings? This cannot be undone.
+              </p>
+              <div class="account-actions">
+                <button disabled={busy} onClick={() => setDeleting(false)}>
+                  Cancel
+                </button>
+                <button
+                  class="danger-action"
+                  disabled={busy}
+                  onClick={() =>
+                    void account.perform(
+                      "delete",
+                      async () => {
+                        await accountApi("/api/me", "DELETE", {});
+                        account.clear();
+                        onNavigate("/");
+                      },
+                      "Your account and watchlist were deleted.",
+                    )
+                  }
+                >
+                  {account.busy === "delete" ? "Deleting…" : "Confirm deletion"}
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <p>
+                Delete your account, saved screenings, favourite cinemas, imported watchlist and
+                email settings. This cannot be undone.
+              </p>
               <button
+                ref={deleteButton}
                 class="danger-action"
-                disabled={!!account.busy}
+                disabled={busy}
                 onClick={() => {
                   account.dismissNotice();
                   setDeleting(true);
                 }}
               >
-                Delete account
+                Delete account…
               </button>
-            </div>
-          </>
-        )
-      ) : (
-        <form
-          onSubmit={(event) => {
-            event.preventDefault();
-            void account.perform(
-              "signin",
-              async () => {
-                await accountApi("/api/auth/request", "POST", { email });
-              },
-              "Check your email for a sign-in link. It expires in 15 minutes. Check your spam folder if it does not arrive.",
-            );
-          }}
-        >
-          <p>
-            Import your public Letterboxd watchlist and choose an optional weekly screening email.
-          </p>
-          <fieldset disabled={!!account.busy}>
-            <label for="account-email">Email</label>
-            <input
-              data-initial-focus
-              id="account-email"
-              type="email"
-              autoComplete="email"
-              required
-              value={email}
-              onInput={(event) => setEmail(event.currentTarget.value)}
-            />
-            <button disabled={cooling && account.notice?.action === "signin"}>
-              {account.busy === "signin" ? "Sending link…" : "Send sign-in link"}
-            </button>
-          </fieldset>
-        </form>
+            </>
+          )}
+        </PreferenceSection>
       )}
-      {!account.loading && !deleting && (
-        <section aria-label="Favourite cinemas">
-          <h3>Favourite cinemas</h3>
-          <p>
-            {account.user
-              ? "Choose cinemas saved to your account."
-              : "Choose cinemas for this browser. Sign in to sync them to your account."}
-          </p>
-          <button aria-haspopup="dialog" disabled={!!account.busy} onClick={onManageCinemas}>
-            Manage my cinemas
-          </button>
-        </section>
-      )}
-    </Dialog>
+    </article>
   );
 }
 export function TokenPage({
@@ -461,7 +666,7 @@ export function TokenPage({
     </article>
   );
 }
-export function Privacy() {
+export function Privacy({ onNavigate }: { onNavigate: (path: string) => void }) {
   return (
     <article class="about-page">
       <h2>Privacy</h2>
@@ -501,15 +706,29 @@ export function Privacy() {
       </p>
       <p>
         Weekly screening emails are optional and off by default. Unsubscribe using a link in any
-        email or turn them off in Account. Delete account removes your account, sessions, watchlist
-        friendships, requests, saved screenings and alert history from the active database
-        immediately. Hosting providers may retain routine security logs or backups under their own
-        retention policies.
+        email or turn them off in{" "}
+        <PageLink href="/account#emails" onNavigate={onNavigate}>
+          Account
+        </PageLink>
+        . Delete account removes your account, sessions, watchlist friendships, requests, saved
+        screenings and alert history from the active database immediately. Hosting providers may
+        retain routine security logs or backups under their own retention policies.
       </p>
       <p>
-        To correct your data, change your username or email preferences in Account. You can sign out
-        or delete your account there at any time. Sign-in tokens expire after 15 minutes; expired
-        sessions and hashed request-limit records are removed by scheduled maintenance.
+        To correct your data, change your{" "}
+        <PageLink href="/account#profile" onNavigate={onNavigate}>
+          username
+        </PageLink>{" "}
+        or{" "}
+        <PageLink href="/account#emails" onNavigate={onNavigate}>
+          email preferences
+        </PageLink>{" "}
+        in Account. You can sign out in the sidebar or{" "}
+        <PageLink href="/account#delete" onNavigate={onNavigate}>
+          delete your account
+        </PageLink>{" "}
+        at any time. Sign-in tokens expire after 15 minutes; expired sessions and hashed
+        request-limit records are removed by scheduled maintenance.
       </p>
       <p>
         This is a personal, non-commercial service. For a privacy question,{" "}

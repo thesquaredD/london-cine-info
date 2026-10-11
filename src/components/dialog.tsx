@@ -7,7 +7,7 @@ export function Dialog({
   children,
   restoreTo,
   focusKey = "",
-  className = "account-dialog",
+  className = "modal-dialog",
 }: {
   className?: string;
   open: boolean;
@@ -62,7 +62,7 @@ export function Dialog({
           ×
         </button>
       </div>
-      <div class="account-dialog-body">{open && children}</div>
+      <div class="dialog-body">{open && children}</div>
     </dialog>
   );
 }

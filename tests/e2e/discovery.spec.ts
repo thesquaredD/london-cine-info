@@ -99,15 +99,15 @@ test("guest favourites use Account management and missing cinemas offer setup", 
     await page.getByRole("button", { name: "Toggle pages" }).click();
     await page
       .getByRole("dialog", { name: "Pages", exact: true })
-      .getByRole("button", { name: "Sign in", exact: true })
+      .getByRole("link", { name: "Sign in", exact: true })
       .click();
-  } else await page.locator(".desktop-sidebar .account-panel button").click();
-  const account = page.locator(".account-dialog");
-  await account.getByRole("button", { name: "Manage my cinemas", exact: true }).click();
+  } else await page.locator('.desktop-sidebar a[href="/account"]').click();
+  const account = page.getByRole("article", { name: "Sign in", exact: true });
+  await account.getByRole("button", { name: "Manage cinemas", exact: true }).click();
   await expect(dialog.getByRole("checkbox", { name: "BFI Southbank", exact: true })).toBeChecked();
   await expect(page.locator("dialog[open]")).toHaveCount(1);
   await dialog.getByRole("button", { name: "Close manage my cinemas", exact: true }).click();
-  await expect(account).toBeVisible();
+  await expect(account.getByRole("button", { name: "Manage cinemas", exact: true })).toBeFocused();
 });
 test("Radar shows explicit formats and global counts, themes fit 390px", async ({
   page,

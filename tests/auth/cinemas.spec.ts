@@ -13,24 +13,15 @@ async function login(page: Page, email: string) {
   expect(response.ok()).toBe(true);
 }
 async function manage(page: Page) {
-  const account = page.locator(".account-dialog");
-  if (!(await account.isVisible())) {
-    if (page.viewportSize()!.width < 800) {
-      await page.getByRole("button", { name: "Toggle pages" }).click();
-      await page
-        .getByRole("dialog", { name: "Pages", exact: true })
-        .getByRole("button", { name: /^(Sign in|Account)$/ })
-        .click();
-    } else await page.locator(".desktop-sidebar .account-panel button").click();
-  }
-  await expect(account).toBeVisible();
-  await account.getByRole("button", { name: "Manage my cinemas", exact: true }).click();
+  await page.goto("/account");
+  const account = page.getByRole("article", { name: /^(Sign in|Account)$/ });
+  await account.getByRole("button", { name: "Manage cinemas", exact: true }).click();
   const dialog = page.getByRole("dialog", { name: "Manage my cinemas", exact: true });
-  await expect(dialog.getByRole("button", { name: "Done", exact: true })).toBeEnabled();
-  await expect(account).toBeHidden();
+  await expect(dialog).toBeVisible();
   await expect(page.locator("dialog[open]")).toHaveCount(1);
   return dialog;
 }
+
 test("real favourite union, cross-device removal, failed save, sign-out and account isolation", async ({
   page,
   browser,
@@ -123,9 +114,12 @@ test("real favourite union, cross-device removal, failed save, sign-out and acco
     await dialog.getByRole("checkbox", { name: "BFI Southbank", exact: true }).uncheck();
     await expect(dialog.getByRole("status").filter({ hasText: /^Saved$/ })).toBeVisible();
     await dialog.getByRole("button", { name: "Done", exact: true }).click();
-    const account = page.locator(".account-dialog");
+    const account = page.getByRole("article", { name: "Account", exact: true });
     await expect(account).toBeVisible();
-    await account.getByRole("button", { name: "Close account", exact: true }).click();
+    await expect(
+      account.getByRole("button", { name: "Manage cinemas", exact: true }),
+    ).toBeFocused();
+    await page.goto("/");
     await expect(
       page
         .getByRole("group", { name: "Shortcuts" })

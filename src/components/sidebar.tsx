@@ -1,5 +1,6 @@
 import { FriendsButton } from "./friends";
-import { AccountPanel } from "./account";
+import { accountApi } from "../lib/account";
+import { PageLink } from "./page-link";
 import type { AccountState } from "../lib/account";
 import type { DataMeta } from "../shared/data";
 import { PAGES, defaultSort, viewUrl, hasCustomSort, type ViewState } from "../lib/catalogue";
@@ -8,20 +9,11 @@ type Props = {
   onSettings: () => void;
   onFriends: () => void;
   account: AccountState;
-  onAccount: () => void;
   state: ViewState;
   meta: DataMeta | null;
   onChange: (changes: Partial<ViewState>, push?: boolean) => void;
 };
-export function Sidebar({
-  state,
-  meta,
-  onChange,
-  account,
-  onAccount,
-  onSettings,
-  onFriends,
-}: Props) {
+export function Sidebar({ state, meta, onChange, account, onSettings, onFriends }: Props) {
   return (
     <div class="sidebar-content">
       <nav aria-label="Film pages">
@@ -75,7 +67,40 @@ export function Sidebar({
         ))}
       </nav>
       <h2 class="section-label">Preferences</h2>
-      <AccountPanel account={account} onOpen={onAccount} />
+      <nav class="preferences-nav" aria-label="Preferences">
+        <PageLink
+          href="/account"
+          aria-current={state.path === "/account" ? "page" : undefined}
+          onNavigate={() => onChange({ path: "/account", page: 1 }, true)}
+        >
+          {account.loading || account.user ? "Account" : "Sign in"}
+        </PageLink>
+        {account.user?.pending && (
+          <small class="account-import" role="status">
+            {account.user.sync?.state === "importing" ? "Importing watchlist…" : "Import queued…"}
+          </small>
+        )}
+        {account.user && (
+          <button
+            class="signout-button"
+            disabled={!!account.busy}
+            onClick={() =>
+              void account.perform(
+                "logout",
+                async () => {
+                  await accountApi("/api/auth/logout", "POST", {});
+                  account.clear();
+                  if (["/account", "/friends", "/watchlist", "/my-calendar"].includes(state.path))
+                    onChange({ path: "/", page: 1 }, true);
+                },
+                "You are signed out.",
+              )
+            }
+          >
+            {account.busy === "logout" ? "Signing out…" : "Sign out"}
+          </button>
+        )}
+      </nav>
       <button class="settings-button" aria-haspopup="dialog" onClick={onSettings}>
         Settings
       </button>
