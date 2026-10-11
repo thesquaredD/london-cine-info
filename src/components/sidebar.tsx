@@ -1,19 +1,45 @@
-import { FriendsButton } from "./friends";
+import { useFriendContext } from "../lib/friends";
+import type { ComponentChildren } from "preact";
 import { accountApi } from "../lib/account";
 import { PageLink } from "./page-link";
 import type { AccountState } from "../lib/account";
 import type { DataMeta } from "../shared/data";
 import { PAGES, defaultSort, viewUrl, hasCustomSort, type ViewState } from "../lib/catalogue";
 
+function NavLink({
+  path,
+  children,
+  className,
+  state,
+  onChange,
+}: {
+  path: string;
+  children: ComponentChildren;
+  className?: string;
+  state: ViewState;
+  onChange: (changes: Partial<ViewState>, push?: boolean) => void;
+}) {
+  return (
+    <PageLink
+      href={path}
+      class={className}
+      aria-current={state.path === path ? "page" : undefined}
+      onNavigate={() => onChange({ path, page: 1 }, true)}
+    >
+      {children}
+    </PageLink>
+  );
+}
 type Props = {
   onSettings: () => void;
-  onFriends: () => void;
   account: AccountState;
   state: ViewState;
   meta: DataMeta | null;
   onChange: (changes: Partial<ViewState>, push?: boolean) => void;
 };
-export function Sidebar({ state, meta, onChange, account, onSettings, onFriends }: Props) {
+export function Sidebar({ state, meta, onChange, account, onSettings }: Props) {
+  const friends = useFriendContext();
+  const count = friends?.pendingIncoming ?? 0;
   return (
     <div class="sidebar-content">
       <nav aria-label="Film pages">
@@ -62,19 +88,29 @@ export function Sidebar({ state, meta, onChange, account, onSettings, onFriends 
                 </a>
               ))}
             </div>
-            {group === "For you" && <FriendsButton onOpen={onFriends} />}
+            {group === "For you" && friends && (
+              <div>
+                <NavLink state={state} onChange={onChange} path="/friends" className="friends-link">
+                  Friends
+                  {count > 0 && (
+                    <span
+                      class="nav-badge"
+                      aria-label={`${count} friend request${count === 1 ? "" : "s"}`}
+                    >
+                      {count > 9 ? "9+" : count}
+                    </span>
+                  )}
+                </NavLink>
+              </div>
+            )}
           </section>
         ))}
       </nav>
       <h2 class="section-label">Preferences</h2>
       <nav class="preferences-nav" aria-label="Preferences">
-        <PageLink
-          href="/account"
-          aria-current={state.path === "/account" ? "page" : undefined}
-          onNavigate={() => onChange({ path: "/account", page: 1 }, true)}
-        >
+        <NavLink state={state} onChange={onChange} path="/account">
           {account.loading || account.user ? "Account" : "Sign in"}
-        </PageLink>
+        </NavLink>
         {account.user?.pending && (
           <small class="account-import" role="status">
             {account.user.sync?.state === "importing" ? "Importing watchlist…" : "Import queued…"}
@@ -105,32 +141,17 @@ export function Sidebar({ state, meta, onChange, account, onSettings, onFriends 
         Settings
       </button>
       <div class="sidebar-bottom">
-        <a
-          class="about-link"
-          href="/about"
-          aria-current={state.path === "/about" ? "page" : undefined}
-          onClick={(event) => {
-            if (event.button || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)
-              return;
-            event.preventDefault();
-            onChange({ path: "/about", page: 1 }, true);
-          }}
-        >
+        <NavLink state={state} onChange={onChange} path="/about" className="about-link">
           About & sources
-        </a>
-        <a
-          class="about-link privacy-link"
-          href="/privacy"
-          aria-current={state.path === "/privacy" ? "page" : undefined}
-          onClick={(event) => {
-            if (event.button || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)
-              return;
-            event.preventDefault();
-            onChange({ path: "/privacy", page: 1 }, true);
-          }}
+        </NavLink>
+        <NavLink
+          state={state}
+          onChange={onChange}
+          path="/privacy"
+          className="about-link privacy-link"
         >
           Privacy
-        </a>
+        </NavLink>
         {meta && (
           <p class="update-note">
             Updated{" "}

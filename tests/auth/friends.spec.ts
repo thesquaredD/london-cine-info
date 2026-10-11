@@ -23,21 +23,10 @@ async function login(page: Page, email: string) {
   return (await (await page.request.get("/api/me")).json()).user;
 }
 async function openFriends(page: Page) {
-  if (page.viewportSize()!.width < 800) {
-    await page.getByRole("button", { name: "Toggle pages" }).click();
-    await page
-      .locator(".sidebar-drawer")
-      .getByRole("button", { name: /^Friends/ })
-      .click();
-  } else
-    await page
-      .locator(".desktop-sidebar")
-      .getByRole("button", { name: /^Friends/ })
-      .click();
-  const dialog = page.getByRole("dialog", { name: "Find a film together", exact: true });
-  await dialog.getByRole("button", { name: "Keep friends for next time", exact: true }).click();
-  await expect(dialog).toBeVisible();
-  return dialog;
+  await page.goto("/friends");
+  const friends = page.getByRole("article", { name: "Friends", exact: true });
+  await expect(friends).toBeVisible();
+  return friends;
 }
 async function watchlistsButton(page: Page) {
   await page.getByRole("button", { name: /^Filters(?:\s|$)/ }).click();
@@ -115,7 +104,7 @@ test("real friendship lifecycle, 500-friend search and filters, guest comparison
     dialog = await openFriends(page);
     await dialog.getByRole("button", { name: "Accept", exact: true }).click();
     await expect(dialog.getByRole("status")).toContainText("now friends");
-    await dialog.getByRole("button", { name: "Close find a film together", exact: true }).click();
+    await page.goto("/");
     const timestamp = Math.floor(Date.now() / 1000);
     const quote = sqlQuote;
     const statements: string[] = [];
@@ -159,7 +148,7 @@ test("real friendship lifecycle, 500-friend search and filters, guest comparison
     await dialog.getByLabel("Search friends", { exact: true }).fill("");
     await dialog.getByRole("button", { name: "Next", exact: true }).click();
     await expect(dialog.getByText("2 / 84", { exact: true })).toBeVisible();
-    await dialog.getByRole("button", { name: "Close find a film together", exact: true }).click();
+    await page.goto("/");
     await (await watchlistsButton(page)).click();
     const lists = page.getByRole("dialog", { name: "Watchlists", exact: true });
     expect(await lists.locator(".watchlist-option").count()).toBeLessThanOrEqual(8);
@@ -221,7 +210,7 @@ test("real friendship lifecycle, 500-friend search and filters, guest comparison
     await expect(page.locator(".watchlist-selections")).toHaveCount(0);
     dialog = await openFriends(page);
     await expect(dialog.getByRole("heading", { name: "Your friends · 0" })).toBeVisible();
-    await dialog.getByRole("button", { name: "Close find a film together", exact: true }).click();
+    await page.goto("/");
     expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(
       false,
     );

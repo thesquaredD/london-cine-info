@@ -80,10 +80,10 @@ test("guest planning intersects two public lists without an account or friend re
   await page.goto("/");
   if (page.viewportSize()!.width < 800) await page.locator(".menu-button").click();
   await page
-    .getByRole("button", { name: /^Friends/ })
+    .getByRole("link", { name: /^Friends/ })
     .filter({ visible: true })
     .click();
-  const plan = page.getByRole("dialog", { name: "Find a film together", exact: true });
+  const plan = page.getByRole("article", { name: "Friends", exact: true });
   await plan.getByPlaceholder("e.g. alex_films").fill("alex_films");
   await plan.getByPlaceholder("e.g. zoe_films").fill("zoe_films");
   await plan.getByRole("button", { name: "Find films in common", exact: true }).click();

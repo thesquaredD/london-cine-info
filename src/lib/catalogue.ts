@@ -111,6 +111,7 @@ export function readView(url: URL): ViewState {
   const path = [
     ...PAGES.map((page) => page.path),
     "/account",
+    "/friends",
     "/about",
     "/privacy",
     "/auth/verify",

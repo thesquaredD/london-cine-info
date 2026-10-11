@@ -88,7 +88,8 @@ export function useFriendsModel(
     null,
   );
   const [matches, setMatches] = useState<{ id: string; items: FriendMatch[] } | null>(null);
-  const [panel, setPanel] = useState<"friends" | "watchlists" | null>(null);
+  const [panel, setPanel] = useState<"watchlists" | null>(null);
+  const [watching, setWatching] = useState(false);
   const [loading, setLoading] = useState(false),
     [busy, setBusy] = useState(false),
     [listLoading, setListLoading] = useState(false),
@@ -211,12 +212,12 @@ export function useFriendsModel(
       if (!document.hidden && !mutation.current) void reload();
     };
     window.addEventListener("focus", refresh);
-    const interval = panel === "friends" ? window.setInterval(refresh, 30000) : null;
+    const interval = watching ? window.setInterval(refresh, 30000) : null;
     return () => {
       window.removeEventListener("focus", refresh);
       if (interval) window.clearInterval(interval);
     };
-  }, [panel, reload]);
+  }, [watching, reload]);
   const selectedIds = choices.selected
     .filter((s) => s.startsWith("f:"))
     .map((s) => s.slice(2))
@@ -510,6 +511,10 @@ export function useFriendsModel(
     accepted,
     panel,
     setPanel,
+    setWatching,
+    pendingIncoming: value.friends.filter(
+      (f) => f.status === "pending" && f.direction === "incoming",
+    ).length,
     loading,
     busy,
     listLoading,

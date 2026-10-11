@@ -197,14 +197,6 @@
   display: grid;
   gap: 8px;
 }
-:root .social-manage-toggle {
-  margin-top: 16px;
-  padding: 8px 0;
-  background: transparent;
-  border: 0;
-  text-decoration: underline;
-  font-size: 15px;
-}
 :root .social-plan > p {
   margin: 0 0 16px;
 }
@@ -379,7 +371,7 @@
 :root .film-about > summary::-webkit-details-marker {
   display: none;
 }
-:root .sidebar-content :is(.settings-button, .friends-button) {
+:root .sidebar-content .settings-button {
   background: transparent;
   border: 0;
   box-shadow: none;
@@ -388,7 +380,7 @@
   min-height: 44px;
   text-align: left;
 }
-:root .sidebar-content :is(.settings-button, .friends-button):hover {
+:root .sidebar-content .settings-button:hover {
   background: var(--shade);
 }
 @media (max-width: 799px) {
