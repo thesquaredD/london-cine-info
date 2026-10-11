@@ -32,7 +32,7 @@ import {
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { useAccount } from "./lib/account";
 import {
-  AccountDialogs,
+  AccountPage,
   AccountFeedback,
   ImportStatus,
   Privacy,
@@ -40,6 +40,7 @@ import {
   TokenPage,
 } from "./components/account";
 import { letterboxdSlug } from "./shared/account";
+import { PageLink } from "./components/page-link";
 import { Sidebar } from "./components/sidebar";
 import { FilterBar } from "./components/filter-bar";
 import { FilmTable } from "./components/film-table";
@@ -226,7 +227,6 @@ export function App() {
     change({ film: key ?? undefined }, true);
   }
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [accountOpen, setAccountOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const drawer = useRef<HTMLDialogElement>(null);
   const meta = catalogue?.meta ?? null;
@@ -234,9 +234,12 @@ export function App() {
   const yearDecades = useMemo(() => catalogueDecades(catalogue?.films ?? []), [catalogue]);
   const pageTitle =
     PAGES.find((page) => page.path === state.path)?.name ??
-    { "/privacy": "Privacy", "/auth/verify": "Sign in", "/unsubscribe": "Unsubscribe" }[
-      state.path
-    ] ??
+    {
+      "/account": "Account",
+      "/privacy": "Privacy",
+      "/auth/verify": "Sign in",
+      "/unsubscribe": "Unsubscribe",
+    }[state.path] ??
     "About";
   const hasActiveChoices = Boolean(
     friends.choices.selected.length ||
@@ -262,7 +265,6 @@ export function App() {
     [catalogue, watched],
   );
   const myCinemasUnavailable = myCinemasActive && !cinemas.venues.length;
-  const returnToAccount = useRef(false);
   const baseFilms = useMemo(
     () =>
       (myCinemasUnavailable ? [] : (catalogue?.films ?? [])).filter((film) =>
@@ -448,10 +450,11 @@ export function App() {
       else window.history.replaceState(null, "", url);
     }
     setState(next);
-    if (navigates) {
+    if (changes.path !== undefined) {
+      if (drawer.current?.open) drawer.current.close();
       setDrawerOpen(false);
-      window.scrollTo({ top: 0 });
     }
+    if (navigates) window.scrollTo({ top: 0 });
   }
   useEffect(() => {
     const controller = new AbortController();
@@ -474,6 +477,9 @@ export function App() {
     window.addEventListener("popstate", onPop);
     return () => window.removeEventListener("popstate", onPop);
   }, []);
+  useEffect(() => {
+    if (state.path === "/account") capture("account_opened");
+  }, [state.path]);
   useEffect(() => {
     document.title = `${pageTitle} — London Ciné Info`;
   }, [pageTitle]);
@@ -521,15 +527,11 @@ export function App() {
       (account.user && account.watchlist?.fetchedAt && !account.error))
       ? recoverySuggestions(baseFilms, catalogue.meta, state, now)
       : [];
-  function openCinemas(fromAccount = false) {
-    returnToAccount.current = fromAccount;
-    document.querySelector<HTMLDialogElement>(".account-dialog")?.close();
-    setAccountOpen(false);
+  function openCinemas() {
     setCinemasOpen(true);
   }
   function closeCinemas() {
     setCinemasOpen(false);
-    if (returnToAccount.current) setAccountOpen(true);
   }
   function openScreeningCalendar(event: CalendarInput) {
     calendar.dismiss();
@@ -544,13 +546,17 @@ export function App() {
     setDrawerOpen(false);
     setSettingsOpen(true);
   }
-  function openAccount() {
-    capture("account_opened");
+  function goToAccount() {
     closeScreeningCalendar();
-    // The phone drawer is itself a modal dialog; close it first so dialogs never nest.
-    if (drawer.current?.open) drawer.current.close();
-    setDrawerOpen(false);
-    setAccountOpen(true);
+    navigateTo("/account");
+  }
+  function navigateTo(path: string) {
+    const url = new URL(path, location.origin);
+    change({ path: url.pathname, page: 1, director: "" }, true);
+    if (url.hash) {
+      history.replaceState(null, "", `${location.pathname}${location.search}${url.hash}`);
+      window.dispatchEvent(new HashChangeEvent("hashchange"));
+    }
   }
   const phone = () => window.matchMedia("(max-width: 799px)").matches;
   const sidebarProps = {
@@ -562,7 +568,6 @@ export function App() {
     },
     onSettings: openSettings,
     account,
-    onAccount: openAccount,
     meta,
     onChange: change,
   };
@@ -612,10 +617,13 @@ export function App() {
         </dialog>
         <main class="main-column" id="main-content">
           <FriendsDialogs
-            onAccount={openAccount}
+            onAccount={(path) => {
+              closeScreeningCalendar();
+              navigateTo(path ?? "/account");
+            }}
             onNavigate={() => change({ path: "/", watchlist: false, page: 1 }, true)}
           />
-          {!friends.panel && <FriendsFeedback />}
+          {!friends.panel && state.path !== "/account" && <FriendsFeedback />}
           <header class="masthead">
             <button
               class="menu-button"
@@ -679,19 +687,6 @@ export function App() {
             />
             {displayError && <p role="status">{displayError}</p>}
           </Dialog>
-          <AccountDialogs
-            account={account}
-            open={accountOpen}
-            matches={watchlistMatches}
-            onManageCinemas={() => openCinemas(true)}
-            onClose={() => setAccountOpen(false)}
-            onNavigate={(path) => change({ path, page: 1, director: "" }, true)}
-            restoreTo={() =>
-              document.querySelector<HTMLElement>(
-                phone() ? ".menu-button" : ".desktop-sidebar .account-panel button",
-              )
-            }
-          />
           {meta && (
             <>
               <MyCinemas cinemas={cinemas} meta={meta} open={cinemasOpen} onClose={closeCinemas} />
@@ -719,13 +714,13 @@ export function App() {
             calendar={calendar}
             account={account}
             onClose={() => setCalendarEvent(null)}
-            onAccount={openAccount}
+            onAccount={goToAccount}
             onNavigate={() => {
               closeScreeningCalendar();
               change({ path: "/my-calendar", page: 1 }, true);
             }}
           />
-          {!accountOpen && (
+          {state.path !== "/account" && (
             <div class="page-notices">
               <AccountFeedback
                 account={account}
@@ -737,8 +732,17 @@ export function App() {
               />
             </div>
           )}
-          {state.path === "/privacy" ? (
-            <Privacy />
+          {state.path === "/account" ? (
+            <AccountPage
+              account={account}
+              matches={watchlistMatches}
+              cinemas={cinemas}
+              meta={meta}
+              onManageCinemas={openCinemas}
+              onNavigate={navigateTo}
+            />
+          ) : state.path === "/privacy" ? (
+            <Privacy onNavigate={navigateTo} />
           ) : state.path === "/auth/verify" ? (
             <TokenPage kind="verify" onSignedIn={account.reload} />
           ) : state.path === "/unsubscribe" ? (
@@ -758,7 +762,7 @@ export function App() {
                   }),
                 }}
                 account={account}
-                onAccount={openAccount}
+                onAccount={goToAccount}
                 now={now}
               />
             </>
@@ -775,9 +779,9 @@ export function App() {
                       Sign in to view your watchlist, or clear the My watchlist filter to browse all
                       films.
                     </p>
-                    <button aria-haspopup="dialog" onClick={openAccount}>
+                    <PageLink href="/account" onNavigate={goToAccount}>
                       Sign in
-                    </button>
+                    </PageLink>
                   </div>
                 )}
               {state.path === "/watchlist" && (
@@ -792,25 +796,25 @@ export function App() {
                   ) : !account.user ? (
                     <>
                       <p>Sign in to import your public Letterboxd watchlist.</p>
-                      <button aria-haspopup="dialog" onClick={openAccount}>
+                      <PageLink href="/account" onNavigate={goToAccount}>
                         Sign in
-                      </button>
+                      </PageLink>
                     </>
                   ) : !account.user.username ? (
                     <>
                       <p>Set your Letterboxd username to import your public watchlist.</p>
-                      <button aria-haspopup="dialog" onClick={openAccount}>
+                      <PageLink href="/account" onNavigate={goToAccount}>
                         Open account
-                      </button>
+                      </PageLink>
                     </>
                   ) : (
                     <>
                       <ImportStatus account={account} matches={watchlistMatches} />
                       <div class="account-actions">
                         <RefreshButton account={account} />
-                        <button aria-haspopup="dialog" onClick={openAccount}>
+                        <PageLink href="/account" onNavigate={goToAccount}>
                           Account
-                        </button>
+                        </PageLink>
                       </div>
                     </>
                   )}

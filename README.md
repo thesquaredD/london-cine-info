@@ -268,7 +268,9 @@ Replay calendar account verification with
 `npm run e2e:accounts -- tests/auth/calendar.spec.ts` after the fixture build.
 The code/flow UX review and remaining decisions are in [docs/UX_REVIEW.md](docs/UX_REVIEW.md).
 
-Display preferences now open in a **Settings** modal from the sidebar/Pages menu.
+Account preferences live on the **Account** page (`/account`), with separate
+Profile and Emails forms and Sign out in the sidebar. Display preferences open
+in a **Settings** modal from the sidebar/Pages menu.
 The cinema chooser keeps selected cinemas at the top with individual remove
 buttons, independent of its search, and aligns native checkboxes with their labels.
 

@@ -159,7 +159,7 @@ export function MyCinemas({
       onClose={onClose}
       restoreTo={() =>
         document.querySelector<HTMLElement>(".empty-state button") ??
-        document.querySelector<HTMLElement>(".desktop-sidebar .account-panel button") ??
+        document.querySelector<HTMLElement>("#cinemas button") ??
         document.querySelector<HTMLElement>(".menu-button")
       }
     >

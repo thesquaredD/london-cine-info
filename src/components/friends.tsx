@@ -1,4 +1,5 @@
 import { useEffect, useState } from "preact/hooks";
+import { PageLink } from "./page-link";
 import { Dialog } from "./dialog";
 import { useFriendContext } from "../lib/friends";
 import { letterboxdSlug } from "../shared/account";
@@ -130,7 +131,7 @@ export function FriendsDialogs({
   onAccount,
 }: {
   onNavigate: () => void;
-  onAccount: () => void;
+  onAccount: (path?: string) => void;
 }) {
   const m = useFriendContext();
   const [ownHandle, setOwnHandle] = useState("");
@@ -139,14 +140,10 @@ export function FriendsDialogs({
   const [planningError, setPlanningError] = useState("");
   const [manageFriends, setManageFriends] = useState(false);
   const [handle, setHandle] = useState(""),
-    [username, setUsername] = useState(""),
     [query, setQuery] = useState(""),
     [page, setPage] = useState(1),
     [addList, setAddList] = useState(false),
     [remove, setRemove] = useState<Friend | null>(null);
-  useEffect(() => {
-    setUsername(m?.value.appUsername ?? "");
-  }, [m?.value.appUsername]);
   useEffect(() => {
     setHandle("");
     setOwnHandle(m?.account.user?.username ?? "");
@@ -346,34 +343,18 @@ export function FriendsDialogs({
         </>
       ) : m.panel === "friends" ? (
         <>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              void m.perform(
-                "/api/friends/profile",
-                "PUT",
-                { username: normalizeUsername(username) },
-                "Your app username was saved.",
-              );
-            }}
-          >
-            <label for="app-username">Your app username</label>
-            <div class="social-input-row">
-              <input
-                id="app-username"
-                value={username}
-                maxLength={30}
-                placeholder="Choose a unique username"
-                onInput={(e) => setUsername(e.currentTarget.value)}
-              />
-              <button
-                disabled={m.busy || normalizeUsername(username) === (m.value.appUsername ?? "")}
-              >
-                Save username
-              </button>
-            </div>
-            <p class="filter-hint">Separate from Letterboxd. Friends use this to find you.</p>
-          </form>
+          <p>
+            <PageLink
+              href="/account#profile"
+              onNavigate={(path) => {
+                close();
+                onAccount(path);
+              }}
+            >
+              Change your app username in Account
+            </PageLink>
+            .
+          </p>
           <p class="social-intro">
             Accepted friends can filter films by your watchlist and see what you have in common.
           </p>
@@ -487,28 +468,6 @@ export function FriendsDialogs({
             m.value.friends.filter((f) => f.status === "pending" && f.direction === "outgoing"),
             "outgoing",
           )}
-          <section class="social-section">
-            <label>
-              <input
-                type="checkbox"
-                checked={m.value.friendsDigest}
-                disabled={m.busy || !m.value.appUsername}
-                onChange={(e) =>
-                  void m.perform(
-                    "/api/friends/profile",
-                    "PUT",
-                    { friendsDigest: e.currentTarget.checked },
-                    "Email preference saved.",
-                  )
-                }
-              />{" "}
-              Include films in common in my weekly email
-            </label>
-            <p class="filter-hint">
-              Accepted friends only. Temporary Letterboxd lists are never included. Choose the
-              weekly email day in Account.
-            </p>
-          </section>
         </>
       ) : (
         <>

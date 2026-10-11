@@ -114,6 +114,10 @@ it("puts all-sold-out films and overflow in the compact list with eight cards", 
   expect(result.also[0]!.slug).toBe("sold");
   expect(result.count).toBe(11);
   const html = digestHtml(result, venues, "https://example.com", "https://example.com/unsubscribe");
+  expect(html).toContain('href="https://example.com/account#emails"');
+  expect(
+    digestText(result, venues, "https://example.com", "https://example.com/unsubscribe"),
+  ).toContain("Change the day: https://example.com/account#emails");
   expect(html).toContain("Also in the next ten days");
   expect(html).toContain("Sold out");
   expect(html).toContain('width="28"');

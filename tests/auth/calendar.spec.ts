@@ -62,6 +62,14 @@ test("screening export, saved calendar persistence, failure recovery, removal an
   expect(guestFile).toContain("BEGIN:VEVENT");
   expect(guestFile).toContain("SUMMARY:Fixture Classic A");
   expect(guestFile).toMatch(/DTSTART:\d{8}T\d{6}Z/);
+  await dialog.getByRole("button", { name: "Sign in to save", exact: true }).click();
+  await expect(page).toHaveURL("/account");
+  await expect(
+    page
+      .getByRole("article", { name: "Sign in", exact: true })
+      .getByLabel("Email", { exact: true }),
+  ).toBeVisible();
+  await expect(page.locator("dialog[open]")).toHaveCount(0);
   const email = `calendar-${info.project.name}-${Date.now()}@example.com`;
   await login(page, email);
   dialog = await screening(page);

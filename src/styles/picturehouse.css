@@ -33,11 +33,6 @@
 :root .sidebar-content nav section + section {
   margin-top: 12px;
 }
-:root .account-panel {
-  border: 0;
-  padding: 6px 12px;
-}
-:root .account-panel > button,
 :root .settings-button,
 :root .friends-button,
 :root .theme-button {
@@ -47,9 +42,6 @@
   justify-content: start;
   font-size: 12px;
   padding: 7px 12px;
-}
-:root .account-panel > button {
-  padding-left: 0;
 }
 :root .sidebar-bottom {
   padding: 8px 12px;
@@ -1021,7 +1013,7 @@ html {
   :root .showtime-day li {
     grid-template-columns: 58px 4px minmax(0, 1fr);
   }
-  :root .sidebar-drawer :is(.account-panel > button, .settings-button) {
+  :root .sidebar-drawer :is(.preferences-nav a, .signout-button, .settings-button) {
     font-size: 16px;
     min-height: 44px;
   }

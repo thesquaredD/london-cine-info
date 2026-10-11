@@ -173,7 +173,7 @@ export function useAccount() {
       setNotice(null);
       try {
         await work();
-        setNotice({ kind: "success", message });
+        setNotice({ kind: "success", action: name, message });
         return true;
       } catch (failure) {
         if (failure instanceof AccountError && failure.status === 401) clear();

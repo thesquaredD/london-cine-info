@@ -179,3 +179,42 @@ test("sends real Web Vitals and page-leave measurements through the proxy", asyn
   ).toBe(false);
   expect(directRequests).toEqual([]);
 });
+
+test("account_opened tracks the page on direct load, sidebar navigation and history", async ({
+  page,
+}) => {
+  const events = await intercept(page);
+  await page.goto("/account");
+  await expect
+    .poll(() => events.filter((event) => event.event === "account_opened").length)
+    .toBe(1);
+  await page
+    .getByRole("article", { name: "Sign in", exact: true })
+    .getByLabel("Email", { exact: true })
+    .fill("unsent@example.com");
+  await page.goto("/");
+  if (page.viewportSize()!.width < 800)
+    await page.getByRole("button", { name: "Toggle pages", exact: true }).click();
+  await page.getByRole("link", { name: "Sign in", exact: true }).filter({ visible: true }).click();
+  await expect(page).toHaveURL("/account");
+  await expect
+    .poll(() => events.filter((event) => event.event === "account_opened").length)
+    .toBe(2);
+  await expect(page.locator("dialog[open]")).toHaveCount(0);
+  await page.goBack();
+  await page.goForward();
+  await expect
+    .poll(() => events.filter((event) => event.event === "account_opened").length)
+    .toBe(3);
+  const accountViews = events.filter((event) => event.event === "account_opened");
+  for (const view of accountViews)
+    expect(view.properties).toMatchObject({
+      path: "/account",
+      $pathname: "/account",
+      $current_url: "https://london-cine.info/account",
+    });
+  expect(
+    events.filter((event) => event.event === "$pageview").map((event) => event.properties.path),
+  ).toEqual(["/account", "/", "/account", "/", "/account"]);
+  expect(JSON.stringify(events)).not.toContain("unsent@example.com");
+});

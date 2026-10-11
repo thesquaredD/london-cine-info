@@ -84,11 +84,13 @@ test("real friendship lifecycle, 500-friend search and filters, guest comparison
   await expect(
     page.locator(".all-filters, .watchlists-trigger").filter({ visible: true }).first(),
   ).toBeVisible();
-  let dialog = await openFriends(page);
-  await dialog.getByLabel("Your app username").fill(`owner_${suffix}`);
-  await dialog.getByRole("button", { name: "Save username" }).click();
-  await expect(dialog.getByRole("status")).toContainText("username was saved");
-  await dialog.getByRole("button", { name: "Close find a film together", exact: true }).click();
+  await page.goto("/account");
+  const account = page.getByRole("article", { name: "Account", exact: true });
+  await account.getByLabel("App username", { exact: true }).fill(`owner_${suffix}`);
+  await account.getByRole("button", { name: "Save profile" }).click();
+  await expect(account.getByRole("status").filter({ hasText: "Profile saved." })).toBeVisible();
+  await page.goto("/");
+  let dialog: ReturnType<Page["getByRole"]>;
   const peerContext = await browser.newContext({ baseURL: origin, viewport: page.viewportSize()! });
   const peer = await peerContext.newPage();
   try {

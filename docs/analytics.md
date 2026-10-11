@@ -96,3 +96,5 @@ workflow applies migrations). After deployment, check Live events for a pageview
 sign-in, successful watchlist import and shared watchlist use, then confirm all dashboard queries
 render and exclude `environment=test`. Set `POSTHOG_ENABLED=false` to stop server/import tracking;
 remove/disable browser initialization to stop browser tracking.
+
+`account_opened` fires when the Account page (`/account`) is viewed, including direct loads and browser history navigation. The event name is unchanged.

@@ -48,3 +48,7 @@ suppress these animations. Existing populated cinema results remain visible
 during background preference reloads.
 
 10 October 2026: The shortcut rows and phone shortcut dialog above are superseded by the quiet, personalised shortcut strip. Search and Filters share one row; date and applicable personal shortcuts wrap beneath it. Next week and Under 2 hours remain in the Filters sheet. Implementation follows `docs/filter-strip-plan.md`.
+
+## 11 October 2026 — account pages
+
+[Account, Friends and Settings plan](account-pages-plan.md) moves these preferences into pages in three sequential PRs. Account now lives on `/account`; Friends and Settings follow after its review.

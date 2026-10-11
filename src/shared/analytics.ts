@@ -173,6 +173,7 @@ const paths = new Set([
   "/watchlist",
   "/my-calendar",
   "/radar",
+  "/account",
   "/about",
   "/privacy",
   "/auth/verify",

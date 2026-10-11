@@ -110,6 +110,7 @@ export function readView(url: URL): ViewState {
   const sort = url.searchParams.get("sort");
   const path = [
     ...PAGES.map((page) => page.path),
+    "/account",
     "/about",
     "/privacy",
     "/auth/verify",

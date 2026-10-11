@@ -379,10 +379,7 @@
 :root .film-about > summary::-webkit-details-marker {
   display: none;
 }
-:root .sidebar-content .account-panel {
-  padding: 0;
-}
-:root .sidebar-content :is(.account-panel > button, .settings-button, .friends-button) {
+:root .sidebar-content :is(.settings-button, .friends-button) {
   background: transparent;
   border: 0;
   box-shadow: none;
@@ -391,7 +388,7 @@
   min-height: 44px;
   text-align: left;
 }
-:root .sidebar-content :is(.account-panel > button, .settings-button, .friends-button):hover {
+:root .sidebar-content :is(.settings-button, .friends-button):hover {
   background: var(--shade);
 }
 @media (max-width: 799px) {
