@@ -206,5 +206,15 @@ test("account_opened tracks the page on direct load, sidebar navigation and hist
   await expect
     .poll(() => events.filter((event) => event.event === "account_opened").length)
     .toBe(3);
+  const accountViews = events.filter((event) => event.event === "account_opened");
+  for (const view of accountViews)
+    expect(view.properties).toMatchObject({
+      path: "/account",
+      $pathname: "/account",
+      $current_url: "https://london-cine.info/account",
+    });
+  expect(
+    events.filter((event) => event.event === "$pageview").map((event) => event.properties.path),
+  ).toEqual(["/account", "/", "/account", "/", "/account"]);
   expect(JSON.stringify(events)).not.toContain("unsent@example.com");
 });

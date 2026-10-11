@@ -1557,9 +1557,6 @@ h3 {
   color: var(--muted);
   font-size: 13px;
 }
-.account-email {
-  font-weight: 500;
-}
 .account-actions {
   display: flex;
   flex-wrap: wrap;
