@@ -1,0 +1,7 @@
+{
+  "id": "feedback-form-layout",
+  "type": "improved",
+  "title": "A simpler feedback form",
+  "body": "Start with your message, choose a topic if you want, and add an email only if you would like a reply. The form shows what accompanies your feedback beside the sending options.",
+  "visibility": "public"
+}

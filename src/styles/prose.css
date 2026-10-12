@@ -292,3 +292,42 @@
     align-items: center;
   }
 }
+
+/* Feedback shares the article scale without inheriting page padding. */
+.feedback-form {
+  font-size: var(--prose-body);
+  line-height: var(--prose-leading);
+}
+.feedback-form,
+.feedback-fields {
+  gap: var(--prose-gap);
+}
+.feedback-form label {
+  gap: 6px;
+}
+.feedback-topics legend {
+  margin-bottom: 8px;
+}
+.dialog-body .feedback-context-line,
+.feedback-form details,
+.feedback-form .feedback-muted {
+  font-size: var(--prose-small);
+  line-height: var(--prose-leading);
+}
+.dialog-body .feedback-form p {
+  margin: 0;
+}
+.dialog-body .feedback-form .prose-footer p {
+  font-size: var(--prose-small);
+}
+@media (max-width: 799px) {
+  .feedback-form :is(input, textarea) {
+    font-size: var(--prose-body);
+  }
+  .feedback-phone-row .feedback-entry {
+    font-size: var(--prose-body);
+  }
+  :root .sidebar-bottom .feedback-entry {
+    font-size: 18px;
+  }
+}

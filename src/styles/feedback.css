@@ -44,22 +44,20 @@
   gap: 4px 20px;
 }
 
-/* The form */
-.feedback-form {
-  display: grid;
-  gap: 14px;
+/* Layout and control appearance; all reading scale lives in prose.css. */
+:root .feedback-dialog {
+  width: min(640px, calc(100vw - 32px));
 }
+.feedback-fields,
 .feedback-form label {
   display: grid;
-  gap: 6px;
-}
-.feedback-form label .feedback-muted {
-  font-weight: 400;
+  gap: var(--prose-gap);
+  min-width: 0;
 }
 .feedback-form textarea {
   width: 100%;
   min-width: 0;
-  padding: 7px 8px;
+  padding: 10px 12px;
   color: inherit;
   font: inherit;
   background: var(--panel);
@@ -70,31 +68,37 @@
 .feedback-muted {
   color: var(--muted);
 }
-.dialog-body .feedback-form p.feedback-muted {
-  font-size: 13px;
-}
-.feedback-form details {
-  color: var(--muted);
-  font-size: 13px;
-}
-.feedback-form summary {
-  min-height: 32px;
-  cursor: pointer;
-}
-.feedback-context {
-  display: grid;
-  gap: 2px;
-  margin: 6px 0 8px;
-}
-.feedback-context div {
-  display: grid;
-  grid-template-columns: 9em 1fr;
+.feedback-topics > div {
+  display: flex;
+  flex-wrap: wrap;
   gap: 8px;
 }
-.feedback-context dd {
+:root dialog.feedback-dialog .feedback-topics button {
+  min-height: 36px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+}
+:root dialog.feedback-dialog .feedback-topics button[aria-pressed="true"] {
+  background: var(--fg);
+  color: var(--bg);
+}
+.feedback-form .feedback-reply {
+  display: grid;
+  gap: var(--prose-gap);
+  justify-content: stretch;
   margin: 0;
-  color: var(--fg);
-  overflow-wrap: anywhere;
+}
+.feedback-form .feedback-reply > label:first-child {
+  display: flex;
+}
+.feedback-reply .feedback-email {
+  width: 100%;
+}
+.feedback-form summary {
+  cursor: pointer;
+  min-height: 44px;
 }
 .feedback-problem {
   padding-left: 10px;
@@ -106,17 +110,16 @@
   align-items: center;
   gap: 8px 16px;
 }
-.feedback-actions {
-  display: flex;
-  justify-content: flex-end;
-}
-.feedback-primary {
+:root dialog.feedback-dialog button.feedback-primary {
+  min-height: 44px;
   padding: 9px 18px;
   color: var(--active-fg);
   background: var(--active-bg);
   border: 0;
 }
-
+.feedback-dialog .prose-footer {
+  margin: 8px -16px -16px;
+}
 @media (max-width: 799px) {
   .feedback-phone-row {
     display: flex;
@@ -126,30 +129,34 @@
   .feedback-phone-row .feedback-entry,
   .feedback-link,
   .feedback-fallback :is(a, button),
-  .feedback-primary,
-  .feedback-form summary {
+  :root dialog.feedback-dialog .feedback-topics button {
     min-height: 44px;
-  }
-  .feedback-phone-row .feedback-entry {
-    font-size: 15px;
   }
   :root .sidebar-bottom .feedback-entry {
     min-height: 44px;
-    font-size: 18px;
   }
-  /* 16px+ stops iOS zooming into the fields. */
-  .feedback-form :is(input, select, textarea) {
-    font-size: 16px;
+  :root .feedback-dialog {
+    width: 100%;
+    border-radius: 12px 12px 0 0;
+    padding-bottom: 0;
+  }
+  .feedback-dialog .sheet-heading button {
+    min-width: 44px;
+    min-height: 44px;
   }
   .feedback-fallback a {
     display: inline-flex;
     align-items: center;
   }
-  .feedback-context div {
-    grid-template-columns: 1fr;
-    gap: 0;
-  }
-  .feedback-dialog .dialog-body {
+  .feedback-dialog .prose-footer {
     padding-bottom: calc(16px + env(safe-area-inset-bottom));
+  }
+  .feedback-dialog .prose-footer .feedback-primary {
+    width: 100%;
+    order: -1;
+  }
+  .feedback-dialog .prose-footer p {
+    text-align: center;
+    align-self: center;
   }
 }

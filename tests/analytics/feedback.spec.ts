@@ -44,7 +44,8 @@ test("only an explicit Send captures one survey response, with an acknowledged r
   await dialog.getByRole("textbox", { name: "Your feedback" }).fill("Typed, then closed.");
   await page.keyboard.press("Escape");
   await page.locator(".feedback-entry:visible").first().click();
-  await dialog.getByRole("combobox", { name: /What is it about/ }).selectOption("idea");
+  await dialog.getByRole("button", { name: "Idea", exact: true }).click();
+  await dialog.getByRole("checkbox", { name: "I'd like a reply" }).check();
   await dialog.getByRole("textbox", { name: /Email/ }).fill("reply@example.com");
   expect(feedback).toEqual([]);
 
@@ -128,4 +129,24 @@ test("Do Not Track also falls back to email", async ({ page }) => {
   const dialog = await openForm(page);
   await expect(dialog.getByRole("status")).toContainText("analytics, which is off");
   expect([...feedback, ...other]).toEqual([]);
+});
+
+test("reply email is optional, cleared on uncheck, and Send fits the phone", async ({
+  page,
+}, info) => {
+  await intercept(page);
+  const dialog = await openForm(page);
+  const choice = dialog.getByRole("checkbox", { name: "I'd like a reply" });
+  const email = dialog.getByRole("textbox", { name: "Email, used only to answer this" });
+  await expect(email).toHaveCount(0);
+  await choice.check();
+  await email.fill("optional@example.com");
+  await choice.uncheck();
+  await expect(email).toHaveCount(0);
+  await choice.check();
+  await expect(email).toHaveValue("");
+  expect(
+    (await dialog.getByRole("button", { name: "Send", exact: true }).boundingBox())!.height,
+  ).toBeGreaterThanOrEqual(44);
+  await page.screenshot({ path: info.outputPath("feedback-reply.png") });
 });
