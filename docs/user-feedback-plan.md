@@ -1,7 +1,7 @@
 # User feedback — proposed plan
 
-Status: implemented 12 October 2026 — operating guide in [feedback.md](feedback.md). The production
-survey ID is configured with `npm run feedback:survey`; until then the form offers email.
+Status: implemented 12 October 2026 — operating guide in [feedback.md](feedback.md). Production
+survey created 12 October 2026 (`01a13017-0862-0000-7122-d04c3dd57ef5`).
 Decision: collect through PostHog Surveys; triage responses before creating GitHub engineering issues.
 This supersedes both the custom in-app inbox and the private GitHub intake/delivery-queue proposals.
 

@@ -17,12 +17,18 @@ export type FeedbackSurvey = {
   questions: { message: string; category: string; email: string };
 };
 /**
- * Created by `npm run feedback:survey`. Production stays null until the survey exists in the
- * project, and the form offers email instead. The test survey keeps local and CI submissions
- * out of the production response list.
+ * Created by `npm run feedback:survey`; with null, production offers email instead.
+ * The test survey keeps local and CI submissions out of the production response list.
  */
 export const FEEDBACK_SURVEYS: { production: FeedbackSurvey | null; test: FeedbackSurvey } = {
-  production: null,
+  production: {
+    id: "01a13017-0862-0000-7122-d04c3dd57ef5",
+    questions: {
+      message: "65114b6a-cfcf-4b58-925c-c31d3172c2da",
+      category: "ff780e97-ab37-47a6-a1cb-4301c4f7352f",
+      email: "36bad265-ece8-4d11-b303-327b6d810c91",
+    },
+  },
   test: {
     id: "00000000-0000-4000-8000-00000000f00d",
     questions: {
