@@ -31,13 +31,12 @@ function NavLink({
   );
 }
 type Props = {
-  onSettings: () => void;
   account: AccountState;
   state: ViewState;
   meta: DataMeta | null;
   onChange: (changes: Partial<ViewState>, push?: boolean) => void;
 };
-export function Sidebar({ state, meta, onChange, account, onSettings }: Props) {
+export function Sidebar({ state, meta, onChange, account }: Props) {
   const friends = useFriendContext();
   const count = friends?.pendingIncoming ?? 0;
   return (
@@ -136,10 +135,10 @@ export function Sidebar({ state, meta, onChange, account, onSettings }: Props) {
             {account.busy === "logout" ? "Signing out…" : "Sign out"}
           </button>
         )}
+        <NavLink state={state} onChange={onChange} path="/settings">
+          Settings
+        </NavLink>
       </nav>
-      <button class="settings-button" aria-haspopup="dialog" onClick={onSettings}>
-        Settings
-      </button>
       <div class="sidebar-bottom">
         <NavLink state={state} onChange={onChange} path="/about" className="about-link">
           About & sources

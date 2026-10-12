@@ -51,4 +51,4 @@ during background preference reloads.
 
 ## 11 October 2026 — account pages
 
-[Account, Friends and Settings plan](account-pages-plan.md) moves these preferences into pages in three sequential PRs. Account and Friends now live on `/account` and `/friends`. Friends preserves the Watchlists picker, with pending requests visible in navigation. Settings follows after Friends review.
+[Account, Friends and Settings plan](account-pages-plan.md) moves these preferences into pages in three sequential PRs. Account and Friends now live on `/account` and `/friends`. Friends preserves the Watchlists picker, with pending requests visible in navigation. Settings now lives on `/settings` with an inert film-row preview. Every sidebar destination is a page; catalogue pickers remain dialogs.

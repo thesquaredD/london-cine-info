@@ -245,3 +245,27 @@ test("Friends page navigation records its path without sending usernames or sect
   expect(JSON.stringify(events)).not.toContain("private_watchlist");
   expect(JSON.stringify(events)).not.toContain("#requests");
 });
+
+test("Settings records its page path and preview changes emit no film-open event", async ({
+  page,
+}) => {
+  const events = await intercept(page);
+  await page.goto("/settings#preview");
+  const settings = page.getByRole("article", { name: "Settings", exact: true });
+  await expect(settings.locator(".pref-preview .film-row")).toHaveCount(1);
+  await expect.poll(() => events.filter((event) => event.event === "$pageview").length).toBe(1);
+  expect(events.find((event) => event.event === "$pageview")!.properties).toMatchObject({
+    path: "/settings",
+    $pathname: "/settings",
+    $current_url: "https://london-cine.info/settings",
+  });
+  await settings.getByLabel("Film titles").selectOption("original");
+  await settings.getByRole("button", { name: "Move IMDb rating up" }).click();
+  await page.locator(".masthead h1 a").click();
+  await expect.poll(() => events.filter((event) => event.event === "$pageview").length).toBe(2);
+  expect(
+    events.filter((event) => event.event === "$pageview").map((event) => event.properties.path),
+  ).toEqual(["/settings", "/"]);
+  expect(events.map((event) => event.event)).not.toContain("film_opened");
+  expect(JSON.stringify(events)).not.toContain("#preview");
+});

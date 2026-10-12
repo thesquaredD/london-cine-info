@@ -1506,7 +1506,7 @@ h3 {
   overflow: visible;
 }
 
-:is(.modal-dialog, .mobile-sort-dialog, .cinema-dialog, .settings-dialog) {
+:is(.modal-dialog, .mobile-sort-dialog, .cinema-dialog) {
   width: min(480px, calc(100vw - 32px));
   max-height: 85dvh;
   padding: 0;
@@ -1516,7 +1516,7 @@ h3 {
   color: var(--fg);
   overflow-y: auto;
 }
-:is(.modal-dialog, .mobile-sort-dialog, .cinema-dialog, .settings-dialog)::backdrop {
+:is(.modal-dialog, .mobile-sort-dialog, .cinema-dialog)::backdrop {
   background: rgba(0, 0, 0, 0.45);
 }
 .dialog-body {
@@ -1528,22 +1528,22 @@ h3 {
   margin: 0;
   overflow-wrap: anywhere;
 }
-:is(.modal-dialog, .mobile-sort-dialog, .cinema-dialog, .settings-dialog) form,
-:is(.modal-dialog, .mobile-sort-dialog, .cinema-dialog, .settings-dialog) fieldset {
+:is(.modal-dialog, .mobile-sort-dialog, .cinema-dialog) form,
+:is(.modal-dialog, .mobile-sort-dialog, .cinema-dialog) fieldset {
   display: grid;
   gap: 8px;
   min-width: 0;
 }
-:is(.modal-dialog, .mobile-sort-dialog, .cinema-dialog, .settings-dialog) fieldset {
+:is(.modal-dialog, .mobile-sort-dialog, .cinema-dialog) fieldset {
   margin: 0;
   padding: 0;
   border: 0;
 }
-:is(.modal-dialog, .mobile-sort-dialog, .cinema-dialog, .settings-dialog) label {
+:is(.modal-dialog, .mobile-sort-dialog, .cinema-dialog) label {
   font-weight: 500;
 }
-:is(.modal-dialog, .mobile-sort-dialog, .cinema-dialog, .settings-dialog) input,
-:is(.modal-dialog, .mobile-sort-dialog, .cinema-dialog, .settings-dialog) select {
+:is(.modal-dialog, .mobile-sort-dialog, .cinema-dialog) input,
+:is(.modal-dialog, .mobile-sort-dialog, .cinema-dialog) select {
   width: 100%;
   min-width: 0;
   padding: 7px 8px;
@@ -1552,8 +1552,8 @@ h3 {
   background: var(--panel);
   color: inherit;
 }
-:is(.modal-dialog, .mobile-sort-dialog, .cinema-dialog, .settings-dialog) fieldset p,
-:is(.modal-dialog, .mobile-sort-dialog, .cinema-dialog, .settings-dialog) .import-status p + p {
+:is(.modal-dialog, .mobile-sort-dialog, .cinema-dialog) fieldset p,
+:is(.modal-dialog, .mobile-sort-dialog, .cinema-dialog) .import-status p + p {
   color: var(--muted);
   font-size: 13px;
 }
@@ -1657,7 +1657,7 @@ h3 {
   justify-self: start;
 }
 @media (max-width: 799px) {
-  :is(.modal-dialog, .mobile-sort-dialog, .cinema-dialog, .settings-dialog) {
+  :is(.modal-dialog, .mobile-sort-dialog, .cinema-dialog) {
     position: fixed;
     inset: auto 0 0;
     margin: 0;
@@ -1667,12 +1667,12 @@ h3 {
     border-radius: 4px 4px 0 0;
     padding-bottom: env(safe-area-inset-bottom);
   }
-  :is(.modal-dialog, .mobile-sort-dialog, .cinema-dialog, .settings-dialog) input,
-  :is(.modal-dialog, .mobile-sort-dialog, .cinema-dialog, .settings-dialog) select {
+  :is(.modal-dialog, .mobile-sort-dialog, .cinema-dialog) input,
+  :is(.modal-dialog, .mobile-sort-dialog, .cinema-dialog) select {
     font-size: 16px;
     min-height: 44px;
   }
-  :is(.modal-dialog, .mobile-sort-dialog, .cinema-dialog, .settings-dialog) button,
+  :is(.modal-dialog, .mobile-sort-dialog, .cinema-dialog) button,
   .watchlist-intro button {
     min-height: 44px;
   }
@@ -1744,13 +1744,6 @@ h3 {
 .mobile-event-labels {
   display: none;
 }
-.display-controls {
-  padding: 12px;
-  border-top: 1px solid var(--line);
-}
-.display-controls .section-label {
-  padding: 0 0 12px;
-}
 .display-controls label {
   display: grid;
   gap: 6px;
@@ -1764,15 +1757,6 @@ h3 {
   background: var(--panel);
   color: var(--fg);
 }
-.display-controls h3 {
-  font-size: 14px;
-  margin: 16px 0 6px;
-}
-.display-controls p {
-  margin: 0 0 8px;
-  font-size: 12px;
-  color: var(--muted);
-}
 .display-controls ol {
   padding: 0;
   margin: 0;
@@ -1780,13 +1764,15 @@ h3 {
 }
 .display-controls li {
   display: grid;
-  grid-template-columns: 12px minmax(0, 1fr) 28px 28px;
+  grid-template-columns: 12px minmax(0, 1fr) 36px 36px;
   align-items: center;
   gap: 4px;
   margin: 4px 0;
   font-size: 14px;
 }
 .display-controls li button {
+  width: 100%;
+  justify-self: stretch;
   padding: 4px;
   min-height: 30px;
   border-radius: 4px;
@@ -1816,6 +1802,7 @@ h3 {
     font-size: 12px;
   }
   .display-controls li {
+    font-size: 18px;
     grid-template-columns: 16px minmax(0, 1fr) 44px 44px;
   }
   .display-controls li button,
@@ -2066,15 +2053,6 @@ h3 {
   margin: 0;
 }
 
-.settings-button {
-  width: calc(100% - 24px);
-  margin: 0 12px 12px;
-}
-.settings-dialog .display-controls {
-  padding: 0;
-  border: 0;
-}
-
 /* Entrance only: layout and navigation update immediately, close is immediate.
    No height/width interpolation or retained compositor layers. */
 @media (prefers-reduced-motion: no-preference) {
@@ -2092,7 +2070,6 @@ h3 {
     .modal-dialog,
     .mobile-sort-dialog,
     .cinema-dialog,
-    .settings-dialog,
     .screening-calendar-dialog
   )[open] {
     animation: sheet-enter 140ms cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
@@ -2484,4 +2461,41 @@ h3 {
   .mobile-sort-score strong {
     color: var(--rating);
   }
+}
+
+.display-controls .filter-hint {
+  color: var(--muted);
+  font-size: 13px;
+}
+.pref-preview {
+  min-width: 0;
+}
+.pref-preview .pagination {
+  display: none;
+}
+.pref-preview :is(.film-row, .film-title, a, button) {
+  cursor: default;
+}
+@media (max-width: 799px) {
+  .display-controls .filter-hint {
+    font-size: 16px;
+  }
+}
+.pref-preview .film-table th {
+  position: static;
+}
+:root .pref-preview .film-table th button {
+  padding-inline: 4px;
+}
+.pref-preview .sort-arrow {
+  display: none;
+}
+
+:root .pref-preview .film-row :is(.rating-column, .year-column) {
+  padding-inline: 4px;
+  white-space: nowrap;
+  overflow-wrap: normal;
+}
+.pref-preview .rating-chip {
+  min-width: 0;
 }

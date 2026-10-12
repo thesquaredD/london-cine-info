@@ -9,8 +9,7 @@ import {
   WatchlistsButton,
   WatchlistSelections,
 } from "./components/friends";
-import { Dialog } from "./components/dialog";
-import { DisplayControls } from "./components/display-controls";
+import { SettingsPage } from "./components/settings-page";
 import { useCalendar } from "./lib/calendar";
 import { MyCalendar, ScreeningCalendarDialog } from "./components/screening-calendar";
 import type { CalendarInput } from "./shared/calendar";
@@ -178,7 +177,6 @@ export function App() {
   const calendar = useCalendar(account);
   const [calendarEvent, setCalendarEvent] = useState<CalendarInput | null>(null);
   const cinemas = useCinemas(account);
-  const [settingsOpen, setSettingsOpen] = useState(false);
   const [cinemasOpen, setCinemasOpen] = useState(false);
   const [nearbyOpen, setNearbyOpen] = useState(false);
   const [now, setNow] = useState(() => new Date());
@@ -238,6 +236,7 @@ export function App() {
     {
       "/account": "Account",
       "/friends": "Friends",
+      "/settings": "Settings",
       "/privacy": "Privacy",
       "/auth/verify": "Sign in",
       "/unsubscribe": "Unsubscribe",
@@ -543,10 +542,15 @@ export function App() {
     document.querySelector<HTMLDialogElement>(".screening-calendar-dialog")?.close();
     setCalendarEvent(null);
   }
-  function openSettings() {
-    if (drawer.current?.open) drawer.current.close();
-    setDrawerOpen(false);
-    setSettingsOpen(true);
+  function changeDisplay(value: DisplayState) {
+    setDisplay(value);
+    try {
+      localStorage.setItem(HIDE_RATINGS_STORAGE, String(!!value.hideWatchlistRatings));
+      setDisplayError("");
+    } catch {
+      setDisplayError("Browser storage is unavailable. This preference lasts only for this visit.");
+    }
+    change({ page: 1 });
   }
   function goToAccount() {
     closeScreeningCalendar();
@@ -563,7 +567,6 @@ export function App() {
   const phone = () => window.matchMedia("(max-width: 799px)").matches;
   const sidebarProps = {
     state,
-    onSettings: openSettings,
     account,
     meta,
     onChange: change,
@@ -655,34 +658,6 @@ export function App() {
           </header>
           <div class="tagline">The database of London cinema screenings</div>
           <h2 class="sr-only">{pageTitle}</h2>
-          <Dialog
-            open={settingsOpen}
-            title="Settings"
-            className="settings-dialog"
-            onClose={() => setSettingsOpen(false)}
-            restoreTo={() =>
-              document.querySelector<HTMLElement>(
-                phone() ? ".menu-button" : ".desktop-sidebar .settings-button",
-              )
-            }
-          >
-            <DisplayControls
-              value={display}
-              onChange={(value) => {
-                setDisplay(value);
-                try {
-                  localStorage.setItem(HIDE_RATINGS_STORAGE, String(!!value.hideWatchlistRatings));
-                  setDisplayError("");
-                } catch {
-                  setDisplayError(
-                    "Browser storage is unavailable. This preference lasts only for this visit.",
-                  );
-                }
-                change({ page: 1 });
-              }}
-            />
-            {displayError && <p role="status">{displayError}</p>}
-          </Dialog>
           {meta && (
             <>
               <MyCinemas cinemas={cinemas} meta={meta} open={cinemasOpen} onClose={closeCinemas} />
@@ -743,6 +718,14 @@ export function App() {
                 if (path === "/") change({ path: "/", watchlist: false, page: 1 }, true);
                 else navigateTo(path);
               }}
+            />
+          ) : state.path === "/settings" ? (
+            <SettingsPage
+              display={display}
+              onChange={changeDisplay}
+              error={displayError}
+              catalogue={catalogue}
+              state={state}
             />
           ) : state.path === "/privacy" ? (
             <Privacy onNavigate={navigateTo} />
