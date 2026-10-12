@@ -35,6 +35,11 @@ Search/filter capture waits 600ms for a settled action and loaded results; backg
 not create repeated search events. Import outcomes are emitted only after the authoritative D1
 write succeeds, ignoring stale/replaced jobs. Analytics failures cannot block app operations.
 
+Feedback is not an analytics event. The in-app form posts one PostHog `survey sent` response
+directly to the capture endpoint (bypassing the SDK and its allowlist, which still drops any
+SDK-originated survey event). Its payload is fixed in `feedbackEvent` in `src/shared/feedback.ts`;
+see [feedback.md](feedback.md).
+
 ## Privacy and environment
 
 Page-leave events measure visit duration and scroll depth. Web Vitals collect numeric LCP,

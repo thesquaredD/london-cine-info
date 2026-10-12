@@ -1,3 +1,4 @@
+import { openFeedback } from "../lib/feedback";
 import { useEffect, useRef, useState } from "preact/hooks";
 import type { ComponentChildren } from "preact";
 import { accountApi, type AccountState } from "../lib/account";
@@ -39,6 +40,12 @@ export function AccountFeedback({
           <button disabled={!!account.busy} onClick={() => void account.reload()}>
             Try loading account again
           </button>
+          <button
+            class="feedback-link"
+            onClick={() => openFeedback({ context: { errorCode: "account_load" } })}
+          >
+            Report this problem
+          </button>
         </div>
       )}
       {account.notice && showNotice && (
@@ -50,6 +57,18 @@ export function AccountFeedback({
           <button aria-label="Dismiss account message" onClick={account.dismissNotice}>
             Dismiss
           </button>
+          {account.notice.kind === "error" && (
+            <button
+              class="feedback-link"
+              onClick={() =>
+                openFeedback({
+                  context: { errorCode: `account_${account.notice?.action ?? "action"}` },
+                })
+              }
+            >
+              Report this problem
+            </button>
+          )}
         </div>
       )}
     </>

@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "preact/hooks";
 import type { DataMeta, Film, FilmShowtimes, RatingKey } from "../shared/data";
 import { RATINGS, formatDate, runtime } from "../lib/catalogue";
 import { loadShowtimes } from "../lib/data";
+import { openFeedback } from "../lib/feedback";
 
 import type { CalendarInput } from "../shared/calendar";
 import type { CalendarState } from "../lib/calendar";
@@ -169,6 +170,14 @@ export function ExpandedRow({
                 >
                   Share film
                 </button>
+                <button
+                  class="feedback-link"
+                  onClick={() =>
+                    openFeedback({ category: "listing", context: { filmId: film.id } })
+                  }
+                >
+                  Report a listing problem
+                </button>
                 {shareMessage && (
                   <span role="status" class="share-status">
                     {shareMessage}
@@ -187,6 +196,14 @@ export function ExpandedRow({
               <div role="alert" class="details-status">
                 <p>Screening details could not be loaded.</p>
                 <button onClick={() => setAttempt((value) => value + 1)}>Try again</button>
+                <button
+                  class="feedback-link"
+                  onClick={() =>
+                    openFeedback({ context: { filmId: film.id, errorCode: "showtimes_load" } })
+                  }
+                >
+                  Report this problem
+                </button>
               </div>
             )}
             {data && !days.length && (
