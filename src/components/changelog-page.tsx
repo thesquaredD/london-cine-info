@@ -2,6 +2,7 @@ import { useEffect, useState } from "preact/hooks";
 import type { ChangelogBundle, ChangelogEntry } from "../shared/changelog";
 import { usePreferenceFocus } from "../lib/preference-focus";
 import { PageLink } from "./page-link";
+import { openFeedback } from "../lib/feedback";
 
 const PAGE_SIZE = 20;
 const TYPE_LABEL = { added: "Added", improved: "Improved", fixed: "Fixed" } as const;
@@ -78,11 +79,19 @@ export function ChangelogPage({ onNavigate }: { onNavigate: (path: string) => vo
                 <span class="changelog-type">{TYPE_LABEL[entry.type]}</span>
                 <h4 id={`${entry.id}-title`}>{entry.title}</h4>
                 <p>{entry.body}</p>
-                {entry.href && (
-                  <PageLink href={entry.href} onNavigate={onNavigate}>
-                    {entry.linkLabel} →
-                  </PageLink>
-                )}
+                <div class="changelog-actions">
+                  {entry.href && (
+                    <PageLink href={entry.href} onNavigate={onNavigate}>
+                      {entry.linkLabel} →
+                    </PageLink>
+                  )}
+                  <button
+                    class="feedback-link"
+                    onClick={() => openFeedback({ context: { changelogId: entry.id } })}
+                  >
+                    Feedback on this change
+                  </button>
+                </div>
               </section>
             ))}
           </div>

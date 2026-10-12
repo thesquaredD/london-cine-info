@@ -215,3 +215,16 @@ export function analyticsHeaders(): Record<string, string> {
     return {};
   }
 }
+
+/**
+ * The identity feedback is sent under: this browser's analytics ID (an opaque account ID when
+ * signed in). Null when analytics is off here, so feedback never re-enables tracking.
+ */
+export function feedbackIdentity(): { distinctId: string; environment: string } | null {
+  if (!initialized || !analyticsAllowed()) return null;
+  try {
+    return { distinctId: posthog.get_distinct_id(), environment };
+  } catch {
+    return null;
+  }
+}

@@ -1,0 +1,155 @@
+/* Entry points: quiet text actions, never a floating button or badge. */
+.feedback-entry,
+.feedback-link {
+  padding: 6px 0;
+  color: inherit;
+  font-size: 14px;
+  text-align: left;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  background: transparent;
+  border: 0;
+}
+:root .sidebar-bottom .feedback-entry {
+  display: block;
+  margin-top: 10px;
+  padding: 0;
+  font-size: 11px;
+  text-decoration: none;
+}
+:root .sidebar-bottom .feedback-entry:hover {
+  text-decoration: underline;
+}
+.feedback-phone-row,
+.feedback-footer {
+  display: none;
+}
+.sidebar-collapsed .feedback-footer {
+  display: inline;
+  margin-right: 12px;
+  font-size: inherit;
+}
+.film-links .feedback-link {
+  min-height: 32px;
+}
+:is(.empty-state, .catalogue-status, .account-notice, .details-status) .feedback-link {
+  justify-self: start;
+  border: 0;
+  background: transparent;
+}
+.changelog-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 20px;
+}
+
+/* The form */
+.feedback-form {
+  display: grid;
+  gap: 14px;
+}
+.feedback-form label {
+  display: grid;
+  gap: 6px;
+}
+.feedback-form label .feedback-muted {
+  font-weight: 400;
+}
+.feedback-form textarea {
+  width: 100%;
+  min-width: 0;
+  padding: 7px 8px;
+  color: inherit;
+  font: inherit;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  resize: vertical;
+}
+.feedback-muted {
+  color: var(--muted);
+}
+.dialog-body .feedback-form p.feedback-muted {
+  font-size: 13px;
+}
+.feedback-form details {
+  color: var(--muted);
+  font-size: 13px;
+}
+.feedback-form summary {
+  min-height: 32px;
+  cursor: pointer;
+}
+.feedback-context {
+  display: grid;
+  gap: 2px;
+  margin: 6px 0 8px;
+}
+.feedback-context div {
+  display: grid;
+  grid-template-columns: 9em 1fr;
+  gap: 8px;
+}
+.feedback-context dd {
+  margin: 0;
+  color: var(--fg);
+  overflow-wrap: anywhere;
+}
+.feedback-problem {
+  padding-left: 10px;
+  border-left: 2px solid var(--link);
+}
+.feedback-fallback {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+}
+.feedback-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+.feedback-primary {
+  padding: 9px 18px;
+  color: var(--active-fg);
+  background: var(--active-bg);
+  border: 0;
+}
+
+@media (max-width: 799px) {
+  .feedback-phone-row {
+    display: flex;
+    justify-content: flex-end;
+    padding: 0 14px;
+  }
+  .feedback-phone-row .feedback-entry,
+  .feedback-link,
+  .feedback-fallback :is(a, button),
+  .feedback-primary,
+  .feedback-form summary {
+    min-height: 44px;
+  }
+  .feedback-phone-row .feedback-entry {
+    font-size: 15px;
+  }
+  :root .sidebar-bottom .feedback-entry {
+    min-height: 44px;
+    font-size: 18px;
+  }
+  /* 16px+ stops iOS zooming into the fields. */
+  .feedback-form :is(input, select, textarea) {
+    font-size: 16px;
+  }
+  .feedback-fallback a {
+    display: inline-flex;
+    align-items: center;
+  }
+  .feedback-context div {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+  .feedback-dialog .dialog-body {
+    padding-bottom: calc(16px + env(safe-area-inset-bottom));
+  }
+}

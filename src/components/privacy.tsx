@@ -2,8 +2,9 @@ import { useEffect, useState } from "preact/hooks";
 import { analyticsAllowed, browserDoNotTrack, setAnalyticsAllowed } from "../lib/analytics";
 import { usePreferenceFocus } from "../lib/preference-focus";
 import { PageLink } from "./page-link";
+import { CONTACT_EMAIL } from "../shared/feedback";
 
-const contact = "diogo.seabra.diogo@gmail.com";
+const contact = CONTACT_EMAIL;
 export function Privacy({ onNavigate }: { onNavigate: (path: string) => void }) {
   const article = usePreferenceFocus();
   const [analytics, setAnalytics] = useState(analyticsAllowed);
@@ -31,6 +32,7 @@ export function Privacy({ onNavigate }: { onNavigate: (path: string) => void }) 
           ["purposes", "Purposes"],
           ["storage", "Browser storage"],
           ["analytics", "Analytics choice"],
+          ["feedback", "Feedback"],
           ["sharing", "Providers"],
           ["retention", "Retention"],
           ["security", "Security"],
@@ -172,6 +174,24 @@ export function Privacy({ onNavigate }: { onNavigate: (path: string) => void }) 
           this browser. Measurements already collected may finish delivery and are not erased by
           this switch. Scheduled watchlist imports can still record limited operational outcomes
           independently of browser preferences.
+        </p>
+      </section>
+      <section id="feedback" tabIndex={-1} aria-labelledby="feedback-h">
+        <h3 id="feedback-h">Feedback you send</h3>
+        <p>
+          The Feedback form sends your message, an optional topic and an optional reply email to
+          PostHog only when you press Send. Nothing you type is sent before that. With it go the
+          page path, app version, a broad screen size, the screening-data version and, where you
+          started from one, a film, error code or change identifier. It is stored under this
+          browser’s analytics identifier, or your opaque account ID if you are signed in, so it is
+          not anonymous. Your account email is never attached; a reply email is used only to answer
+          you.
+        </p>
+        <p>
+          Feedback is read privately. When it points to work on the site, a reviewed summary without
+          your words, email or identifiers may become a public issue in the project’s GitHub
+          repository. Feedback is not sent from the form when analytics is off or Do Not Track is
+          set; you can email it instead. Ask us at any time to delete feedback you sent.
         </p>
       </section>
       <section id="sharing" tabIndex={-1} aria-labelledby="sharing-h">

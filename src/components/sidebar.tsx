@@ -31,12 +31,13 @@ function NavLink({
   );
 }
 type Props = {
+  onFeedback: () => void;
   account: AccountState;
   state: ViewState;
   meta: DataMeta | null;
   onChange: (changes: Partial<ViewState>, push?: boolean) => void;
 };
-export function Sidebar({ state, meta, onChange, account }: Props) {
+export function Sidebar({ state, meta, onChange, account, onFeedback }: Props) {
   const friends = useFriendContext();
   const count = friends?.pendingIncoming ?? 0;
   return (
@@ -152,6 +153,9 @@ export function Sidebar({ state, meta, onChange, account }: Props) {
             </NavLink>
           )}
         </nav>
+        <button class="about-link feedback-entry" onClick={onFeedback}>
+          Feedback
+        </button>
         <NavLink state={state} onChange={onChange} path="/changelog" className="about-link">
           What’s new
         </NavLink>

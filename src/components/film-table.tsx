@@ -1,3 +1,4 @@
+import { openFeedback } from "../lib/feedback";
 import { capture } from "../lib/analytics";
 import { FilmFriends } from "./friends";
 import { displayTitle, type DisplayState } from "../lib/display";
@@ -339,6 +340,12 @@ export function FilmTable({
           <h2>No films match these filters</h2>
           <p>Try removing a filter or choosing another day or cinema.</p>
           <button onClick={() => onChange(clearFilters(state.path))}>Clear filters</button>
+          <button
+            class="feedback-link"
+            onClick={() => openFeedback({ context: { resultCount: 0 } })}
+          >
+            Missing something? Tell us
+          </button>
         </div>
       ) : null}
       {films.length > 0 && (

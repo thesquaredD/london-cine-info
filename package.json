@@ -30,7 +30,8 @@
     "changelog:validate": "tsx scripts/changelog.ts validate",
     "changelog:policy": "tsx scripts/changelog.ts policy",
     "changelog:build": "tsx scripts/changelog.ts build",
-    "deployment:verify": "tsx scripts/verify-deployment.ts"
+    "deployment:verify": "tsx scripts/verify-deployment.ts",
+    "feedback:survey": "tsx scripts/setup-feedback-survey.ts"
   },
   "dependencies": {
     "@preact/signals": "^2.11.3",

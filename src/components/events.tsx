@@ -1,3 +1,4 @@
+import { openFeedback } from "../lib/feedback";
 import { capture } from "../lib/analytics";
 import { FilmFriends } from "./friends";
 import { Fragment } from "preact";
@@ -86,6 +87,12 @@ export function Events({
           <h2>No events match these filters</h2>
           <p>Try another date, cinema or event type.</p>
           <button onClick={() => onChange(clearFilters(state.path))}>Clear filters</button>
+          <button
+            class="feedback-link"
+            onClick={() => openFeedback({ context: { resultCount: 0 } })}
+          >
+            Missing something? Tell us
+          </button>
         </div>
       )}
       {groupEvents(events).map(([date, rows]) => (
