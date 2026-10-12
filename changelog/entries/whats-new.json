@@ -1,0 +1,9 @@
+{
+  "id": "whats-new",
+  "type": "added",
+  "title": "See what has changed",
+  "body": "A What’s new page lists improvements and fixes to the site as they go live. Find it at the bottom of the menu.",
+  "visibility": "public",
+  "href": "/changelog",
+  "linkLabel": "Open What’s new"
+}

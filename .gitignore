@@ -16,3 +16,8 @@ playwright-report/
 
 # Fontshare files are licensed for this website, not public repository redistribution.
 public/fonts/fontshare/*.woff2
+
+# Built from changelog/entries for the deployed revision (npm run changelog:build).
+public/changelog.json
+public/version.json
+deployment-receipt.json

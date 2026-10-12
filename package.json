@@ -24,8 +24,13 @@
     "digests:send": "tsx scripts/send-digests.ts",
     "e2e:analytics": "playwright test -c playwright.analytics.config.ts",
     "analytics:dashboard": "tsx scripts/setup-analytics-dashboard.ts",
-    "prebuild": "node scripts/fetch-display-font.mjs",
-    "predev": "node scripts/fetch-display-font.mjs"
+    "prebuild": "node scripts/fetch-display-font.mjs && npm run changelog:build",
+    "predev": "node scripts/fetch-display-font.mjs && npm run changelog:build",
+    "changelog:new": "tsx scripts/changelog.ts new",
+    "changelog:validate": "tsx scripts/changelog.ts validate",
+    "changelog:policy": "tsx scripts/changelog.ts policy",
+    "changelog:build": "tsx scripts/changelog.ts build",
+    "deployment:verify": "tsx scripts/verify-deployment.ts"
   },
   "dependencies": {
     "@preact/signals": "^2.11.3",

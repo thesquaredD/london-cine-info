@@ -16,6 +16,8 @@ jobs:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           persist-credentials: false
+          # Changelog dates come from the commit that added each fragment.
+          fetch-depth: 0
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 24
@@ -36,6 +38,24 @@ jobs:
           npm run e2e:analytics
           npx wrangler d1 migrations apply london-cine-info --local
           npm run e2e:accounts
+
+  changelog-policy:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Require a changelog fragment or a reviewed internal reason
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: npm run changelog:policy -- "origin/$BASE_REF"
 
   platform:
     if: github.event_name == 'workflow_dispatch'

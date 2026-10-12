@@ -104,7 +104,9 @@ CI runs typecheck, lint, tests and a fixture-backed build for pull requests and
 `main`. The production workflow repeats checks, builds live data, then uses
 Wrangler Direct Upload. It runs on pushes to `main`, manually, and at 06:45 and
 11:45 UTC daily. `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` are repository
-secrets. Local preview deployments use:
+secrets. After uploading, the workflow verifies production serves the built revision and its
+changelog, and keeps a deployment receipt — see [docs/changelog.md](docs/changelog.md). Every PR
+adds a changelog fragment (`AGENTS.md`). Local preview deployments use:
 
 ```sh
 npx wrangler pages deploy dist --project-name london-cine-info --branch codex-core-ui

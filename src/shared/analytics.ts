@@ -176,6 +176,7 @@ const paths = new Set([
   "/account",
   "/friends",
   "/settings",
+  "/changelog",
   "/about",
   "/privacy",
   "/auth/verify",
