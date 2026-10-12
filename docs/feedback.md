@@ -24,7 +24,7 @@ that surface first instead of stacking modals.
 | What’s new entry                         | changelog entry ID                          |
 
 Every report also carries the route (allowlisted), app revision, broad screen size and the
-screening-data version. Users see all of it under “What’s sent with it”.
+screening-data version. Users see all of it in “Sent with it” (under “What’s sent with it” on phones).
 
 - Sends only on **Send**. Typing, closing or navigating sends nothing. The draft stays in
   memory for the visit (never storage) and is cleared after a confirmed send.
@@ -33,7 +33,7 @@ screening-data version. Users see all of it under “What’s sent with it”.
   feedback**, and a retry reuses the same `$survey_submission_id` as the event UUID so PostHog
   can de-duplicate. Exactly-once delivery is not promised.
 - Identity: the current analytics distinct ID (`account:<uuid>` when signed in), with
-  `$process_person_profile: false`, GeoIP off and `$ip: null`. The form says it is not anonymous.
+  `$process_person_profile: false`, GeoIP off and `$ip: null`. The form identifies the browser/account analytics ID under which it is stored; Privacy explains that it is not anonymous.
 - Analytics off or Do Not Track → no Send button; email/copy only. The choice is not changed.
 - Off the production host (local, previews) the form also falls back to email, except with
   `VITE_ANALYTICS_TEST=1`, which targets the **test** survey in `FEEDBACK_SURVEYS`.
@@ -91,3 +91,11 @@ No custom inbox, admin routes, D1 feedback tables, delivery queue, voting board,
 surveys or session recording. Automatic survey → GitHub issue routing is optional later work;
 PostHog's GitHub destination targets Error Tracking and needs an isolated integration test
 before use.
+
+## Form layout
+
+The message is the first field and receives focus on open. Topic is an optional row of four
+buttons; pressing the selected topic clears it. A reply email appears only after choosing
+“I'd like a reply”; clearing that choice clears the email. Context appears in a “Sent with it”
+line, collapsed on phones. Privacy information and Send sit together in the footer; when
+sending is unavailable the same footer offers Email feedback and Copy feedback.

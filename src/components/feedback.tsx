@@ -48,6 +48,14 @@ export function FeedbackDialog({
   const [context, setContext] = useState<FeedbackContext | null>(null);
   const [channel, setChannel] = useState<FeedbackChannel>("unavailable");
   const [copied, setCopied] = useState("");
+  const [wantReply, setWantReply] = useState(false);
+  const [phone, setPhone] = useState(() => matchMedia("(max-width: 799px)").matches);
+  useEffect(() => {
+    const media = matchMedia("(max-width: 799px)");
+    const change = () => setPhone(media.matches);
+    media.addEventListener("change", change);
+    return () => media.removeEventListener("change", change);
+  }, []);
   useEffect(() => {
     if (!request) return;
     setContext(currentContext(request, dataVersion));
@@ -62,6 +70,7 @@ export function FeedbackDialog({
     feedbackRequest.value = null;
     if (status === "sent") {
       setDraft(EMPTY);
+      setWantReply(false);
       setStatus("editing");
     }
   };
@@ -118,6 +127,20 @@ export function FeedbackDialog({
       )}
     </div>
   );
+  const contextLine = context && (
+    <p class="feedback-context-line">
+      <span class="prose-eyebrow">Sent with it</span>{" "}
+      <span class="feedback-context">
+        {describeContext(context).map(([label, value], index) => (
+          <span key={label}>
+            {index > 0 && " · "}
+            <span class="feedback-muted">{label}</span> {value}
+          </span>
+        ))}
+      </span>{" "}
+      Nothing else: not your watchlist, friends, searches or account email.
+    </p>
+  );
   return (
     <Dialog
       open={!!request}
@@ -134,111 +157,120 @@ export function FeedbackDialog({
             Not every message gets a reply. If you left an email address, it is used only to answer
             this.
           </p>
-          <button data-initial-focus class="feedback-primary" onClick={close}>
-            Back to browsing
-          </button>
+          <footer class="prose-footer">
+            <button data-initial-focus class="feedback-primary" onClick={close}>
+              Back to browsing
+            </button>
+          </footer>
         </div>
       ) : (
         <form class="feedback-form" onSubmit={submit} noValidate>
-          <p>A problem, a listing correction, an idea or something you liked. No account needed.</p>
-          <label>
-            <span>
-              What is it about? <span class="feedback-muted">(optional)</span>
-            </span>
-            <select
-              value={draft.category}
-              onChange={(event) =>
-                update({ category: event.currentTarget.value as FeedbackCategory | "" })
-              }
-            >
-              <option value="">Choose a topic</option>
-              {Object.entries(FEEDBACK_CATEGORIES).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Your feedback
-            <textarea
-              data-initial-focus
-              required
-              rows={5}
-              maxLength={FEEDBACK_MAX_LENGTH}
-              value={draft.message}
-              onInput={(event) => update({ message: event.currentTarget.value })}
-              placeholder="What happened, or what would make this better?"
-            />
-          </label>
-          {channel === "ready" && (
+          <div class="feedback-fields">
             <label>
-              <span>
-                Email <span class="feedback-muted">(optional, only if you’d like a reply)</span>
-              </span>
-              <input
-                type="email"
-                autoComplete="email"
-                value={draft.email}
-                onInput={(event) => update({ email: event.currentTarget.value })}
+              What happened, or what would make this better?
+              <textarea
+                aria-label="Your feedback"
+                data-initial-focus
+                required
+                rows={5}
+                maxLength={FEEDBACK_MAX_LENGTH}
+                value={draft.message}
+                onInput={(event) => update({ message: event.currentTarget.value })}
+                placeholder="A problem, a wrong listing, an idea, or something you liked. No account needed."
               />
             </label>
-          )}
-          {context && (
-            <details>
-              <summary>What’s sent with it</summary>
-              <dl class="feedback-context">
-                {describeContext(context).map(([label, value]) => (
-                  <div key={label}>
-                    <dt>{label}</dt>
-                    <dd>{value}</dd>
-                  </div>
+            <fieldset class="feedback-topics">
+              <legend>Topic (optional)</legend>
+              <div>
+                {Object.entries(FEEDBACK_CATEGORIES).map(([value, label]) => (
+                  <button
+                    type="button"
+                    key={value}
+                    aria-pressed={draft.category === value}
+                    onClick={() =>
+                      update({
+                        category: draft.category === value ? "" : (value as FeedbackCategory),
+                      })
+                    }
+                  >
+                    {label}
+                  </button>
                 ))}
-              </dl>
-              <p>
-                Never your watchlist, friends, searches, account email or a screenshot. Only what
-                you type above is added.
+              </div>
+            </fieldset>
+            {channel === "ready" && (
+              <div class="prose-control feedback-reply">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={wantReply || draft.email !== ""}
+                    onChange={(event) => {
+                      setWantReply(event.currentTarget.checked);
+                      if (!event.currentTarget.checked) update({ email: "" });
+                    }}
+                  />
+                  I'd like a reply
+                </label>
+                {(wantReply || draft.email !== "") && (
+                  <label class="feedback-email">
+                    Email, used only to answer this
+                    <input
+                      type="email"
+                      autoComplete="email"
+                      value={draft.email}
+                      onInput={(event) => update({ email: event.currentTarget.value })}
+                    />
+                  </label>
+                )}
+              </div>
+            )}
+            {context &&
+              (phone ? (
+                <details>
+                  <summary>What’s sent with it</summary>
+                  {contextLine}
+                </details>
+              ) : (
+                contextLine
+              ))}
+            {problem && (
+              <p role="alert" class="feedback-problem">
+                {problem}
               </p>
-            </details>
-          )}
-          {channel === "ready" ? (
-            <>
-              <p class="feedback-muted">
-                Stored privately in PostHog, our analytics provider, under this browser’s analytics
-                ID (your account’s, if signed in). Only a reviewed summary, never your words or
-                email, may become a public development issue.{" "}
-                <PageLink
-                  href="/privacy#feedback"
-                  onNavigate={(path) => {
-                    close();
-                    onNavigate(path);
-                  }}
-                >
-                  How feedback is handled
-                </PageLink>
-              </p>
-              {problem && (
-                <p role="alert" class="feedback-problem">
-                  {problem}
+            )}
+            {channel === "ready" && status === "failed" && fallback}
+          </div>
+          <footer class="prose-footer">
+            {channel === "ready" ? (
+              <>
+                <p>
+                  Stored privately in PostHog under this browser’s analytics ID (your account’s, if
+                  signed in).{" "}
+                  <PageLink
+                    href="/privacy#feedback"
+                    onNavigate={(path) => {
+                      close();
+                      onNavigate(path);
+                    }}
+                  >
+                    How feedback is handled
+                  </PageLink>
                 </p>
-              )}
-              {status === "failed" && fallback}
-              <div class="feedback-actions">
                 <button type="submit" class="feedback-primary" disabled={status === "sending"}>
                   {status === "sending" ? "Sending…" : status === "failed" ? "Try again" : "Send"}
                 </button>
-              </div>
-            </>
-          ) : (
-            <>
-              <p class="feedback-problem" role="status">
-                {channel === "analytics-off"
-                  ? "Sending from the site uses analytics, which is off in this browser. Email it instead; your choice stays as it is."
-                  : "Sending from the site isn’t available here. Email it instead."}
-              </p>
-              {fallback}
-            </>
-          )}
+              </>
+            ) : (
+              <>
+                <p class="feedback-problem" role="status">
+                  {channel === "analytics-off"
+                    ? "Sending from the site uses analytics, which is off in this browser. Email it instead; your choice stays as it is."
+                    : "Sending from the site isn’t available here. Email it instead."}
+                </p>
+                {fallback}
+              </>
+            )}
+          </footer>
         </form>
       )}
     </Dialog>
