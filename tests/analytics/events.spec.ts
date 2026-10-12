@@ -320,6 +320,37 @@ test("privacy objection stops browser events and request analytics, survives rel
   await other.close();
 });
 
+test("a single tab can resume analytics after opting out and reloading", async ({ page }) => {
+  const events = await intercept(page);
+  await page.goto("/privacy#analytics");
+  await expect.poll(() => events.filter((event) => event.event === "$pageview").length).toBe(1);
+  const choice = page.getByRole("checkbox", {
+    name: "Allow site analytics in this browser",
+    exact: true,
+  });
+  await choice.uncheck();
+  await page.reload();
+  await expect(choice).not.toBeChecked();
+  await choice.check();
+  await expect(choice).toBeChecked();
+  await page.locator(".masthead h1 a").click();
+  await expect
+    .poll(
+      () =>
+        events.filter((event) => event.event === "$pageview" && event.properties.path === "/")
+          .length,
+    )
+    .toBe(1);
+  await page.reload();
+  await expect
+    .poll(
+      () =>
+        events.filter((event) => event.event === "$pageview" && event.properties.path === "/")
+          .length,
+    )
+    .toBe(2);
+});
+
 test("Do Not Track prevents identifiers and makes the privacy choice read-only", async ({
   page,
 }) => {

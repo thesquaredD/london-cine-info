@@ -181,6 +181,29 @@ it("does not initialise identifiers after a saved objection or Do Not Track", as
   expect(analytics.analyticsAllowed()).toBe(false);
   expect(analytics.analyticsHeaders()).toEqual({ "X-Analytics-Enabled": "0" });
 });
+it("clears the SDK's persisted objection when re-enabled after a reload", async () => {
+  vi.stubEnv("VITE_ANALYTICS_TEST", "1");
+  vi.stubGlobal("localStorage", { getItem: () => "true", setItem: vi.fn() });
+  const analytics = await import("./analytics");
+  analytics.initAnalytics();
+  expect(sdk.init).not.toHaveBeenCalled();
+  let sdkOptedOut = true;
+  sdk.has_opted_out_capturing.mockImplementation(() => sdkOptedOut);
+  sdk.opt_in_capturing.mockImplementationOnce(() => {
+    sdkOptedOut = false;
+  });
+  try {
+    analytics.setAnalyticsAllowed(true);
+    expect(sdk.init).toHaveBeenCalledOnce();
+    expect(sdk.opt_in_capturing).toHaveBeenCalledWith({ captureEventName: false });
+    expect(analytics.analyticsAllowed()).toBe(true);
+    expect(analytics.analyticsHeaders()["X-Analytics-Enabled"]).toBe("1");
+    analytics.capture("$pageview");
+    expect(sdk.capture).toHaveBeenCalledOnce();
+  } finally {
+    sdk.has_opted_out_capturing.mockReturnValue(false);
+  }
+});
 it("keeps an objection in memory even if storage and the SDK fail", async () => {
   vi.stubEnv("VITE_ANALYTICS_TEST", "1");
   const analytics = await import("./analytics");
