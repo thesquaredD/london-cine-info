@@ -12,6 +12,62 @@ import {
   type AnalyticsProperties,
 } from "../shared/analytics";
 
+export const ANALYTICS_CHOICE_STORAGE = "london-cine.analytics-disabled.v1";
+let optedOut = (() => {
+  try {
+    return localStorage.getItem(ANALYTICS_CHOICE_STORAGE) === "true";
+  } catch {
+    return false;
+  }
+})();
+export function browserDoNotTrack() {
+  return typeof navigator !== "undefined" && ["1", "yes"].includes(navigator.doNotTrack ?? "");
+}
+export function analyticsAllowed() {
+  if (optedOut || browserDoNotTrack()) return false;
+  try {
+    return !initialized || !posthog.has_opted_out_capturing();
+  } catch {
+    return !optedOut;
+  }
+}
+function applyAnalyticsAllowed(allowed: boolean) {
+  optedOut = !allowed;
+  try {
+    if (!allowed) sessionStorage.removeItem("cine-analytics-visit");
+  } catch {
+    /* Collection still stops when storage is unavailable. */
+  }
+  try {
+    if (initialized) {
+      if (allowed && !browserDoNotTrack()) {
+        // A sign-out/account change may have happened while capture was disabled.
+        posthog.reset(true);
+        posthog.opt_in_capturing({ captureEventName: false });
+        if (accountId) posthog.identify(`account:${accountId}`);
+      } else posthog.opt_out_capturing();
+    } else if (allowed) initAnalytics();
+  } catch {
+    /* The local guard still enforces the choice if the SDK fails. */
+  }
+  if (typeof window !== "undefined") window.dispatchEvent?.(new Event("cine-analytics-choice"));
+}
+export function setAnalyticsAllowed(allowed: boolean) {
+  let saved = true;
+  try {
+    localStorage.setItem(ANALYTICS_CHOICE_STORAGE, String(!allowed));
+  } catch {
+    saved = false;
+  }
+  applyAnalyticsAllowed(allowed);
+  return saved;
+}
+if (typeof window !== "undefined")
+  window.addEventListener?.("storage", (event) => {
+    if (event.key === ANALYTICS_CHOICE_STORAGE || event.key === null)
+      applyAnalyticsAllowed(event.key !== ANALYTICS_CHOICE_STORAGE || event.newValue !== "true");
+  });
+
 let initialized = false;
 let accountId: string | null = null;
 let environment = "production";
@@ -19,6 +75,7 @@ let visit: AnalyticsProperties = {};
 
 export function sanitizeCapture(event: CaptureResult | null): CaptureResult | null {
   if (
+    !analyticsAllowed() ||
     !event ||
     (!(ANALYTICS_EVENTS as readonly string[]).includes(event.event) && event.event !== "$identify")
   )
@@ -53,7 +110,7 @@ function automaticEventPath(url: unknown): string {
 }
 
 export function initAnalytics() {
-  if (initialized || typeof window === "undefined") return;
+  if (initialized || typeof window === "undefined" || !analyticsAllowed()) return;
   const test = import.meta.env.VITE_ANALYTICS_TEST === "1";
   if (!test && (!import.meta.env.PROD || window.location.hostname !== SITE_HOST)) return;
   environment = test ? "test" : "production";
@@ -101,13 +158,14 @@ export function initAnalytics() {
     // A persisted identified ID must be checked against the actual session before use.
     const id = posthog.get_distinct_id();
     if (id.startsWith("account:")) posthog.reset(true);
+    if (accountId) posthog.identify(`account:${accountId}`);
   } catch {
     /* Analytics must never prevent the app from loading. */
   }
 }
 
 export function capture(event: AnalyticsEvent, properties: AnalyticsProperties = {}) {
-  if (!initialized) return;
+  if (!initialized || !analyticsAllowed()) return;
   try {
     try {
       sessionStorage.setItem("cine-analytics-visit", JSON.stringify({ at: Date.now(), visit }));
@@ -127,10 +185,12 @@ export function capture(event: AnalyticsEvent, properties: AnalyticsProperties =
 }
 
 export function identifyAccount(id: string | null) {
-  if (!initialized || accountId === id) return;
+  if (accountId === id) return;
+  const previous = accountId;
+  accountId = id;
+  if (!initialized || !analyticsAllowed()) return;
   try {
-    if (accountId !== null) posthog.reset(true);
-    accountId = id;
+    if (previous !== null) posthog.reset(true);
     if (id) posthog.identify(`account:${id}`);
   } catch {
     /* Identity tracking is best effort. */
@@ -138,8 +198,8 @@ export function identifyAccount(id: string | null) {
 }
 
 export function analyticsHeaders(): Record<string, string> {
+  if (!analyticsAllowed()) return { "X-Analytics-Enabled": "0" };
   if (!initialized) return {};
-  if (posthog.has_opted_out_capturing()) return { "X-Analytics-Enabled": "0" };
   try {
     return {
       "X-Analytics-Id": posthog.get_distinct_id(),

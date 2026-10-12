@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, it, expect, vi } from "vitest";
 const sdk = vi.hoisted(() => ({
   init: vi.fn(),
+  opt_in_capturing: vi.fn(),
+  opt_out_capturing: vi.fn(),
   capture: vi.fn(),
   identify: vi.fn(),
   reset: vi.fn(),
@@ -126,4 +128,72 @@ it("keeps automatic measurements and their original route while stripping URLs a
     $prev_pageview_duration: 12,
     $prev_pageview_max_scroll_percentage: 0.5,
   });
+});
+
+it("persists a browser objection, blocks new events and sends the server opt-out header", async () => {
+  vi.stubEnv("VITE_ANALYTICS_TEST", "1");
+  const storage = new Map<string, string>();
+  vi.stubGlobal("localStorage", {
+    getItem: (key: string) => storage.get(key),
+    setItem: (key: string, value: string) => storage.set(key, value),
+  });
+  vi.stubGlobal("sessionStorage", { getItem: () => null, setItem: vi.fn(), removeItem: vi.fn() });
+  const analytics = await import("./analytics");
+  analytics.initAnalytics();
+  analytics.identifyAccount("account-one");
+  expect(analytics.setAnalyticsAllowed(false)).toBe(true);
+  expect(storage.get(analytics.ANALYTICS_CHOICE_STORAGE)).toBe("true");
+  expect(sdk.opt_out_capturing).toHaveBeenCalledOnce();
+  sdk.capture.mockClear();
+  analytics.capture("$pageview");
+  expect(sdk.capture).not.toHaveBeenCalled();
+  expect(
+    analytics.sanitizeCapture({ uuid: "vitals-off", event: "$web_vitals", properties: {} }),
+  ).toBeNull();
+  expect(analytics.analyticsHeaders()).toEqual({ "X-Analytics-Enabled": "0" });
+  analytics.identifyAccount("account-two");
+  expect(analytics.setAnalyticsAllowed(true)).toBe(true);
+  expect(sdk.opt_in_capturing).toHaveBeenCalledWith({ captureEventName: false });
+  expect(sdk.identify).toHaveBeenLastCalledWith("account:account-two");
+  analytics.capture("$pageview");
+  expect(sdk.capture).toHaveBeenCalledOnce();
+  analytics.setAnalyticsAllowed(false);
+  analytics.identifyAccount(null);
+  sdk.identify.mockClear();
+  sdk.reset.mockClear();
+  analytics.setAnalyticsAllowed(true);
+  expect(sdk.reset).toHaveBeenCalledOnce();
+  expect(sdk.identify).not.toHaveBeenCalled();
+});
+it("does not initialise identifiers after a saved objection or Do Not Track", async () => {
+  vi.stubEnv("VITE_ANALYTICS_TEST", "1");
+  vi.stubGlobal("localStorage", { getItem: () => "true" });
+  let analytics = await import("./analytics");
+  analytics.initAnalytics();
+  expect(sdk.init).not.toHaveBeenCalled();
+  expect(analytics.analyticsHeaders()).toEqual({ "X-Analytics-Enabled": "0" });
+  vi.resetModules();
+  vi.stubGlobal("localStorage", { getItem: () => null });
+  vi.stubGlobal("navigator", { doNotTrack: "1" });
+  analytics = await import("./analytics");
+  analytics.initAnalytics();
+  expect(sdk.init).not.toHaveBeenCalled();
+  expect(analytics.analyticsAllowed()).toBe(false);
+  expect(analytics.analyticsHeaders()).toEqual({ "X-Analytics-Enabled": "0" });
+});
+it("keeps an objection in memory even if storage and the SDK fail", async () => {
+  vi.stubEnv("VITE_ANALYTICS_TEST", "1");
+  const analytics = await import("./analytics");
+  analytics.initAnalytics();
+  vi.stubGlobal("localStorage", {
+    setItem: () => {
+      throw new Error("blocked");
+    },
+  });
+  sdk.opt_out_capturing.mockImplementationOnce(() => {
+    throw new Error("SDK unavailable");
+  });
+  expect(analytics.setAnalyticsAllowed(false)).toBe(false);
+  expect(analytics.analyticsAllowed()).toBe(false);
+  expect(analytics.analyticsHeaders()).toEqual({ "X-Analytics-Enabled": "0" });
 });

@@ -183,9 +183,11 @@ test("signed-out and signed-in Settings fit desktop and phone", async ({ page },
     }
     await page.goto("/settings");
     await expect(page.locator(".pref-preview .film-row")).toHaveCount(1);
-    await expect(page.locator(".desktop-sidebar .preferences-nav")).toContainText(
-      state === "in" ? "Account" : "Sign in",
-    );
+    await expect(
+      page.locator(
+        state === "in" ? ".desktop-sidebar .preferences-nav" : ".desktop-sidebar .sidebar-auth",
+      ),
+    ).toContainText(state === "in" ? "Account" : "Sign in");
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
       true,
     );

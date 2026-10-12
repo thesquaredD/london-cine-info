@@ -269,8 +269,10 @@ Replay calendar account verification with
 The code/flow UX review and remaining decisions are in [docs/UX_REVIEW.md](docs/UX_REVIEW.md).
 
 Account preferences live on the **Account** page (`/account`), with separate
-Profile and Emails forms and Sign out in the sidebar. Display preferences live
+Profile and Emails forms. Sign in and Sign out sit at the bottom of the sidebar,
+above About & sources. Display preferences live
 on the **Settings** page (`/settings`), with a film-row preview.
+The Privacy page documents the site’s data practices and includes a browser analytics switch.
 The cinema chooser keeps selected cinemas at the top with individual remove
 buttons, independent of its search, and aligns native checkboxes with their labels.
 

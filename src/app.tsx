@@ -9,6 +9,7 @@ import {
   WatchlistsButton,
   WatchlistSelections,
 } from "./components/friends";
+import { Privacy } from "./components/privacy";
 import { SettingsPage } from "./components/settings-page";
 import { useCalendar } from "./lib/calendar";
 import { MyCalendar, ScreeningCalendarDialog } from "./components/screening-calendar";
@@ -35,7 +36,6 @@ import {
   AccountPage,
   AccountFeedback,
   ImportStatus,
-  Privacy,
   RefreshButton,
   TokenPage,
 } from "./components/account";

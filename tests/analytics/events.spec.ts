@@ -269,3 +269,76 @@ test("Settings records its page path and preview changes emit no film-open event
   expect(events.map((event) => event.event)).not.toContain("film_opened");
   expect(JSON.stringify(events)).not.toContain("#preview");
 });
+
+test("privacy objection stops browser events and request analytics, survives reload and resumes on opt-in", async ({
+  page,
+  context,
+}) => {
+  const events = await intercept(page);
+  await page.goto("/privacy#analytics");
+  await expect.poll(() => events.filter((event) => event.event === "$pageview").length).toBe(1);
+  const other = await context.newPage();
+  await other.route("**/api/me", (route) => route.fulfill({ json: { user: null } }));
+  await other.goto("/privacy#analytics");
+  await expect.poll(() => events.filter((event) => event.event === "$pageview").length).toBe(2);
+  const choice = page.getByRole("checkbox", {
+    name: "Allow site analytics in this browser",
+    exact: true,
+  });
+  await choice.uncheck();
+  await expect(
+    other.getByRole("checkbox", { name: "Allow site analytics in this browser", exact: true }),
+  ).not.toBeChecked();
+  const before = events.length;
+  await page.getByRole("link", { name: "Account", exact: true }).click();
+  await expect(page).toHaveURL("/account#emails");
+  let enabled = "";
+  await page.route("**/api/auth/request", (route) => {
+    enabled = route.request().headers()["x-analytics-enabled"] ?? "";
+    return route.fulfill({ json: { ok: true } });
+  });
+  await page.getByLabel("Email", { exact: true }).fill("privacy-test@example.com");
+  await page.getByRole("button", { name: "Send sign-in link", exact: true }).click();
+  await expect(page.getByRole("status").filter({ hasText: "Check your email" })).toBeVisible();
+  expect(enabled).toBe("0");
+  await page.reload();
+  await page.goto("/privacy#analytics");
+  await expect(choice).not.toBeChecked();
+  expect(events.length).toBe(before);
+  await choice.check();
+  await expect(
+    other.getByRole("checkbox", { name: "Allow site analytics in this browser", exact: true }),
+  ).toBeChecked();
+  await page.locator(".masthead h1 a").click();
+  await expect
+    .poll(
+      () =>
+        events.filter((event) => event.event === "$pageview" && event.properties.path === "/")
+          .length,
+    )
+    .toBe(1);
+  await other.close();
+});
+
+test("Do Not Track prevents identifiers and makes the privacy choice read-only", async ({
+  page,
+}) => {
+  const events = await intercept(page);
+  await page.addInitScript(() =>
+    Object.defineProperty(navigator, "doNotTrack", { configurable: true, value: "1" }),
+  );
+  await page.goto("/privacy#analytics");
+  const choice = page.getByRole("checkbox", {
+    name: "Allow site analytics in this browser",
+    exact: true,
+  });
+  await expect(choice).not.toBeChecked();
+  await expect(choice).toBeDisabled();
+  await expect(page.getByRole("status").filter({ hasText: "Do Not Track" })).toBeVisible();
+  await page.locator(".masthead h1 a").click();
+  await expect(page.locator(".film-row")).toHaveCount(6);
+  expect(events).toEqual([]);
+  expect(
+    await page.evaluate(() => Object.keys(localStorage).filter((key) => key.includes("posthog"))),
+  ).toEqual([]);
+});
