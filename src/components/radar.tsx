@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "preact/hooks";
-import { screeningMatcher, isFilmFormat, isImaxFormat } from "../lib/filters";
+import { screeningMatcher, isFilmFormat, isImaxFormat, directorLabel } from "../lib/filters";
 import { formatDate, viewUrl } from "../lib/catalogue";
 import { FilmTable } from "./film-table";
 import type { DataMeta, Film } from "../shared/data";
@@ -205,6 +205,7 @@ export function Radar({
                 </div>
               )}
               <FilmTable
+                directorName={directorLabel(state, films)}
                 films={visible}
                 calendar={calendar}
                 onCalendar={onCalendar}

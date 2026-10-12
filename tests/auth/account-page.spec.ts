@@ -163,6 +163,8 @@ test("Profile and Emails issue partial saves and retain drafts across a failed f
   );
   await profile.getByRole("button", { name: "Save profile", exact: true }).click();
   await expect(profile.getByRole("alert")).toContainText("Profile unavailable");
+  await expect(profile.getByRole("alert")).toHaveCount(1);
+  await expect(profile.locator(".notice-title")).toHaveText("That action didn't finish");
   expect(updates.map((update) => update.path)).toEqual(["/api/friends/profile"]);
   await expect(profile.getByLabel("Letterboxd username", { exact: true })).toHaveValue(
     "sample-list",

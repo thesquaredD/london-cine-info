@@ -372,6 +372,28 @@ export function filterLabel(key: FacetKey, id: string, meta: DataMeta): string {
   return meta.facets[key].find((option) => option.id === id)?.label ?? id;
 }
 
+export function directorLabel(state: ViewState, films: Film[]) {
+  return (
+    films.flatMap((film) => film.di).find((director) => director.id === state.director)?.name ??
+    state.director
+  );
+}
+
+/** One label source for active facet chips and empty-result recovery. */
+export function activeFacetChoices(state: ViewState, meta: DataMeta) {
+  return FILTERS.flatMap(({ key, label: groupLabel }) =>
+    [false, true].flatMap((excluded) =>
+      ((excluded ? state.excluded : state.filters)[key] ?? []).map((id) => ({
+        key,
+        id,
+        groupLabel,
+        label: filterLabel(key, id, meta),
+        excluded,
+      })),
+    ),
+  );
+}
+
 export function isSpecialFormat(formats: string[]) {
   return isFilmFormat(formats) || isImaxFormat(formats);
 }

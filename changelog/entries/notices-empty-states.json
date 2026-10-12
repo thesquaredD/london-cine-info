@@ -1,0 +1,7 @@
+{
+  "id": "notices-empty-states",
+  "type": "improved",
+  "title": "Clearer notices and ways out of empty results",
+  "body": "Account and import notices now show a clear heading and nearby actions. Empty results name your choices and let you loosen one filter while keeping the others.",
+  "visibility": "public"
+}

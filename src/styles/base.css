@@ -614,8 +614,7 @@ h3 {
 .active-director button {
   font-size: 12px;
 }
-.catalogue-status,
-.empty-state {
+.catalogue-status {
   text-align: center;
   padding: 70px 20px;
   color: var(--muted);
@@ -1512,8 +1511,7 @@ h3 {
   background: var(--panel);
   color: inherit;
 }
-:is(.modal-dialog, .mobile-sort-dialog, .cinema-dialog) fieldset p,
-:is(.modal-dialog, .mobile-sort-dialog, .cinema-dialog) .import-status p + p {
+:is(.modal-dialog, .mobile-sort-dialog, .cinema-dialog) fieldset p {
   color: var(--muted);
   font-size: 13px;
 }
@@ -1534,31 +1532,6 @@ h3 {
 .danger-action {
   color: var(--sold-out);
   border-color: var(--sold-out);
-}
-.account-notice,
-.import-status {
-  display: grid;
-  gap: 6px;
-  padding: 10px 12px;
-  border: 1px solid var(--line);
-  border-left: 3px solid var(--strong-line);
-  border-radius: 4px;
-  background: var(--shade);
-}
-.account-notice p,
-.import-status p {
-  margin: 0;
-}
-.account-notice[role="alert"],
-.import-status.import-failed {
-  border-left-color: var(--sold-out);
-}
-.import-status.import-completed {
-  border-left-color: var(--rating);
-}
-.account-notice button,
-.import-status button {
-  justify-self: start;
 }
 .page-notices {
   display: grid;
@@ -1596,21 +1569,10 @@ h3 {
 .watchlist-connected .import-status {
   flex: 1 1 280px;
   min-width: 0;
-  gap: 2px;
-  padding: 0;
-  border: 0;
-  background: none;
-}
-.watchlist-connected .import-status p + p {
-  font-size: 12px;
-  color: var(--muted);
 }
 .watchlist-connected .account-actions {
   flex-shrink: 0;
   gap: 6px;
-}
-.watchlist-connected .import-failed > p:first-child {
-  color: var(--sold-out);
 }
 .watchlist-intro button,
 .account-prompt button {
