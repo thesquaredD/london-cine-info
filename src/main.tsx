@@ -5,6 +5,7 @@ import "./styles/base.css";
 import "./styles/friends.css";
 import "./styles/picturehouse.css";
 import "./styles/discovery.css";
+import "./styles/changelog.css";
 
 document.documentElement.dataset.theme = "dark";
 initAnalytics();

@@ -1,0 +1,9 @@
+{
+  "id": "account-pages",
+  "type": "improved",
+  "title": "Account, Friends and Settings have their own pages",
+  "body": "Your watchlist connection, favourite cinemas and email preferences sit together in Account. Friends and display settings each have a page of their own in the menu.",
+  "visibility": "public",
+  "href": "/account",
+  "linkLabel": "Open Account"
+}

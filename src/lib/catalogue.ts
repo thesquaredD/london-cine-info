@@ -113,6 +113,7 @@ export function readView(url: URL): ViewState {
     "/account",
     "/friends",
     "/settings",
+    "/changelog",
     "/about",
     "/privacy",
     "/auth/verify",

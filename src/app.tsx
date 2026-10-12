@@ -11,6 +11,7 @@ import {
 } from "./components/friends";
 import { Privacy } from "./components/privacy";
 import { SettingsPage } from "./components/settings-page";
+import { ChangelogPage } from "./components/changelog-page";
 import { useCalendar } from "./lib/calendar";
 import { MyCalendar, ScreeningCalendarDialog } from "./components/screening-calendar";
 import type { CalendarInput } from "./shared/calendar";
@@ -237,6 +238,7 @@ export function App() {
       "/account": "Account",
       "/friends": "Friends",
       "/settings": "Settings",
+      "/changelog": "What’s new",
       "/privacy": "Privacy",
       "/auth/verify": "Sign in",
       "/unsubscribe": "Unsubscribe",
@@ -727,6 +729,8 @@ export function App() {
               catalogue={catalogue}
               state={state}
             />
+          ) : state.path === "/changelog" ? (
+            <ChangelogPage onNavigate={navigateTo} />
           ) : state.path === "/privacy" ? (
             <Privacy onNavigate={navigateTo} />
           ) : state.path === "/auth/verify" ? (
