@@ -40,11 +40,16 @@ export function ChangelogPage({ onNavigate }: { onNavigate: (path: string) => vo
     else groups.push({ day: entry.changeDate, entries: [entry] });
   }
   return (
-    <article class="prose pref-page changelog-page" aria-labelledby="changelog-title" ref={article}>
-      <h2 id="changelog-title" tabIndex={-1}>
-        What’s new
-      </h2>
-      <p class="pref-lede">
+    <article class="prose changelog-page" aria-labelledby="changelog-title" ref={article}>
+      <header class="prose-head">
+        <h2 id="changelog-title" tabIndex={-1}>
+          What’s new
+        </h2>
+        <button class="feedback-link" onClick={() => openFeedback()}>
+          Something missing? Tell us
+        </button>
+      </header>
+      <p class="prose-lede">
         Improvements and fixes to London Ciné Info, newest first. Screening updates are not listed.
       </p>
       {location.hostname !== "london-cine.info" && (
@@ -63,44 +68,48 @@ export function ChangelogPage({ onNavigate }: { onNavigate: (path: string) => vo
         <p class="changelog-status">Nothing to report yet.</p>
       ) : (
         groups.map((group) => (
-          <div class="changelog-day" key={group.day ?? "pending"}>
+          <section class="changelog-day" key={group.day ?? "pending"}>
             <h3>
               <span class="sr-only">Change date: </span>
               {group.day ? formatDay(group.day) : "Not yet merged"}
             </h3>
-            {group.entries.map((entry) => (
-              <section
-                class="pref-section changelog-entry"
-                id={entry.id}
-                key={entry.id}
-                tabIndex={-1}
-                aria-labelledby={`${entry.id}-title`}
-              >
-                <span class="changelog-type">{TYPE_LABEL[entry.type]}</span>
-                <h4 id={`${entry.id}-title`}>{entry.title}</h4>
-                <p>{entry.body}</p>
-                <div class="changelog-actions">
-                  {entry.href && (
-                    <PageLink href={entry.href} onNavigate={onNavigate}>
-                      {entry.linkLabel} →
-                    </PageLink>
-                  )}
-                  <button
-                    class="feedback-link"
-                    onClick={() => openFeedback({ context: { changelogId: entry.id } })}
-                  >
-                    Feedback on this change
-                  </button>
-                </div>
-              </section>
-            ))}
-          </div>
+            <div class="changelog-entries">
+              {group.entries.map((entry) => (
+                <section
+                  class="changelog-entry"
+                  id={entry.id}
+                  key={entry.id}
+                  tabIndex={-1}
+                  aria-labelledby={`${entry.id}-title`}
+                >
+                  <span class={`changelog-type changelog-${entry.type}`}>
+                    {TYPE_LABEL[entry.type]}
+                  </span>
+                  <h4 id={`${entry.id}-title`}>{entry.title}</h4>
+                  <p>{entry.body}</p>
+                  <div class="changelog-actions">
+                    {entry.href && (
+                      <PageLink href={entry.href} onNavigate={onNavigate}>
+                        {entry.linkLabel} →
+                      </PageLink>
+                    )}
+                    <button
+                      class="feedback-link"
+                      onClick={() => openFeedback({ context: { changelogId: entry.id } })}
+                    >
+                      Feedback on this change
+                    </button>
+                  </div>
+                </section>
+              ))}
+            </div>
+          </section>
         ))
       )}
       {entries && entries.length > shown && (
-        <button class="changelog-more" onClick={() => setShown(shown + PAGE_SIZE)}>
-          Show older changes
-        </button>
+        <div class="changelog-more">
+          <button onClick={() => setShown(shown + PAGE_SIZE)}>Show older changes</button>
+        </div>
       )}
     </article>
   );

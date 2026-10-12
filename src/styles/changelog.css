@@ -1,43 +1,49 @@
+/* Page layout; type and vertical reading rhythm are shared in prose.css. */
 .changelog-preview {
   padding-left: 12px;
-  margin-bottom: 20px;
-  color: var(--muted);
-  font-size: 14px;
   border-left: 2px solid var(--brass);
 }
-.changelog-day > h3 {
-  margin: 28px 0 0;
-  color: var(--muted);
-  font-size: 14px;
-  font-weight: 400;
-}
-.changelog-day .changelog-entry:first-of-type {
+.changelog-day {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr);
+  gap: 20px;
   border-top: 1px solid var(--line);
 }
 .changelog-type {
   color: var(--brass);
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
 }
-.changelog-entry h4 {
-  margin: 0;
-  font-size: 20px;
-  font-weight: 500;
+.changelog-fixed {
+  color: var(--muted);
 }
-.changelog-entry a {
-  justify-self: start;
+.changelog-entry {
+  min-width: 0;
+  scroll-margin-top: 16px;
+}
+.changelog-entry:focus-visible {
+  outline: 2px solid var(--brass);
+  outline-offset: 4px;
+}
+.changelog-actions :is(a, button) {
+  color: var(--muted);
+}
+.changelog-actions a {
+  display: inline-flex;
+  align-items: center;
   padding: 10px 0;
 }
 .changelog-more {
-  margin-top: 16px;
-  min-height: 44px;
+  border-top: 1px solid var(--line);
 }
-.changelog-status {
-  padding: 16px 0;
+.changelog-more button {
+  min-height: 44px;
+  background: var(--shade);
 }
 .changelog-status button {
-  margin-top: 12px;
   min-height: 44px;
+}
+@media (max-width: 799px) {
+  .changelog-day {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
 }
