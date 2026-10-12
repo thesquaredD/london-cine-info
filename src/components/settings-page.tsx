@@ -29,7 +29,7 @@ export function SettingsPage({
     ) ?? catalogue?.films[0];
   return (
     <article
-      class="pref-page display-controls settings-page"
+      class="prose pref-page display-controls settings-page"
       aria-labelledby="pref-title"
       ref={article}
     >

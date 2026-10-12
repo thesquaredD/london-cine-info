@@ -15,7 +15,7 @@ export function Privacy({ onNavigate }: { onNavigate: (path: string) => void }) 
     return () => window.removeEventListener("cine-analytics-choice", changed);
   }, []);
   return (
-    <article class="about-page privacy-page" aria-labelledby="privacy-title" ref={article}>
+    <article class="prose about-page privacy-page" aria-labelledby="privacy-title" ref={article}>
       <h2 id="privacy-title" tabIndex={-1}>
         Privacy
       </h2>
@@ -44,7 +44,7 @@ export function Privacy({ onNavigate }: { onNavigate: (path: string) => void }) 
           </a>
         ))}
       </nav>
-      <section id="operator" tabIndex={-1} aria-labelledby="operator-h">
+      <section class="prose-section" id="operator" tabIndex={-1} aria-labelledby="operator-h">
         <h3 id="operator-h">Who is responsible</h3>
         <p>
           Diogo Diogo operates London Ciné Info and is the controller of the personal information
@@ -53,7 +53,7 @@ export function Privacy({ onNavigate }: { onNavigate: (path: string) => void }) 
           rather than a public GitHub issue.
         </p>
       </section>
-      <section id="information" tabIndex={-1} aria-labelledby="information-h">
+      <section class="prose-section" id="information" tabIndex={-1} aria-labelledby="information-h">
         <h3 id="information-h">Information we use</h3>
         <p>
           Requesting a sign-in link creates an account record with your email address. If you use
@@ -82,7 +82,7 @@ export function Privacy({ onNavigate }: { onNavigate: (path: string) => void }) 
           coordinates, to your cinema preferences.
         </p>
       </section>
-      <section id="purposes" tabIndex={-1} aria-labelledby="purposes-h">
+      <section class="prose-section" id="purposes" tabIndex={-1} aria-labelledby="purposes-h">
         <h3 id="purposes-h">Why we use this information</h3>
         <p>
           We use account information to provide the features you request: signing in, saving
@@ -106,7 +106,7 @@ export function Privacy({ onNavigate }: { onNavigate: (path: string) => void }) 
           . Sign-in links you request are separate from a weekly email subscription.
         </p>
       </section>
-      <section id="storage" tabIndex={-1} aria-labelledby="storage-h">
+      <section class="prose-section" id="storage" tabIndex={-1} aria-labelledby="storage-h">
         <h3 id="storage-h">Cookies and browser storage</h3>
         <p>
           A secure, HttpOnly session cookie keeps you signed in. It expires 90 days after its most
@@ -129,7 +129,7 @@ export function Privacy({ onNavigate }: { onNavigate: (path: string) => void }) 
           controls can block storage, although some preferences then last only for the visit.
         </p>
       </section>
-      <section id="analytics" tabIndex={-1} aria-labelledby="analytics-h">
+      <section class="prose-section" id="analytics" tabIndex={-1} aria-labelledby="analytics-h">
         <h3 id="analytics-h">Site analytics and your choice</h3>
         <p>
           PostHog EU Cloud helps us measure page visits, referral domains and campaign labels,
@@ -176,7 +176,7 @@ export function Privacy({ onNavigate }: { onNavigate: (path: string) => void }) 
           independently of browser preferences.
         </p>
       </section>
-      <section id="feedback" tabIndex={-1} aria-labelledby="feedback-h">
+      <section class="prose-section" id="feedback" tabIndex={-1} aria-labelledby="feedback-h">
         <h3 id="feedback-h">Feedback you send</h3>
         <p>
           The Feedback form sends your message, an optional topic and an optional reply email to
@@ -194,7 +194,7 @@ export function Privacy({ onNavigate }: { onNavigate: (path: string) => void }) 
           set; you can email it instead. Ask us at any time to delete feedback you sent.
         </p>
       </section>
-      <section id="sharing" tabIndex={-1} aria-labelledby="sharing-h">
+      <section class="prose-section" id="sharing" tabIndex={-1} aria-labelledby="sharing-h">
         <h3 id="sharing-h">Service providers and external sites</h3>
         <p>
           <a href="https://www.cloudflare.com/privacypolicy/">Cloudflare</a> hosts the site, account
@@ -220,7 +220,7 @@ export function Privacy({ onNavigate }: { onNavigate: (path: string) => void }) 
           arrangements relevant to your data.
         </p>
       </section>
-      <section id="retention" tabIndex={-1} aria-labelledby="retention-h">
+      <section class="prose-section" id="retention" tabIndex={-1} aria-labelledby="retention-h">
         <h3 id="retention-h">How long information stays</h3>
         <p>
           Account records and saved preferences remain in the active database until you remove them
@@ -244,7 +244,7 @@ export function Privacy({ onNavigate }: { onNavigate: (path: string) => void }) 
           applicable legal obligations when handling a retention or deletion request.
         </p>
       </section>
-      <section id="security" tabIndex={-1} aria-labelledby="security-h">
+      <section class="prose-section" id="security" tabIndex={-1} aria-labelledby="security-h">
         <h3 id="security-h">Keeping information secure</h3>
         <p>
           The site uses HTTPS. Sign-in tokens and session credentials are stored as hashes, and
@@ -253,7 +253,7 @@ export function Privacy({ onNavigate }: { onNavigate: (path: string) => void }) 
           sign-in emails private and sign out on shared devices.
         </p>
       </section>
-      <section id="rights" tabIndex={-1} aria-labelledby="rights-h">
+      <section class="prose-section" id="rights" tabIndex={-1} aria-labelledby="rights-h">
         <h3 id="rights-h">Your choices and data rights</h3>
         <p>
           You can change your{" "}
@@ -285,7 +285,7 @@ export function Privacy({ onNavigate }: { onNavigate: (path: string) => void }) 
           with legal or similarly significant effects on you.
         </p>
       </section>
-      <section id="changes" tabIndex={-1} aria-labelledby="changes-h">
+      <section class="prose-section" id="changes" tabIndex={-1} aria-labelledby="changes-h">
         <h3 id="changes-h">Changes to this policy</h3>
         <p>
           We will update this page when the service’s data practices change. The date above
