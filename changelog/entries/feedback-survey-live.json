@@ -1,0 +1,7 @@
+{
+  "id": "feedback-survey-live",
+  "type": "improved",
+  "title": "Send feedback straight from the site",
+  "body": "The Feedback form now sends your message directly, so you no longer need to email it. Add an email address only if you would like a reply.",
+  "visibility": "public"
+}
