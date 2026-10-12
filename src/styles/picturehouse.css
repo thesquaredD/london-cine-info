@@ -34,7 +34,6 @@
   margin-top: 12px;
 }
 :root .settings-button,
-:root .friends-button,
 :root .theme-button {
   border: 0;
   background: transparent;
@@ -496,8 +495,7 @@
   font-family: Arial, Helvetica, sans-serif;
   font-weight: 400;
 }
-:root .sidebar-content nav a,
-:root .sidebar-content .friends-button {
+:root .sidebar-content nav a {
   padding-block: 8px;
 }
 :root .sidebar-content nav a[aria-current="page"] {
@@ -574,8 +572,7 @@
   --link: #faf7ef;
   border-right: 1px solid #8c714344;
 }
-:root .sidebar-content nav a,
-:root .sidebar-content .friends-button {
+:root .sidebar-content nav a {
   font-family: "Space Grotesk", Arial, sans-serif;
   font-size: 13px;
   font-weight: 500;
@@ -729,7 +726,6 @@
 :root .film-title,
 :root .film-row.is-expanded .film-title,
 :root .sidebar-content nav a,
-:root .sidebar-content .friends-button,
 :root .section-label,
 :root .showtime-day h3,
 :root .showtime-day time,
@@ -978,8 +974,7 @@ html {
   :root .mobile-sort-score {
     font-size: 15px;
   }
-  :root .sidebar-content nav a,
-  :root .sidebar-content .friends-button {
+  :root .sidebar-content nav a {
     font-size: 18px;
     padding-block: 12px;
   }

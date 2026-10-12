@@ -174,6 +174,7 @@ const paths = new Set([
   "/my-calendar",
   "/radar",
   "/account",
+  "/friends",
   "/about",
   "/privacy",
   "/auth/verify",

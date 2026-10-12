@@ -2066,8 +2066,7 @@ h3 {
   margin: 0;
 }
 
-.settings-button,
-.friends-button {
+.settings-button {
   width: calc(100% - 24px);
   margin: 0 12px 12px;
 }

@@ -191,7 +191,7 @@ Page navigation stays in a desktop sidebar and a separate Pages drawer on phones
 For local development with accounts, run `npm run dev:accounts` after a build and local
 migrations, then start Vite with `ACCOUNTS_API_URL=http://localhost:4174 npm run dev`.
 
-Accounts, friends and Letterboxd watchlists: see [ACCOUNT_SETUP.md](ACCOUNT_SETUP.md) for platform setup, verification and activation.
+Accounts, friends and Letterboxd watchlists: see [ACCOUNT_SETUP.md](ACCOUNT_SETUP.md) for platform setup, verification and activation. Friends live on `/friends`, with public watchlist comparison above saved friends and waiting requests.
 
 ## Dates, favourite cinemas and Radar
 

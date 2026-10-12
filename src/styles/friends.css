@@ -4,39 +4,27 @@
 .filter-bar {
   flex-wrap: wrap;
 }
-.friends-count {
-  float: right;
-  font-size: 12px;
-  color: var(--muted);
-}
-.social-dialog {
+.watchlists-dialog {
   width: min(560px, calc(100% - 24px));
   max-height: 90dvh;
 }
-.social-dialog[open] {
+.watchlists-dialog[open] {
   display: flex;
   flex-direction: column;
 }
-.social-dialog > .sheet-heading {
+.watchlists-dialog > .sheet-heading {
   flex-shrink: 0;
 }
-.social-dialog .dialog-body {
+.watchlists-dialog .dialog-body {
   min-height: 0;
   padding: 16px;
 }
-.social-dialog p {
+.watchlists-dialog p {
   line-height: 1.5;
 }
 .social-intro {
   color: var(--muted);
   margin-top: 0;
-}
-.social-identity {
-  display: flex;
-  justify-content: space-between;
-  padding-bottom: 16px;
-  margin-bottom: 16px;
-  border-bottom: 1px solid var(--line);
 }
 .social-input-row {
   display: flex;
@@ -130,7 +118,7 @@
   background: var(--shade);
   border-radius: 4px;
 }
-.social-dialog-actions {
+.watchlists-dialog-actions {
   display: flex;
   justify-content: space-between;
   gap: 12px;
@@ -176,17 +164,17 @@
   line-height: 1.4;
 }
 
-.social-dialog button {
+.watchlists-dialog button {
   border-radius: 4px;
 }
 .calendar-watchlists {
   padding: 16px 0;
 }
 @media (max-width: 799px) {
-  .social-dialog {
+  .watchlists-dialog {
     max-height: 90dvh;
   }
-  .social-dialog .dialog-body {
+  .watchlists-dialog .dialog-body {
     padding: 16px;
   }
   .social-person {
@@ -209,15 +197,15 @@
   .film-friends {
     font-size: 12px;
   }
-  .social-dialog-actions {
+  .watchlists-dialog-actions {
     position: sticky;
     bottom: 0;
     background: var(--panel);
     padding-bottom: 8px;
   }
 }
-.social-dialog input[type="checkbox"],
-.social-dialog input[type="radio"] {
+.watchlists-dialog input[type="checkbox"],
+.watchlists-dialog input[type="radio"] {
   width: 16px;
   min-width: 16px;
   height: 16px;
@@ -315,28 +303,99 @@
   flex: 1;
   min-width: 0;
 }
-.social-dialog .watchlist-option strong,
-.social-dialog .social-person strong {
+.watchlists-dialog .watchlist-option strong,
+.watchlists-dialog .social-person strong {
   overflow-wrap: anywhere;
 }
-.social-dialog {
+.watchlists-dialog {
   padding: 0;
   background: var(--panel);
   color: var(--fg);
   border: 1px solid var(--line);
   border-radius: 4px;
 }
-.social-dialog::backdrop {
+.watchlists-dialog::backdrop {
   background: rgba(0, 0, 0, 0.4);
 }
-.social-dialog form > label {
+.watchlists-dialog form > label {
   display: block;
   font-weight: 500;
 }
-.social-dialog .filter-hint {
+.watchlists-dialog .filter-hint {
   font-size: 12px;
   color: var(--muted);
 }
-.social-dialog > .dialog-body {
+.watchlists-dialog > .dialog-body {
   overflow-y: auto;
+}
+
+.sidebar-content .friends-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.nav-badge {
+  min-width: 16px;
+  height: 16px;
+  padding: 1px 4px 0;
+  border-radius: 8px;
+  font-size: 11px;
+  line-height: 15px;
+  font-variant-numeric: tabular-nums;
+  background: var(--brass);
+  color: var(--bg);
+}
+.friends-page .social-plan {
+  padding: 18px;
+  margin: 20px 0 0;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+}
+.friends-page .social-plan h3 {
+  margin: 0 0 12px;
+  font-size: 18px;
+  font-weight: 500;
+}
+.friends-page .social-plan-form .filter-hint {
+  margin: 0;
+}
+.friends-page .social-list-toolbar {
+  position: static;
+  background: transparent;
+}
+.friends-page .social-remove {
+  margin: 0;
+  padding: 12px 0;
+  border: 0;
+}
+.friends-page .social-remove p {
+  margin-top: 0;
+}
+@media (max-width: 799px) {
+  .menu-button[data-requests="true"] {
+    position: relative;
+  }
+  .menu-button[data-requests="true"]::after {
+    content: "";
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--brass);
+  }
+  .friends-page .social-plan {
+    padding: 14px;
+  }
+  .friends-page .social-person small,
+  .friends-page .filter-hint,
+  .friends-page .social-pagination {
+    font-size: 15px;
+  }
+}
+
+.friends-page .social-plan + .pref-section {
+  border-top: 0;
 }

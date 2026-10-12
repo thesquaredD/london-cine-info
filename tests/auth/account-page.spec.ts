@@ -190,14 +190,16 @@ test("Profile and Emails issue partial saves and retain drafts across a failed f
   ).not.toBeChecked();
   const saved = await (await page.request.get("/api/friends")).json();
   expect(saved.appUsername).toMatch(/^page_/);
-  // The existing Friends manager reads the saved profile; its editor moves into Account in this PR.
   const nav = await sidebar(page);
-  await nav.getByRole("button", { name: /^Friends/ }).click();
-  const manager = page.getByRole("dialog", { name: "Find a film together", exact: true });
-  await manager.getByRole("button", { name: "Keep friends for next time", exact: true }).click();
-  await expect(manager.getByLabel("Your app username", { exact: true })).toHaveCount(0);
-  await manager.getByLabel("Add a friend", { exact: true }).fill("another_friend");
-  await expect(manager.getByRole("button", { name: "Send request", exact: true })).toBeEnabled();
+  await nav.getByRole("link", { name: "Friends", exact: true }).click();
+  const friends = page.getByRole("article", { name: "Friends", exact: true });
+  await expect(friends).toContainText(`You are @${saved.appUsername}`);
+  await expect(friends.getByLabel("Your app username", { exact: true })).toHaveCount(0);
+  await friends
+    .getByRole("region", { name: "Add a friend", exact: true })
+    .getByLabel("App username", { exact: true })
+    .fill("another_friend");
+  await expect(friends.getByRole("button", { name: "Send request", exact: true })).toBeEnabled();
 });
 
 test("Delete confirmation is inline, restores focus on cancel and leaves a notice on completion", async ({

@@ -207,7 +207,9 @@ save, persistence, failed-save retry, export, removal and account-isolation flow
 
 Migration `0007_friends.sql` adds unique, case-insensitive app usernames, pending/accepted
 friendships and the shared-film email preference. App usernames are separate from Letterboxd
-handles. Choose one in Friends beside Account and Settings, then request another app username.
+handles. Choose one in Account › Profile, then open `/friends` to request another app username.
+The Friends page puts comparison first, then waiting requests, saved friends and sent requests.
+Waiting requests appear as a numeric badge on the sidebar link and a dot on the phone menu.
 Only the recipient can accept. Removing a friend or deleting either account revokes access;
 account deletion cascades through both sides of the relationship. Friendships and pending
 requests are capped at 1,000 per account. Lists are searchable and shown six friends at a time,
@@ -238,8 +240,8 @@ public HTML source as account imports; Letterboxd may refuse reads, and the UI r
 
 Weekly digests add current shared films with fresh accepted-friend imports, independently of
 normal previously-announced-film suppression. A shared-only digest can therefore be sent even
-when no new personal screening alert exists. The section is optional in Friends and still uses
-the account's existing weekly subscription. It links to `/watchlist?friends=1`, which selects
+when no new personal screening alert exists. The section is optional in Account › Emails and
+still uses the account's existing weekly subscription. It links to `/watchlist?friends=1`, which selects
 Any friend's watchlist within the recipient's own list. New payloads use `digest-v3/` keys;
 existing pending deliveries continue to retry their original stored payload and key.
 

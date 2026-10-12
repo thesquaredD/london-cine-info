@@ -1,9 +1,10 @@
 import { MobileSort } from "./components/mobile-sort";
 import { capture } from "./lib/analytics";
 import { useDiscoveryAnalytics } from "./lib/discovery-analytics";
+import { FriendsPage } from "./components/friends-page";
 import { FriendsContext, useFriendsModel } from "./lib/friends";
 import {
-  FriendsDialogs,
+  WatchlistsDialog,
   FriendsFeedback,
   WatchlistsButton,
   WatchlistSelections,
@@ -236,6 +237,7 @@ export function App() {
     PAGES.find((page) => page.path === state.path)?.name ??
     {
       "/account": "Account",
+      "/friends": "Friends",
       "/privacy": "Privacy",
       "/auth/verify": "Sign in",
       "/unsubscribe": "Unsubscribe",
@@ -561,11 +563,6 @@ export function App() {
   const phone = () => window.matchMedia("(max-width: 799px)").matches;
   const sidebarProps = {
     state,
-    onFriends: () => {
-      if (drawer.current?.open) drawer.current.close();
-      setDrawerOpen(false);
-      friends.setPanel("friends");
-    },
     onSettings: openSettings,
     account,
     meta,
@@ -616,18 +613,17 @@ export function App() {
           <Sidebar {...sidebarProps} />
         </dialog>
         <main class="main-column" id="main-content">
-          <FriendsDialogs
-            onAccount={(path) => {
-              closeScreeningCalendar();
-              navigateTo(path ?? "/account");
-            }}
-            onNavigate={() => change({ path: "/", watchlist: false, page: 1 }, true)}
-          />
-          {!friends.panel && state.path !== "/account" && <FriendsFeedback />}
+          <WatchlistsDialog onNavigate={navigateTo} />
+          {!friends.panel && !["/account", "/friends"].includes(state.path) && <FriendsFeedback />}
           <header class="masthead">
             <button
               class="menu-button"
-              aria-label="Toggle pages"
+              data-requests={friends.pendingIncoming > 0}
+              aria-label={
+                friends.pendingIncoming
+                  ? `Toggle pages, ${friends.pendingIncoming} friend request${friends.pendingIncoming === 1 ? "" : "s"}`
+                  : "Toggle pages"
+              }
               aria-expanded={phone() ? drawerOpen : !collapsed}
               onClick={() => {
                 if (phone()) setDrawerOpen(true);
@@ -740,6 +736,13 @@ export function App() {
               meta={meta}
               onManageCinemas={openCinemas}
               onNavigate={navigateTo}
+            />
+          ) : state.path === "/friends" ? (
+            <FriendsPage
+              onNavigate={(path) => {
+                if (path === "/") change({ path: "/", watchlist: false, page: 1 }, true);
+                else navigateTo(path);
+              }}
             />
           ) : state.path === "/privacy" ? (
             <Privacy onNavigate={navigateTo} />

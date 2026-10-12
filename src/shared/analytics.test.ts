@@ -30,23 +30,26 @@ describe("analytics data boundary", () => {
       "/",
     );
   });
-  it("records Account as its own page while stripping section anchors and private query values", () => {
-    const safe = safeAnalyticsProperties({
-      path: "/account",
-      $current_url: "https://london-cine.info/account?email=private@example.com#emails",
-      $prev_pageview_pathname: "/account",
-    });
-    expect(safe).toMatchObject({
-      path: "/account",
-      $pathname: "/account",
-      $current_url: "https://london-cine.info/account",
-      $prev_pageview_pathname: "/account",
-    });
-    expect(acquisition(new URL("https://london-cine.info/account#profile"), "").landing_path).toBe(
-      "/account",
-    );
-    expect(JSON.stringify(safe)).not.toContain("private@example.com");
-  });
+  it.each(["/account", "/friends"])(
+    "records %s while stripping section anchors and private query values",
+    (path) => {
+      const safe = safeAnalyticsProperties({
+        path,
+        $current_url: `https://london-cine.info${path}?email=private@example.com#emails`,
+        $prev_pageview_pathname: path,
+      });
+      expect(safe).toMatchObject({
+        path,
+        $pathname: path,
+        $current_url: `https://london-cine.info${path}`,
+        $prev_pageview_pathname: path,
+      });
+      expect(acquisition(new URL(`https://london-cine.info${path}#profile`), "").landing_path).toBe(
+        path,
+      );
+      expect(JSON.stringify(safe)).not.toContain("private@example.com");
+    },
+  );
   it("separates organic search, referral, direct and explicit campaign sources", () => {
     const url = new URL("https://london-cine.info/new?q=alien&token=private");
     expect(acquisition(url, "https://www.google.co.uk/search?q=private").source).toBe(

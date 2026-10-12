@@ -218,3 +218,30 @@ test("account_opened tracks the page on direct load, sidebar navigation and hist
   ).toEqual(["/account", "/", "/account", "/", "/account"]);
   expect(JSON.stringify(events)).not.toContain("unsent@example.com");
 });
+
+test("Friends page navigation records its path without sending usernames or section anchors", async ({
+  page,
+}) => {
+  const events = await intercept(page);
+  await page.goto("/friends#requests");
+  await expect(page.getByRole("article", { name: "Friends", exact: true })).toBeVisible();
+  await expect.poll(() => events.filter((event) => event.event === "$pageview").length).toBe(1);
+  const view = events.find((event) => event.event === "$pageview")!;
+  expect(view.properties).toMatchObject({
+    path: "/friends",
+    $pathname: "/friends",
+    $current_url: "https://london-cine.info/friends",
+  });
+  await page.getByLabel("Your Letterboxd username", { exact: true }).fill("private_watchlist");
+  await page
+    .getByRole("article", { name: "Friends", exact: true })
+    .getByRole("link", { name: "Sign in", exact: true })
+    .click();
+  await expect(page).toHaveURL("/account");
+  await expect.poll(() => events.filter((event) => event.event === "$pageview").length).toBe(2);
+  expect(
+    events.filter((event) => event.event === "$pageview").map((event) => event.properties.path),
+  ).toEqual(["/friends", "/account"]);
+  expect(JSON.stringify(events)).not.toContain("private_watchlist");
+  expect(JSON.stringify(events)).not.toContain("#requests");
+});
