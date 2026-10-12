@@ -60,6 +60,11 @@ test("notes are grouped by change date, paginated and deep-linkable", async ({ p
     "Change date: 1 October 2026",
   ]);
   await expect(article.locator("#change-1")).toContainText("Added");
+  const date = (await article.getByRole("heading", { level: 3 }).first().boundingBox())!;
+  const entry = (await article.locator("#change-1").boundingBox())!;
+  if (page.viewportSize()!.width < 800) expect(date.y).toBeLessThan(entry.y);
+  else expect(date.x).toBeLessThan(entry.x);
+
   await expect(article.locator(".changelog-entry")).toHaveCount(20);
   await article.getByRole("button", { name: "Show older changes" }).click();
   await expect(article.locator(".changelog-entry")).toHaveCount(21);
@@ -79,4 +84,25 @@ test("a failed load offers a retry", async ({ page }) => {
   await expect(page.getByRole("alert")).toContainText("could not be loaded");
   await page.getByRole("button", { name: "Try again" }).click();
   await expect(page.locator("#change-1")).toBeVisible();
+});
+
+test("About starts with four facts and retains source credits", async ({ page }, info) => {
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  await page.goto("/about");
+  await expect(page.locator(".prose-facts > div")).toHaveCount(4);
+  await expect(page.locator(".prose-facts")).toContainText("9");
+  await expect(page.getByRole("img", { name: "The Movie Database (TMDB)" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "London Datastore" })).toHaveAttribute(
+    "href",
+    "https://data.london.gov.uk/dataset/london-boroughs-e55pw",
+  );
+  await expect(page.getByRole("link", { name: "Open Government Licence v3.0" })).toBeVisible();
+  await page.screenshot({ path: info.outputPath("about-facts.png"), fullPage: true });
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= document.documentElement.clientWidth,
+    ),
+  ).toBe(true);
+  expect(errors).toEqual([]);
 });
