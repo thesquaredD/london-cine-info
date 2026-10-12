@@ -73,7 +73,7 @@ import type { DataMeta, Film, EventOccurrence } from "./shared/data";
 
 function About({ meta }: { meta: DataMeta | null }) {
   return (
-    <article class="about-page">
+    <article class="prose about-page">
       <h2>London screenings, in one table</h2>
       <p>
         Browse cinema screenings across London, from new films to classics and special events.

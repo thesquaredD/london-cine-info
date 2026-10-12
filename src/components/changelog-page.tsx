@@ -40,7 +40,7 @@ export function ChangelogPage({ onNavigate }: { onNavigate: (path: string) => vo
     else groups.push({ day: entry.changeDate, entries: [entry] });
   }
   return (
-    <article class="pref-page changelog-page" aria-labelledby="changelog-title" ref={article}>
+    <article class="prose pref-page changelog-page" aria-labelledby="changelog-title" ref={article}>
       <h2 id="changelog-title" tabIndex={-1}>
         What’s new
       </h2>

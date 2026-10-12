@@ -343,7 +343,7 @@ export function AccountPage({
     .map((id) => meta?.venues.find((venue) => venue.id === id)?.name)
     .filter(Boolean);
   return (
-    <article ref={article} class="pref-page" aria-labelledby="pref-title">
+    <article ref={article} class="prose pref-page" aria-labelledby="pref-title">
       <h2 id="pref-title" tabIndex={-1}>
         {account.loading || account.user ? "Account" : "Sign in"}
       </h2>
@@ -650,7 +650,7 @@ export function TokenPage({
   }, []);
   const verify = kind === "verify";
   return (
-    <article class="about-page">
+    <article class="prose about-page">
       <h2>{verify ? "Sign in to London Ciné Info" : "Unsubscribe from screening emails"}</h2>
       <p>
         {verify

@@ -631,19 +631,6 @@ h3 {
   color: var(--muted);
   font-size: 11px;
 }
-.about-page {
-  max-width: 750px;
-  padding: 30px 24px;
-  margin: 0 auto;
-  line-height: 1.7;
-}
-.about-page h2 {
-  font-size: 24px;
-}
-.about-page h3 {
-  font-size: 18px;
-  margin-top: 28px;
-}
 .pref-page {
   width: 100%;
   max-width: 640px;
@@ -980,9 +967,6 @@ h3 {
   }
   .source-status dd {
     margin-bottom: 10px;
-  }
-  .about-page {
-    padding: 20px 16px;
   }
 }
 @media (prefers-reduced-motion: no-preference) {
@@ -2550,10 +2534,4 @@ h3 {
   flex-wrap: wrap;
   gap: 8px 16px;
   margin: 24px 0;
-}
-@media (max-width: 799px) {
-  .privacy-page {
-    font-size: 17px;
-    overflow-wrap: anywhere;
-  }
 }

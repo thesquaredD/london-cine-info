@@ -1,0 +1,294 @@
+/* Shared scale and blocks for every reading surface. Colours come from the theme. */
+:root {
+  --prose-measure: 62ch;
+  --prose-body: 15px;
+  --prose-leading: 1.55;
+  --prose-small: 14px;
+  --prose-lede: 17px;
+  --prose-h1: 30px;
+  --prose-h2: 20px;
+  --prose-eyebrow: 11px;
+  --prose-gap: 12px;
+  --prose-section: 40px;
+}
+.prose {
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 40px 32px 64px;
+  font-size: var(--prose-body);
+  line-height: var(--prose-leading);
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+.prose :is(p, li, dd),
+.dialog-body p {
+  max-width: var(--prose-measure);
+}
+.prose p,
+.dialog-body p {
+  margin: 0 0 var(--prose-gap);
+  font-size: var(--prose-body);
+  line-height: var(--prose-leading);
+}
+.prose :is(h1, h2),
+.prose-h1 {
+  margin: 0 0 var(--prose-gap);
+  font-size: var(--prose-h1);
+  line-height: 1.15;
+  font-weight: 500;
+}
+.prose :is(h3, .prose-h2),
+.prose .prose-section h2 {
+  margin: 0 0 var(--prose-gap);
+  font-size: var(--prose-h2);
+  line-height: 1.3;
+  font-weight: 500;
+}
+.prose-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--prose-gap) 20px;
+  margin-bottom: var(--prose-gap);
+}
+.prose-head :is(h1, h2, p) {
+  margin: 0;
+}
+.prose .prose-meta,
+.prose .prose-small,
+.prose-small,
+.prose .pref-hint,
+.prose .pref-save [role="status"] {
+  font-size: var(--prose-small);
+  color: var(--muted);
+}
+.prose .prose-lede,
+.prose .pref-lede {
+  margin-bottom: 20px;
+  font-size: var(--prose-lede);
+  line-height: 1.5;
+  color: var(--fg);
+}
+.prose-section {
+  border-top: 1px solid var(--line);
+  padding-top: 16px;
+  margin-top: var(--prose-section);
+  scroll-margin-top: 16px;
+  min-width: 0;
+}
+.prose-section:focus-visible {
+  outline: 2px solid var(--brass);
+  outline-offset: 4px;
+}
+.prose-num {
+  color: var(--brass);
+  font-size: 13px;
+  margin-right: 10px;
+}
+.prose-summary {
+  background: var(--panel);
+  border-top: 2px solid var(--brass);
+  padding: 18px 22px;
+  max-width: 720px;
+  margin-block: 24px var(--prose-section);
+}
+.prose .prose-eyebrow,
+.prose-eyebrow,
+.prose .pref-section h3 {
+  font-size: var(--prose-eyebrow);
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--brass);
+}
+.prose ul {
+  padding-left: 20px;
+  margin: 0 0 var(--prose-gap);
+}
+.prose li + li {
+  margin-top: 6px;
+}
+.prose li::marker {
+  color: var(--brass);
+}
+.prose dl {
+  display: grid;
+  grid-template-columns: 11em minmax(0, 1fr);
+  gap: 8px 20px;
+  margin: 0 0 var(--prose-gap);
+}
+.prose dt {
+  color: var(--muted);
+}
+.prose dd {
+  margin: 0;
+}
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: var(--prose-gap);
+}
+.prose th {
+  color: var(--muted);
+  font-weight: 500;
+  border-bottom: 1px solid var(--line);
+}
+.prose :is(th, td) {
+  text-align: left;
+  vertical-align: top;
+  padding: 8px 12px 8px 0;
+}
+.prose td {
+  border-bottom: 1px solid var(--shade);
+}
+.prose :is(th, td):first-child {
+  width: 11em;
+}
+.prose-scroll {
+  min-width: 0;
+  overflow-x: auto;
+}
+.prose-cols {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  max-width: 640px;
+}
+.prose-control {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--prose-gap) 20px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  padding: 14px 18px;
+  min-height: 44px;
+  margin-bottom: var(--prose-gap);
+}
+.prose-control label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 500;
+  min-height: 44px;
+}
+.prose-control input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  accent-color: var(--brass);
+  margin: 0;
+  padding: 0;
+}
+.prose-control [role="status"] {
+  font-size: var(--prose-small);
+  color: var(--muted);
+}
+.prose-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--prose-gap) 20px;
+  border-top: 1px solid var(--line);
+  padding: 16px 20px;
+}
+.prose-footer p {
+  max-width: 40ch;
+  margin: 0;
+  font-size: var(--prose-small);
+  color: var(--muted);
+}
+.prose-map {
+  position: sticky;
+  top: 24px;
+  min-width: 0;
+}
+.prose-map a {
+  display: block;
+  padding: 5px 0 5px 10px;
+  color: var(--muted);
+  text-decoration: none;
+}
+.prose-map a[aria-current="location"] {
+  box-shadow: inset 2px 0 var(--brass);
+  color: var(--fg);
+}
+.prose-map summary {
+  min-height: 44px;
+  cursor: pointer;
+}
+.prose-two {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr);
+  gap: 40px;
+  align-items: start;
+}
+.prose-two > * {
+  min-width: 0;
+}
+.prose-two .prose-section:first-child {
+  margin-top: 0;
+}
+@media (max-width: 899px) {
+  .prose-two {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+  }
+  .prose-map {
+    position: static;
+  }
+}
+@media (max-width: 799px) {
+  :root {
+    --prose-body: 16px;
+    --prose-leading: 1.5;
+  }
+  .prose {
+    padding: 24px 16px 48px;
+  }
+  .prose dl {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px;
+  }
+  .prose dd + dt {
+    margin-top: 10px;
+  }
+  .prose-cols {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .prose table:not(.prose-wide) :is(thead, tbody, tr, th, td) {
+    display: block;
+    width: auto;
+  }
+  .prose table:not(.prose-wide) thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .prose table:not(.prose-wide) td:first-child {
+    color: var(--muted);
+    border: 0;
+    padding-bottom: 2px;
+  }
+  .prose-wide {
+    min-width: 580px;
+  }
+  .prose-footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .prose :is(a, button),
+  .prose-map a {
+    min-height: 44px;
+  }
+  .prose-map a {
+    display: flex;
+    align-items: center;
+  }
+}
