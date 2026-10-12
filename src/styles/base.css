@@ -2498,40 +2498,13 @@ h3 {
 .auth-checking {
   color: var(--muted);
 }
-.privacy-page .privacy-updated {
-  color: var(--muted);
-  font-size: 13px;
-}
-.privacy-page section {
-  scroll-margin-top: 16px;
-}
-.privacy-page .privacy-choice {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-height: 44px;
-}
-.privacy-choice input {
-  width: 18px;
-  height: 18px;
-  flex-shrink: 0;
-}
 @media (max-width: 799px) {
   :root .sidebar-bottom .sidebar-auth :is(a, button, .auth-checking) {
     font-size: 18px;
     min-height: 44px;
   }
-  .privacy-page .privacy-updated {
-    font-size: 15px;
-  }
 }
 
 .sidebar-auth {
   margin-inline: -12px;
-}
-.privacy-contents {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 16px;
-  margin: 24px 0;
 }

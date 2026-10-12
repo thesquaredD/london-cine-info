@@ -1,0 +1,7 @@
+{
+  "id": "privacy-structure",
+  "type": "improved",
+  "title": "Privacy information is easier to find",
+  "body": "The Privacy page now opens with a short summary and links to each section. Browser storage, retention and data choices are easier to scan.",
+  "visibility": "public"
+}

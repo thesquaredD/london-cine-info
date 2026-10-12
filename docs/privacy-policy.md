@@ -36,3 +36,7 @@ or change scheduled importer metrics. The policy distinguishes active-database d
 provider delivery records, analytics and backups. Provider retention periods, processing locations
 and contractual transfer safeguards cannot be inferred from source code; keep their disclosure
 and private-contact route current when provider settings or arrangements change.
+
+On 12 October 2026, the policy was restructured with a summary, section map, definition lists
+and storage/retention tables. Copy was re-cut rather than rewritten; the data practices,
+retention disclosures and rights remain the same.

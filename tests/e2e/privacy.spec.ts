@@ -46,6 +46,8 @@ test("Privacy identifies the operator, explains current data practices and keeps
   await expect(page).toHaveURL("/account#profile");
   await expect(page.getByRole("article", { name: "Sign in", exact: true })).toBeVisible();
   await page.goto("/privacy");
+  if (page.viewportSize()!.width < 700)
+    await policy.getByText("On this page", { exact: true }).click();
   await policy
     .getByRole("navigation", { name: "Privacy policy sections", exact: true })
     .getByRole("link", { name: "Your rights", exact: true })
@@ -81,4 +83,34 @@ test("privacy choice persists and blocked storage reports a visit-only choice", 
     page.getByRole("status").filter({ hasText: "This analytics choice lasts only for this visit" }),
   ).toBeVisible();
   await expect(choice).not.toBeChecked();
+});
+
+test("Privacy summary, current section and storage table work at phone width", async ({
+  page,
+}, info) => {
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  await page.goto("/privacy");
+  const summary = page.getByRole("complementary", { name: "In short" });
+  await expect(summary.getByRole("listitem")).toHaveCount(4);
+  await summary.getByRole("link", { name: "site analytics" }).click();
+  await expect(page.locator("#analytics")).toBeFocused();
+  await page.locator("#retention").evaluate((node) => node.scrollIntoView({ block: "start" }));
+  await expect(page.locator('.prose-map a[href="#retention"]')).toHaveAttribute(
+    "aria-current",
+    "location",
+  );
+  if (page.viewportSize()!.width < 700) {
+    const map = page.locator(".prose-map details");
+    await expect(map.locator("summary")).toHaveText("On this page");
+    await expect(map).not.toHaveAttribute("open", "");
+    const scroll = page.getByRole("region", { name: "Browser storage", exact: true });
+    expect(await scroll.evaluate((node) => node.scrollWidth > node.clientWidth)).toBe(true);
+  }
+  expect(await page.evaluate(() => document.documentElement.scrollWidth === innerWidth)).toBe(true);
+  await page.goto("/privacy");
+  await page.screenshot({ path: info.outputPath("privacy-structured.png"), fullPage: true });
+  await summary.getByRole("link", { name: "remove your account" }).click();
+  await expect(page).toHaveURL("/account#delete");
+  expect(errors).toEqual([]);
 });
