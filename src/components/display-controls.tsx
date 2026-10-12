@@ -2,27 +2,16 @@ import { useState } from "preact/hooks";
 import { RATINGS } from "../lib/catalogue";
 import { moveRating, type DisplayState, type TitleMode } from "../lib/display";
 import type { RatingKey } from "../shared/data";
-export function DisplayControls({
-  value,
-  onChange,
-}: {
+type Props = {
   value: DisplayState;
   onChange: (value: DisplayState) => void;
-}) {
-  const [announcement, setAnnouncement] = useState("");
-  function move(key: RatingKey, destination: number) {
-    onChange({ ...value, ratingOrder: moveRating(value.ratingOrder, key, destination) });
-    setAnnouncement(
-      `${RATINGS.find((rating) => rating.key === key)!.name} is rating column ${destination + 1} of 4.`,
-    );
-  }
+};
+export function DisplayControls({ value, onChange }: Props) {
   return (
-    <section class="display-controls" aria-label="Display">
-      <h2 class="section-label">Display</h2>
+    <>
       <label>
         Film titles
         <select
-          data-initial-focus
           value={value.titleMode}
           onChange={(event) =>
             onChange({ ...value, titleMode: event.currentTarget.value as TitleMode })
@@ -43,8 +32,20 @@ export function DisplayControls({
         />{" "}
         Hide ratings in my watchlist
       </label>
-      <h3>Rating column order</h3>
-      <p>Drag or use the arrows to reorder.</p>
+    </>
+  );
+}
+export function RatingOrderControls({ value, onChange }: Props) {
+  const [announcement, setAnnouncement] = useState("");
+  function move(key: RatingKey, destination: number) {
+    onChange({ ...value, ratingOrder: moveRating(value.ratingOrder, key, destination) });
+    setAnnouncement(
+      `${RATINGS.find((rating) => rating.key === key)!.name} is rating column ${destination + 1} of 4.`,
+    );
+  }
+  return (
+    <>
+      <p class="filter-hint">Drag or use the arrows to reorder.</p>
       <ol aria-label="Rating column order">
         {value.ratingOrder.map((key, index) => {
           const rating = RATINGS.find((rating) => rating.key === key)!;
@@ -94,6 +95,6 @@ export function DisplayControls({
       <span class="sr-only" role="status" aria-live="polite">
         {announcement}
       </span>
-    </section>
+    </>
   );
 }

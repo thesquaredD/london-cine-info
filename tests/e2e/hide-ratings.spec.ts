@@ -34,16 +34,10 @@ test("remembered watchlist preference removes every rating surface and rating so
   await expect(page.locator(".rating-column").first()).toBeAttached();
   if (page.viewportSize()!.width < 800)
     await page.getByRole("button", { name: "Toggle pages" }).click();
-  await page
-    .locator(
-      page.viewportSize()!.width < 800
-        ? ".sidebar-drawer .settings-button"
-        : ".desktop-sidebar .settings-button",
-    )
-    .click();
-  const settings = page.getByRole("dialog", { name: "Settings", exact: true });
+  await page.getByRole("link", { name: "Settings", exact: true }).filter({ visible: true }).click();
+  const settings = page.getByRole("article", { name: "Settings", exact: true });
   await settings.getByLabel("Hide ratings in my watchlist").check();
-  await page.keyboard.press("Escape");
+  await page.goBack();
   await expect(page.locator(".rating-column")).toHaveCount(0);
   await expect(page.locator(".mobile-sort-score")).toHaveCount(0);
   await expect(page.locator("th.title-column")).toHaveAttribute("aria-sort", "ascending");
@@ -71,11 +65,8 @@ test("remembered watchlist preference removes every rating surface and rating so
   await expect(page.locator(".rating-column")).toHaveCount(0);
   if (page.viewportSize()!.width < 800)
     await page.getByRole("button", { name: "Toggle pages" }).click();
-  await page
-    .getByRole("button", { name: "Settings", exact: true })
-    .filter({ visible: true })
-    .click();
+  await page.getByRole("link", { name: "Settings", exact: true }).filter({ visible: true }).click();
   await settings.getByLabel("Hide ratings in my watchlist").uncheck();
-  await page.keyboard.press("Escape");
+  await page.goBack();
   await expect(page.locator(".rating-column").first()).toBeAttached();
 });

@@ -371,18 +371,6 @@
 :root .film-about > summary::-webkit-details-marker {
   display: none;
 }
-:root .sidebar-content .settings-button {
-  background: transparent;
-  border: 0;
-  box-shadow: none;
-  padding: 10px 12px;
-  width: 100%;
-  min-height: 44px;
-  text-align: left;
-}
-:root .sidebar-content .settings-button:hover {
-  background: var(--shade);
-}
 @media (max-width: 799px) {
   :root .film-expanded > .film-detail-title {
     margin: 0 0 8px;

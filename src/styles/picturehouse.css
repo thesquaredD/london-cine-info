@@ -33,7 +33,6 @@
 :root .sidebar-content nav section + section {
   margin-top: 12px;
 }
-:root .settings-button,
 :root .theme-button {
   border: 0;
   background: transparent;
@@ -1008,7 +1007,7 @@ html {
   :root .showtime-day li {
     grid-template-columns: 58px 4px minmax(0, 1fr);
   }
-  :root .sidebar-drawer :is(.preferences-nav a, .signout-button, .settings-button) {
+  :root .sidebar-drawer :is(.preferences-nav a, .signout-button) {
     font-size: 16px;
     min-height: 44px;
   }

@@ -9,23 +9,16 @@ async function pages(page: Page) {
 }
 async function settings(page: Page) {
   await pages(page);
-  await page
-    .getByRole("button", { name: "Settings", exact: true })
-    .filter({ visible: true })
-    .click();
-  const dialog = page.getByRole("dialog", { name: "Settings", exact: true });
-  await expect(dialog).toBeVisible();
-  await expect(dialog.getByLabel("Film titles")).toBeFocused();
-  await expect(page.locator("dialog[open]")).toHaveCount(1);
+  await page.getByRole("link", { name: "Settings", exact: true }).filter({ visible: true }).click();
+  const settings = page.getByRole("article", { name: "Settings", exact: true });
+  await expect(settings).toBeVisible();
+  await expect(settings.getByRole("heading", { name: "Settings", exact: true })).toBeFocused();
+  await expect(page.locator("dialog[open]")).toHaveCount(0);
 }
-async function closeSettings(page: Page) {
-  await page.keyboard.press("Escape");
-  await expect(page.getByRole("dialog", { name: "Settings", exact: true })).toBeHidden();
-  await expect(
-    page.viewportSize()!.width < 800
-      ? page.getByRole("button", { name: "Toggle pages" })
-      : page.locator(".desktop-sidebar .settings-button"),
-  ).toBeFocused();
+async function returnToCatalogue(page: Page) {
+  await page.goBack();
+  await expect(page.getByRole("article", { name: "Settings", exact: true })).toHaveCount(0);
+  await expect(page.locator(".film-row").first()).toBeVisible();
 }
 test.beforeEach(async ({ page }) => {
   await page.route("**/api/me", (route) => route.fulfill({ json: { user: null } }));
@@ -98,7 +91,7 @@ test("Display changes titles and rating order, persists across navigation and re
   await controls.getByRole("button", { name: "Move IMDb rating up" }).focus();
   await page.keyboard.press("Enter");
   await expect(controls.getByRole("status")).toHaveText("IMDb is rating column 1 of 4.");
-  await closeSettings(page);
+  await returnToCatalogue(page);
   await expect(page.locator(".film-title").filter({ hasText: "Titre B" })).not.toContainText(
     "Fixture Classic B",
   );
@@ -117,7 +110,7 @@ test("Display changes titles and rating order, persists across navigation and re
   );
   await settings(page);
   await controls.getByLabel("Film titles").selectOption("title");
-  await closeSettings(page);
+  await returnToCatalogue(page);
   await expect(page.locator(".film-title i")).toHaveCount(0);
   await page.reload();
   await expect(page.locator(".film-title i")).toHaveCount(1);
@@ -129,16 +122,13 @@ test("Display changes titles and rating order, persists across navigation and re
       .locator('[title="Drag Rotten Tomatoes"]')
       .dragTo(controls.getByRole("listitem").first());
     await expect(controls.getByRole("listitem").first()).toContainText("Rotten Tomatoes");
-    await expect(page.getByRole("button", { name: "Sort by RT", exact: true })).toBeVisible();
+    await expect(page.locator(".pref-preview th").nth(2)).toContainText("RT");
     await expect(page.locator(".film-table th").nth(2)).toContainText("RT");
   }
   const evidence = process.env.CI
     ? test.info().outputPath("settings")
     : join(homedir(), ".Codex/london-cine-info/discovery/verification");
   await mkdir(evidence, { recursive: true });
-  await page.getByRole("dialog", { name: "Settings", exact: true }).evaluate(async (node) => {
-    await Promise.all(node.getAnimations().map((animation) => animation.finished));
-  });
   await page.screenshot({ path: join(evidence, `settings-${test.info().project.name}.png`) });
 });
 test("official TMDB attribution loads locally in About", async ({ page }) => {
@@ -173,6 +163,9 @@ test("all catalogue pages fit phone, tablet and desktop in dark mode under eithe
         "/calendar",
         "/watchlist",
         "/radar",
+        "/account",
+        "/friends",
+        "/settings",
         "/about",
         "/privacy",
       ]) {

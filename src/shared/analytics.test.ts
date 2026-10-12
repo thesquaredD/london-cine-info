@@ -30,7 +30,7 @@ describe("analytics data boundary", () => {
       "/",
     );
   });
-  it.each(["/account", "/friends"])(
+  it.each(["/account", "/friends", "/settings"])(
     "records %s while stripping section anchors and private query values",
     (path) => {
       const safe = safeAnalyticsProperties({
