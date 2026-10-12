@@ -107,7 +107,11 @@ test("Privacy summary, current section and storage table work at phone width", a
     const scroll = page.getByRole("region", { name: "Browser storage", exact: true });
     expect(await scroll.evaluate((node) => node.scrollWidth > node.clientWidth)).toBe(true);
   }
-  expect(await page.evaluate(() => document.documentElement.scrollWidth === innerWidth)).toBe(true);
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth === document.documentElement.clientWidth,
+    ),
+  ).toBe(true);
   await page.goto("/privacy");
   await page.screenshot({ path: info.outputPath("privacy-structured.png"), fullPage: true });
   await summary.getByRole("link", { name: "remove your account" }).click();
