@@ -39,14 +39,15 @@ function applyAnalyticsAllowed(allowed: boolean) {
     /* Collection still stops when storage is unavailable. */
   }
   try {
+    if (allowed && !browserDoNotTrack() && !initialized) initAnalytics();
     if (initialized) {
       if (allowed && !browserDoNotTrack()) {
-        // A sign-out/account change may have happened while capture was disabled.
+        // Clear a persisted SDK objection after reload and any stale account identity.
         posthog.reset(true);
         posthog.opt_in_capturing({ captureEventName: false });
         if (accountId) posthog.identify(`account:${accountId}`);
       } else posthog.opt_out_capturing();
-    } else if (allowed) initAnalytics();
+    }
   } catch {
     /* The local guard still enforces the choice if the SDK fails. */
   }
