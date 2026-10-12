@@ -64,7 +64,8 @@ input:focus-visible,
 select:focus-visible,
 .poster:focus-visible,
 .active-filters:focus-visible,
-.pref-page :is(h2, section, p[tabindex]):focus-visible {
+.pref-page :is(h2, section, p[tabindex]):focus-visible,
+.privacy-page :is(h2, section):focus-visible {
   outline: 2px solid var(--original);
   outline-offset: 3px;
 }
@@ -2498,4 +2499,61 @@ h3 {
 }
 .pref-preview .rating-chip {
   min-width: 0;
+}
+
+:root .sidebar-bottom .sidebar-auth :is(a, button, .auth-checking) {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 8px 0;
+  font-size: 15px;
+  text-align: left;
+  border: 0;
+  background: transparent;
+}
+.auth-checking {
+  color: var(--muted);
+}
+.privacy-page .privacy-updated {
+  color: var(--muted);
+  font-size: 13px;
+}
+.privacy-page section {
+  scroll-margin-top: 16px;
+}
+.privacy-page .privacy-choice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+}
+.privacy-choice input {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+@media (max-width: 799px) {
+  :root .sidebar-bottom .sidebar-auth :is(a, button, .auth-checking) {
+    font-size: 18px;
+    min-height: 44px;
+  }
+  .privacy-page .privacy-updated {
+    font-size: 15px;
+  }
+}
+
+:root .sidebar-auth a[aria-current="page"]::before {
+  left: -12px;
+}
+.privacy-contents {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin: 24px 0;
+}
+@media (max-width: 799px) {
+  .privacy-page {
+    font-size: 17px;
+    overflow-wrap: anywhere;
+  }
 }

@@ -40,10 +40,22 @@ test("Account navigation, browser favourites and sidebar sign out", async ({ pag
     fullPage: true,
   });
   let nav = await sidebar(page);
+  await expect(nav.locator(".preferences-nav")).not.toContainText("Sign in");
+  await expect(
+    nav
+      .locator(".sidebar-bottom .sidebar-auth")
+      .getByRole("link", { name: "Sign in", exact: true }),
+  ).toBeVisible();
+  expect(
+    await nav.locator(".sidebar-bottom").evaluate((node) => node.firstElementChild?.className),
+  ).toBe("sidebar-auth");
   await expect(nav.getByRole("link", { name: "Sign in", exact: true })).toHaveAttribute(
     "aria-current",
     "page",
   );
+  await page.screenshot({
+    path: info.outputPath(`auth-footer-signed-out-${info.project.name}.png`),
+  });
   if (info.project.name === "mobile")
     await nav.getByRole("link", { name: "Sign in", exact: true }).click();
   const email = await signIn(page, info.project.name);
@@ -76,6 +88,20 @@ test("Account navigation, browser favourites and sidebar sign out", async ({ pag
     "aria-current",
     "page",
   );
+  await expect(
+    nav.locator(".preferences-nav").getByRole("link", { name: "Account", exact: true }),
+  ).toBeVisible();
+  await expect(
+    nav.locator(".preferences-nav").getByRole("button", { name: "Sign out", exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    nav
+      .locator(".sidebar-bottom .sidebar-auth")
+      .getByRole("button", { name: "Sign out", exact: true }),
+  ).toBeVisible();
+  await page.screenshot({
+    path: info.outputPath(`auth-footer-signed-in-${info.project.name}.png`),
+  });
   await nav.getByRole("button", { name: "Sign out", exact: true }).click();
   await expect(page).toHaveURL("/");
   await expect(page.locator(".page-notices")).toContainText("You are signed out.");

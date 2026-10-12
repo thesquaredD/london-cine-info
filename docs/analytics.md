@@ -45,7 +45,16 @@ No emails, app/Letterboxd usernames, friend identities, sign-in tokens, raw URLs
 Search text is deliberate, limited to 200 characters, with URLs, emails and common tokens redacted;
 this is not a general personal-data detector. Properties pass a strict allowlist. URLs are rebuilt
 from known routes, omitting queries and fragments. GeoIP collection is disabled.
-Browser Do Not Track is respected. Scheduled job measurements are independent of browser DNT.
+Browser Do Not Track is respected. `/privacy#analytics` also provides an explicit browser opt-out,
+persisted under `london-cine.analytics-disabled.v1`. An objection prevents SDK initialization on
+subsequent loads, filters new manual/automatic browser events, and sets `X-Analytics-Enabled: 0`
+on API requests so request-derived server analytics stops too. Changes propagate to other open
+tabs. With blocked storage, the current tab still honours the choice for the visit and reports
+that limitation. Opting back in restores capture without a synthetic opt-in event. Measurements
+already queued can complete delivery; separately scheduled importer events are unaffected.
+Account identity is retained in memory while disabled so an explicit opt-in links subsequent
+measurements to the current account, rather than a stale login.
+Scheduled job measurements are independent of browser choices and DNT.
 
 Collection is enabled only on the canonical production host and production watchlist importer.
 Cloudflare preview disables `POSTHOG_ENABLED`; local browsers are disabled unless the explicit

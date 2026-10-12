@@ -107,39 +107,51 @@ export function Sidebar({ state, meta, onChange, account }: Props) {
       </nav>
       <h2 class="section-label">Preferences</h2>
       <nav class="preferences-nav" aria-label="Preferences">
-        <NavLink state={state} onChange={onChange} path="/account">
-          {account.loading || account.user ? "Account" : "Sign in"}
-        </NavLink>
+        {(account.loading || account.user) && (
+          <NavLink state={state} onChange={onChange} path="/account">
+            Account
+          </NavLink>
+        )}
         {account.user?.pending && (
           <small class="account-import" role="status">
             {account.user.sync?.state === "importing" ? "Importing watchlist…" : "Import queued…"}
           </small>
-        )}
-        {account.user && (
-          <button
-            class="signout-button"
-            disabled={!!account.busy}
-            onClick={() =>
-              void account.perform(
-                "logout",
-                async () => {
-                  await accountApi("/api/auth/logout", "POST", {});
-                  account.clear();
-                  if (["/account", "/friends", "/watchlist", "/my-calendar"].includes(state.path))
-                    onChange({ path: "/", page: 1 }, true);
-                },
-                "You are signed out.",
-              )
-            }
-          >
-            {account.busy === "logout" ? "Signing out…" : "Sign out"}
-          </button>
         )}
         <NavLink state={state} onChange={onChange} path="/settings">
           Settings
         </NavLink>
       </nav>
       <div class="sidebar-bottom">
+        <nav class="sidebar-auth" aria-label="Account access">
+          {account.loading ? (
+            <span class="auth-checking" role="status">
+              Checking sign-in…
+            </span>
+          ) : account.user ? (
+            <button
+              class="signout-button"
+              disabled={!!account.busy}
+              onClick={() =>
+                void account.perform(
+                  "logout",
+                  async () => {
+                    await accountApi("/api/auth/logout", "POST", {});
+                    account.clear();
+                    if (["/account", "/friends", "/watchlist", "/my-calendar"].includes(state.path))
+                      onChange({ path: "/", page: 1 }, true);
+                  },
+                  "You are signed out.",
+                )
+              }
+            >
+              {account.busy === "logout" ? "Signing out…" : "Sign out"}
+            </button>
+          ) : (
+            <NavLink state={state} onChange={onChange} path="/account" className="signin-link">
+              Sign in
+            </NavLink>
+          )}
+        </nav>
         <NavLink state={state} onChange={onChange} path="/about" className="about-link">
           About & sources
         </NavLink>
