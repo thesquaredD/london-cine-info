@@ -2505,7 +2505,7 @@ h3 {
   display: block;
   width: 100%;
   margin: 0;
-  padding: 8px 0;
+  padding: 8px 12px;
   font-size: 15px;
   text-align: left;
   border: 0;
@@ -2542,8 +2542,8 @@ h3 {
   }
 }
 
-:root .sidebar-auth a[aria-current="page"]::before {
-  left: -12px;
+.sidebar-auth {
+  margin-inline: -12px;
 }
 .privacy-contents {
   display: flex;
