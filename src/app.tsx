@@ -1,3 +1,5 @@
+import { Notice } from "./components/notice";
+import { EmptyState } from "./components/empty-state";
 import { MobileSort } from "./components/mobile-sort";
 import { capture } from "./lib/analytics";
 import { useDiscoveryAnalytics } from "./lib/discovery-analytics";
@@ -51,8 +53,9 @@ import {
   clearFilters,
   filterFilms,
   facetCounts,
+  activeFacetChoices,
+  directorLabel,
   FILTERS,
-  filterLabel,
   dateShortcut,
 } from "./lib/filters";
 import { loadCatalogue } from "./lib/data";
@@ -1011,12 +1014,7 @@ export function App() {
                         onClick={() => change({ director: "", page: 1 })}
                         aria-label="Clear director"
                       >
-                        Director:{" "}
-                        {catalogue.films
-                          .flatMap((film) => film.di)
-                          .find((director) => director.id === state.director)?.name ??
-                          state.director}{" "}
-                        ×
+                        Director: {directorLabel(state, catalogue.films)} ×
                       </button>
                     )}
                     {state.search && (
@@ -1027,11 +1025,12 @@ export function App() {
                         Search: {state.search} ×
                       </button>
                     )}
-                    {FILTERS.flatMap(({ key, label }) =>
-                      (state.filters[key] ?? []).map((id) => (
+                    {activeFacetChoices(state, catalogue.meta)
+                      .filter((choice) => !choice.excluded)
+                      .map(({ key, id, groupLabel, label }) => (
                         <button
                           key={`${key}-${id}`}
-                          aria-label={`Remove ${label.toLowerCase()} filter: ${filterLabel(key, id, catalogue.meta)}`}
+                          aria-label={`Remove ${groupLabel.toLowerCase()} filter: ${label}`}
                           onClick={() =>
                             change({
                               filters: {
@@ -1042,21 +1041,21 @@ export function App() {
                             })
                           }
                         >
-                          {filterLabel(key, id, catalogue.meta)} ×
+                          {label} ×
                         </button>
-                      )),
-                    )}
+                      ))}
                     {(state.from || state.to) && (
                       <button onClick={() => change({ from: "", to: "", page: 1 })}>
                         Starts {state.from || "00:00"}–{state.to || "23:59"} ×
                       </button>
                     )}
-                    {FILTERS.flatMap(({ key, label }) =>
-                      (state.excluded[key] ?? []).map((id) => (
+                    {activeFacetChoices(state, catalogue.meta)
+                      .filter((choice) => choice.excluded)
+                      .map(({ key, id, groupLabel, label }) => (
                         <button
                           class="excluded-chip"
                           key={`not-${key}-${id}`}
-                          aria-label={`Remove excluded ${label.toLowerCase()} filter: ${filterLabel(key, id, catalogue.meta)}`}
+                          aria-label={`Remove excluded ${groupLabel.toLowerCase()} filter: ${label}`}
                           onClick={() =>
                             change({
                               excluded: {
@@ -1067,10 +1066,9 @@ export function App() {
                             })
                           }
                         >
-                          NOT {filterLabel(key, id, catalogue.meta)} ×
+                          NOT {label} ×
                         </button>
-                      )),
-                    )}
+                      ))}
                     {state.short && (
                       <button onClick={() => change({ short: false, page: 1 })}>
                         Under 2 hours ×
@@ -1095,33 +1093,47 @@ export function App() {
                 </div>
               )}
               {error && (
-                <div class="catalogue-status" role="alert">
-                  <h2>The programme could not be loaded</h2>
-                  <p>Please check your connection and try again.</p>
-                  <button onClick={() => setAttempt((value) => value + 1)}>Try again</button>
-                  <button
-                    class="feedback-link"
-                    onClick={() => openFeedback({ context: { errorCode: "catalogue_load" } })}
-                  >
-                    Report this problem
-                  </button>
-                </div>
-              )}
-              {suggestions.length > 0 && (
-                <div
-                  class="recovery-suggestions"
-                  role="group"
-                  aria-label="Suggested filter adjustments"
+                <Notice
+                  kind="error"
+                  className="catalogue-status"
+                  heading
+                  title="The programme could not be loaded"
+                  actions={
+                    <>
+                      <button onClick={() => setAttempt((value) => value + 1)}>Try again</button>
+                      <button
+                        class="feedback-link"
+                        onClick={() => openFeedback({ context: { errorCode: "catalogue_load" } })}
+                      >
+                        Report this problem
+                      </button>
+                    </>
+                  }
                 >
-                  <h2>No films match these filters</h2>
-                  <p>Try one adjustment below. Your other choices stay selected.</p>
-                  {suggestions.map((suggestion) => (
-                    <button key={suggestion.label} onClick={() => change(suggestion.changes)}>
-                      {suggestion.label} · {suggestion.count}{" "}
-                      {suggestion.count === 1 ? "film" : "films"}
-                    </button>
-                  ))}
-                </div>
+                  <p>Please check your connection and try again.</p>
+                </Notice>
+              )}
+              {catalogue && suggestions.length > 0 && (
+                <EmptyState
+                  directorName={directorLabel(state, catalogue.films)}
+                  state={effectiveState}
+                  meta={catalogue.meta}
+                  onChange={change}
+                  suggestions={
+                    <div
+                      class="recovery-suggestions"
+                      role="group"
+                      aria-label="Suggested filter adjustments"
+                    >
+                      {suggestions.map((suggestion) => (
+                        <button key={suggestion.label} onClick={() => change(suggestion.changes)}>
+                          {suggestion.label} · {suggestion.count}{" "}
+                          {suggestion.count === 1 ? "film" : "films"}
+                        </button>
+                      ))}
+                    </div>
+                  }
+                />
               )}
               {catalogue && myCinemasUnavailable && (
                 <div class="empty-state" aria-label="My cinemas setup">
@@ -1171,6 +1183,7 @@ export function App() {
                   />
                 ) : (
                   <FilmTable
+                    directorName={directorLabel(state, catalogue.films)}
                     films={selected}
                     showEmpty={
                       !suggestions.length &&

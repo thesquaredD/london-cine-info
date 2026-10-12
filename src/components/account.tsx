@@ -1,3 +1,4 @@
+import { Notice } from "./notice";
 import { openFeedback } from "../lib/feedback";
 import { useEffect, useRef, useState } from "preact/hooks";
 import type { ComponentChildren } from "preact";
@@ -35,45 +36,78 @@ export function AccountFeedback({
   return (
     <>
       {account.error && showError && (
-        <div class="account-notice" role="alert">
+        <Notice
+          kind="error"
+          title="Your account didn't load"
+          className="account-notice"
+          actions={
+            <>
+              <button disabled={!!account.busy} onClick={() => void account.reload()}>
+                Try loading account again
+              </button>
+              <button
+                class="feedback-link"
+                onClick={() => openFeedback({ context: { errorCode: "account_load" } })}
+              >
+                Report this problem
+              </button>
+            </>
+          }
+        >
           <p>{account.error}</p>
-          <button disabled={!!account.busy} onClick={() => void account.reload()}>
-            Try loading account again
-          </button>
-          <button
-            class="feedback-link"
-            onClick={() => openFeedback({ context: { errorCode: "account_load" } })}
-          >
-            Report this problem
-          </button>
-        </div>
+        </Notice>
       )}
       {account.notice && showNotice && (
-        <div class="account-notice" role={account.notice.kind === "error" ? "alert" : "status"}>
+        <Notice
+          kind={account.notice.kind}
+          className="account-notice"
+          title={
+            account.notice.retryAt
+              ? `Try again after ${new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/London" }).format(new Date(account.notice.retryAt * 1000))}`
+              : account.notice.kind === "error"
+                ? "That action didn't finish"
+                : account.notice.action === "signin"
+                  ? "Sign-in link requested"
+                  : account.notice.action === "delete"
+                    ? "Account deleted"
+                    : account.notice.action === "refresh"
+                      ? "Import requested"
+                      : "Account updated"
+          }
+          actions={
+            <>
+              <button
+                class="notice-quiet"
+                aria-label="Dismiss account message"
+                onClick={account.dismissNotice}
+              >
+                Dismiss
+              </button>
+              {account.notice.kind === "error" && (
+                <button
+                  class="feedback-link"
+                  onClick={() =>
+                    openFeedback({
+                      context: { errorCode: `account_${account.notice?.action ?? "action"}` },
+                    })
+                  }
+                >
+                  Report this problem
+                </button>
+              )}
+            </>
+          }
+        >
           <p>{account.notice.message}</p>
           {account.notice.retryAt && (
             <p>Try again after {time(account.notice.retryAt)} (London time).</p>
           )}
-          <button aria-label="Dismiss account message" onClick={account.dismissNotice}>
-            Dismiss
-          </button>
-          {account.notice.kind === "error" && (
-            <button
-              class="feedback-link"
-              onClick={() =>
-                openFeedback({
-                  context: { errorCode: `account_${account.notice?.action ?? "action"}` },
-                })
-              }
-            >
-              Report this problem
-            </button>
-          )}
-        </div>
+        </Notice>
       )}
     </>
   );
 }
+
 export function ImportStatus({ account, matches }: { account: AccountState; matches?: number }) {
   const user = account.user;
   if (!user?.username) return null;
@@ -96,42 +130,57 @@ export function ImportStatus({ account, matches }: { account: AccountState; matc
     failed: sync?.error ?? "The latest import failed. Please try again later.",
     idle: "Your watchlist has not been imported yet. Choose Import watchlist to get started.",
   }[state];
+  const title = {
+    submitting: "Requesting an import",
+    queued: "Import queued",
+    importing: "Importing your watchlist",
+    completed: `Imported ${user.count} ${user.count === 1 ? "film" : "films"}`,
+    failed: "The import failed",
+    idle: "Watchlist not imported yet",
+  }[state];
   return (
     <section class={`import-status import-${state}`} aria-label="Watchlist import">
-      <p
-        role={state === "failed" ? "alert" : "status"}
-        aria-live={state === "failed" ? "assertive" : "polite"}
+      <Notice
+        kind={state === "failed" ? "error" : state === "completed" ? "success" : "status"}
+        title={title}
+        actions={
+          (user.pending || state === "failed") && (
+            <button disabled={!!account.busy} onClick={() => void account.reload()}>
+              Check import status
+            </button>
+          )
+        }
       >
-        {message}
-      </p>
-      {user.fetchedAt && (
         <p>
-          Last successful import: {time(user.fetchedAt)} (London time).
-          {active || user.stale ? " Showing your last good watchlist." : ""}
+          {state === "queued"
+            ? message.replace("Import queued. ", "")
+            : state === "completed" && matches === undefined
+              ? "Your imported watchlist is ready to browse."
+              : message}
         </p>
-      )}
-      {user.stale && state !== "failed" && !active && (
-        <p role="status">
-          These results are overdue for an update. Refresh to check the latest list.
-        </p>
-      )}
-      {state === "completed" && user.count === 0 && (
-        <p>Your public watchlist is empty. Add films on Letterboxd, then refresh here.</p>
-      )}
-      {state === "completed" && user.count > 0 && matches === 0 && (
-        <p>
-          None of your imported films currently have London screenings. Check back when the
-          programme updates.
-        </p>
-      )}
-      {(user.pending || state === "failed") && (
-        <button disabled={!!account.busy} onClick={() => void account.reload()}>
-          Check import status
-        </button>
-      )}
+        {user.fetchedAt && (
+          <p>
+            Last successful import: {time(user.fetchedAt)} (London time).
+            {active || user.stale ? " Showing your last good watchlist." : ""}
+          </p>
+        )}
+        {user.stale && state !== "failed" && !active && (
+          <p>These results are overdue for an update. Refresh to check the latest list.</p>
+        )}
+        {state === "completed" && user.count === 0 && (
+          <p>Your public watchlist is empty. Add films on Letterboxd, then refresh here.</p>
+        )}
+        {state === "completed" && user.count > 0 && matches === 0 && (
+          <p>
+            None of your imported films currently have London screenings. Check back when the
+            programme updates.
+          </p>
+        )}
+      </Notice>
     </section>
   );
 }
+
 export function RefreshButton({
   account,
   disabled = false,
@@ -266,8 +315,16 @@ export function AccountPage({
         showError={false}
         showNotice={account.notice?.action === action}
       />
-      {friendOwner === action && friends?.error && <p role="alert">{friends.error}</p>}
-      {friendOwner === action && friends?.notice && <p role="status">{friends.notice}</p>}
+      {friendOwner === action && friends?.error && (
+        <Notice kind="error" title="That action didn't finish">
+          <p>{friends.error}</p>
+        </Notice>
+      )}
+      {friendOwner === action && friends?.notice && (
+        <Notice kind="success" title="Account updated">
+          <p>{friends.notice}</p>
+        </Notice>
+      )}
     </>
   );
   async function saveProfile() {
@@ -515,7 +572,6 @@ export function AccountPage({
         </>
       ) : (
         <>
-          <p class="pref-lede">A link in your email signs you in. No password.</p>
           <form
             onSubmit={(event) => {
               event.preventDefault();
@@ -549,9 +605,23 @@ export function AccountPage({
             showNotice={account.notice?.action === "signin"}
           />
           <PreferenceSection id="benefits" title="With an account">
-            <p>Import your public Letterboxd watchlist to see what is screening in London.</p>
-            <p>Keep friends for next time and find films in common.</p>
-            <p>Choose an optional weekly email with screenings from your watchlist.</p>
+            <ul class="prose-benefits">
+              <li>
+                <strong>See your watchlist on screen.</strong>
+                <span>
+                  Import your public Letterboxd watchlist to see what is screening in London.
+                </span>
+              </li>
+              <li>
+                <strong>Find films in common.</strong>
+                <span>Keep friends for next time and find films in common.</span>
+              </li>
+              <li>
+                <strong>Get a weekly email.</strong>
+                <span>Choose an optional weekly email with screenings from your watchlist.</span>
+              </li>
+            </ul>
+            <p>A link in your email signs you in. No password, no account needed to browse.</p>
           </PreferenceSection>
         </>
       )}

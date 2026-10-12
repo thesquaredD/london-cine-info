@@ -91,6 +91,8 @@ test("account service failures stay out of the way of browsing and can be retrie
   await page.goto("/watchlist");
   const alert = page.getByRole("alert");
   await expect(alert).toContainText("unexpected response");
+  await expect(alert.locator(".notice-title")).toHaveText("Your account didn't load");
+  await expect(alert.getByRole("alert")).toHaveCount(0);
   await expect(alert).not.toContainText("Bad gateway");
   failing = false;
   await alert.getByRole("button", { name: "Try loading account again" }).click();
@@ -108,6 +110,8 @@ test("import lifecycle states are honest on the watchlist page and on Account", 
   await page.goto("/watchlist");
   const status = page.locator(".watchlist-intro .import-status");
   await expect(status.getByRole("status")).toContainText("Import queued");
+  await expect(status.getByRole("status")).toHaveCount(1);
+  await expect(status.locator(".notice-title")).toHaveText("Import queued");
   await expect(status).not.toContainText("%");
   await expect(page.getByRole("button", { name: "Import in progress" })).toBeDisabled();
   // The compact sidebar entry point also announces a running import.
@@ -149,6 +153,8 @@ test("import lifecycle states are honest on the watchlist page and on Account", 
   );
   await page.reload();
   await expect(status.getByRole("alert")).toContainText(IMPORT_ERRORS.not_found);
+  await expect(status.getByRole("alert")).toHaveCount(1);
+  await expect(status.locator(".notice-title")).toHaveText("The import failed");
   await expect(status).toContainText("Showing your last good watchlist");
   await expect(
     page.locator(".watchlist-intro").getByText(/Next import available after/),
@@ -288,6 +294,8 @@ test("save, cooldown and dispatch failures keep input, explain retry and never e
   await page.getByRole("button", { name: "Refresh now" }).click();
   const alert = page.locator(".page-notices").getByRole("alert");
   await expect(alert).toContainText("unexpected response");
+  await expect(alert.locator(".notice-title")).toHaveText("That action didn't finish");
+  await expect(alert.getByRole("alert")).toHaveCount(0);
   await expect(alert).not.toContainText("stack trace");
   dialog = await visitAccount(page);
   await expect(dialog).toHaveAccessibleName("Account");

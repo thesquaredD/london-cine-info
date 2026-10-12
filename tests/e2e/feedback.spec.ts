@@ -142,3 +142,51 @@ test("feedback begins with the message and optional topics toggle off", async ({
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   expect(errors).toEqual([]);
 });
+
+test("empty results can clear one group while keeping the other filters", async ({
+  page,
+}, info) => {
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  await page.goto("/?day=2026-10-20&venue=bfi.org.uk-southbank&genre=drama");
+  const empty = page.locator(".empty-state");
+  await expect(empty).toHaveCount(1);
+  await expect(empty.getByRole("heading")).toContainText("BFI Southbank");
+  await expect(empty.getByRole("button", { name: "Any day", exact: true })).toBeVisible();
+  await expect(empty.getByRole("button", { name: "Any cinema", exact: true })).toBeVisible();
+  if (page.viewportSize()!.width < 800)
+    for (const button of await empty.getByRole("button").all())
+      expect((await button.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+  await page.screenshot({ path: info.outputPath("empty-results.png") });
+  await empty.getByRole("button", { name: "Any day", exact: true }).click();
+  const url = new URL(page.url());
+  expect(url.searchParams.getAll("day")).toEqual([]);
+  expect(url.searchParams.getAll("venue")).toEqual(["bfi.org.uk-southbank"]);
+  expect(url.searchParams.getAll("genre")).toEqual(["drama"]);
+  await expect(page.locator(".film-row").first()).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
+test("sign-in benefits read as a list", async ({ page }, info) => {
+  await page.goto("/account");
+  const benefits = page.getByRole("region", { name: "With an account" });
+  await expect(benefits.getByRole("listitem")).toHaveCount(3);
+  await expect(benefits).toContainText("No password, no account needed to browse.");
+  await page.screenshot({ path: info.outputPath("sign-in-benefits.png"), fullPage: true });
+});
+
+test("empty-result labels use director names and Any time clears the whole time group", async ({
+  page,
+}) => {
+  await page.goto("/?director=director-a&day=2026-10-20");
+  await expect(page.locator(".empty-state p").first()).toContainText("Director: director a");
+  await expect(page.locator(".empty-state p").first()).not.toContainText("director-a");
+  await page.goto("/?time=morning&from=18%3A00&to=19%3A00&venue=bfi.org.uk-southbank");
+  await page.getByRole("button", { name: "Any time", exact: true }).click();
+  const url = new URL(page.url());
+  expect(url.searchParams.getAll("time")).toEqual([]);
+  expect(url.searchParams.has("from")).toBe(false);
+  expect(url.searchParams.has("to")).toBe(false);
+  expect(url.searchParams.getAll("venue")).toEqual(["bfi.org.uk-southbank"]);
+  await expect(page.locator(".film-row").first()).toBeVisible();
+});

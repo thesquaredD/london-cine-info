@@ -1,11 +1,11 @@
-import { openFeedback } from "../lib/feedback";
+import { directorLabel } from "../lib/filters";
+import { EmptyState } from "./empty-state";
 import { capture } from "../lib/analytics";
 import { FilmFriends } from "./friends";
 import { Fragment } from "preact";
 import { useState } from "preact/hooks";
 import { EVENT_TYPES } from "../data/event-rules";
 import { groupEvents } from "../lib/events";
-import { clearFilters } from "../lib/filters";
 import { formatDate, type ViewState } from "../lib/catalogue";
 import { displayTitle, type DisplayState } from "../lib/display";
 import { letterboxdSlug } from "../shared/account";
@@ -83,17 +83,13 @@ export function Events({
         Special cinema experiences, in London date order. Formats alone are listed in Radar.
       </p>
       {!events.length && (
-        <div class="empty-state">
-          <h2>No events match these filters</h2>
-          <p>Try another date, cinema or event type.</p>
-          <button onClick={() => onChange(clearFilters(state.path))}>Clear filters</button>
-          <button
-            class="feedback-link"
-            onClick={() => openFeedback({ context: { resultCount: 0 } })}
-          >
-            Missing something? Tell us
-          </button>
-        </div>
+        <EmptyState
+          directorName={directorLabel(state, films)}
+          state={state}
+          meta={meta}
+          onChange={onChange}
+          events
+        />
       )}
       {groupEvents(events).map(([date, rows]) => (
         <section key={date} aria-label={formatDate(date)}>

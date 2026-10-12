@@ -1,3 +1,4 @@
+import { Notice } from "./notice";
 import { useEffect, useState } from "preact/hooks";
 import type { ChangelogBundle, ChangelogEntry } from "../shared/changelog";
 import { usePreferenceFocus } from "../lib/preference-focus";
@@ -56,10 +57,14 @@ export function ChangelogPage({ onNavigate }: { onNavigate: (path: string) => vo
         <p class="changelog-preview">Preview · these notes are not necessarily live.</p>
       )}
       {failed ? (
-        <div role="alert" class="changelog-status">
+        <Notice
+          kind="error"
+          className="changelog-status"
+          title="Changes didn't load"
+          actions={<button onClick={() => setAttempt(attempt + 1)}>Try again</button>}
+        >
           <p>The list of changes could not be loaded.</p>
-          <button onClick={() => setAttempt(attempt + 1)}>Try again</button>
-        </div>
+        </Notice>
       ) : !entries ? (
         <p role="status" class="changelog-status">
           Loading…
