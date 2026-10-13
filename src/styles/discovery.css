@@ -112,7 +112,7 @@
   border: 0;
 }
 :root .rating-card :is(span, strong, small) {
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 400;
 }
 :root .rating-card span {
@@ -127,7 +127,7 @@
   margin: 0 16px 0 0;
   padding: 6px 0;
   min-height: 32px;
-  font-size: 14px;
+  font-size: 0.875rem;
   background: transparent;
   border: 0;
   text-decoration: underline;
@@ -141,7 +141,7 @@
 }
 :root .screening-venue {
   flex: 1 1 220px;
-  font-size: 17px;
+  font-size: 1.0625rem;
 }
 :root .booking-action {
   display: inline-flex;
@@ -153,7 +153,7 @@
   color: var(--active-fg);
   border: 0;
   border-radius: 2px;
-  font-size: 16px;
+  font-size: 1rem;
   font-weight: 400;
   text-decoration: none;
 }
@@ -162,7 +162,7 @@
 }
 :root .screening-info .add-calendar {
   order: 4;
-  font-size: 14px;
+  font-size: 0.875rem;
   min-height: 36px;
   margin: 0;
 }
@@ -191,7 +191,7 @@
   background: var(--shade);
   color: var(--fg);
   border: 0;
-  font-size: 16px;
+  font-size: 1rem;
 }
 :root .social-plan-form label {
   display: grid;
@@ -208,7 +208,7 @@
 }
 :root :is(.radar-discovery-tabs, .event-discovery-tabs) button {
   padding: 10px 14px;
-  font-size: 16px;
+  font-size: 1rem;
   background: var(--shade);
   border: 0;
   min-height: 44px;
@@ -222,10 +222,10 @@
 }
 @media (min-width: 800px) {
   :root .film-row {
-    height: 56px;
+    height: 3.5rem;
   }
   :root .film-title {
-    height: 36px;
+    height: 2.25rem;
     align-items: start;
   }
 }
@@ -242,7 +242,7 @@
     display: grid;
     grid-template-columns: minmax(0, 1fr) 10px;
     min-height: 44px;
-    font-size: 16px;
+    font-size: 1rem;
     max-width: 65%;
     margin: 0;
     padding: 8px 10px;
@@ -272,7 +272,7 @@
     line-height: 1.25;
   }
   :root .director-text {
-    font-size: 16px;
+    font-size: 1rem;
   }
   :root .film-expanded {
     padding: 12px;
@@ -292,13 +292,13 @@
   :root .film-facts,
   :root .film-genres {
     grid-column: 2;
-    font-size: 15px;
+    font-size: 0.9375rem;
   }
   :root .film-detail-title {
     display: block;
     grid-column: 2;
     margin: 0;
-    font-size: 19px;
+    font-size: 1.1875rem;
     font-weight: 400;
   }
   :root .poster {
@@ -310,39 +310,39 @@
   :root .synopsis-toggle {
     justify-self: start;
     min-height: 44px;
-    font-size: 16px;
+    font-size: 1rem;
   }
   :root .film-description .film-synopsis {
-    font-size: 16px;
+    font-size: 1rem;
     margin: 0;
   }
   :root .film-cast {
-    font-size: 15px;
+    font-size: 0.9375rem;
   }
   :root .rating-cards {
     margin: 0;
     gap: 10px;
   }
   :root .rating-card :is(span, strong, small) {
-    font-size: 14px;
+    font-size: 0.875rem;
   }
   :root .trailer-link,
   :root .share-film {
-    font-size: 16px;
+    font-size: 1rem;
     min-height: 44px;
     margin: 0;
     justify-self: start;
   }
   :root .screening-venue {
     flex-basis: 100%;
-    font-size: 17px;
+    font-size: 1.0625rem;
   }
   :root .screening-info :is(.booking-action, .add-calendar) {
     min-height: 44px;
-    font-size: 16px;
+    font-size: 1rem;
   }
   :root .showtime-day time {
-    font-size: 19px;
+    font-size: 1.1875rem;
   }
 }
 
@@ -359,7 +359,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 16px;
+  font-size: 1rem;
   color: var(--muted);
 }
 :root .film-about > summary::before {
@@ -448,8 +448,24 @@
   }
 }
 
-/* Use the compact toolbar before the full desktop controls start wrapping. */
+/* Give the five numeric columns enough room at narrow desktop widths. */
 @media (min-width: 800px) and (max-width: 1099px) {
+  :root .title-column {
+    width: 35%;
+  }
+  :root .director-column {
+    width: 20%;
+  }
+  :root
+    .film-table
+    th:not(.title-column):not(.director-column):not(.event-column):not(.mobile-sort-column) {
+    width: 9%;
+  }
+  :root .film-row td,
+  :root .film-table th button {
+    padding-inline: 4px;
+  }
+
   :root .film-info {
     grid-template-columns: 70px minmax(0, 1fr);
     gap: 12px;

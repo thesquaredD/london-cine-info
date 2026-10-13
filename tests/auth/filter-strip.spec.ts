@@ -51,7 +51,7 @@ test("connected watchlist and chosen cinemas appear immediately and all eight sh
   await expect(strip.getByRole("button")).toHaveCount(8);
   const width = info.project.name === "mobile" ? 390 : 1280;
   await page.setViewportSize({ width, height: 900 });
-  expect((await strip.boundingBox())!.height).toBeLessThanOrEqual(width === 390 ? 80 : 30);
+  expect((await strip.boundingBox())!.height).toBeLessThanOrEqual(width === 390 ? 80 : 37.5);
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= document.documentElement.clientWidth,

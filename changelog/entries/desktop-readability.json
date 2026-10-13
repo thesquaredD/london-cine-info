@@ -1,0 +1,7 @@
+{
+  "id": "desktop-readability",
+  "type": "improved",
+  "title": "Larger text on desktop",
+  "body": "Desktop text is larger, with more room in navigation, filters and film rows. The phone layout keeps its existing text sizes.",
+  "visibility": "public"
+}

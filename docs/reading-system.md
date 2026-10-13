@@ -32,6 +32,11 @@ Mockups of every block in use: https://claude.ai/artifact/XrtzgxorfQirUYVFPTfTnk
 
 ## Scale
 
+Type uses `rem` units. At the standard browser font setting, the values below
+are the 100% reference scale; desktop (800px and wider) uses a 125% root size.
+For example, desktop body copy is 18.75px and small print is 17.5px. Phones retain
+their existing 16px body copy. Browser font preferences and zoom still apply.
+
 | Token             | Value                                        | Use                                     |
 | ----------------- | -------------------------------------------- | --------------------------------------- |
 | `--prose-measure` | `62ch`                                       | max-width of any `p`, `li`, `dd`        |

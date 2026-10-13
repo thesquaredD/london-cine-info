@@ -84,7 +84,7 @@ test("strip wraps without overflow and seven guest items fit the height budget",
   await page.reload();
   const strip = page.getByRole("group", { name: "Shortcuts" });
   await expect(strip.getByRole("button")).toHaveCount(7);
-  expect((await strip.boundingBox())!.height).toBeLessThanOrEqual(width === 390 ? 80 : 30);
+  expect((await strip.boundingBox())!.height).toBeLessThanOrEqual(width === 390 ? 80 : 37.5);
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= document.documentElement.clientWidth,

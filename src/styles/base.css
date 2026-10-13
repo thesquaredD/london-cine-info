@@ -18,6 +18,14 @@
   --sidebar-width: 214px;
 }
 
+/* Desktop follows the comfortable 125% reading scale. Rem-based type also
+   respects the reader's default font size; phones retain their existing scale. */
+@media (min-width: 800px) {
+  html {
+    font-size: 125%;
+  }
+}
+
 * {
   box-sizing: border-box;
 }
@@ -27,7 +35,7 @@ body {
 }
 body {
   font-family: Arial, Helvetica, sans-serif;
-  font-size: 14px;
+  font-size: 0.875rem;
   background: var(--bg);
   color: var(--fg);
 }
@@ -117,7 +125,7 @@ h3 {
 }
 .section-label {
   font-style: italic;
-  font-size: 18px;
+  font-size: 1.125rem;
   margin: 0;
   padding: 16px 12px 9px;
   border-bottom: 1px solid var(--strong-line);
@@ -128,7 +136,7 @@ h3 {
   text-decoration: none;
   color: var(--fg);
   border-bottom: 1px solid var(--strong-line);
-  font-size: 18px;
+  font-size: 1.125rem;
   font-weight: 500;
 }
 .sidebar-content nav a:hover {
@@ -173,10 +181,10 @@ h3 {
   align-items: center;
   justify-content: center;
   gap: 10px;
-  font-size: 18px;
+  font-size: 1.125rem;
 }
 .theme-button span {
-  font-size: 14px;
+  font-size: 0.875rem;
 }
 .about-link {
   display: block;
@@ -184,7 +192,7 @@ h3 {
   margin-top: 16px;
 }
 .update-note {
-  font-size: 12px;
+  font-size: 0.75rem;
   color: var(--muted);
   text-align: center;
   line-height: 1.5;
@@ -205,7 +213,7 @@ h3 {
   color: var(--masthead-fg);
 }
 .masthead h1 {
-  font-size: 32px;
+  font-size: 2rem;
   letter-spacing: 0.01em;
   margin: 0;
 }
@@ -222,12 +230,12 @@ h3 {
   background: transparent;
   color: inherit;
   border: 0;
-  font-size: 26px;
+  font-size: 1.625rem;
   padding: 4px 8px;
 }
 .tagline {
   text-align: center;
-  font-size: 18px;
+  font-size: 1.125rem;
   font-weight: 500;
   font-style: italic;
   padding: 9px 16px;
@@ -261,7 +269,7 @@ h3 {
   position: absolute;
   top: 7px;
   right: 8px;
-  font-size: 25px;
+  font-size: 1.5625rem;
   border: 0;
   padding: 0 9px;
   background: transparent;
@@ -288,7 +296,7 @@ h3 {
   align-items: center;
   justify-content: space-between;
   padding: 8px 10px;
-  font-size: 15px;
+  font-size: 0.9375rem;
   text-align: left;
 }
 .title-column {
@@ -309,7 +317,7 @@ h3 {
 }
 .sort-arrow {
   color: var(--line);
-  font-size: 15px;
+  font-size: 0.9375rem;
 }
 .sort-arrow.selected {
   color: var(--muted);
@@ -317,7 +325,7 @@ h3 {
 .film-row td {
   border-bottom: 1px solid var(--line);
   padding: 9px 10px;
-  font-size: 16px;
+  font-size: 1rem;
   line-height: 1.3;
 }
 .film-row:hover,
@@ -335,20 +343,20 @@ h3 {
   width: 100%;
   min-height: 34px;
   font-weight: 500;
-  font-size: 17px;
+  font-size: 1.0625rem;
   line-height: 1.25;
   overflow-wrap: anywhere;
 }
 .film-title i {
   display: block;
-  font-size: 14px;
+  font-size: 0.875rem;
   color: var(--original);
   font-weight: 400;
   margin-top: 2px;
 }
 .expansion-icon {
   flex: 0 0 10px;
-  font-size: 13px;
+  font-size: 0.8125rem;
   color: var(--muted);
 }
 .director-column a {
@@ -370,7 +378,7 @@ h3 {
   padding: 3px;
   text-decoration: none;
   border: 1px solid var(--line);
-  font-size: 16px;
+  font-size: 1rem;
   color: var(--rating);
   background: var(--panel);
 }
@@ -415,14 +423,14 @@ h3 {
   color: var(--muted);
 }
 .poster-placeholder span {
-  font-size: 12px;
+  font-size: 0.75rem;
   margin-top: 15px;
 }
 .poster figcaption {
   position: relative;
   text-align: center;
   padding: 5px 4px;
-  font-size: 12px;
+  font-size: 0.75rem;
   line-height: 1.5;
   background: var(--panel);
 }
@@ -433,7 +441,7 @@ h3 {
   overflow-y: auto;
   background: var(--panel);
   padding: 10px;
-  font-size: 12px;
+  font-size: 0.75rem;
   line-height: 1.4;
 }
 .poster:hover .poster-overlay,
@@ -450,7 +458,7 @@ h3 {
   border: 1px solid var(--line);
   border-radius: 2px;
   padding: 2px 5px;
-  font-size: 11px;
+  font-size: 0.6875rem;
   background: var(--panel);
   color: var(--muted);
 }
@@ -470,14 +478,14 @@ h3 {
   border-radius: 2px;
   padding: 9px 3px;
   gap: 7px;
-  font-size: 11px;
+  font-size: 0.6875rem;
   color: var(--fg);
 }
 .rating-card strong {
-  font-size: 20px;
+  font-size: 1.25rem;
 }
 .rating-card small {
-  font-size: 10px;
+  font-size: 0.625rem;
 }
 .rating-card.missing {
   color: var(--muted);
@@ -486,7 +494,7 @@ h3 {
   display: block;
   margin-top: 12px;
   text-align: center;
-  font-size: 12px;
+  font-size: 0.75rem;
 }
 .showtimes {
   background: var(--panel);
@@ -497,7 +505,7 @@ h3 {
   margin: 0;
   padding: 9px;
   text-align: center;
-  font-size: 15px;
+  font-size: 0.9375rem;
   background: var(--shade);
 }
 .showtime-day ul {
@@ -517,7 +525,7 @@ h3 {
   border-bottom: 0;
 }
 .showtime-day time {
-  font-size: 15px;
+  font-size: 0.9375rem;
   font-variant-numeric: tabular-nums;
 }
 .time-dot {
@@ -539,7 +547,7 @@ h3 {
 }
 .screening-info > a {
   text-decoration: none;
-  font-size: 15px;
+  font-size: 0.9375rem;
   color: var(--fg);
   overflow-wrap: anywhere;
 }
@@ -550,7 +558,7 @@ h3 {
   display: block;
   width: 100%;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 0.75rem;
   overflow-wrap: anywhere;
 }
 .sold-out-badge {
@@ -580,7 +588,7 @@ h3 {
 }
 .page-controls button {
   width: 32px;
-  font-size: 20px;
+  font-size: 1.25rem;
   padding: 3px;
 }
 .page-controls label {
@@ -600,7 +608,7 @@ h3 {
   padding: 9px 14px;
   background: var(--shade);
   color: var(--muted);
-  font-size: 12px;
+  font-size: 0.75rem;
 }
 .active-director {
   display: flex;
@@ -612,7 +620,7 @@ h3 {
   border-bottom: 1px solid var(--line);
 }
 .active-director button {
-  font-size: 12px;
+  font-size: 0.75rem;
 }
 .catalogue-status {
   text-align: center;
@@ -628,7 +636,7 @@ h3 {
   padding: 14px;
   text-align: center;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 0.6875rem;
 }
 .pref-page {
   width: 100%;
@@ -640,7 +648,7 @@ h3 {
 }
 .pref-page h2 {
   margin: 0 0 12px;
-  font-size: 24px;
+  font-size: 1.5rem;
   font-weight: 500;
 }
 .pref-lede {
@@ -660,7 +668,7 @@ h3 {
 .pref-section h3 {
   margin: 0;
   color: var(--brass);
-  font-size: 11px;
+  font-size: 0.6875rem;
   font-weight: 500;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -720,7 +728,7 @@ h3 {
 }
 .pref-save [role="status"],
 .pref-hint {
-  font-size: 13px;
+  font-size: 0.8125rem;
   color: var(--muted);
 }
 .pref-page .pref-checkbox {
@@ -759,7 +767,7 @@ h3 {
 @media (max-width: 799px) {
   .pref-page {
     padding: 24px 18px;
-    font-size: 18px;
+    font-size: 1.125rem;
   }
   .profile-fields {
     grid-template-columns: minmax(0, 1fr);
@@ -768,12 +776,12 @@ h3 {
   .pref-page input:not([type="checkbox"]),
   .pref-page select,
   .pref-page button {
-    font-size: 18px;
+    font-size: 1.125rem;
     min-height: 44px;
   }
   .pref-hint,
   .pref-save [role="status"] {
-    font-size: 16px;
+    font-size: 1rem;
   }
 }
 @media (max-width: 999px) and (min-width: 800px) {
@@ -787,17 +795,17 @@ h3 {
   }
   .film-table th button {
     padding-inline: 5px;
-    font-size: 13px;
+    font-size: 0.8125rem;
   }
   .rating-chip {
     min-width: 31px;
-    font-size: 14px;
+    font-size: 0.875rem;
   }
   .sort-arrow {
     display: none;
   }
   .masthead h1 {
-    font-size: 28px;
+    font-size: 1.75rem;
   }
 }
 .mobile-sort-trigger,
@@ -825,14 +833,14 @@ h3 {
     padding-left: 35px;
   }
   .masthead h1 {
-    font-size: clamp(20px, 5.8vw, 30px);
+    font-size: clamp(1.25rem, 5.8vw, 1.875rem);
   }
   .menu-button {
     left: 3px;
-    font-size: 25px;
+    font-size: 1.5625rem;
   }
   .tagline {
-    font-size: 14px;
+    font-size: 0.875rem;
     padding: 10px;
   }
   .mobile-hidden {
@@ -854,7 +862,7 @@ h3 {
   .mobile-sort-column .rating-chip small {
     margin-left: 3px;
     color: var(--muted);
-    font-size: 11px;
+    font-size: 0.6875rem;
   }
 
   .title-column {
@@ -868,18 +876,18 @@ h3 {
   }
   .film-table th button {
     min-height: 44px;
-    font-size: 14px;
+    font-size: 0.875rem;
   }
   .film-row td {
     padding: 10px 8px;
-    font-size: 13px;
+    font-size: 0.8125rem;
   }
   .film-title {
-    font-size: 15px;
+    font-size: 0.9375rem;
     min-height: 35px;
   }
   .film-title i {
-    font-size: 12px;
+    font-size: 0.75rem;
   }
   .film-expanded {
     grid-template-columns: minmax(0, 1fr);
@@ -898,7 +906,7 @@ h3 {
     margin-bottom: 0;
   }
   .poster figcaption {
-    font-size: 10px;
+    font-size: 0.625rem;
   }
   .rating-card {
     min-height: 65px;
@@ -906,17 +914,17 @@ h3 {
     gap: 5px;
   }
   .rating-card span {
-    font-size: 10px;
+    font-size: 0.625rem;
   }
   .rating-card strong {
-    font-size: 18px;
+    font-size: 1.125rem;
   }
   .trailer-link {
     margin-top: 8px;
   }
   .poster-overlay {
     padding: 6px;
-    font-size: 10px;
+    font-size: 0.625rem;
   }
   .showtime-day li {
     gap: 7px;
@@ -924,11 +932,11 @@ h3 {
     grid-template-columns: 41px 6px minmax(0, 1fr);
   }
   .showtime-day h3 {
-    font-size: 13px;
+    font-size: 0.8125rem;
   }
   .showtime-day time,
   .screening-info > a {
-    font-size: 13px;
+    font-size: 0.8125rem;
   }
   .time-dot {
     width: 6px;
@@ -936,7 +944,7 @@ h3 {
   }
   .pagination {
     padding: 6px 8px max(6px, env(safe-area-inset-bottom));
-    font-size: 12px;
+    font-size: 0.75rem;
     gap: 5px;
   }
   .result-range {
@@ -955,17 +963,17 @@ h3 {
   background: var(--shade);
   color: var(--fg);
   border-block: 1px solid var(--strong-line);
-  font-size: 18px;
+  font-size: 1.125rem;
   font-weight: 500;
 }
 .director-group small {
   margin-left: 8px;
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 400;
   color: var(--muted);
 }
 .filter-hint {
-  font-size: 12px;
+  font-size: 0.75rem;
   line-height: 1.5;
   color: var(--muted);
   margin: 0 0 10px;
@@ -1003,12 +1011,12 @@ h3 {
 .filter-picker summary > small {
   display: block;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 0.75rem;
   margin-top: 4px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  line-height: 17px;
+  line-height: 1.0625rem;
   height: 17px;
   padding-right: 10px;
 }
@@ -1029,12 +1037,12 @@ h3 {
   gap: 5px;
   align-items: center;
   justify-content: space-between;
-  font-size: 11px;
+  font-size: 0.6875rem;
   color: var(--muted);
   margin-bottom: 6px;
 }
 .picker-actions button {
-  font-size: 11px;
+  font-size: 0.6875rem;
   padding: 4px;
 }
 .filter-options {
@@ -1051,7 +1059,7 @@ h3 {
   gap: 8px;
   padding: 8px 2px;
   cursor: pointer;
-  font-size: 13px;
+  font-size: 0.8125rem;
   line-height: 1.4;
 }
 .filter-options input {
@@ -1066,13 +1074,13 @@ h3 {
   overflow-wrap: anywhere;
 }
 .filter-options small {
-  font-size: 11px;
+  font-size: 0.6875rem;
   color: var(--muted);
   padding-top: 2px;
 }
 .option-group {
   font-weight: 500;
-  font-size: 12px;
+  font-size: 0.75rem;
   border-top: 1px solid var(--line);
   padding: 8px 0 0;
   margin: 6px 0;
@@ -1090,7 +1098,7 @@ h3 {
   align-items: center;
 }
 .time-range legend {
-  font-size: 12px;
+  font-size: 0.75rem;
   padding: 0 4px;
 }
 .time-range input {
@@ -1102,7 +1110,7 @@ h3 {
   display: flex;
   gap: 8px;
   align-items: center;
-  font-size: 12px;
+  font-size: 0.75rem;
   line-height: 1.4;
   margin: 12px 0;
 }
@@ -1133,7 +1141,7 @@ h3 {
 }
 .filter-summary > p {
   margin: 0;
-  font-size: 13px;
+  font-size: 0.8125rem;
   color: var(--muted);
 }
 .filter-summary strong {
@@ -1151,7 +1159,7 @@ h3 {
   margin-top: 0;
 }
 .active-filters button {
-  font-size: 12px;
+  font-size: 0.75rem;
   padding: 5px 8px;
   border-radius: 4px;
   max-width: min(360px, 80vw);
@@ -1191,7 +1199,7 @@ h3 {
 .not-label {
   font-weight: 500;
   color: var(--sold-out);
-  font-size: 11px;
+  font-size: 0.6875rem;
 }
 .excluded-option input {
   accent-color: var(--sold-out);
@@ -1244,7 +1252,7 @@ h3 {
   gap: 8px;
   min-height: 44px;
   cursor: pointer;
-  font-size: 13px;
+  font-size: 0.8125rem;
 }
 .decade-row label {
   flex: 1;
@@ -1388,7 +1396,7 @@ h3 {
   z-index: 2;
 }
 .sheet-heading h2 {
-  font-size: 18px;
+  font-size: 1.125rem;
   font-weight: 500;
   margin: 0;
 }
@@ -1428,7 +1436,7 @@ h3 {
   .bar-search {
     flex-basis: 100%;
     width: 100%;
-    font-size: 16px;
+    font-size: 1rem;
   }
   .desktop-filters {
     display: none;
@@ -1513,7 +1521,7 @@ h3 {
 }
 :is(.modal-dialog, .mobile-sort-dialog, .cinema-dialog) fieldset p {
   color: var(--muted);
-  font-size: 13px;
+  font-size: 0.8125rem;
 }
 .account-actions {
   display: flex;
@@ -1527,7 +1535,7 @@ h3 {
 }
 .refresh-action p {
   color: var(--muted);
-  font-size: 13px;
+  font-size: 0.8125rem;
 }
 .danger-action {
   color: var(--sold-out);
@@ -1548,11 +1556,11 @@ h3 {
 .account-prompt {
   display: grid;
   gap: 10px;
-  font-size: 14px;
+  font-size: 0.875rem;
   color: var(--fg);
 }
 .watchlist-intro h2 {
-  font-size: 16px;
+  font-size: 1rem;
   font-weight: 500;
 }
 .watchlist-intro h2 {
@@ -1564,7 +1572,7 @@ h3 {
   align-items: center;
   gap: 6px 16px;
   padding: 8px 12px;
-  font-size: 13px;
+  font-size: 0.8125rem;
 }
 .watchlist-connected .import-status {
   flex: 1 1 280px;
@@ -1591,7 +1599,7 @@ h3 {
   }
   :is(.modal-dialog, .mobile-sort-dialog, .cinema-dialog) input,
   :is(.modal-dialog, .mobile-sort-dialog, .cinema-dialog) select {
-    font-size: 16px;
+    font-size: 1rem;
     min-height: 44px;
   }
   :is(.modal-dialog, .mobile-sort-dialog, .cinema-dialog) button,
@@ -1609,7 +1617,7 @@ h3 {
 @media (max-width: 799px) {
   .watchlist-column {
     width: 38px;
-    font-size: 11px;
+    font-size: 0.6875rem;
   }
 }
 .sidebar-fields {
@@ -1641,7 +1649,7 @@ h3 {
 .release-group h3 {
   display: inline;
   margin: 0;
-  font-size: 18px;
+  font-size: 1.125rem;
 }
 .release-group small {
   margin-left: 8px;
@@ -1690,7 +1698,7 @@ h3 {
   align-items: center;
   gap: 4px;
   margin: 4px 0;
-  font-size: 14px;
+  font-size: 0.875rem;
 }
 .display-controls li button {
   width: 100%;
@@ -1713,10 +1721,10 @@ h3 {
     display: block;
     margin: 4px 0 0 17px;
     color: var(--muted);
-    font-size: 12px;
+    font-size: 0.75rem;
   }
   .display-controls li {
-    font-size: 18px;
+    font-size: 1.125rem;
     grid-template-columns: 16px minmax(0, 1fr) 44px 44px;
   }
   .display-controls li button,
@@ -1724,7 +1732,7 @@ h3 {
     min-height: 44px;
   }
   .release-group h3 {
-    font-size: 16px;
+    font-size: 1rem;
   }
 }
 
@@ -1745,7 +1753,7 @@ h3 {
   margin: 8px 0;
 }
 .date-shortcuts button {
-  font-size: 12px;
+  font-size: 0.75rem;
   padding: 5px;
 }
 .calendar-heading {
@@ -1765,7 +1773,7 @@ h3 {
 }
 .calendar-weekday {
   text-align: center;
-  font-size: 11px;
+  font-size: 0.6875rem;
 }
 
 .calendar-grid button[aria-current="date"] {
@@ -1796,7 +1804,7 @@ h3 {
 }
 .selected-cinemas h3 {
   margin: 0 0 8px;
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 500;
 }
 .selected-cinemas ul {
@@ -1819,15 +1827,15 @@ h3 {
   max-width: 100%;
 }
 .favourite-options h3 {
-  font-size: 13px;
+  font-size: 0.8125rem;
   color: var(--muted);
 }
 .radar-page > section > h2 {
   margin: 18px 14px 8px;
-  font-size: 18px;
+  font-size: 1.125rem;
 }
 .radar-label {
-  font-size: 12px;
+  font-size: 0.75rem;
   color: var(--muted);
   margin: 4px 0;
 }
@@ -1902,7 +1910,7 @@ h3 {
   margin: 0;
 }
 .add-calendar {
-  font-size: 12px;
+  font-size: 0.75rem;
   display: inline-block;
   margin: 3px 0;
 }
@@ -1922,7 +1930,7 @@ h3 {
 }
 .saved-screenings h4 {
   margin: 0 0 6px;
-  font-size: 16px;
+  font-size: 1rem;
   font-weight: 500;
 }
 .saved-screenings p {
@@ -1957,13 +1965,13 @@ h3 {
 .radar-intro summary {
   color: var(--muted);
   cursor: pointer;
-  font-size: 12px;
+  font-size: 0.75rem;
 }
 .radar-intro details p {
-  font-size: 12px;
+  font-size: 0.75rem;
 }
 .recovery-suggestions h2 {
-  font-size: 16px;
+  font-size: 1rem;
   margin: 0;
 }
 
@@ -2025,13 +2033,13 @@ h3 {
   gap: 12px;
   width: 100%;
   text-align: left;
-  font-size: 16px;
+  font-size: 1rem;
   font-weight: 500;
   padding: 12px 14px;
 }
 .radar-section-toggle small,
 .events-agenda h2 small {
-  font-size: 12px;
+  font-size: 0.75rem;
   color: var(--muted);
 }
 .radar-page > section > h2 {
@@ -2050,7 +2058,7 @@ h3 {
   max-width: 100%;
 }
 .events-agenda > section > h2 {
-  font-size: 16px;
+  font-size: 1rem;
   font-weight: 500;
   padding: 14px;
   margin: 0;
@@ -2075,7 +2083,7 @@ h3 {
 }
 .event-information h3 {
   margin: 0 0 6px;
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 500;
 }
 .event-information p {
@@ -2083,7 +2091,7 @@ h3 {
 }
 .event-notes {
   color: var(--muted);
-  font-size: 12px;
+  font-size: 0.75rem;
 }
 .event-actions {
   display: flex;
@@ -2319,7 +2327,7 @@ h3 {
   flex-wrap: wrap;
   gap: 6px;
   align-items: center;
-  font-size: 12px;
+  font-size: 0.75rem;
   color: var(--muted);
 }
 .cinema-save-status p {
@@ -2370,7 +2378,7 @@ h3 {
     display: block;
     margin: 2px 0 0 19px;
     color: var(--muted);
-    font-size: 11px;
+    font-size: 0.6875rem;
   }
   .mobile-sort-score strong {
     color: var(--rating);
@@ -2379,7 +2387,7 @@ h3 {
 
 .display-controls .filter-hint {
   color: var(--muted);
-  font-size: 13px;
+  font-size: 0.8125rem;
 }
 .pref-preview {
   min-width: 0;
@@ -2392,7 +2400,7 @@ h3 {
 }
 @media (max-width: 799px) {
   .display-controls .filter-hint {
-    font-size: 16px;
+    font-size: 1rem;
   }
 }
 .pref-preview .film-table th {
@@ -2419,7 +2427,7 @@ h3 {
   width: 100%;
   margin: 0;
   padding: 8px 12px;
-  font-size: 15px;
+  font-size: 0.9375rem;
   text-align: left;
   border: 0;
   background: transparent;
@@ -2429,7 +2437,7 @@ h3 {
 }
 @media (max-width: 799px) {
   :root .sidebar-bottom .sidebar-auth :is(a, button, .auth-checking) {
-    font-size: 18px;
+    font-size: 1.125rem;
     min-height: 44px;
   }
 }
