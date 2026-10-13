@@ -46,7 +46,7 @@
   padding-top: 8px;
 }
 .social-section h3 {
-  font-size: 14px;
+  font-size: 0.875rem;
   margin: 0 0 12px;
 }
 .social-person {
@@ -60,7 +60,7 @@
 .watchlist-option small,
 .social-match small {
   display: block;
-  font-size: 12px;
+  font-size: 0.75rem;
   color: var(--muted);
   margin-top: 4px;
 }
@@ -92,7 +92,7 @@
 .social-number {
   font-variant-numeric: tabular-nums;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 0.75rem;
 }
 .social-match {
   margin: 20px 0;
@@ -137,7 +137,7 @@
   margin-top: 12px;
 }
 .social-temp-actions button {
-  font-size: 12px;
+  font-size: 0.75rem;
 }
 .watchlist-selections {
   display: flex;
@@ -145,11 +145,11 @@
   gap: 6px;
   align-items: center;
   padding: 10px 0;
-  font-size: 12px;
+  font-size: 0.75rem;
 }
 .watchlist-selections button {
   padding: 4px 8px;
-  font-size: 12px;
+  font-size: 0.75rem;
 }
 .watchlist-selections button:disabled {
   opacity: 1;
@@ -157,7 +157,7 @@
 }
 .film-friends {
   display: block;
-  font-size: 12px;
+  font-size: 0.75rem;
   color: var(--muted);
   font-weight: 400;
   margin: 5px 0 3px 18px;
@@ -195,7 +195,7 @@
   }
 
   .film-friends {
-    font-size: 12px;
+    font-size: 0.75rem;
   }
   .watchlists-dialog-actions {
     position: sticky;
@@ -250,7 +250,7 @@
   justify-content: space-between;
   flex-wrap: wrap;
   margin: 6px 0;
-  font-size: 12px;
+  font-size: 0.75rem;
   color: var(--muted);
 }
 .social-list-toolbar {
@@ -322,7 +322,7 @@
   font-weight: 500;
 }
 .watchlists-dialog .filter-hint {
-  font-size: 12px;
+  font-size: 0.75rem;
   color: var(--muted);
 }
 .watchlists-dialog > .dialog-body {
@@ -340,8 +340,8 @@
   height: 16px;
   padding: 1px 4px 0;
   border-radius: 8px;
-  font-size: 11px;
-  line-height: 15px;
+  font-size: 0.6875rem;
+  line-height: 0.9375rem;
   font-variant-numeric: tabular-nums;
   background: var(--brass);
   color: var(--bg);
@@ -354,7 +354,7 @@
 }
 .friends-page .social-plan h3 {
   margin: 0 0 12px;
-  font-size: 18px;
+  font-size: 1.125rem;
   font-weight: 500;
 }
 .friends-page .social-plan-form .filter-hint {
@@ -392,7 +392,7 @@
   .friends-page .social-person small,
   .friends-page .filter-hint,
   .friends-page .social-pagination {
-    font-size: 15px;
+    font-size: 0.9375rem;
   }
 }
 

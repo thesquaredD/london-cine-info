@@ -1,15 +1,15 @@
 /* Shared scale and blocks for every reading surface. Colours come from the theme. */
 :root {
   --prose-measure: 62ch;
-  --prose-body: 15px;
+  --prose-body: 0.9375rem;
   --prose-leading: 1.55;
-  --prose-small: 14px;
-  --prose-lede: 17px;
-  --prose-h1: 30px;
-  --prose-h2: 20px;
-  --prose-eyebrow: 11px;
-  --prose-gap: 12px;
-  --prose-section: 40px;
+  --prose-small: 0.875rem;
+  --prose-lede: 1.0625rem;
+  --prose-h1: 1.875rem;
+  --prose-h2: 1.25rem;
+  --prose-eyebrow: 0.6875rem;
+  --prose-gap: 0.75rem;
+  --prose-section: 2.5rem;
 }
 .prose {
   width: 100%;
@@ -84,7 +84,7 @@
 }
 .prose-num {
   color: var(--brass);
-  font-size: 13px;
+  font-size: 0.8125rem;
   margin-right: 10px;
 }
 .prose-summary {
@@ -244,7 +244,7 @@
 }
 @media (max-width: 799px) {
   :root {
-    --prose-body: 16px;
+    --prose-body: 1rem;
     --prose-leading: 1.5;
   }
   .prose {
@@ -328,7 +328,7 @@
     font-size: var(--prose-body);
   }
   :root .sidebar-bottom .feedback-entry {
-    font-size: 18px;
+    font-size: 1.125rem;
   }
 }
 
@@ -402,7 +402,7 @@
   margin-top: 28px;
 }
 .changelog-entry h4 {
-  font-size: 19px;
+  font-size: 1.1875rem;
   line-height: 1.3;
   font-weight: 500;
   margin: 4px 0 6px;

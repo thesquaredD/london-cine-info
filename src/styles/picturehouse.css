@@ -3,7 +3,7 @@
   display: none;
 }
 :root {
-  --sidebar-width: 178px;
+  --sidebar-width: 11.125rem;
 }
 :root body {
   font-family: Arial, Helvetica, sans-serif;
@@ -20,15 +20,15 @@
 }
 :root .section-label {
   border: 0;
-  padding: 12px 12px 5px;
+  padding: 0.75rem 0.75rem 0.3125rem;
   font:
-    700 10px Arial,
+    700 0.625rem Arial,
     sans-serif;
   text-transform: uppercase;
 }
 :root .sidebar-content nav a {
   border: 0;
-  padding: 8px 12px;
+  padding: 0.5rem 0.75rem;
 }
 :root .sidebar-content nav section + section {
   margin-top: 12px;
@@ -38,7 +38,7 @@
   background: transparent;
   text-align: left;
   justify-content: start;
-  font-size: 12px;
+  font-size: 0.75rem;
   padding: 7px 12px;
 }
 :root .sidebar-bottom {
@@ -47,26 +47,26 @@
 :root .sidebar-bottom a,
 :root .update-note {
   text-align: left;
-  font-size: 11px;
+  font-size: 0.6875rem;
   margin-top: 10px;
 }
 :root .masthead {
-  height: 48px;
+  height: 3rem;
   justify-content: start;
-  padding: 0 14px 0 46px;
+  padding: 0 0.875rem 0 2.875rem;
   position: sticky;
 }
 :root .masthead h1 span {
   font-weight: 800;
 }
 :root .menu-button {
-  font-size: 19px;
+  font-size: 1.1875rem;
   left: 6px;
 }
 :root .design-view-label {
   display: block;
   margin-left: auto;
-  font-size: 11px;
+  font-size: 0.6875rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
@@ -74,20 +74,20 @@
   display: none;
 }
 :root .filter-bar {
-  padding: 10px 12px 7px;
-  gap: 6px;
+  padding: 0.625rem 0.75rem 0.4375rem;
+  gap: 0.375rem;
   border: 0;
   align-items: center;
 }
 :root .bar-search {
   flex: 1 1 180px;
-  min-width: 140px;
-  padding: 7px 10px;
-  font-size: 12px;
+  min-width: 8.75rem;
+  padding: 0.4375rem 0.625rem;
+  font-size: 0.75rem;
   background: var(--shade);
   border: 0;
   border-radius: 2px;
-  height: 32px;
+  height: 2rem;
 }
 :root .desktop-filters,
 :root .desktop-filters .filter-fields {
@@ -100,53 +100,53 @@
   border-radius: 2px;
 }
 :root .desktop-filters .filter-picker summary {
-  padding: 8px 24px 8px 9px;
-  font-size: 12px;
+  padding: 0.5rem 1.5rem 0.5rem 0.5625rem;
+  font-size: 0.75rem;
 }
 :root .desktop-filters .filter-picker summary::after {
   top: 8px;
 }
 :root .all-filters,
 :root .watchlists-trigger {
-  padding: 8px 10px;
-  font-size: 12px;
+  padding: 0.5rem 0.625rem;
+  font-size: 0.75rem;
   border: 0;
   background: var(--shade);
 }
 :root .filter-summary {
-  padding: 0 12px 7px;
-  gap: 4px 10px;
+  padding: 0 0.75rem 0.4375rem;
+  gap: 0.25rem 0.625rem;
   border: 0;
 }
 :root .filter-summary .result-status {
-  font-size: 11px;
+  font-size: 0.6875rem;
 }
 :root .active-filters button {
-  padding: 3px 6px;
-  font-size: 11px;
+  padding: 0.1875rem 0.375rem;
+  font-size: 0.6875rem;
 }
 :root .film-table th {
-  top: 48px;
+  top: 3rem;
   border: 0;
 }
 :root .film-table th button {
-  min-height: 32px;
-  padding: 6px 10px;
-  font-size: 11px;
+  min-height: 2rem;
+  padding: 0.375rem 0.625rem;
+  font-size: 0.6875rem;
   font-weight: 700;
   background: transparent;
 }
 :root .film-row td {
   border: 0;
-  padding: 7px 10px;
-  font-size: 13px;
+  padding: 0.4375rem 0.625rem;
+  font-size: 0.8125rem;
   line-height: 1.3;
 }
 :root .film-title {
-  min-height: 28px;
+  min-height: 1.75rem;
 }
 :root .film-title i {
-  font-size: 11px;
+  font-size: 0.6875rem;
   margin-top: 2px;
   font-style: normal;
 }
@@ -158,7 +158,7 @@
   border: 0;
   background: transparent;
   padding: 2px;
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
@@ -170,7 +170,7 @@
   padding: 7px 12px;
   border: 0;
   background: var(--shade);
-  font-size: 11px;
+  font-size: 0.6875rem;
 }
 :root .film-expanded {
   padding: 12px;
@@ -200,22 +200,22 @@
 }
 @media (max-width: 799px) {
   :root .masthead {
-    height: 44px;
-    padding-left: 40px;
+    height: 2.75rem;
+    padding-left: 2.5rem;
   }
   :root .masthead h1 {
-    font-size: 20px;
+    font-size: 1.25rem;
   }
   :root .design-view-label {
-    font-size: 9px;
+    font-size: 0.5625rem;
     letter-spacing: 0;
   }
   :root .film-table th {
-    top: 44px;
+    top: 2.75rem;
   }
   :root .filter-bar {
-    padding: 8px 9px 4px;
-    gap: 5px;
+    padding: 0.5rem 0.5625rem 0.25rem;
+    gap: 0.3125rem;
   }
   :root .bar-search {
     flex-basis: 100%;
@@ -224,18 +224,18 @@
     padding: 7px 8px;
     border: 0;
     background: var(--shade);
-    font-size: 11px;
+    font-size: 0.6875rem;
     min-height: 32px;
   }
   :root .filter-summary {
-    padding: 2px 9px 6px;
-    gap: 4px 8px;
+    padding: 0.125rem 0.5625rem 0.375rem;
+    gap: 0.25rem 0.5rem;
   }
   :root .film-row td {
-    padding: 8px;
+    padding: 0.5rem;
   }
   :root .film-title {
-    font-size: 14px;
+    font-size: 0.875rem;
   }
   :root .sidebar-drawer .sidebar-content {
     padding-top: 35px;
@@ -253,18 +253,18 @@
 }
 :root .masthead .brand-info {
   font:
-    700 10px Arial,
+    700 0.625rem Arial,
     sans-serif;
 }
 :root .showtime-day h3 {
   text-align: left;
 }
 :root .showtime-day li {
-  padding: 8px 10px;
-  gap: 8px;
+  padding: 0.5rem 0.625rem;
+  gap: 0.5rem;
 }
 :root .screening-info > a {
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 600;
 }
 :root .film-row td {
@@ -275,12 +275,12 @@
 }
 :root .showtime-day h3 {
   font:
-    600 11px "Space Grotesk",
+    600 0.6875rem "Space Grotesk",
     sans-serif;
 }
 :root .showtime-day time {
   font:
-    600 15px "Space Grotesk",
+    600 0.9375rem "Space Grotesk",
     sans-serif;
 }
 :root .time-dot {
@@ -298,7 +298,7 @@
 }
 @media (max-width: 760px) {
   :root .masthead h1 {
-    font-size: 20px;
+    font-size: 1.25rem;
   }
   :root .masthead h1 a {
     gap: 5px;
@@ -318,7 +318,7 @@
   min-height: 0;
 }
 :root .rating-card strong {
-  font-size: 16px;
+  font-size: 1rem;
 }
 @media (max-width: 760px) {
   :root .film-expanded {
@@ -400,7 +400,7 @@
 }
 @media (max-width: 760px) {
   :root .film-title {
-    font-size: 15px;
+    font-size: 0.9375rem;
   }
 }
 :root {
@@ -414,7 +414,7 @@
   gap: 12px;
 }
 :root .masthead .brand-info {
-  font-size: 10px;
+  font-size: 0.625rem;
   font-weight: 500;
   letter-spacing: 0.14em;
   border: 0;
@@ -430,7 +430,7 @@
   line-height: 1.1;
 }
 :root .showtime-day li {
-  grid-template-columns: 46px 4px minmax(0, 1fr);
+  grid-template-columns: 2.875rem 0.25rem minmax(0, 1fr);
 }
 :root .masthead {
   border-bottom: 3px double var(--deco-brass);
@@ -443,7 +443,7 @@
 }
 @media (max-width: 760px) {
   :root .masthead h1 {
-    font-size: 18px;
+    font-size: 1.125rem;
     letter-spacing: 0.045em;
   }
   :root .masthead h1 a {
@@ -451,10 +451,10 @@
   }
   :root .masthead .brand-info {
     padding-left: 6px;
-    font-size: 8px;
+    font-size: 0.5rem;
   }
   :root .film-title {
-    font-size: 14px;
+    font-size: 0.875rem;
   }
 }
 :root .masthead h1 a::before {
@@ -477,7 +477,7 @@
   content: none;
 }
 :root .masthead h1 {
-  font-size: 25px;
+  font-size: 1.5625rem;
   font-style: normal;
   letter-spacing: 0.075em;
 }
@@ -487,7 +487,7 @@
 :root .film-title {
   font-family: "Josefin Sans", Arial, sans-serif;
   font-weight: 600;
-  font-size: 16px;
+  font-size: 1rem;
   letter-spacing: 0.005em;
 }
 :root .film-title i {
@@ -495,7 +495,7 @@
   font-weight: 400;
 }
 :root .sidebar-content nav a {
-  padding-block: 8px;
+  padding-block: 0.5rem;
 }
 :root .sidebar-content nav a[aria-current="page"] {
   font-weight: 600;
@@ -511,20 +511,20 @@
 :root .film-row.is-expanded .film-title {
   font-family: var(--cinema-display);
   font-weight: var(--cinema-weight);
-  font-size: 20px;
+  font-size: 1.25rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
 @media (max-width: 760px) {
   :root .masthead h1 {
-    font-size: 19px;
+    font-size: 1.1875rem;
     letter-spacing: 0.04em;
   }
   :root .film-title {
-    font-size: 15px;
+    font-size: 0.9375rem;
   }
   :root .film-row.is-expanded .film-title {
-    font-size: 17px;
+    font-size: 1.0625rem;
   }
 }
 :root {
@@ -573,14 +573,14 @@
 }
 :root .sidebar-content nav a {
   font-family: "Space Grotesk", Arial, sans-serif;
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 500;
   letter-spacing: 0;
 }
 :root .section-label {
   font-family: "Space Grotesk", Arial, sans-serif;
   font-weight: 500;
-  font-size: 10px;
+  font-size: 0.625rem;
   letter-spacing: 0.09em;
   color: var(--brass);
 }
@@ -616,18 +616,18 @@
 }
 :root .showtime-day h3 {
   font-family: "Space Grotesk", Arial, sans-serif;
-  font-size: 12px;
+  font-size: 0.75rem;
   letter-spacing: 0.03em;
   color: var(--fg);
   border-bottom-color: #ad915c70;
 }
 @media (max-width: 760px) {
   :root .masthead h1 {
-    font-size: 19px;
+    font-size: 1.1875rem;
   }
   :root .film-title,
   :root .film-row.is-expanded .film-title {
-    font-size: 15px;
+    font-size: 0.9375rem;
   }
 }
 :root .masthead h1 a {
@@ -695,7 +695,7 @@
     min-height: 29px;
   }
   :root .masthead h1 {
-    font-size: 18px;
+    font-size: 1.125rem;
     letter-spacing: 0.025em;
   }
 }
@@ -733,10 +733,10 @@
   font-weight: 400;
 }
 :root body {
-  font-size: 15px;
+  font-size: 0.9375rem;
 }
 :root :is(button, input, select, textarea) {
-  font-size: 14px;
+  font-size: 0.875rem;
 }
 :root .masthead h1,
 :root .masthead h1 .brand-name {
@@ -745,18 +745,18 @@
   letter-spacing: 0.06em;
 }
 :root .showtime-day time {
-  font-size: 16px;
+  font-size: 1rem;
   font-weight: 500;
   letter-spacing: 0;
 }
 :root .film-title,
 :root .film-row.is-expanded .film-title {
-  font-size: 15px;
+  font-size: 0.9375rem;
   font-weight: 400;
   letter-spacing: 0;
 }
 :root .sidebar-content nav a {
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 400;
 }
 :root
@@ -765,7 +765,7 @@
 }
 @media (max-width: 760px) {
   :root .masthead h1 {
-    font-size: 17px;
+    font-size: 1.0625rem;
     letter-spacing: 0.025em;
   }
 }
@@ -779,13 +779,13 @@ html {
 :root .film-title,
 :root .film-row.is-expanded .film-title {
   width: 100%;
-  min-height: 28px;
+  min-height: 1.75rem;
 }
 :root .active-filters:empty {
   display: flex;
 }
 :root .filter-summary {
-  min-height: 68px;
+  min-height: 4.25rem;
 }
 :root .filter-summary .result-status {
   min-width: 8ch;
@@ -794,11 +794,11 @@ html {
 :root .filter-bar :is(.filter-picker > summary, .watchlists-trigger, .all-filters) {
   display: flex;
   align-items: center;
-  height: 36px;
-  min-height: 36px;
-  padding: 0 10px;
+  height: 2.25rem;
+  min-height: 2.25rem;
+  padding: 0 0.625rem;
   line-height: 1;
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 400;
   white-space: nowrap;
 }
@@ -806,16 +806,16 @@ html {
   padding-right: 24px;
 }
 :root .watchlists-trigger {
-  width: 124px;
+  width: 7.75rem;
   flex-shrink: 0;
 }
 :root .all-filters {
-  width: 108px;
+  width: 6.75rem;
   flex-shrink: 0;
 }
 :root .shortcut-count {
   width: 3ch;
-  font-size: 11px;
+  font-size: 0.6875rem;
   font-variant-numeric: tabular-nums;
 }
 :root .filter-bar [data-active="true"],
@@ -843,8 +843,8 @@ html {
   :root .bar-search {
     grid-column: 1 / -1;
     min-width: 0;
-    height: 36px;
-    font-size: 16px;
+    height: 2.25rem;
+    font-size: 1rem;
   }
   :root .filter-bar :is(.watchlists-trigger, .all-filters) {
     width: 100%;
@@ -853,14 +853,14 @@ html {
     min-height: 44px;
     padding: 0 6px;
     justify-content: center;
-    font-size: 13px;
+    font-size: 0.8125rem;
   }
   :root .mobile-sort-trigger {
     grid-column: 1 / -1;
     justify-self: start;
   }
   :root .filter-summary {
-    min-height: 50px;
+    min-height: 3.125rem;
   }
 }
 
@@ -899,116 +899,116 @@ html {
 /* Mobile uses readable type and only allocates a chip row when it has content. */
 @media (max-width: 799px) {
   :root body {
-    font-size: 17px;
+    font-size: 1.0625rem;
   }
   :root :is(button, input, select, textarea) {
-    font-size: 16px;
+    font-size: 1rem;
   }
   :root .masthead h1 {
-    font-size: 20px;
+    font-size: 1.25rem;
   }
   :root .design-view-label {
     display: none;
   }
   :root .filter-bar {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 6px;
+    gap: 0.375rem;
   }
   :root .bar-search {
-    height: 44px;
-    font-size: 17px;
+    height: 2.75rem;
+    font-size: 1.0625rem;
   }
   :root .filter-bar :is(.watchlists-trigger, .all-filters) {
-    font-size: 16px;
+    font-size: 1rem;
     justify-content: flex-start;
     padding-inline: 12px;
   }
   :root :is(.mobile-sort-trigger) {
-    font-size: 16px;
+    font-size: 1rem;
     min-height: 44px;
     padding: 8px 10px;
   }
   :root .shortcut-count {
-    font-size: 14px;
+    font-size: 0.875rem;
   }
   :root .filter-summary {
     min-height: 0;
-    padding: 4px 9px 6px;
+    padding: 0.25rem 0.5625rem 0.375rem;
     row-gap: 0;
   }
   :root .filter-summary .result-status {
-    font-size: 16px;
+    font-size: 1rem;
     width: auto;
     min-width: 0;
   }
   :root .filter-summary .active-filters {
     height: auto;
-    min-height: 44px;
-    margin-top: 6px;
+    min-height: 2.75rem;
+    margin-top: 0.375rem;
   }
   :root .filter-summary .active-filters:empty {
     display: none;
   }
   :root .active-filters button {
-    font-size: 16px;
-    min-height: 44px;
+    font-size: 1rem;
+    min-height: 2.75rem;
   }
   :root .film-table th button {
-    font-size: 16px;
+    font-size: 1rem;
   }
   :root .film-row td {
-    font-size: 17px;
+    font-size: 1.0625rem;
     line-height: 1.3;
-    padding: 12px 9px;
+    padding: 0.75rem 0.5625rem;
   }
   :root .film-title,
   :root .film-row.is-expanded .film-title {
-    font-size: 20px;
+    font-size: 1.25rem;
     line-height: 1.2;
-    min-height: 32px;
+    min-height: 2rem;
   }
   :root .film-title i {
-    font-size: 15px;
+    font-size: 0.9375rem;
   }
   :root .mobile-sort-score {
-    font-size: 15px;
+    font-size: 0.9375rem;
   }
   :root .sidebar-content nav a {
-    font-size: 18px;
-    padding-block: 12px;
+    font-size: 1.125rem;
+    padding-block: 0.75rem;
   }
   :root .section-label {
-    font-size: 12px;
+    font-size: 0.75rem;
   }
   :root dialog :is(button, input, select, textarea, summary, .filter-options label) {
-    font-size: 16px;
+    font-size: 1rem;
   }
   :root dialog :is(button, .filter-picker > summary) {
     min-height: 44px;
   }
   :root dialog .filter-options small {
-    font-size: 14px;
+    font-size: 0.875rem;
   }
   :root :is(.calendar-help, .poster figcaption, .rating-card span, .pagination) {
-    font-size: 14px;
+    font-size: 0.875rem;
   }
   :root .showtime-day h3 {
-    font-size: 16px;
+    font-size: 1rem;
   }
   :root .showtime-day time {
-    font-size: 22px;
+    font-size: 1.375rem;
   }
   :root .screening-info > a {
-    font-size: 18px;
+    font-size: 1.125rem;
   }
   :root .screening-info small {
-    font-size: 15px;
+    font-size: 0.9375rem;
   }
   :root .showtime-day li {
-    grid-template-columns: 58px 4px minmax(0, 1fr);
+    grid-template-columns: 3.625rem 0.25rem minmax(0, 1fr);
   }
   :root .sidebar-drawer :is(.preferences-nav a, .signout-button) {
-    font-size: 16px;
+    font-size: 1rem;
     min-height: 44px;
   }
 }
@@ -1021,7 +1021,7 @@ html {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 6px 10px;
+    gap: 0.375rem 0.625rem;
   }
   :root .filter-summary .result-status {
     flex-shrink: 0;
@@ -1039,9 +1039,9 @@ html {
 :root .filter-bar :is(.watchlists-trigger, .all-filters, .mobile-sort-trigger),
 :root .watchlists-trigger {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 3ch 10px;
+  grid-template-columns: minmax(0, 1fr) 3ch 0.625rem;
   align-items: center;
-  gap: 6px;
+  gap: 0.375rem;
   text-align: left;
   border: 0;
   border-radius: 2px;
@@ -1063,7 +1063,7 @@ html {
   text-align: right;
 }
 :root .filter-bar :is(.watchlists-trigger, .all-filters, .mobile-sort-trigger) {
-  padding-inline: 12px;
+  padding-inline: 0.75rem;
 }
 :root :is(dialog) .filter-picker {
   border: 0;
@@ -1089,7 +1089,7 @@ html {
   padding: 0;
   height: auto;
   line-height: 1.25;
-  font-size: 14px;
+  font-size: 0.875rem;
 }
 :root :is(dialog) .filter-picker > summary::after,
 :root .desktop-filters > .filter-controls .filter-picker > summary::after {
@@ -1132,7 +1132,7 @@ html {
     min-height: 52px;
   }
   :root dialog .filter-picker > summary > small {
-    font-size: 16px;
+    font-size: 1rem;
   }
 }
 :root .filter-bar :is(.watchlists-trigger) {
@@ -1155,21 +1155,21 @@ html {
 :root .filter-bar .bar-search {
   flex: 1;
   min-width: 0;
-  height: 36px;
+  height: 2.25rem;
 }
 :root .filter-bar .desktop-filters {
   display: flex;
 }
 :root .filter-bar button.all-filters {
-  width: 124px;
+  width: 7.75rem;
   flex: none;
-  grid-template-columns: minmax(0, 1fr) 3ch 10px;
+  grid-template-columns: minmax(0, 1fr) 3ch 0.625rem;
 }
 :root .all-filters .control-caret {
   grid-column: 3;
 }
 :root .filter-summary {
-  min-height: 56px;
+  min-height: 3.5rem;
 }
 :root .shortcut-strip {
   grid-column: 1 / -1;
@@ -1177,21 +1177,21 @@ html {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 4px 14px;
-  padding: 2px 0 8px;
-  min-height: 30px;
+  gap: 0.25rem 0.875rem;
+  padding: 0.125rem 0 0.5rem;
+  min-height: 1.875rem;
 }
 :root .shortcut-strip button {
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 400;
-  line-height: 18px;
+  line-height: 1.125rem;
   color: var(--muted);
   background: transparent;
   border: 0;
   border-bottom: 1px solid transparent;
   border-radius: 0;
   padding: 0;
-  min-height: 19px;
+  min-height: 1.1875rem;
 }
 :root .shortcut-strip button:hover,
 :root .shortcut-strip button[aria-pressed="true"] {
@@ -1214,28 +1214,28 @@ html {
     display: none;
   }
   :root .filter-bar .bar-search {
-    height: 44px;
-    font-size: 16px;
+    height: 2.75rem;
+    font-size: 1rem;
   }
   :root .filter-bar button.all-filters {
-    width: 112px;
-    height: 44px;
-    min-height: 44px;
-    font-size: 16px;
-    padding-inline: 10px;
+    width: 7rem;
+    height: 2.75rem;
+    min-height: 2.75rem;
+    font-size: 1rem;
+    padding-inline: 0.625rem;
   }
   :root .filter-summary {
     min-height: 0;
   }
   :root .shortcut-strip {
     flex-basis: 100%;
-    gap: 4px 12px;
+    gap: 0.25rem 0.75rem;
     padding-bottom: 0;
-    min-height: 38px;
+    min-height: 2.375rem;
   }
   :root .shortcut-strip button {
-    font-size: 13px;
-    min-height: 36px;
-    padding-block: 8px;
+    font-size: 0.8125rem;
+    min-height: 2.25rem;
+    padding-block: 0.5rem;
   }
 }
