@@ -8,18 +8,12 @@ async function revealContext(page: Page) {
   const summary = page.locator(".feedback-dialog summary");
   if (await summary.isVisible()) await summary.click();
 }
-async function openFromMenu(page: Page) {
-  if (page.viewportSize()!.width < 800) {
-    await page.getByRole("button", { name: /^Toggle pages/ }).click();
-    await page
-      .getByRole("dialog", { name: "Pages", exact: true })
-      .getByRole("button", { name: "Feedback" })
-      .click();
-  } else await page.locator(".desktop-sidebar").getByRole("button", { name: "Feedback" }).click();
+async function openFromHeader(page: Page) {
+  await page.locator(".masthead").getByRole("button", { name: "Share feedback" }).click();
   return page.getByRole("dialog", { name: "Share feedback" });
 }
 
-test("the menu opens one form that keeps its draft and offers email when it cannot send", async ({
+test("the header opens one form that keeps its draft and offers email when it cannot send", async ({
   page,
 }) => {
   const posthog: string[] = [];
@@ -28,7 +22,7 @@ test("the menu opens one form that keeps its draft and offers email when it cann
   });
   await page.goto("/?q=private-search");
   await expect(page.locator(".empty-state")).toBeVisible();
-  const dialog = await openFromMenu(page);
+  const dialog = await openFromHeader(page);
   await expect(dialog.getByRole("textbox", { name: "Your feedback" })).toBeFocused();
   await expect(page.getByRole("dialog", { name: "Pages", exact: true })).toBeHidden();
   await dialog
@@ -48,9 +42,7 @@ test("the menu opens one form that keeps its draft and offers email when it cann
       JSON.stringify({ ...localStorage, ...sessionStorage }).includes("Prince Charles"),
     ),
   ).toBe(false);
-  if (page.viewportSize()!.width < 800)
-    await expect(page.getByRole("button", { name: /^Toggle pages/ })).toBeFocused();
-  else await expect(page.locator(".desktop-sidebar .feedback-entry")).toBeFocused();
+  await expect(page.locator(".masthead .feedback-entry")).toBeFocused();
   await page.locator(".feedback-entry:visible").first().click();
   await expect(dialog.getByRole("textbox", { name: "Your feedback" })).toHaveValue(
     "The Prince Charles is missing.",
@@ -100,19 +92,24 @@ test("a programme load failure can be reported next to the retry", async ({ page
   await expect(dialog.locator(".feedback-context")).toContainText(/Error\s*catalogue_load/);
 });
 
-test("a collapsed desktop sidebar keeps Feedback reachable in the footer", async ({ page }) => {
+test("a collapsed desktop sidebar keeps Feedback reachable in the header", async ({ page }) => {
   test.skip(page.viewportSize()!.width < 800, "desktop only");
   await page.goto("/");
   await page.getByRole("button", { name: /^Toggle pages/ }).click();
-  await page.locator(".source-footer").getByRole("button", { name: "Feedback" }).click();
+  await openFromHeader(page);
   await expect(page.getByRole("dialog", { name: "Share feedback" })).toBeVisible();
 });
 
-test("phones get a Feedback action under the masthead", async ({ page }) => {
+test("phones keep Feedback in the masthead without an extra row", async ({ page }) => {
   test.skip(page.viewportSize()!.width >= 800, "phone only");
   await page.goto("/");
-  const entry = page.locator(".feedback-phone-row").getByRole("button", { name: "Feedback" });
+  const entry = page.locator(".masthead").getByRole("button", { name: "Share feedback" });
   expect((await entry.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+  expect((await entry.boundingBox())!.width).toBeGreaterThanOrEqual(44);
+  await expect(page.locator(".feedback-entry")).toHaveCount(1);
+  const header = await page.locator(".masthead").boundingBox();
+  const filters = await page.locator(".filter-bar").boundingBox();
+  expect(filters!.y).toBeLessThanOrEqual(header!.y + header!.height + 1);
   await entry.click();
   await expect(page.getByRole("dialog", { name: "Share feedback" })).toBeVisible();
 });
@@ -121,7 +118,7 @@ test("feedback begins with the message and optional topics toggle off", async ({
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("/");
-  const dialog = await openFromMenu(page);
+  const dialog = await openFromHeader(page);
   await expect(dialog.getByRole("textbox", { name: "Your feedback" })).toBeFocused();
   await expect(dialog.getByRole("combobox")).toHaveCount(0);
   await dialog.getByRole("button", { name: "Idea", exact: true }).click();

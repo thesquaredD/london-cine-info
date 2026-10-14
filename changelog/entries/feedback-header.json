@@ -1,0 +1,7 @@
+{
+  "id": "feedback-header",
+  "type": "improved",
+  "title": "Feedback within reach",
+  "body": "Open feedback from the header on every page. Look for Feedback on desktop or the speech bubble on mobile, without an extra row above the filters.",
+  "visibility": "public"
+}

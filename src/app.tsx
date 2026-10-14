@@ -14,7 +14,7 @@ import {
 import { Privacy } from "./components/privacy";
 import { SettingsPage } from "./components/settings-page";
 import { ChangelogPage } from "./components/changelog-page";
-import { FeedbackDialog } from "./components/feedback";
+import { FeedbackDialog, FeedbackEntry } from "./components/feedback";
 import { openFeedback } from "./lib/feedback";
 import { useCalendar } from "./lib/calendar";
 import { MyCalendar, ScreeningCalendarDialog } from "./components/screening-calendar";
@@ -616,10 +616,6 @@ export function App() {
   }
   const phone = () => window.matchMedia("(max-width: 799px)").matches;
   const sidebarProps = {
-    onFeedback: () => {
-      setDrawerOpen(false);
-      openFeedback();
-    },
     state,
     account,
     meta,
@@ -709,12 +705,8 @@ export function App() {
               </a>
             </h1>
             <span class="design-view-label">{pageTitle}</span>
+            <FeedbackEntry />
           </header>
-          <div class="feedback-phone-row">
-            <button class="feedback-entry" onClick={() => openFeedback()}>
-              Feedback
-            </button>
-          </div>
           <FeedbackDialog dataVersion={meta?.generatedAt} onNavigate={navigateTo} />
           <div class="tagline">The database of London cinema screenings</div>
           <h2 class="sr-only">{pageTitle}</h2>
@@ -1207,9 +1199,6 @@ export function App() {
             </>
           )}
           <div class="source-footer">
-            <button class="feedback-entry feedback-footer" onClick={() => openFeedback()}>
-              Feedback
-            </button>
             Screening data from{" "}
             <a href="https://clusterflick.com" target="_blank" rel="noopener noreferrer">
               Clusterflick

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "preact/hooks";
 import {
   currentContext,
+  openFeedback,
   feedbackChannel,
   feedbackRequest,
   sendFeedback,
@@ -19,6 +20,33 @@ import {
 } from "../shared/feedback";
 import { Dialog } from "./dialog";
 import { PageLink } from "./page-link";
+
+export function FeedbackEntry() {
+  return (
+    <button
+      class="feedback-entry feedback-header"
+      aria-label="Share feedback"
+      title="Share feedback"
+      onClick={() => openFeedback()}
+    >
+      <svg
+        viewBox="0 0 24 24"
+        width="21"
+        height="21"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.6"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M6 4h12a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3h-7l-5 3v-3a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3Z" />
+        <path d="M8 9h8M8 13h5" />
+      </svg>
+      <span>Feedback</span>
+    </button>
+  );
+}
 
 const EMPTY: FeedbackDraft = { message: "", category: "", email: "" };
 type Status = "editing" | "sending" | "failed" | "sent";

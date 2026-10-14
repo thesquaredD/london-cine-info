@@ -324,12 +324,6 @@
   .feedback-form :is(input, textarea) {
     font-size: var(--prose-body);
   }
-  .feedback-phone-row .feedback-entry {
-    font-size: var(--prose-body);
-  }
-  :root .sidebar-bottom .feedback-entry {
-    font-size: 18px;
-  }
 }
 
 /* Facts and dated entries share the scale with the policy. */
