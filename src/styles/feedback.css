@@ -10,24 +10,24 @@
   background: transparent;
   border: 0;
 }
-:root .sidebar-bottom .feedback-entry {
-  display: block;
-  margin-top: 10px;
-  padding: 0;
-  font-size: 11px;
+/* Keep the global action in the sticky masthead, clear of catalogue controls. */
+:root .feedback-header {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 44px;
+  padding: 0 12px;
+  color: var(--masthead-fg);
   text-decoration: none;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
-:root .sidebar-bottom .feedback-entry:hover {
-  text-decoration: underline;
+:root .masthead .design-view-label {
+  margin-right: 22px;
 }
-.feedback-phone-row,
-.feedback-footer {
-  display: none;
-}
-.sidebar-collapsed .feedback-footer {
-  display: inline;
-  margin-right: 12px;
-  font-size: inherit;
+:root .feedback-header:hover {
+  background: color-mix(in srgb, var(--masthead-fg) 10%, transparent);
 }
 .film-links .feedback-link {
   min-height: 32px;
@@ -121,18 +121,9 @@
   margin: 8px -16px -16px;
 }
 @media (max-width: 799px) {
-  .feedback-phone-row {
-    display: flex;
-    justify-content: flex-end;
-    padding: 0 14px;
-  }
-  .feedback-phone-row .feedback-entry,
   .feedback-link,
   .feedback-fallback :is(a, button),
   :root dialog.feedback-dialog .feedback-topics button {
-    min-height: 44px;
-  }
-  :root .sidebar-bottom .feedback-entry {
     min-height: 44px;
   }
   :root .feedback-dialog {
@@ -158,5 +149,25 @@
   .feedback-dialog .prose-footer p {
     text-align: center;
     align-self: center;
+  }
+}
+
+@media (max-width: 799px) {
+  :root .masthead {
+    padding-right: 6px;
+    gap: 4px;
+  }
+  :root .feedback-header {
+    margin-left: auto;
+    padding: 0;
+    min-width: 44px;
+  }
+  .feedback-header span {
+    display: none;
+  }
+}
+@media (max-width: 359px) {
+  :root .masthead .brand-info {
+    display: none;
   }
 }

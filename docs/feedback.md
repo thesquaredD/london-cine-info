@@ -10,14 +10,12 @@ this repository → PR with changelog fragment → verified deployment → optio
 ## The form
 
 `src/components/feedback.tsx`, opened through `openFeedback()` in `src/lib/feedback.ts`. One
-dialog serves the whole app, so a control inside another surface (the phone Pages drawer) closes
-that surface first instead of stacking modals.
+dialog serves the whole app. The header action stays available with the desktop sidebar open
+or collapsed; on phones it is a speech bubble with the accessible name “Share feedback”.
 
 | Entry point                              | Context attached                            |
 | ---------------------------------------- | ------------------------------------------- |
-| Sidebar / phone Pages menu               | page                                        |
-| Under the masthead on phones             | page                                        |
-| Footer when the sidebar is collapsed     | page                                        |
+| Header on desktop and phones             | page                                        |
 | Film details: Report a listing problem   | film ID, topic preset to Listing correction |
 | Programme / screenings / account failure | controlled error code                       |
 | Empty results                            | result count 0                              |
