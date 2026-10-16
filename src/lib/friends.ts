@@ -1,8 +1,8 @@
 import { capture } from "./analytics";
 import { createContext } from "preact";
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "preact/hooks";
-import type { Film } from "../shared/data";
-import { letterboxdSlug } from "../shared/account";
+import type { Film } from "@lci/core/data";
+import { letterboxdSlug } from "@lci/core/account";
 import {
   MAX_SELECTED_WATCHLISTS,
   normalizeUsername,
@@ -10,7 +10,7 @@ import {
   type FriendsResponse,
   type FriendMatch,
   type FriendWatchlist,
-} from "../shared/friends";
+} from "@lci/core/friends";
 import { AccountError, accountApi, type AccountState } from "./account";
 import {
   readFriends,
@@ -18,7 +18,7 @@ import {
   readFriendLists,
   readPublicPage,
   readFriendMutation,
-} from "./friends-response";
+} from "@lci/core/friends-response";
 
 type Temporary = { username: string; slugs: string[]; fetchedAt: number };
 type Choices = { selected: string[]; mode: "all" | "any"; temporary: Temporary[] };

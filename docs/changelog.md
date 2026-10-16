@@ -5,7 +5,7 @@ Plan and reasoning: [changelog-plan.md](changelog-plan.md).
 
 ## Fragments
 
-Each PR adds `changelog/entries/<id>.json` (schema: `src/shared/changelog.ts`). Rules for
+Each PR adds `changelog/entries/<id>.json` (schema: `packages/core/src/changelog.ts`). Rules for
 writing one live in `AGENTS.md`.
 
 | Command                              | Purpose                                                  |
@@ -65,3 +65,10 @@ Listing/data corrections fixed by a data refresh have no fragment; note the data
 4. D1 migrations are not undone by a Pages rollback; migrations must stay compatible with the
    previous app.
 5. Fix forward on `main`; the next verified deploy restores the entry.
+
+## Phone app releases
+
+Phone app changes follow the same fragment policy. Until store launch, public fragments
+carry `feature: "mobile_app"`. Enable the flag only in the change announcing verified store
+listings. The app opens the website's What's new page in its in-app browser; notes publish
+with the verified website deployment, while binary changes require a store release.

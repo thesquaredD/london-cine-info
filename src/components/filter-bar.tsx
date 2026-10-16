@@ -1,7 +1,7 @@
 import { WatchlistsButton } from "./friends";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { FilterControls, type FilterControlsProps } from "./filter-controls";
-import type { FacetKey } from "../shared/data";
+import type { FacetKey } from "@lci/core/data";
 
 export function FilterBar(
   props: FilterControlsProps & {

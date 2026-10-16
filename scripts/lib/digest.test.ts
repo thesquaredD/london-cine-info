@@ -1,6 +1,6 @@
 import { expect, it } from "vitest";
 import { digestFilms, digestHtml, digestSubject, digestText, screeningLines } from "./digest";
-import type { Film, FilmShowtimes, Showtime, Venue } from "../../src/shared/data";
+import type { Film, FilmShowtimes, Showtime, Venue } from "@lci/core/data";
 const now = Date.parse("2026-10-04T12:00:00Z") / 1000;
 const film = (id: string, slug = id) =>
   ({

@@ -9,7 +9,15 @@
     "noEmit": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
-    "types": ["node"]
+    "types": ["node"],
+    "paths": {
+      "@lci/core/*": ["../packages/core/src/*"]
+    }
   },
-  "include": ["./**/*.ts", "../src/data/**/*.ts", "../src/shared/**/*.ts", "../vite.config.ts"]
+  "include": [
+    "./**/*.ts",
+    "../src/data/**/*.ts",
+    "../packages/core/src/**/*.ts",
+    "../vite.config.ts"
+  ]
 }

@@ -1,7 +1,12 @@
 import { useEffect, useRef, useState } from "preact/hooks";
-import type { DataMeta } from "../shared/data";
+import type { DataMeta } from "@lci/core/data";
 import type { CinemasState } from "../lib/cinemas";
-import { distanceMiles, validCoordinates, withinRadius, type Coordinates } from "../lib/distance";
+import {
+  distanceMiles,
+  validCoordinates,
+  withinRadius,
+  type Coordinates,
+} from "@lci/core/distance";
 import { Dialog } from "./dialog";
 export function MyCinemas({
   cinemas,

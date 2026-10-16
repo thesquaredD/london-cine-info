@@ -57,7 +57,7 @@ Generated files are excluded from git:
 - `src/generated/manifest.json`: URLs of the current film, metadata, event and showtime
   assets. The UI imports this manifest at build time; generate data before typechecking.
 
-The shared contract is in `src/shared/data.ts` (schema version 2). Rebuild data before
+The shared contract is in `packages/core/src/data.ts` (schema version 2). Rebuild data before
 building the UI: version 1 assets lack the event index. The repository’s existing
 `build-data` producer generates it for both fixtures and live releases; the Deploy
 workflow already runs this producer before Vite, so no external producer or separate
@@ -300,3 +300,15 @@ and Director column. An explicitly chosen default rating is retained in the URL
 so its mobile column survives sharing and reload. Unknown runtimes sort last.
 Desktop columns stay unchanged. Events keeps its chronological agenda; Release
 calendar sorts films within each date group.
+
+## Phone apps
+
+`mobile/` contains the Expo SDK 57 iPhone and Android app. Both interfaces use
+`packages/core` for catalogue selection, filtering, Events, Radar and calendar exports.
+The website remains the web interface. Listings refresh from the website's public
+`/catalogue.json` at launch and after 30 minutes away; app code ships through store releases.
+
+Install from the repository root with `npm ci`, then run `cd mobile && npx expo start --dev-client`.
+A development build is needed for the native modules. See [docs/mobile.md](docs/mobile.md)
+for preview builds, sign-in, privacy, device verification and the release gates. The app
+launch announcement stays disabled until the store checks are complete.

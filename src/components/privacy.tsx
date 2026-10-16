@@ -2,7 +2,7 @@ import { useEffect, useState } from "preact/hooks";
 import { analyticsAllowed, browserDoNotTrack, setAnalyticsAllowed } from "../lib/analytics";
 import { usePreferenceFocus } from "../lib/preference-focus";
 import { PageLink } from "./page-link";
-import { CONTACT_EMAIL } from "../shared/feedback";
+import { CONTACT_EMAIL } from "@lci/core/feedback";
 
 const contact = CONTACT_EMAIL;
 export function Privacy({ onNavigate }: { onNavigate: (path: string) => void }) {
@@ -70,14 +70,15 @@ export function Privacy({ onNavigate }: { onNavigate: (path: string) => void }) 
           Privacy
         </h2>
         <p class="prose-meta">
-          Last updated 12 October 2026 · Operator Diogo Diogo ·{" "}
+          Last updated 16 October 2026 · Operator Diogo Diogo ·{" "}
           <a href={`mailto:${contact}`}>Contact</a>
         </p>
       </header>
       <p class="prose-lede">
         London Ciné Info is a personal, non-commercial service for finding cinema screenings. You
-        can browse without an account. This policy explains what happens to your information when
-        you browse, sign in or use the optional watchlist, friends and email features.
+        can browse without an account. This policy explains what happens to your information on the
+        website and phone apps when you browse, sign in or use the optional watchlist, friends and
+        email features.
       </p>
       <aside class="prose-summary" aria-label="In short">
         <p class="prose-eyebrow">In short</p>
@@ -155,6 +156,12 @@ export function Privacy({ onNavigate }: { onNavigate: (path: string) => void }) 
                 Watchlist imports come from public Letterboxd pages for the username you supply. We
                 do not ask for your Letterboxd password or access private Letterboxd lists.
               </dd>
+              <dt>Phone calendar</dt>
+              <dd>
+                The phone app opens the system event editor when you add a screening. It does not
+                import existing calendar events. Exporting saved screenings creates a temporary
+                calendar file for the share sheet.
+              </dd>
               <dt>What friends see</dt>
               <dd>
                 Accepted friends can see your app username and connected Letterboxd username and use
@@ -171,9 +178,11 @@ export function Privacy({ onNavigate }: { onNavigate: (path: string) => void }) 
               <dt>Near me</dt>
               <dd>
                 Near me is optional. With your browser’s permission, location coordinates are used
-                in the browser to calculate cinema distances. A postcode you enter is sent to
-                postcodes.io to look up coordinates. We save your chosen cinema IDs, rather than the
-                postcode or coordinates, to your cinema preferences.
+                in the browser to calculate cinema distances. The phone app requests foreground
+                location, calculates distances on your phone and does not save or send coordinates.
+                A postcode you enter on the website is sent to postcodes.io to look up coordinates.
+                We save your chosen cinema IDs, rather than the postcode or coordinates, to your
+                cinema preferences.
               </dd>
             </dl>
           </section>
@@ -238,6 +247,20 @@ export function Privacy({ onNavigate }: { onNavigate: (path: string) => void }) 
                     <td>90 days after its most recent renewal; removed on sign-out.</td>
                   </tr>
                   <tr>
+                    <td>Phone app storage</td>
+                    <td>
+                      The phone app keeps its session in the device keychain or keystore. Guest
+                      cinemas, a random cinema-preference identifier, display preferences and the
+                      analytics choice stay on the phone. A cached catalogue helps the app open
+                      without a connection.
+                    </td>
+                    <td>
+                      The session lasts up to 90 days after the last account check. Preferences
+                      remain until cleared or the app is removed. The operating system may remove
+                      cached listings.
+                    </td>
+                  </tr>
+                  <tr>
                     <td>Local storage</td>
                     <td>
                       Local storage holds guest favourite cinemas, a random cinema-preference
@@ -268,6 +291,10 @@ export function Privacy({ onNavigate }: { onNavigate: (path: string) => void }) 
               </table>
             </div>
             <p class="prose-small">
+              Phone app usage analytics is off by default. You can enable or disable it in the app's
+              Account tab. The website's choice below applies to this browser only.
+            </p>
+            <p>
               Analytics uses local storage for a browser identifier and session storage for limited
               visit attribution. The analytics choice below is also saved locally. We do not use
               advertising cookies. Clearing site data removes local choices and identifiers; browser

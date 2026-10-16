@@ -19,6 +19,11 @@ export default defineConfig({
       ? { "/api": { target: process.env.ACCOUNTS_API_URL, changeOrigin: false } }
       : undefined,
   },
-  resolve: { alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) } },
+  resolve: {
+    alias: {
+      "@lci/core": fileURLToPath(new URL("./packages/core/src", import.meta.url)),
+      "@": fileURLToPath(new URL("./src", import.meta.url)),
+    },
+  },
   build: { target: "es2022", sourcemap: false },
 });

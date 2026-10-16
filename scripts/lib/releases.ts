@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { readFile, mkdir, writeFile, rename } from "node:fs/promises";
 import { join } from "node:path";
 import { z } from "zod";
-import type { SourceRelease } from "../../src/shared/data";
+import type { SourceRelease } from "@lci/core/data";
 import { httpUrl } from "./schemas";
 
 const assetSchema = z.object({

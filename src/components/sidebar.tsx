@@ -3,8 +3,8 @@ import type { ComponentChildren } from "preact";
 import { accountApi } from "../lib/account";
 import { PageLink } from "./page-link";
 import type { AccountState } from "../lib/account";
-import type { DataMeta } from "../shared/data";
-import { PAGES, defaultSort, viewUrl, hasCustomSort, type ViewState } from "../lib/catalogue";
+import type { DataMeta } from "@lci/core/data";
+import { PAGES, defaultSort, viewUrl, hasCustomSort, type ViewState } from "@lci/core/catalogue";
 
 function NavLink({
   path,

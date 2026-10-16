@@ -4,9 +4,9 @@ import { useEffect, useRef, useState } from "preact/hooks";
 import type { ComponentChildren } from "preact";
 import { accountApi, type AccountState } from "../lib/account";
 import { useFriendContext } from "../lib/friends";
-import { normalizeUsername } from "../shared/friends";
+import { normalizeUsername } from "@lci/core/friends";
 import type { CinemasState } from "../lib/cinemas";
-import type { DataMeta } from "../shared/data";
+import type { DataMeta } from "@lci/core/data";
 import { usePreferenceFocus } from "../lib/preference-focus";
 import { PageLink } from "./page-link";
 function time(stamp: number) {

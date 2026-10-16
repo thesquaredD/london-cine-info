@@ -17,7 +17,7 @@ import {
   type FeedbackCategory,
   type FeedbackContext,
   type FeedbackDraft,
-} from "../shared/feedback";
+} from "@lci/core/feedback";
 import { Dialog } from "./dialog";
 import { PageLink } from "./page-link";
 

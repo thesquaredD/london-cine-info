@@ -1,0 +1,8 @@
+{
+  "id": "mobile-code-sign-in",
+  "type": "added",
+  "title": "Sign in to the phone app by email code",
+  "body": "Sign-in emails include a six-digit code for London Cin\u00e9 Info on your phone. The website sign-in link remains available; both expire after 15 minutes.",
+  "visibility": "public",
+  "feature": "mobile_app"
+}

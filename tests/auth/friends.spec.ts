@@ -2,8 +2,8 @@ import { test, expect, type Page } from "@playwright/test";
 import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
 import { randomUUID } from "node:crypto";
-import type { Film } from "../../src/shared/data";
-import { letterboxdSlug } from "../../src/shared/account";
+import type { Film } from "@lci/core/data";
+import { letterboxdSlug } from "@lci/core/account";
 const origin = "http://localhost:4174";
 async function login(page: Page, email: string) {
   const sent = await page.request.post("/api/auth/request", {

@@ -1,4 +1,4 @@
-import type { AnalyticsEvent, AnalyticsProperties } from "../src/shared/analytics";
+import type { AnalyticsEvent, AnalyticsProperties } from "@lci/core/analytics";
 import type { Env, User } from "./types";
 import {
   MAX_FRIENDS,
@@ -7,7 +7,7 @@ import {
   validAppUsername,
   type Friend,
   type FriendWatchlist,
-} from "../src/shared/friends";
+} from "@lci/core/friends";
 import { acceptedFriendsSql, friendMatchesSql } from "./friend-queries";
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {

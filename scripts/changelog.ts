@@ -9,7 +9,7 @@ import {
   parseFragments,
   readFragmentFiles,
 } from "./lib/changelog";
-import { CHANGELOG_ID } from "../src/shared/changelog";
+import { CHANGELOG_ID } from "@lci/core/changelog";
 
 const [command, arg] = process.argv.slice(2);
 

@@ -1,0 +1,61 @@
+name: Phone apps
+
+on:
+  pull_request:
+    paths:
+      - "mobile/**"
+      - "packages/core/**"
+      - "package*.json"
+      - ".github/workflows/mobile.yml"
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: EAS build profile
+        required: true
+        default: preview
+        type: choice
+        options: [development, preview, production]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx tsc --noEmit -p packages/core/tsconfig.json
+      - run: npm run typecheck:mobile
+      - run: npx eslint mobile packages/core
+      - run: npx vitest run mobile/src packages/core/src
+      - run: npx expo-doctor
+        working-directory: mobile
+      - run: npx expo export --platform all
+        working-directory: mobile
+
+  build:
+    if: github.event_name == 'workflow_dispatch'
+    needs: check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Build both phone apps
+        working-directory: mobile
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          BUILD_PROFILE: ${{ inputs.profile }}
+        run: npx eas-cli@latest build --platform all --profile "$BUILD_PROFILE" --non-interactive --no-wait

@@ -35,3 +35,19 @@ one shared scale in `src/styles/prose.css`, no per-page `font-size`, `line-heigh
 and three or more parallel facts as a list, definition list or table, never a paragraph. Long
 pages open with a lede, an In short card and an On this page map; dialogs end in a footer bar.
 Run that document's checklist before opening a PR that adds or changes reader-facing text.
+
+## Shared core and phone apps
+
+`packages/core` is platform-independent TypeScript. It compiles with `lib: ["ES2022"]`
+and no DOM or Node ambient types. Do not import web hooks or native modules there or use
+browser globals or `fetch`. The small standard URL declarations in `platform.d.ts` describe
+runtime globals supported by both browsers and Hermes; they do not provide browser APIs.
+
+Prefer additive optional fields when changing `DATA_SCHEMA_VERSION`. A breaking data version
+must ship in a store release before the Deploy workflow publishes that version. Keep the
+previous version readable in the app for at least 30 days, with an explicit compatibility
+adapter and tests. The website is built together with its data.
+
+The changelog requirement includes `mobile/`. Public app fragments use `feature: "mobile_app"`
+until launch; leave that flag disabled until store listings and device release checks pass.
+Native dependencies stay in `mobile/package.json`; never import them into website components.

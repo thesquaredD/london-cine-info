@@ -1,8 +1,8 @@
 import { DateCalendar } from "./date-calendar";
 import type { ComponentChildren } from "preact";
 import { useState } from "preact/hooks";
-import type { DataMeta, FacetKey } from "../shared/data";
-import { filterLabel } from "../lib/filters";
+import type { DataMeta, FacetKey } from "@lci/core/data";
+import { filterLabel } from "@lci/core/filters";
 type Props = {
   filterKey: FacetKey;
   label: string;

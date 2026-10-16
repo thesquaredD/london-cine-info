@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import type { ChangelogBundle } from "../../src/shared/changelog";
+import type { ChangelogBundle } from "@lci/core/changelog";
 
 const bundle: ChangelogBundle = {
   revision: "f".repeat(40),

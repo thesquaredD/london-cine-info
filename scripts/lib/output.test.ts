@@ -5,7 +5,7 @@ import { afterEach, expect, it } from "vitest";
 import { buildDataset } from "./transform";
 import { loadBoroughs } from "./boroughs";
 import { writeDataset } from "./output";
-import type { SourceRelease } from "../../src/shared/data";
+import type { SourceRelease } from "@lci/core/data";
 
 const temporaryRoots: string[] = [];
 afterEach(async () => {
@@ -46,6 +46,7 @@ it("publishes immutable URLs, removes obsolete outputs, and preserves the last b
   const changed = structuredClone(dataset);
   changed.showtimes[0]!.days["2026-10-03"]![0]!.bookingUrl = "https://example.com/new-booking";
   const second = await writeDataset(changed, root);
+  expect(JSON.parse(await readFile(join(root, "public/catalogue.json"), "utf8"))).toEqual(second);
   expect(second.films).toBe(first.films);
   expect(second.showtimes).not.toBe(first.showtimes);
   expect(await readdir(join(root, "public/data"))).not.toContain(first.showtimes.split("/")[2]);
@@ -54,5 +55,6 @@ it("publishes immutable URLs, removes obsolete outputs, and preserves the last b
   invalid.showtimes[0]!.id = "../escape";
   await expect(writeDataset(invalid, root)).rejects.toThrow(/Unsafe output filename/);
   expect(await readFile(join(root, "src/generated/manifest.json"), "utf8")).toBe(previousManifest);
+  expect(JSON.parse(await readFile(join(root, "public/catalogue.json"), "utf8"))).toEqual(second);
   expect(await readdir(join(root, "public/data"))).toContain(second.showtimes.split("/")[2]);
 });

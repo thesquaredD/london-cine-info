@@ -1,10 +1,10 @@
 import { YearPicker } from "./year-picker";
 import type { AccountState } from "../lib/account";
 import { FilterPicker } from "./filter-picker";
-import { clearFilters, FILTERS } from "../lib/filters";
-import type { FacetKey } from "../shared/data";
-import type { DataMeta } from "../shared/data";
-import type { ViewState } from "../lib/catalogue";
+import { clearFilters, FILTERS } from "@lci/core/filters";
+import type { FacetKey } from "@lci/core/data";
+import type { DataMeta } from "@lci/core/data";
+import type { ViewState } from "@lci/core/catalogue";
 
 export type FilterControlsProps = {
   account: AccountState;

@@ -1,9 +1,9 @@
 import { sendAnalytics } from "../server/analytics";
-import { IMPORT_TIMEOUT } from "../src/shared/account";
+import { IMPORT_TIMEOUT } from "@lci/core/account";
 import { syncQueries, failedSyncQueries } from "./lib/watchlist-store";
 import { readFile } from "node:fs/promises";
-import { letterboxdSlug } from "../src/shared/account";
-import type { Film, DataManifest } from "../src/shared/data";
+import { letterboxdSlug } from "@lci/core/account";
+import type { Film, DataManifest } from "@lci/core/data";
 import { d1 } from "./lib/d1";
 import { fetchWatchlist, politeGet, WatchlistError } from "./lib/watchlist";
 const target = process.env.WATCHLIST_USER_ID || null;

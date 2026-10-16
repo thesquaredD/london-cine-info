@@ -1,11 +1,6 @@
+import { validateCatalogue, validateShowtimes } from "@lci/core/catalogue-loader";
 import manifest from "../generated/manifest.json";
-import {
-  DATA_SCHEMA_VERSION,
-  type DataMeta,
-  type Film,
-  type FilmShowtimes,
-  type EventOccurrence,
-} from "../shared/data";
+import { type DataMeta, type Film, type FilmShowtimes, type EventOccurrence } from "@lci/core/data";
 
 export async function fetchJson<T>(url: string, signal?: AbortSignal): Promise<T> {
   const response = await fetch(url, { signal });
@@ -20,15 +15,7 @@ export async function loadCatalogue(
     fetchJson<DataMeta>(manifest.meta, signal),
     fetchJson<EventOccurrence[]>(manifest.events, signal),
   ]);
-  if (
-    manifest.schemaVersion !== DATA_SCHEMA_VERSION ||
-    meta.schemaVersion !== DATA_SCHEMA_VERSION ||
-    !Array.isArray(events) ||
-    !Array.isArray(films) ||
-    films.length !== meta.counts.films
-  )
-    throw new Error("The screening data is incompatible. Please reload the page.");
-  return { films, meta, events };
+  return validateCatalogue(manifest, films, meta, events);
 }
 const showtimeCache = new Map<string, Promise<FilmShowtimes>>();
 export function loadShowtimes(id: string): Promise<FilmShowtimes> {
@@ -36,9 +23,7 @@ export function loadShowtimes(id: string): Promise<FilmShowtimes> {
   if (cached) return cached;
   const pending = fetchJson<FilmShowtimes>(`${manifest.showtimes}${encodeURIComponent(id)}.json`)
     .then((result) => {
-      if (result.id !== id || !result.days || !result.details)
-        throw new Error("The screening details are incompatible. Please reload the page.");
-      return result;
+      return validateShowtimes(id, result);
     })
     .catch((error: unknown) => {
       showtimeCache.delete(id);

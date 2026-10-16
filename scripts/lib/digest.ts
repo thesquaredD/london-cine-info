@@ -1,6 +1,6 @@
-import type { Film, FilmShowtimes, Showtime, Venue } from "../../src/shared/data";
-import { letterboxdSlug } from "../../src/shared/account";
-import { addDays, londonDate } from "../../src/lib/filters";
+import type { Film, FilmShowtimes, Showtime, Venue } from "@lci/core/data";
+import { letterboxdSlug } from "@lci/core/account";
+import { addDays, londonDate } from "@lci/core/filters";
 
 export type Alert = {
   slug: string;

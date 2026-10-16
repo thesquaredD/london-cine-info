@@ -37,7 +37,7 @@ write succeeds, ignoring stale/replaced jobs. Analytics failures cannot block ap
 
 Feedback is not an analytics event. The in-app form posts one PostHog `survey sent` response
 directly to the capture endpoint (bypassing the SDK and its allowlist, which still drops any
-SDK-originated survey event). Its payload is fixed in `feedbackEvent` in `src/shared/feedback.ts`;
+SDK-originated survey event). Its payload is fixed in `feedbackEvent` in `packages/core/src/feedback.ts`;
 see [feedback.md](feedback.md).
 
 ## Privacy and environment
