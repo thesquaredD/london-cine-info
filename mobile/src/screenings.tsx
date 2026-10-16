@@ -1,7 +1,7 @@
 import { Platform, Linking } from "react-native";
 import { router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
-import { createEventInCalendarAsync } from "expo-calendar/legacy";
+import Constants from "expo-constants";
 import { File, Paths } from "expo-file-system";
 import * as Sharing from "expo-sharing";
 import { calendarFile } from "@lci/core/ical";
@@ -23,6 +23,11 @@ export async function exportCalendar(rows: CalendarScreening[]) {
   await Sharing.shareAsync(file.uri, { mimeType: "text/calendar", UTI: "public.calendar-event" });
 }
 export async function addToPhone(event: CalendarInput) {
+  if (Constants.executionEnvironment === "storeClient")
+    throw new Error(
+      "Adding screenings to your phone calendar needs an installed development build. You can still browse and save screenings in this preview.",
+    );
+  const { createEventInCalendarAsync } = await import("expo-calendar/legacy");
   // The OS editor lets the user select a calendar and confirm. No calendar is read by us.
   await createEventInCalendarAsync({
     title: event.title,

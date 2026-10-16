@@ -42,11 +42,15 @@ export const session = createSession(
   fetch,
   analyticsHeaders,
 );
-export const catalogue = createCatalogue(fileCache, async (url) => {
-  const response = await fetch(url, { signal: AbortSignal.timeout(20_000) });
-  if (!response.ok) throw new HttpError(response.status);
-  return response.json();
-});
+export const catalogue = createCatalogue(
+  fileCache,
+  async (url) => {
+    const response = await fetch(url, { signal: AbortSignal.timeout(20_000) });
+    if (!response.ok) throw new HttpError(response.status);
+    return response.json();
+  },
+  __DEV__ ? process.env.EXPO_PUBLIC_CATALOGUE_ORIGIN : undefined,
+);
 const GUEST_KEY = "london-cine.cinemas.v1",
   PREFS_KEY = "lci.preferences.v1";
 function parseStored<T>(text: string | null): T | null {

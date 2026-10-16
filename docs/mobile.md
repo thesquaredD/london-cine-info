@@ -28,6 +28,20 @@ website compiler remains TypeScript 5.9; the mobile workspace uses the SDK-suppo
 The export builds iOS and Android only (`platforms` excludes web). It tests Metro and Hermes
 compilation; it does not prove a signed native build installs or works on a phone.
 
+For a browsing preview on Android with Expo Go, first run `npm run build-data` and
+`npm run dev -- --host 0.0.0.0 --port 4175` from the repository root. Then, from
+`mobile/`, run the following with this Mac's Wi-Fi address:
+
+```sh
+EXPO_PUBLIC_CATALOGUE_ORIGIN=http://YOUR_MAC_IP:4175 npx expo start --go --lan
+```
+
+Scan the QR code in Expo Go on the same Wi-Fi network. The catalogue origin override is
+used only in development; release builds keep the production endpoint. SDK 57's calendar
+module is unavailable in Expo Go, so it loads only when needed in a development build.
+Code sign-in also needs the updated backend to be deployed. Browsing, filters and guest
+preferences can be previewed without that deployment.
+
 Create an Expo account/project and associate it once, from `mobile/`:
 
 ```sh
