@@ -1,0 +1,75 @@
+{
+  "expo": {
+    "name": "London Cin\u00e9 Info",
+    "slug": "london-cine-info",
+    "version": "1.0.0",
+    "scheme": "londoncine",
+    "platforms": [
+      "ios",
+      "android"
+    ],
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "icon": "./assets/icon.png",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "ios": {
+      "bundleIdentifier": "info.londoncine.app",
+      "supportsTablet": false,
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSLocationWhenInUseUsageDescription": "Find cinemas near you. Your location stays on this phone and is not saved.",
+        "NSCalendarsWriteOnlyAccessUsageDescription": "Add a screening to your phone calendar when you choose."
+      }
+    },
+    "android": {
+      "package": "info.londoncine.app",
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "WRITE_CALENDAR"
+      ],
+      "blockedPermissions": [
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_BACKGROUND_LOCATION",
+        "android.permission.READ_CALENDAR",
+        "android.permission.READ_CONTACTS",
+        "android.permission.WRITE_CONTACTS"
+      ],
+      "predictiveBackGestureEnabled": true,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#000000"
+      }
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash.png",
+          "imageWidth": 128,
+          "backgroundColor": "#171310"
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Find cinemas near you. Your location stays on this phone and is not saved."
+        }
+      ],
+      [
+        "expo-calendar",
+        {
+          "writeOnlyAccess": true,
+          "writeOnlyCalendarPermission": "Add a screening to your phone calendar when you choose.",
+          "remindersPermission": false
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

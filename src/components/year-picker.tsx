@@ -8,7 +8,7 @@ import {
   yearMatches,
   yearSummary,
   type YearSelection,
-} from "../lib/years";
+} from "@lci/core/years";
 
 type Props = {
   selection: YearSelection;

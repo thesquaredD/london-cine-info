@@ -14,7 +14,7 @@ import { readdir, readFile } from "node:fs/promises";
 import { Miniflare, convertV4MiniflareOptions } from "miniflare";
 import { onRequest } from "../functions/api/[[path]]";
 import type { Env } from "./types";
-import { IMPORT_ERRORS, IMPORT_TIMEOUT, type Account, type Watchlist } from "../src/shared/account";
+import { IMPORT_ERRORS, IMPORT_TIMEOUT, type Account, type Watchlist } from "@lci/core/account";
 import { hash } from "./security";
 let runtime: Miniflare, env: Env;
 beforeAll(async () => {
@@ -956,5 +956,156 @@ it("counts successful social transitions once without sending friend identities"
     }
   } finally {
     fetcher.mockRestore();
+  }
+});
+
+async function nativeRequest(
+  path: string,
+  method = "GET",
+  body?: unknown,
+  bearer = "",
+  cookie = "",
+) {
+  return onRequest({
+    request: new Request(`http://localhost${path}`, {
+      method,
+      headers: {
+        ...(bearer ? { Authorization: `Bearer ${bearer}` } : {}),
+        ...(cookie ? { Cookie: cookie } : {}),
+      },
+      ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+    }),
+    env,
+  } as Parameters<typeof onRequest>[0]);
+}
+async function requestCode(email: string) {
+  await env.DB.prepare("DELETE FROM rate_limits").run();
+  expect((await request("/api/auth/request", "POST", { email })).status).toBe(200);
+  const row = await env.DB.prepare(
+    "SELECT a.* FROM auth_tokens a JOIN users u ON u.id=a.user_id WHERE u.email=? ORDER BY a.rowid DESC LIMIT 1",
+  )
+    .bind(email)
+    .first<{ code: string; hash: string; user_id: string }>();
+  expect(row!.code).toMatch(/^\d{6}$/);
+  return row!;
+}
+it("redeems email-bound codes once, invalidates all links, and uses bearer sessions without cookies or Origin", async () => {
+  const email = "native@example.com",
+    code = await requestCode(email);
+  const response = await request("/api/auth/verify-code", "POST", {
+    email: ` ${email.toUpperCase()} `,
+    code: `${code.code.slice(0, 3)} ${code.code.slice(3)}`,
+  });
+  expect(response.status).toBe(200);
+  expect(response.headers.get("Set-Cookie")).toBeNull();
+  const result = (await response.json()) as { session: string; expiresAt: number; userId: string };
+  expect(result.session).toMatch(/^[a-f0-9]{64}$/);
+  expect(result.expiresAt).toBeGreaterThan(Date.now() / 1000);
+  expect(
+    (await env.DB.prepare("SELECT COUNT(*) AS n FROM auth_tokens WHERE user_id=?")
+      .bind(result.userId)
+      .first<{ n: number }>())!.n,
+  ).toBe(0);
+  expect((await request("/api/auth/verify-code", "POST", { email, code: code.code })).status).toBe(
+    400,
+  );
+  const me = await nativeRequest("/api/me", "GET", undefined, result.session);
+  expect(me.headers.get("Set-Cookie")).toBeNull();
+  expect(((await me.json()) as { user: Account }).user.email).toBe(email);
+  expect((await nativeRequest("/api/cinemas", "GET", undefined, result.session)).status).toBe(200);
+  expect((await nativeRequest("/api/calendar", "GET", undefined, result.session)).status).toBe(200);
+  expect(
+    (await nativeRequest("/api/cinemas", "PUT", { venues: ["bfi"], version: 0 }, result.session))
+      .status,
+  ).toBe(200);
+  expect(
+    (await nativeRequest("/api/me", "PUT", { username: "native" }, result.session)).status,
+  ).toBe(200);
+  const cookie = `__Host-session=${result.session}`;
+  expect((await nativeRequest("/api/me", "PUT", { username: "bad" }, "", cookie)).status).toBe(403);
+  // Cookie precedence preserves CSRF protection, even with a second valid transport present.
+  expect(
+    (await nativeRequest("/api/me", "PUT", { username: "bad" }, result.session, cookie)).status,
+  ).toBe(403);
+  expect((await nativeRequest("/api/me", "PUT", {}, "a".repeat(64))).status).toBe(403);
+  expect((await nativeRequest("/api/auth/logout", "POST", {}, result.session)).status).toBe(200);
+  expect((await nativeRequest("/api/calendar", "GET", undefined, result.session)).status).toBe(401);
+});
+it("five incorrect codes invalidate the token and cannot redeem the email link afterwards", async () => {
+  const email = "wrong-code@example.com",
+    row = await requestCode(email);
+  const wrong = row.code === "000000" ? "000001" : "000000";
+  for (let index = 0; index < 5; index++)
+    expect((await request("/api/auth/verify-code", "POST", { email, code: wrong })).status).toBe(
+      400,
+    );
+  expect(
+    await env.DB.prepare("SELECT hash FROM auth_tokens WHERE hash=?").bind(row.hash).first(),
+  ).toBeNull();
+  expect((await request("/api/auth/verify-code", "POST", { email, code: row.code })).status).toBe(
+    429,
+  );
+});
+it("rejects expired codes and codes for another email, and only accepts the newest live email", async () => {
+  const row = await requestCode("expired-code@example.com");
+  await env.DB.prepare("UPDATE auth_tokens SET expires_at=1 WHERE hash=?").bind(row.hash).run();
+  expect(
+    (
+      await request("/api/auth/verify-code", "POST", {
+        email: "expired-code@example.com",
+        code: row.code,
+      })
+    ).status,
+  ).toBe(400);
+  expect(
+    (await request("/api/auth/verify-code", "POST", { email: "other@example.com", code: row.code }))
+      .status,
+  ).toBe(400);
+  const old = await requestCode("newest-code@example.com");
+  const newer = old.code === "123456" ? "654321" : "123456";
+  await env.DB.prepare("INSERT INTO auth_tokens(hash,user_id,expires_at,code) VALUES (?,?,?,?)")
+    .bind("f".repeat(64), old.user_id, Math.floor(Date.now() / 1000) + 900, newer)
+    .run();
+  expect(
+    (
+      await request("/api/auth/verify-code", "POST", {
+        email: "newest-code@example.com",
+        code: old.code,
+      })
+    ).status,
+  ).toBe(400);
+  const attempts = await Promise.all([
+    request("/api/auth/verify-code", "POST", { email: "newest-code@example.com", code: newer }),
+    request("/api/auth/verify-code", "POST", { email: "newest-code@example.com", code: newer }),
+  ]);
+  expect(attempts.map((response) => response.status).sort()).toEqual([200, 400]);
+});
+it("sends one email containing both the website link and the stored app code", async () => {
+  await env.DB.prepare("DELETE FROM rate_limits").run();
+  const send = vi
+    .fn<typeof fetch>()
+    .mockResolvedValue(new Response(JSON.stringify({ id: "synthetic-delivery" }), { status: 200 }));
+  vi.stubGlobal("fetch", send);
+  try {
+    const response = await onRequest({
+      request: new Request("http://localhost/api/auth/request", {
+        method: "POST",
+        headers: { Origin: "http://localhost" },
+        body: JSON.stringify({ email: "email-code@example.com" }),
+      }),
+      env: { ...env, DEV_MAGIC_LINK: "0", RESEND_API_KEY: "synthetic-key" },
+    } as Parameters<typeof onRequest>[0]);
+    expect(response.status).toBe(200);
+    const row = await env.DB.prepare(
+      "SELECT code FROM auth_tokens a JOIN users u ON u.id=a.user_id WHERE email=?",
+    )
+      .bind("email-code@example.com")
+      .first<{ code: string }>();
+    const email = JSON.parse((send.mock.calls[0]![1] as RequestInit).body as string);
+    expect(email.text).toContain("https://public.example/auth/verify?token=");
+    expect(email.text).toContain(`enter this code: ${row!.code.slice(0, 3)} ${row!.code.slice(3)}`);
+    expect(email.text).toContain("Both expire in 15 minutes");
+  } finally {
+    vi.unstubAllGlobals();
   }
 });

@@ -1,6 +1,6 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { readView } from "../../src/lib/catalogue";
+import { readView } from "@lci/core/catalogue";
 import { buildBundle, checkPolicy, parseFragments } from "./changelog";
 
 const entry = (fields: Record<string, unknown>) => {

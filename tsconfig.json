@@ -13,7 +13,10 @@
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "types": ["vite/client"],
-    "paths": { "@/*": ["./src/*"] },
+    "paths": {
+      "@/*": ["./src/*"],
+      "@lci/core/*": ["./packages/core/src/*"]
+    },
     "baseUrl": "."
   },
   "include": ["src", "vite.config.ts"]

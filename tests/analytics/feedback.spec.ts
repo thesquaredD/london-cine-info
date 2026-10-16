@@ -1,5 +1,5 @@
 import { test, expect, type Page, type Route } from "@playwright/test";
-import { FEEDBACK_SURVEYS } from "../../src/shared/feedback";
+import { FEEDBACK_SURVEYS } from "@lci/core/feedback";
 
 type Sent = { event: string; uuid?: string; properties: Record<string, unknown> };
 const survey = FEEDBACK_SURVEYS.test;

@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from "preact/hooks";
-import { screeningMatcher, isFilmFormat, isImaxFormat, directorLabel } from "../lib/filters";
-import { formatDate, viewUrl } from "../lib/catalogue";
+import { screeningMatcher, isFilmFormat, isImaxFormat, directorLabel } from "@lci/core/filters";
+import { formatDate, viewUrl } from "@lci/core/catalogue";
 import { FilmTable } from "./film-table";
-import type { DataMeta, Film } from "../shared/data";
-import type { ViewState } from "../lib/catalogue";
+import type { DataMeta, Film } from "@lci/core/data";
+import type { ViewState } from "@lci/core/catalogue";
 import type { DisplayState } from "../lib/display";
-import { radarEntries, radarFilms } from "../lib/radar";
-import type { CalendarInput } from "../shared/calendar";
+import { radarEntries, radarFilms } from "@lci/core/radar";
+import type { CalendarInput } from "@lci/core/calendar";
 import type { CalendarState } from "../lib/calendar";
 export function Radar({
   films,

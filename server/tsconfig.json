@@ -8,7 +8,10 @@
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "skipLibCheck": true,
-    "noEmit": true
+    "noEmit": true,
+    "paths": {
+      "@lci/core/*": ["../packages/core/src/*"]
+    }
   },
   "include": ["./**/*.ts", "../functions/**/*.ts"]
 }

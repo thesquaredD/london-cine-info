@@ -1,6 +1,6 @@
 import { Notice } from "./notice";
 import { useEffect, useState } from "preact/hooks";
-import type { ChangelogBundle, ChangelogEntry } from "../shared/changelog";
+import type { ChangelogBundle, ChangelogEntry } from "@lci/core/changelog";
 import { usePreferenceFocus } from "../lib/preference-focus";
 import { PageLink } from "./page-link";
 import { openFeedback } from "../lib/feedback";

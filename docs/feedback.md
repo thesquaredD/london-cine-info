@@ -42,7 +42,7 @@ screening-data version. Users see all of it in “Sent with it” (under “What
    keeps `disable_surveys: true`).
 2. `POSTHOG_PERSONAL_API_KEY=… npm run feedback:survey` (survey read/write scope). It creates or
    finds “London Cine — feedback” and prints `{ id, questions }`.
-3. Paste that into `FEEDBACK_SURVEYS.production` in `src/shared/feedback.ts`, ship it, then
+3. Paste that into `FEEDBACK_SURVEYS.production` in `packages/core/src/feedback.ts`, ship it, then
    submit one response labelled `LAUNCH TEST` from london-cine.info. Confirm it appears under
    Surveys → London Cine — feedback, then delete that response.
 4. In PostHog, restrict project access to the owner and named collaborators. Set the response

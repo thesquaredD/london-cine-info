@@ -4,15 +4,11 @@ import {
   requestAnalyticsId,
   requestAnalyticsContext,
 } from "../../server/analytics";
-import type { AnalyticsEvent, AnalyticsProperties } from "../../src/shared/analytics";
+import type { AnalyticsEvent, AnalyticsProperties } from "@lci/core/analytics";
 import { friendsApi } from "../../server/friends";
 import { publicWatchlistApi } from "../../server/public-watchlists";
-import {
-  validCalendarInput,
-  screeningKey,
-  type CalendarScreening,
-} from "../../src/shared/calendar";
-import { calendarFile } from "../../src/shared/ical";
+import { validCalendarInput, screeningKey, type CalendarScreening } from "@lci/core/calendar";
+import { calendarFile } from "@lci/core/ical";
 import type { Env, User } from "../../server/types";
 import {
   hash,
@@ -23,12 +19,7 @@ import {
   SESSION_SECONDS,
 } from "../../server/security";
 import { sendEmail } from "../../server/email";
-import {
-  IMPORT_TIMEOUT,
-  safeImportError,
-  type Account,
-  type SyncStatus,
-} from "../../src/shared/account";
+import { IMPORT_TIMEOUT, safeImportError, type Account, type SyncStatus } from "@lci/core/account";
 const now = () => Math.floor(Date.now() / 1000);
 const json = (body: unknown, status = 200, headers: Record<string, string> = {}) =>
   new Response(JSON.stringify(body), {
@@ -103,20 +94,32 @@ async function quota(env: Env, key: string, limit: number, seconds: number) {
 async function userFor(
   request: Request,
   env: Env,
-): Promise<{ user: User; sessionHash: string; rawSession: string } | null> {
-  const value = /(?:^|;\s*)__Host-session=([a-f0-9]{64})(?:;|$)/.exec(
+): Promise<{
+  user: User;
+  sessionHash: string;
+  rawSession: string;
+  transport: "cookie" | "bearer";
+} | null> {
+  const cookie = /(?:^|;\s*)__Host-session=([a-f0-9]{64})(?:;|$)/.exec(
     request.headers.get("Cookie") ?? "",
   )?.[1];
-  if (!value) return null;
-  const sessionHash = await hash(value);
-  const user = await env.DB.prepare(
-    `SELECT u.*,w.fetched_at,w.count_parsed,w.error,w.requested_at,w.completed_at,w.started_at,w.attempt_id
+  const bearer = /^Bearer ([a-f0-9]{64})$/.exec(request.headers.get("Authorization") ?? "")?.[1];
+  for (const [value, transport] of [
+    [cookie, "cookie"],
+    [bearer, "bearer"],
+  ] as const) {
+    if (!value) continue;
+    const sessionHash = await hash(value);
+    const user = await env.DB.prepare(
+      `SELECT u.*,w.fetched_at,w.count_parsed,w.error,w.requested_at,w.completed_at,w.started_at,w.attempt_id
  FROM sessions s JOIN users u ON s.user_id=u.id LEFT JOIN watchlist_sync w ON w.user_id=u.id
  WHERE s.hash=? AND s.expires_at>?`,
-  )
-    .bind(sessionHash, now())
-    .first<User>();
-  return user ? { user, sessionHash, rawSession: value } : null;
+    )
+      .bind(sessionHash, now())
+      .first<User>();
+    if (user) return { user, sessionHash, rawSession: value, transport };
+  }
+  return null;
 }
 async function dispatch(env: Env, user: User) {
   const response = await fetch(
@@ -152,7 +155,8 @@ const handleRequest: PagesFunction<Env> = async ({ request, env, waitUntil }) =>
       method = request.method;
     if (!["GET", "POST", "PUT", "DELETE"].includes(method))
       return json({ error: "Method not allowed" }, 405);
-    if (method !== "GET" && !sameOrigin(request))
+    const requiresBearer = method !== "GET" && !sameOrigin(request);
+    if (requiresBearer && !/^Bearer [a-f0-9]{64}$/.test(request.headers.get("Authorization") ?? ""))
       return json({ error: "Request origin rejected" }, 403);
     const bodyLimit =
       path === "/api/friends/matches"
@@ -176,6 +180,10 @@ const handleRequest: PagesFunction<Env> = async ({ request, env, waitUntil }) =>
         return json({ error: "Invalid request" }, 400);
       }
     }
+    // Drain the request before querying D1, as the cookie flow has always done.
+    let auth = requiresBearer ? await userFor(request, env) : null;
+    if (requiresBearer && auth?.transport !== "bearer")
+      return json({ error: "Request origin rejected" }, 403);
     if (path === "/api/auth/request" && method === "POST") {
       const dev = localDevelopment(request, env.DEV_MAGIC_LINK);
       if (!dev && !env.RESEND_API_KEY)
@@ -198,10 +206,14 @@ const handleRequest: PagesFunction<Env> = async ({ request, env, waitUntil }) =>
       const user = await env.DB.prepare("SELECT id FROM users WHERE email=?")
         .bind(email)
         .first<{ id: string }>();
+      const code = String(crypto.getRandomValues(new Uint32Array(1))[0]! % 1_000_000).padStart(
+        6,
+        "0",
+      );
       const rawToken = token(),
         tokenHash = await hash(rawToken);
-      await env.DB.prepare("INSERT INTO auth_tokens(hash,user_id,expires_at) VALUES (?,?,?)")
-        .bind(tokenHash, user!.id, now() + 900)
+      await env.DB.prepare("INSERT INTO auth_tokens(hash,user_id,expires_at,code) VALUES (?,?,?,?)")
+        .bind(tokenHash, user!.id, now() + 900, code)
         .run();
       const base = dev ? new URL(request.url).origin : env.SITE_URL;
       const link = `${base}/auth/verify?token=${rawToken}`;
@@ -212,7 +224,7 @@ const handleRequest: PagesFunction<Env> = async ({ request, env, waitUntil }) =>
             env.RESEND_FROM,
             email,
             "Sign in to London Ciné Info",
-            `Use this link to sign in (expires in 15 minutes):\n\n${link}\n\nIf you did not request this, ignore this email.`,
+            `Use this link to sign in (expires in 15 minutes):\n\n${link}\n\nOr open the app and enter this code: ${code.slice(0, 3)} ${code.slice(3)}. Both expire in 15 minutes.\n\nIf you did not request this, ignore this email.`,
             tokenHash,
           );
       } catch {
@@ -221,6 +233,55 @@ const handleRequest: PagesFunction<Env> = async ({ request, env, waitUntil }) =>
       }
       track("sign_in_requested", requestAnalyticsId(request) ?? `account:${user!.id}`);
       return json({ ok: true, ...(dev ? { link } : {}) });
+    }
+    if (path === "/api/auth/verify-code" && method === "POST") {
+      const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
+      const code = typeof body.code === "string" ? body.code.replace(/\s/g, "") : "";
+      const invalid = () =>
+        json({ error: "That code is wrong or has expired. Request a new email." }, 400);
+      if (!email || email.length > 254 || !/^\d{6}$/.test(code)) return invalid();
+      await quota(env, `auth-code:${email}`, 5, 900);
+      // Increment atomically before comparing. Only the newest live email can be redeemed.
+      const row = await env.DB.prepare(
+        `UPDATE auth_tokens SET code_attempts=code_attempts+1
+        WHERE hash=(SELECT a.hash FROM auth_tokens a JOIN users u ON u.id=a.user_id
+          WHERE u.email=? AND a.expires_at>? ORDER BY a.rowid DESC LIMIT 1)
+        AND code_attempts<5 RETURNING hash,user_id,code,code_attempts`,
+      )
+        .bind(email, now())
+        .first<{ hash: string; user_id: string; code: string | null; code_attempts: number }>();
+      if (!row) return invalid();
+      // Hashes have a fixed length; compare every character, without an early exit.
+      const actual = await hash(code),
+        expected = await hash(row.code ?? "");
+      let difference = 0;
+      for (let i = 0; i < actual.length; i++)
+        difference |= actual.charCodeAt(i) ^ expected.charCodeAt(i);
+      if (difference || !row.code) {
+        if (row.code_attempts >= 5)
+          await env.DB.prepare("DELETE FROM auth_tokens WHERE hash=?").bind(row.hash).run();
+        return invalid();
+      }
+      const rawSession = token(),
+        sessionHash = await hash(rawSession),
+        expiresAt = now() + SESSION_SECONDS;
+      const result = await env.DB.batch([
+        env.DB.prepare(
+          `INSERT INTO sessions(hash,user_id,expires_at)
+          SELECT ?,user_id,? FROM auth_tokens WHERE hash=? AND expires_at>? RETURNING user_id`,
+        ).bind(sessionHash, expiresAt, row.hash, now()),
+        env.DB.prepare(
+          "UPDATE users SET analytics_signup_completed=1 WHERE analytics_signup_completed=0 AND id=(SELECT user_id FROM sessions WHERE hash=?)",
+        ).bind(sessionHash),
+        env.DB.prepare(
+          "DELETE FROM auth_tokens WHERE user_id=(SELECT user_id FROM sessions WHERE hash=?)",
+        ).bind(sessionHash),
+      ]);
+      if (!result[0]?.meta.changes) return invalid();
+      const userId = (result[0].results[0] as { user_id: string }).user_id;
+      track("sign_in_verified", `account:${userId}`);
+      if (result[1]?.meta.changes) track("signup_completed", `account:${userId}`);
+      return json({ ok: true, userId, session: rawSession, expiresAt });
     }
     // Confirmation POST keeps email scanners from consuming single-use links.
     if (path === "/api/auth/verify" && method === "POST") {
@@ -262,14 +323,14 @@ const handleRequest: PagesFunction<Env> = async ({ request, env, waitUntil }) =>
     }
     if (path === "/api/watchlists/public" && method === "POST")
       return publicWatchlistApi(body, env, request.headers.get("CF-Connecting-IP") ?? "local");
-    const auth = await userFor(request, env);
+    auth ??= await userFor(request, env);
     if (path === "/api/me" && method === "GET") {
       if (!auth) return json({ user: null });
       await env.DB.prepare("UPDATE sessions SET expires_at=? WHERE hash=?")
         .bind(now() + SESSION_SECONDS, auth.sessionHash)
         .run();
       return json({ user: account(auth.user) }, 200, {
-        "Set-Cookie": sessionCookie(auth.rawSession),
+        ...(auth.transport === "cookie" ? { "Set-Cookie": sessionCookie(auth.rawSession) } : {}),
       });
     }
     if (!auth) return json({ error: "Please sign in" }, 401);

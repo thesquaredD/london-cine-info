@@ -1,8 +1,8 @@
 import { useEffect, useState } from "preact/hooks";
 import { Dialog } from "./dialog";
 import { useFriendContext } from "../lib/friends";
-import { letterboxdSlug } from "../shared/account";
-import type { Film } from "../shared/data";
+import { letterboxdSlug } from "@lci/core/account";
+import type { Film } from "@lci/core/data";
 const PAGE_SIZE = 6;
 export function WatchlistsButton() {
   const m = useFriendContext();

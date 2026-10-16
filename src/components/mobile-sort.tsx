@@ -7,7 +7,7 @@ import {
   sortLabel,
   type SortKey,
   type ViewState,
-} from "../lib/catalogue";
+} from "@lci/core/catalogue";
 
 export function MobileSort({
   state,

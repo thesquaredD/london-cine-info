@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import type { Film } from "../../src/shared/data";
+import type { Film } from "@lci/core/data";
 
 test.use({ video: "on" });
 test.beforeEach(async ({ page }) => {

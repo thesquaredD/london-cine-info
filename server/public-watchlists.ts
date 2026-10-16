@@ -1,7 +1,7 @@
 import type { Env } from "./types";
 import { parseWatchlist, WatchlistError } from "../scripts/lib/watchlist";
-import { normalizeUsername, validLetterboxdUsername } from "../src/shared/friends";
-import { safeImportError } from "../src/shared/account";
+import { normalizeUsername, validLetterboxdUsername } from "@lci/core/friends";
+import { safeImportError } from "@lci/core/account";
 import { hash } from "./security";
 const json = (body: unknown, status = 200, headers: Record<string, string> = {}) =>
   new Response(JSON.stringify(body), {

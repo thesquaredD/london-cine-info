@@ -1,7 +1,7 @@
-import { defaultSort, type ViewState } from "../lib/catalogue";
+import { defaultSort, type ViewState } from "@lci/core/catalogue";
 import type { DisplayState } from "../lib/display";
 import { usePreferenceFocus } from "../lib/preference-focus";
-import type { DataMeta, Film } from "../shared/data";
+import type { DataMeta, Film } from "@lci/core/data";
 import { DisplayControls, RatingOrderControls } from "./display-controls";
 import { FilmTable } from "./film-table";
 

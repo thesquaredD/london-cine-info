@@ -1,10 +1,10 @@
 import type { ComponentChildren } from "preact";
 import { openFeedback } from "../lib/feedback";
-import { clearFilters, activeFacetChoices } from "../lib/filters";
-import type { DataMeta } from "../shared/data";
-import type { ViewState } from "../lib/catalogue";
-import { hasYears, yearSummary } from "../lib/years";
-import { EVENT_TYPES } from "../data/event-rules";
+import { clearFilters, activeFacetChoices } from "@lci/core/filters";
+import type { DataMeta } from "@lci/core/data";
+import type { ViewState } from "@lci/core/catalogue";
+import { hasYears, yearSummary } from "@lci/core/years";
+import { EVENT_TYPES } from "@lci/core/data/event-rules";
 
 /** Uses the same facet labels as the active-filter chips; each action clears one group. */
 export function EmptyState({

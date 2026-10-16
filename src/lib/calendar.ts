@@ -5,8 +5,8 @@ import {
   validCalendarInput,
   type CalendarInput,
   type CalendarScreening,
-} from "../shared/calendar";
-import { calendarFile } from "../shared/ical";
+} from "@lci/core/calendar";
+import { calendarFile } from "@lci/core/ical";
 export function downloadEvents(events: CalendarScreening[]) {
   const url = URL.createObjectURL(
     new Blob([calendarFile(events)], { type: "text/calendar;charset=utf-8" }),

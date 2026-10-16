@@ -21,3 +21,9 @@ public/fonts/fontshare/*.woff2
 public/changelog.json
 public/version.json
 deployment-receipt.json
+
+public/catalogue.json
+mobile/.expo/
+mobile/dist/
+mobile/ios/
+mobile/android/

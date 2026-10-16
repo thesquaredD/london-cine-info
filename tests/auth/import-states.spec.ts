@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { IMPORT_ERRORS, type Account, type SyncStatus } from "../../src/shared/account";
+import { IMPORT_ERRORS, type Account, type SyncStatus } from "@lci/core/account";
 async function visitAccount(page: Page) {
   await page.goto("/account");
   const account = page.getByRole("article", { name: /^(Sign in|Account)$/ });

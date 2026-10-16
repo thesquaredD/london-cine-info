@@ -1,16 +1,16 @@
-import { directorLabel } from "../lib/filters";
+import { directorLabel } from "@lci/core/filters";
 import { EmptyState } from "./empty-state";
 import { capture } from "../lib/analytics";
 import { FilmFriends } from "./friends";
 import { Fragment } from "preact";
 import { useState } from "preact/hooks";
-import { EVENT_TYPES } from "../data/event-rules";
-import { groupEvents } from "../lib/events";
-import { formatDate, type ViewState } from "../lib/catalogue";
+import { EVENT_TYPES } from "@lci/core/data/event-rules";
+import { groupEvents } from "@lci/core/events";
+import { formatDate, type ViewState } from "@lci/core/catalogue";
 import { displayTitle, type DisplayState } from "../lib/display";
-import { letterboxdSlug } from "../shared/account";
-import type { DataMeta, EventOccurrence, Film } from "../shared/data";
-import type { CalendarInput } from "../shared/calendar";
+import { letterboxdSlug } from "@lci/core/account";
+import type { DataMeta, EventOccurrence, Film } from "@lci/core/data";
+import type { CalendarInput } from "@lci/core/calendar";
 import type { CalendarState } from "../lib/calendar";
 import { ExpandedRow } from "./expanded-row";
 export function EventTypeFilter({

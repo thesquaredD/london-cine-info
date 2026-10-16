@@ -2,8 +2,8 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { digestFilms, digestHtml, digestSubject, digestText } from "./lib/digest";
-import { letterboxdSlug } from "../src/shared/account";
-import type { DataManifest, DataMeta, Film, FilmShowtimes } from "../src/shared/data";
+import { letterboxdSlug } from "@lci/core/account";
+import type { DataManifest, DataMeta, Film, FilmShowtimes } from "@lci/core/data";
 const output = resolve(process.argv[2] ?? ".cache/digest-sample.html");
 const now = Date.parse(process.argv[3] ?? new Date().toISOString()) / 1000;
 if (!Number.isFinite(now)) throw new Error("Supply an ISO date as the second argument");

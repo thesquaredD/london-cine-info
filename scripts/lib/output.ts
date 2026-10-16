@@ -1,8 +1,8 @@
 import { createHash, randomUUID } from "node:crypto";
-import { mkdir, writeFile, rename, rm, stat } from "node:fs/promises";
+import { mkdir, writeFile, readFile, rename, rm, stat } from "node:fs/promises";
 import { join } from "node:path";
-import { DATA_SCHEMA_VERSION, type DataManifest } from "../../src/shared/data";
-import { buildEventIndex } from "../../src/shared/events";
+import { DATA_SCHEMA_VERSION, type DataManifest } from "@lci/core/data";
+import { buildEventIndex } from "@lci/core/event-index";
 import type { Dataset } from "./transform";
 
 const hash = (content: string) => createHash("sha256").update(content).digest("hex").slice(0, 16);
@@ -54,9 +54,23 @@ export async function writeDataset(dataset: Dataset, root: string): Promise<Data
   const destination = join(root, "public", "data");
   const backup = join(root, ".cache", `previous-output-${buildId}`);
   const manifestPath = join(root, "src", "generated", "manifest.json");
+  const publicManifestPath = join(root, "public", "catalogue.json");
+  const publicManifestTemp = `${publicManifestPath}.${buildId}.tmp`;
   const manifestTemp = `${manifestPath}.${buildId}.tmp`;
+  const previousManifests = await Promise.all(
+    [manifestPath, publicManifestPath].map(async (path) => {
+      try {
+        return await readFile(path, "utf8");
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === "ENOENT") return null;
+        throw error;
+      }
+    }),
+  );
   let previousMoved = false,
-    installed = false;
+    installed = false,
+    manifestInstalled = false,
+    publicManifestInstalled = false;
   try {
     await mkdir(join(staging, showtimeDirectory), { recursive: true });
     await writeFile(join(staging, filmFile), filmJson);
@@ -74,6 +88,7 @@ export async function writeDataset(dataset: Dataset, root: string): Promise<Data
     await mkdir(join(root, "src", "generated"), { recursive: true });
     await mkdir(join(root, "public"), { recursive: true });
     await writeFile(manifestTemp, json(manifest));
+    await writeFile(publicManifestTemp, json(manifest));
     if (await exists(destination)) {
       await rename(destination, backup);
       previousMoved = true;
@@ -81,13 +96,29 @@ export async function writeDataset(dataset: Dataset, root: string): Promise<Data
     await rename(staging, destination);
     installed = true;
     await rename(manifestTemp, manifestPath);
+    manifestInstalled = true;
+    await rename(publicManifestTemp, publicManifestPath);
+    publicManifestInstalled = true;
   } catch (error) {
+    for (const [index, path, temp, changed] of [
+      [0, manifestPath, manifestTemp, manifestInstalled],
+      [1, publicManifestPath, publicManifestTemp, publicManifestInstalled],
+    ] as const) {
+      if (!changed) continue;
+      const previous = previousManifests[index];
+      if (previous === null) await rm(path, { force: true });
+      else {
+        await writeFile(temp, previous!);
+        await rename(temp, path);
+      }
+    }
     if (installed) await rm(destination, { recursive: true, force: true });
     if (previousMoved) await rename(backup, destination);
     throw error;
   } finally {
     await rm(staging, { recursive: true, force: true });
     await rm(manifestTemp, { force: true });
+    await rm(publicManifestTemp, { force: true });
   }
   await rm(backup, { recursive: true, force: true });
   return manifest;

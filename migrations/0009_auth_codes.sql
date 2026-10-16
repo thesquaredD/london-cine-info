@@ -1,0 +1,2 @@
+ALTER TABLE auth_tokens ADD COLUMN code TEXT;
+ALTER TABLE auth_tokens ADD COLUMN code_attempts INTEGER NOT NULL DEFAULT 0;

@@ -1,5 +1,5 @@
 import { signal } from "@preact/signals";
-import { POSTHOG_HOST, POSTHOG_TOKEN, safePath } from "../shared/analytics";
+import { POSTHOG_HOST, POSTHOG_TOKEN, safePath } from "@lci/core/analytics";
 import {
   FEEDBACK_SURVEYS,
   feedbackEvent,
@@ -7,7 +7,7 @@ import {
   type FeedbackCategory,
   type FeedbackContext,
   type FeedbackDraft,
-} from "../shared/feedback";
+} from "@lci/core/feedback";
 import { analyticsAllowed, browserDoNotTrack, feedbackIdentity } from "./analytics";
 
 export type FeedbackRequest = {

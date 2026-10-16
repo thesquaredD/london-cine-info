@@ -11,10 +11,10 @@ import {
   deliverDigest,
   type Delivery,
 } from "./lib/digest-delivery";
-import { londonDate } from "../src/lib/filters";
+import { londonDate } from "@lci/core/filters";
 import { digestFilms, digestText, digestHtml, digestSubject, type Alert } from "./lib/digest";
 import { sendEmailPayload, EmailDeliveryError } from "../server/email";
-import type { Film, FilmShowtimes, DataManifest, DataMeta } from "../src/shared/data";
+import type { Film, FilmShowtimes, DataManifest, DataMeta } from "@lci/core/data";
 const key = process.env.RESEND_API_KEY;
 if (!key) {
   console.log("Digest delivery pending: RESEND_API_KEY is not configured.");

@@ -5,7 +5,7 @@ import {
   safeAnalyticsProperties,
   type AnalyticsEvent,
   type AnalyticsProperties,
-} from "../src/shared/analytics";
+} from "@lci/core/analytics";
 
 // Also used by the Node importer. Safe properties are the entire payload: no headers, raw
 // request URLs, provider messages, usernames, emails, cookies or database rows.

@@ -1,6 +1,6 @@
 import { useRef, useState } from "preact/hooks";
-import type { DataMeta } from "../shared/data";
-import { addDays, DATE_SHORTCUTS, filterLabel, londonDate } from "../lib/filters";
+import type { DataMeta } from "@lci/core/data";
+import { addDays, DATE_SHORTCUTS, filterLabel, londonDate } from "@lci/core/filters";
 
 export function DateCalendar({
   selected,

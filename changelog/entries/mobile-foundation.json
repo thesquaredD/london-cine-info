@@ -1,0 +1,8 @@
+{
+  "id": "mobile-foundation",
+  "visibility": "internal",
+  "reason": "Internal workspace extraction, catalogue validation and deployment verification. Phone app notes stay behind the disabled launch flag.",
+  "type": "improved",
+  "title": "Shared catalogue foundation for phone apps",
+  "body": "Prepare shared catalogue logic and a public manifest for the phone apps."
+}

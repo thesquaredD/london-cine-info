@@ -1,10 +1,13 @@
+import type { DataManifest } from "@lci/core/data";
+import { validateManifest, resolveDataUrl } from "@lci/core/catalogue-loader";
 import { createHash } from "node:crypto";
 import { readFile, writeFile } from "node:fs/promises";
-import type { ChangelogBundle, VersionManifest } from "../src/shared/changelog";
+import type { ChangelogBundle, VersionManifest } from "@lci/core/changelog";
 
 // Confirms a Pages deployment serves the revision and notes built in this run, then writes a
 // receipt. A failure here does not mean the upload failed: the site may already be live.
 const expected = JSON.parse(await readFile("dist/version.json", "utf8")) as VersionManifest;
+const expectedCatalogue = JSON.parse(await readFile("dist/catalogue.json", "utf8")) as DataManifest;
 const targets = (process.env.VERIFY_URLS ?? "")
   .split(/\s+/)
   .filter((url) => /^https?:\/\/[a-z0-9.:-]+$/.test(url));
@@ -23,6 +26,14 @@ async function check(origin: string) {
     read("/version.json"),
     read("/changelog.json"),
   ]);
+  const catalogue = JSON.parse(await read("/catalogue.json")) as DataManifest;
+  validateManifest(catalogue);
+  if (
+    catalogue.generatedAt !== expectedCatalogue.generatedAt ||
+    catalogue.films !== expectedCatalogue.films
+  )
+    throw new Error(`${origin}: catalogue differs from this build`);
+  await read(new URL(resolveDataUrl(origin, catalogue.films)).pathname);
   const version = JSON.parse(versionText) as VersionManifest;
   const bundle = JSON.parse(content) as ChangelogBundle;
   const problems = [

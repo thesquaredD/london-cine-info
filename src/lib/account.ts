@@ -1,15 +1,8 @@
 import { analyticsHeaders, capture, identifyAccount } from "./analytics";
 import { useCallback, useEffect, useState, useRef } from "preact/hooks";
-import type { Account, Watchlist } from "../shared/account";
-export class AccountError extends Error {
-  constructor(
-    message: string,
-    public status = 0,
-    public retryAt: number | null = null,
-  ) {
-    super(message);
-  }
-}
+import type { Account, Watchlist } from "@lci/core/account";
+import { AccountError } from "@lci/core/account-error";
+export { AccountError } from "@lci/core/account-error";
 export async function accountApi<T>(
   path: string,
   method = "GET",

@@ -1,6 +1,6 @@
 import { Fragment } from "preact";
-import type { ViewState } from "../lib/catalogue";
-import { shortcutItems } from "../lib/shortcuts";
+import type { ViewState } from "@lci/core/catalogue";
+import { shortcutItems } from "@lci/core/shortcuts";
 
 export function ShortcutStrip(
   props: Parameters<typeof shortcutItems>[0] & {

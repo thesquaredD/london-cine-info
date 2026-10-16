@@ -4,15 +4,15 @@ import {
   screeningMatcher,
   londonDate,
   dayMatches,
-} from "../../src/lib/filters";
-import { readView, viewUrl } from "../../src/lib/catalogue";
+} from "@lci/core/filters";
+import { readView, viewUrl } from "@lci/core/catalogue";
 import { readFile } from "node:fs/promises";
 import { beforeAll, describe, expect, it } from "vitest";
 import { loadBoroughs, polygonContains, type BoroughIndex } from "./boroughs";
 import { buildDataset, encodeBitset } from "./transform";
 import { londonTime } from "./time";
 import type { Combined, Matched } from "./schemas";
-import type { SourceRelease } from "../../src/shared/data";
+import type { SourceRelease } from "@lci/core/data";
 
 type Fixture = {
   now: string;
@@ -414,7 +414,7 @@ it("Events filters and counts match special screenings, without borrowing a norm
 
 it("compact UTC offsets preserve the exact starts and screen identities from showtimes", async () => {
   const { films, meta, showtimes } = build();
-  const { decodedScreenings } = await import("../../src/lib/filters");
+  const { decodedScreenings } = await import("@lci/core/filters");
   expect(meta.screeningEpoch).toBe(Date.parse("2026-10-03T00:00:00Z"));
   for (const film of films) {
     const source = Object.values(showtimes.find((entry) => entry.id === film.id)!.days).flat();

@@ -1,13 +1,13 @@
 import { capture } from "../lib/analytics";
-import { screeningMatcher } from "../lib/filters";
-import type { ViewState } from "../lib/catalogue";
+import { screeningMatcher } from "@lci/core/filters";
+import type { ViewState } from "@lci/core/catalogue";
 import { useEffect, useRef, useState } from "preact/hooks";
-import type { DataMeta, Film, FilmShowtimes, RatingKey } from "../shared/data";
-import { RATINGS, formatDate, runtime } from "../lib/catalogue";
+import type { DataMeta, Film, FilmShowtimes, RatingKey } from "@lci/core/data";
+import { RATINGS, formatDate, runtime } from "@lci/core/catalogue";
 import { loadShowtimes } from "../lib/data";
 import { openFeedback } from "../lib/feedback";
 
-import type { CalendarInput } from "../shared/calendar";
+import type { CalendarInput } from "@lci/core/calendar";
 import type { CalendarState } from "../lib/calendar";
 export function ExpandedRow({
   film,

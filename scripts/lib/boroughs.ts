@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { z } from "zod";
-import type { Borough } from "../../src/shared/data";
+import type { Borough } from "@lci/core/data";
 
 const point = z.tuple([z.number(), z.number()]);
 const polygon = z.array(z.array(point));

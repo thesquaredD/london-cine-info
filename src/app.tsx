@@ -18,16 +18,16 @@ import { FeedbackDialog, FeedbackEntry } from "./components/feedback";
 import { openFeedback } from "./lib/feedback";
 import { useCalendar } from "./lib/calendar";
 import { MyCalendar, ScreeningCalendarDialog } from "./components/screening-calendar";
-import type { CalendarInput } from "./shared/calendar";
+import type { CalendarInput } from "@lci/core/calendar";
 import { useCinemas } from "./lib/cinemas";
 import { ShortcutStrip } from "./components/shortcut-strip";
 import { MyCinemas } from "./components/my-cinemas";
 import { Events, EventTypeFilter } from "./components/events";
-import { matchingEvents, eventFacetCounts } from "./lib/events";
-import { EVENT_TYPES } from "./data/event-rules";
+import { matchingEvents, eventFacetCounts } from "@lci/core/events";
+import { EVENT_TYPES } from "@lci/core/data/event-rules";
 import { Radar } from "./components/radar";
-import { recoverySuggestions } from "./lib/recovery";
-import { catalogueDecades, countYears, hasYears, yearSummary } from "./lib/years";
+import { recoverySuggestions } from "@lci/core/recovery";
+import { catalogueDecades, countYears, hasYears, yearSummary } from "@lci/core/years";
 import {
   DEFAULT_DISPLAY,
   readHideRatings,
@@ -44,7 +44,7 @@ import {
   RefreshButton,
   TokenPage,
 } from "./components/account";
-import { letterboxdSlug } from "./shared/account";
+import { letterboxdSlug } from "@lci/core/account";
 import { PageLink } from "./components/page-link";
 import { Sidebar } from "./components/sidebar";
 import { FilterBar } from "./components/filter-bar";
@@ -57,7 +57,7 @@ import {
   directorLabel,
   FILTERS,
   dateShortcut,
-} from "./lib/filters";
+} from "@lci/core/filters";
 import { loadCatalogue } from "./lib/data";
 import {
   PAGE_SIZE,
@@ -71,8 +71,8 @@ import {
   tableRows,
   viewUrl,
   type ViewState,
-} from "./lib/catalogue";
-import type { DataMeta, Film, EventOccurrence } from "./shared/data";
+} from "@lci/core/catalogue";
+import type { DataMeta, Film, EventOccurrence } from "@lci/core/data";
 
 function About({
   meta,

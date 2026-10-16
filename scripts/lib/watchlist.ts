@@ -1,4 +1,4 @@
-import type { ImportErrorCode } from "../../src/shared/account";
+import type { ImportErrorCode } from "@lci/core/account";
 export class WatchlistError extends Error {
   constructor(
     public code: ImportErrorCode,
