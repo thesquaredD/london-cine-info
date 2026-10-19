@@ -4,7 +4,7 @@ import { mkdir } from "node:fs/promises";
 import { homedir } from "node:os";
 import { join } from "node:path";
 
-test("connected watchlist and chosen cinemas appear immediately and all eight shortcuts fit", async ({
+test("connected watchlist and chosen cinemas appear immediately and all nine shortcuts fit", async ({
   page,
 }, info) => {
   const errors: string[] = [];
@@ -21,7 +21,7 @@ test("connected watchlist and chosen cinemas appear immediately and all eight sh
   const { user } = await (await page.request.get("/api/me")).json();
   await page.goto("/");
   const strip = page.getByRole("group", { name: "Shortcuts" });
-  await expect(strip.getByRole("button")).toHaveCount(6);
+  await expect(strip.getByRole("button")).toHaveCount(7);
   // Simulate completion of the local import; focus invokes the existing account refresh.
   execFileSync(
     "npx",
@@ -48,7 +48,7 @@ test("connected watchlist and chosen cinemas appear immediately and all eight sh
   await expect(cinemas.getByRole("status").filter({ hasText: /^Saved$/ })).toBeVisible();
   await cinemas.getByRole("button", { name: "Done", exact: true }).click();
   await page.goto("/");
-  await expect(strip.getByRole("button")).toHaveCount(8);
+  await expect(strip.getByRole("button")).toHaveCount(9);
   const width = info.project.name === "mobile" ? 390 : 1280;
   await page.setViewportSize({ width, height: 900 });
   expect((await strip.boundingBox())!.height).toBeLessThanOrEqual(width === 390 ? 80 : 30);

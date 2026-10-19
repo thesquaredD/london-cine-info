@@ -18,6 +18,7 @@ test("visible shortcuts toggle date and evening with fixture counts", async ({ p
     "This weekend",
     "This week",
     "Evening",
+    "Independent cinemas",
     "Near me",
   ]);
   await expect(page.locator(".all-filters")).toHaveAccessibleName("Filters");
@@ -63,7 +64,7 @@ test("sheet runtime toggle changes results and badge; Year chip opens the sheet"
   await expect(sheet.locator('[data-filter="year"]')).toHaveAttribute("open", "");
   await expect(sheet.locator('[data-filter="year"] > summary')).toBeFocused();
 });
-test("strip wraps without overflow and seven guest items fit the height budget", async ({
+test("strip wraps without overflow and eight guest items fit the height budget", async ({
   page,
 }, info) => {
   const width = info.project.name === "mobile" ? 390 : 1280;
@@ -83,7 +84,7 @@ test("strip wraps without overflow and seven guest items fit the height budget",
   );
   await page.reload();
   const strip = page.getByRole("group", { name: "Shortcuts" });
-  await expect(strip.getByRole("button")).toHaveCount(7);
+  await expect(strip.getByRole("button")).toHaveCount(8);
   expect((await strip.boundingBox())!.height).toBeLessThanOrEqual(width === 390 ? 80 : 30);
   expect(
     await page.evaluate(

@@ -300,3 +300,12 @@ and Director column. An explicitly chosen default rating is retained in the URL
 so its mobile column survives sharing and reload. Unknown runtimes sort last.
 Desktop columns stay unchanged. Events keeps its chronological agenda; Release
 calendar sorts films within each date group.
+
+## Independent cinemas
+
+Independent cinemas is an additional screening filter (`?independent=1`): it intersects with
+date, cinema, membership and other choices on the same showing. `src/data/independent-cinemas.ts`
+keeps reviewed venue IDs and source links, including independent commercial and charitable
+cinemas. Unknown venues are excluded, not inferred independent from missing chain metadata. This
+is a maintained selection, not a complete ownership register; review and add venue IDs with a
+source when coverage changes. It does not alter My cinemas or saved preferences.

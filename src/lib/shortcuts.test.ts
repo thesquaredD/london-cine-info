@@ -22,13 +22,14 @@ const base = {
 const labels = (input: Parameters<typeof shortcutItems>[0]) =>
   shortcutItems(input).map((item) => item.label);
 describe("personalized shortcuts", () => {
-  it("shows only dates and Nearby to a signed-out visitor", () => {
+  it("shows dates, independent cinemas and Nearby to a signed-out visitor", () => {
     expect(labels(base)).toEqual([
       "Today",
       "Tomorrow",
       "This weekend",
       "This week",
       "Evening",
+      "Independent cinemas",
       "Near me",
     ]);
   });
@@ -50,8 +51,8 @@ describe("personalized shortcuts", () => {
         ...base,
         account: { user, watchlist },
         cinemas: { venues: ["bfi"], loading: false },
-      }).slice(-3),
-    ).toEqual(["My watchlist", "My cinemas", "Near me"]);
+      }).slice(-4),
+    ).toEqual(["My watchlist", "My cinemas", "Independent cinemas", "Near me"]);
   });
   it("treats Near me as a dialog opener, not a toggle", () => {
     const nearby = shortcutItems(base).find((item) => item.id === "nearby");

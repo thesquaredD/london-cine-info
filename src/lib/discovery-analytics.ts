@@ -24,6 +24,7 @@ export function discoveryProperties(state: ViewState): AnalyticsProperties {
   }))
     if (value) filterValues.push(`${key}:${value}`);
   for (const [key, active] of Object.entries({
+    independent: state.independent,
     available: state.available,
     watchlist: state.watchlist,
     tonight: state.tonight,

@@ -1,3 +1,4 @@
+import { isIndependentCinema } from "../data/independent-cinemas";
 import { yearMatches } from "./years";
 import { isEventScreening, eventTypes } from "../data/event-rules";
 import type { DataMeta, FacetKey, Film, Showtime, Venue } from "../shared/data";
@@ -16,6 +17,7 @@ export const FILTERS: { key: FacetKey; label: string }[] = [
 export const CLEAR_FILTERS = {
   myCinemas: false,
   film: undefined,
+  independent: false,
   sortExplicit: undefined,
   eventType: "",
   filmGauge: undefined,
@@ -175,6 +177,7 @@ export function screeningMatcher(meta: DataMeta, state: ViewState, now = new Dat
     )
       return false;
     const venue = venues.get(venueId);
+    if (state.independent && !isIndependentCinema(venue)) return false;
     if ((allowedDays && !allowedDays.has(date)) || forbiddenDays.has(date)) return false;
     if (
       !accepts(state, "time", [minute < 720 ? "morning" : minute < 1020 ? "afternoon" : "evening"])
@@ -271,6 +274,7 @@ export function hasScreeningFilters(state: ViewState) {
     state.path === "/events" ||
     state.path === "/radar" ||
     state.tonight ||
+    state.independent ||
     state.available ||
     state.from ||
     state.to ||

@@ -81,6 +81,7 @@ export function FilterBar(
     (props.state.years?.length ?? 0) +
     (props.state.decades?.length ?? 0) +
     Number(!!(props.state.from || props.state.to)) +
+    Number(!!props.state.independent) +
     Number(!!props.state.short) +
     Number(!!props.state.available) +
     Number(!!props.state.watchlist);

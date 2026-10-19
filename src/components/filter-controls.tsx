@@ -75,6 +75,24 @@ export function FilterControls({
                   })
                 }
               >
+                {key === "venue" && (
+                  <>
+                    <label class="availability-filter">
+                      <input
+                        type="checkbox"
+                        checked={!!state.independent}
+                        onChange={(event) =>
+                          onChange({ independent: event.currentTarget.checked, page: 1 })
+                        }
+                      />
+                      Independent cinemas only
+                    </label>
+                    <p class="filter-hint">
+                      Independently run and charitable cinemas on our maintained list. Chain cinemas
+                      and unverified venues are excluded.
+                    </p>
+                  </>
+                )}
                 {key === "time" && (
                   <>
                     <p class="filter-hint">

@@ -316,3 +316,34 @@ it("Evening preserves chosen dates and other filters, clears conflicting times, 
     ).map((film) => film.id),
   ).toEqual(["1", "2"]);
 });
+describe("Independent cinemas", () => {
+  const showtime = (venue: string) => ({
+    venue,
+    time: Date.parse("2026-10-03T19:00:00Z"),
+    localTime: "20:00",
+    formats: ["standard"],
+    accessibility: [],
+    soldOut: false,
+    screen: null,
+    notes: null,
+    category: "movie" as const,
+    bookingUrl: "https://test.local",
+    bookingFallback: false,
+  });
+  it("keeps listed venues and excludes chain or unreviewed venues", () => {
+    const matcher = screeningMatcher(meta, state("independent=1"), now);
+    expect(matcher.showtime("2026-10-03", showtime("princecharlescinema.com"))).toBe(true);
+    expect(matcher.showtime("2026-10-03", showtime("picturehouses.com-central"))).toBe(false);
+    expect(matcher.showtime("2026-10-03", showtime("outside.example"))).toBe(false);
+    const all = screeningMatcher(meta, state(), now);
+    expect(all.showtime("2026-10-03", showtime("picturehouses.com-central"))).toBe(true);
+  });
+  it("round-trips independent=1 and omits it when off", () => {
+    const on = state("independent=1");
+    expect(on.independent).toBe(true);
+    expect(viewUrl(on)).toBe("/?independent=1");
+    expect(readView(new URL(viewUrl(on), "https://test.local"))).toEqual(on);
+    expect(state("independent=yes").independent).toBe(false);
+    expect(viewUrl({ ...on, independent: false })).toBe("/");
+  });
+});

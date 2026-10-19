@@ -60,6 +60,8 @@ export function EmptyState({
     if (time) time.label += `, ${label}`;
     else add("range", label, "Any start time", { from: "", to: "", tonight: false });
   }
+  if (state.independent)
+    add("independent", "Independent cinemas", "All cinema types", { independent: false });
   if (state.short) add("short", "Under 2 hours", "Any runtime", { short: false });
   if (state.available)
     add("available", "Not sold out", "Include sold-out screenings", { available: false });

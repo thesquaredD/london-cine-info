@@ -67,6 +67,13 @@ export function shortcutItems({
         page: 1,
       },
     });
+  items.push({
+    id: "independent",
+    label: "Independent cinemas",
+    group: "personal",
+    active: !!state.independent,
+    changes: { independent: !state.independent, page: 1 },
+  });
   // Near me opens the nearby finder; it is not a toggle.
   items.push({ id: "nearby", label: "Near me", group: "personal" });
   return items;
