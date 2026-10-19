@@ -75,7 +75,8 @@ test("empty results and What’s new entries open feedback with their context", 
   await expect(dialog.locator(".feedback-context")).toContainText(/Results shown\s*0/);
   await page.keyboard.press("Escape");
 
-  await page.goto("/changelog");
+  // Linked by its anchor so newer entries cannot push it past the first page.
+  await page.goto("/changelog#whats-new");
   await page.locator("#whats-new").getByRole("button", { name: "Feedback on this change" }).click();
   await revealContext(page);
   await expect(dialog.locator(".feedback-context")).toContainText(/Change\s*whats-new/);

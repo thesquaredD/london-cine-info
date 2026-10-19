@@ -613,3 +613,68 @@
 :root .share-status {
   min-height: 24px;
 }
+
+/* Busy programmes: films with more than one page of screenings get date and cinema choices
+   and pages of 12. Selects follow the filter-field convention; the count takes the shared
+   small status size (.prose-small); every row keeps its height as choices and pages change,
+   so the list below holds still. */
+:root .showtimes {
+  scroll-margin-top: 100px;
+}
+:root .programme-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 8px;
+  padding-bottom: 12px;
+}
+:root .programme-controls label {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  font-weight: 500;
+}
+:root .programme-controls select {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  text-overflow: ellipsis;
+  color: var(--fg);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  padding: 7px 8px;
+  font-weight: 400;
+}
+:root :is(.programme-controls, .programme-pagination) button {
+  min-height: 44px;
+}
+:root .programme-count {
+  grid-column: 1 / -1;
+  margin: 0;
+  min-height: 24px;
+  font-variant-numeric: tabular-nums;
+}
+:root .programme-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 12px;
+}
+:root .programme-pagination span {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+@container screenings (max-width: 26rem) {
+  :root .programme-controls {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  :root .programme-controls label {
+    grid-column: 1;
+  }
+  :root .programme-controls button {
+    grid-column: 2;
+    grid-row: 2;
+  }
+}
