@@ -1,0 +1,9 @@
+{
+  "id": "rio-logo",
+  "type": "fixed",
+  "title": "Rio logo on the welcome page",
+  "body": "The Rio’s logo on the welcome page shows its lettering again instead of a solid shape.",
+  "visibility": "public",
+  "href": "/welcome",
+  "linkLabel": "Open the welcome page"
+}
