@@ -23,9 +23,9 @@ Three things make it fit on a phone without scrolling or a dialog:
 
 1. **Personalised set.** Shortcuts appear only when they apply to this visitor. My watchlist
    needs a connected watchlist; My cinemas needs chosen cinemas. A signed-out visitor sees
-   the date group plus the cinema group's Independent cinemas and Near me.
+   only the date group plus Near me.
 2. **Quiet rendering.** Plain text, no boxes, no counts on the bar. Active = full-strength
-   ink with a brass underline. One hairline separates each non-empty group (dates, personal, cinemas).
+   ink with a brass underline. One hairline separates the date group from the personal group.
 3. **Wrap, never scroll.** On the phone the line may wrap to a second line. Nothing is hidden.
 
 ## Scope
@@ -103,22 +103,20 @@ visibility rules are unit-testable. Move the handler wiring out of the `shortcut
 
 Items, in order, with their visibility rule:
 
-| Group    | Item                | Shown when                                       | Handler                           |
-| -------- | ------------------- | ------------------------------------------------ | --------------------------------- |
-| when     | Today               | always                                           | `dateShortcut(state,"today")`     |
-| when     | Tomorrow            | always                                           | `dateShortcut(state,"tomorrow")`  |
-| when     | This weekend        | always                                           | `dateShortcut(state,"weekend")`   |
-| when     | This week           | always                                           | `dateShortcut(state,"this-week")` |
-| when     | Evening             | always                                           | `eveningShortcut(state)`          |
-| personal | My watchlist        | `account.user && account.watchlist?.fetchedAt`   | existing watchlist toggle         |
-| where    | My cinemas          | `cinemas.venues.length > 0 \|\| myCinemasActive` | existing My cinemas block         |
-| where    | Independent cinemas | always                                           | toggles `independent`             |
-| where    | Near me             | always                                           | `setNearbyOpen(true)`             |
+| Group    | Item         | Shown when                                       | Handler                           |
+| -------- | ------------ | ------------------------------------------------ | --------------------------------- |
+| when     | Today        | always                                           | `dateShortcut(state,"today")`     |
+| when     | Tomorrow     | always                                           | `dateShortcut(state,"tomorrow")`  |
+| when     | This weekend | always                                           | `dateShortcut(state,"weekend")`   |
+| when     | This week    | always                                           | `dateShortcut(state,"this-week")` |
+| when     | Evening      | always                                           | `eveningShortcut(state)`          |
+| personal | My watchlist | `account.user && account.watchlist?.fetchedAt`   | existing watchlist toggle         |
+| personal | My cinemas   | `cinemas.venues.length > 0 \|\| myCinemasActive` | existing My cinemas block         |
+| personal | Near me      | always                                           | `setNearbyOpen(true)`             |
 
 Dropped from the strip: Next week (sheet, Day picker) and Under 2 hours (sheet, new checkbox).
 Do not render an empty personal group or its separator. A visitor with a watchlist but no
-cinemas sees Today … Evening | My watchlist | Independent cinemas · Near me. At 390px the
-signed-out strip wraps to two rows (still within the 80px budget).
+cinemas sees Today … Evening | My watchlist · Near me.
 
 Markup: `<div class="shortcut-strip" role="group" aria-label="Shortcuts">` containing
 `<button aria-pressed>` elements, with `<span class="strip-sep" aria-hidden>` between groups.
@@ -196,8 +194,8 @@ use:
 
 1. `getByRole("group", { name: "Shortcuts" })` is visible; no button named /Quick filters/
    exists; the Filters button is named exactly "Filters".
-2. Signed out: the strip contains Today, Tomorrow, This weekend, This week, Evening,
-   Independent cinemas, Near me, and does not contain My watchlist or My cinemas.
+2. Signed out: the strip contains Today, Tomorrow, This weekend, This week, Evening, Near me,
+   and does not contain My watchlist or My cinemas.
 3. Clicking Today sets `aria-pressed="true"`, the result status updates to the fixture's count
    for today, and the Clear all chip appears; clicking again clears it.
 4. Evening combines with Today (both pressed, count matches the fixture).

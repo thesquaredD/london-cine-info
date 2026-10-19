@@ -22,14 +22,13 @@ const base = {
 const labels = (input: Parameters<typeof shortcutItems>[0]) =>
   shortcutItems(input).map((item) => item.label);
 describe("personalized shortcuts", () => {
-  it("shows dates, independent cinemas and Nearby to a signed-out visitor", () => {
+  it("shows only dates and Nearby to a signed-out visitor", () => {
     expect(labels(base)).toEqual([
       "Today",
       "Tomorrow",
       "This weekend",
       "This week",
       "Evening",
-      "Independent cinemas",
       "Near me",
     ]);
   });
@@ -45,23 +44,14 @@ describe("personalized shortcuts", () => {
     expect(items.find((item) => item.id === "cinemas")?.disabled).toBe(true);
     expect(items.find((item) => item.id === "cinemas")?.changes?.filters?.venue).toEqual(["bfi"]);
   });
-  it("orders My watchlist, then the cinema group ending in Nearby", () => {
+  it("orders both personal shortcuts before Nearby", () => {
     expect(
       labels({
         ...base,
         account: { user, watchlist },
         cinemas: { venues: ["bfi"], loading: false },
-      }).slice(-4),
-    ).toEqual(["My watchlist", "My cinemas", "Independent cinemas", "Near me"]);
-    expect(
-      shortcutItems({
-        ...base,
-        account: { user, watchlist },
-        cinemas: { venues: ["bfi"], loading: false },
-      })
-        .slice(-4)
-        .map((item) => item.group),
-    ).toEqual(["personal", "where", "where", "where"]);
+      }).slice(-3),
+    ).toEqual(["My watchlist", "My cinemas", "Near me"]);
   });
   it("treats Near me as a dialog opener, not a toggle", () => {
     const nearby = shortcutItems(base).find((item) => item.id === "nearby");

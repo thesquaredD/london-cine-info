@@ -18,7 +18,6 @@ test("visible shortcuts toggle date and evening with fixture counts", async ({ p
     "This weekend",
     "This week",
     "Evening",
-    "Independent cinemas",
     "Near me",
   ]);
   await expect(page.locator(".all-filters")).toHaveAccessibleName("Filters");
@@ -64,7 +63,7 @@ test("sheet runtime toggle changes results and badge; Year chip opens the sheet"
   await expect(sheet.locator('[data-filter="year"]')).toHaveAttribute("open", "");
   await expect(sheet.locator('[data-filter="year"] > summary')).toBeFocused();
 });
-test("strip wraps without overflow and eight guest items fit the height budget", async ({
+test("strip wraps without overflow and seven guest items fit the height budget", async ({
   page,
 }, info) => {
   const width = info.project.name === "mobile" ? 390 : 1280;
@@ -84,7 +83,7 @@ test("strip wraps without overflow and eight guest items fit the height budget",
   );
   await page.reload();
   const strip = page.getByRole("group", { name: "Shortcuts" });
-  await expect(strip.getByRole("button")).toHaveCount(8);
+  await expect(strip.getByRole("button")).toHaveCount(7);
   expect((await strip.boundingBox())!.height).toBeLessThanOrEqual(width === 390 ? 80 : 30);
   expect(
     await page.evaluate(
@@ -93,31 +92,34 @@ test("strip wraps without overflow and eight guest items fit the height budget",
   ).toBe(true);
   await page.screenshot({ path: join(evidence, `guest-cinemas-${width}.png`) });
 });
-test("Independent cinemas chip, sheet checkbox, reload and Clear all agree", async ({ page }) => {
+test("Independent cinemas checkbox, active chip, reload and Clear all agree", async ({ page }) => {
   await page.goto("/");
   const strip = page.getByRole("group", { name: "Shortcuts" });
-  const chip = strip.getByRole("button", { name: "Independent cinemas", exact: true });
+  await expect(strip.getByRole("button", { name: /Independent/ })).toHaveCount(0);
   await expect(page.locator(".film-row")).toHaveCount(6);
-  await chip.click();
-  await expect(chip).toHaveAttribute("aria-pressed", "true");
+  const sheet = page.getByRole("dialog", { name: "Filters", exact: true });
+  const cinema = sheet.locator('[data-filter="venue"] > summary');
+  const box = sheet.getByRole("checkbox", { name: "Independent cinemas only" });
+  await page.locator(".all-filters").click();
+  await cinema.click();
+  await expect(box).toHaveAccessibleDescription(/cinemas we’ve checked/i);
+  await box.check();
+  await expect(cinema).toContainText("Independent only");
   await expect(page).toHaveURL(/[?&]independent=1/);
+  await page.keyboard.press("Escape");
   await expect(page.getByRole("button", { name: "Independent cinemas ×" })).toBeVisible();
   const independentRows = await page.locator(".film-row").count();
   expect(independentRows).toBeLessThan(6);
   await page.reload();
   await expect(page.locator(".film-row")).toHaveCount(independentRows);
   await page.locator(".all-filters").click();
-  const sheet = page.getByRole("dialog", { name: "Filters", exact: true });
-  await sheet.locator('[data-filter="venue"] > summary').click();
-  await expect(sheet.locator('[data-filter="venue"] > summary')).toContainText("Independent only");
-  const box = sheet.getByRole("checkbox", { name: "Independent cinemas only" });
+  await cinema.click();
   await expect(box).toBeChecked();
-  await expect(box).toHaveAccessibleDescription(/cinemas we’ve checked/i);
   await page.keyboard.press("Escape");
   await page.getByRole("button", { name: "Clear all", exact: true }).click();
-  await expect(chip).toHaveAttribute("aria-pressed", "false");
   await expect(page).not.toHaveURL(/independent=1/);
   await expect(page.locator(".film-row")).toHaveCount(6);
+  await expect(page.getByRole("button", { name: "Independent cinemas ×" })).toHaveCount(0);
 });
 test("a chain cinema with Independent on gets the generic empty title", async ({ page }) => {
   await page.goto("/?independent=1&venue=picturehouses.com-central&day=today");
