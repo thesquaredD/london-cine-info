@@ -337,3 +337,21 @@ test("a search leaves the welcome page and clearing it does not restore it", asy
   await expect(page.locator(".film-row")).toHaveCount(6);
   await expect(welcomeHeading(page)).toHaveCount(0);
 });
+
+test("the sidebar opens the welcome page again after it has been dismissed", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("london-cine.welcome-dismissed.v1", "true"));
+  await page.goto("/");
+  await expect(page.locator(".film-row").first()).toBeVisible();
+  await openPages(page);
+  const link = page.getByRole("link", { name: "Welcome", exact: true }).filter({ visible: true });
+  await expect(link).not.toHaveAttribute("aria-current");
+  await link.click();
+  await expect(welcomeHeading(page)).toBeVisible();
+  await expect(page).toHaveURL(/\/welcome$/);
+  await expect(
+    page.getByRole("link", { name: "Welcome", exact: true, includeHidden: true }).first(),
+  ).toHaveAttribute("aria-current", "page");
+  await page.getByRole("link", { name: "Browse all films" }).click();
+  await expect(page.locator(".film-row")).toHaveCount(6);
+  await expect(page).toHaveURL(/\/$/);
+});

@@ -1,0 +1,9 @@
+{
+  "id": "welcome-sidebar-link",
+  "type": "improved",
+  "title": "Welcome page in the menu",
+  "body": "The welcome page, with its cinema logos and quick ways to start, is now one click away from the menu on every page.",
+  "visibility": "public",
+  "href": "/welcome",
+  "linkLabel": "Open the welcome page"
+}
