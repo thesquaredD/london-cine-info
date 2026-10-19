@@ -101,10 +101,6 @@ export function useAccount() {
   const reload = useCallback(
     async (retry = true): Promise<void> => {
       const current = ++generation.current;
-      if (import.meta.env.VITE_DISCOVERY_DESIGNS === "1") {
-        setLoading(false);
-        return;
-      }
       try {
         const result = await accountApi<{ user: Account | null }>("/api/me");
         if (
