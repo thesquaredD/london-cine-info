@@ -62,8 +62,25 @@ test("a busy programme pages through 12 screenings at a time", async ({ page }) 
   await expect(count).toHaveText("25–30 of 30 screenings");
   await expect(showtimes.locator(".showtime-day li")).toHaveCount(6);
   await expect(pages.getByRole("button", { name: "Next screenings" })).toBeDisabled();
-  // Page turns bring the top of the programme back into view.
-  await expect(finder).toBeInViewport();
+});
+
+test("a page turn from far down brings the programme top back and focuses the count", async ({
+  page,
+}) => {
+  const showtimes = await openBusyFilm(page);
+  const count = showtimes.getByRole("status");
+  const next = showtimes.getByRole("button", { name: "Next screenings" });
+  await next.scrollIntoViewIfNeeded();
+  // The Next button sits below the fold, so the programme top starts out of view.
+  expect((await showtimes.boundingBox())!.y).toBeLessThan(0);
+  await next.click();
+  await expect(count).toHaveText("13–24 of 30 screenings");
+  await expect(count).toBeFocused();
+  // The programme top lands at its scroll margin, just below the sticky header.
+  const margin = await showtimes.evaluate((node) =>
+    parseFloat(getComputedStyle(node).scrollMarginTop),
+  );
+  expect(Math.abs((await showtimes.boundingBox())!.y - margin)).toBeLessThanOrEqual(2);
 });
 
 test("a busy programme filters by cinema and date, then resets", async ({ page }) => {
@@ -71,8 +88,8 @@ test("a busy programme filters by cinema and date, then resets", async ({ page }
   const finder = showtimes.getByRole("group", { name: "Find a screening" });
   const count = finder.getByRole("status");
   const reset = finder.getByRole("button", { name: "Reset" });
-  const cinema = finder.getByRole("combobox", { name: "Screening cinema" });
-  const date = finder.getByRole("combobox", { name: "Screening date" });
+  const cinema = finder.getByRole("combobox", { name: "Cinema", exact: true });
+  const date = finder.getByRole("combobox", { name: "Date", exact: true });
   await expect(reset).toBeDisabled();
   await expect(cinema.locator("option")).toHaveText([
     "All cinemas",
@@ -102,11 +119,13 @@ test("a busy programme filters by cinema and date, then resets", async ({ page }
   await expect(reset).toBeDisabled();
 });
 
-test("a local cinema choice drops out when the global filters exclude it", async ({ page }) => {
+test("local choices drop when the global filters change and stay dropped on Back", async ({
+  page,
+}) => {
   const showtimes = await openBusyFilm(page);
   const finder = showtimes.getByRole("group", { name: "Find a screening" });
   await finder
-    .getByRole("combobox", { name: "Screening cinema" })
+    .getByRole("combobox", { name: "Cinema", exact: true })
     .selectOption("bfi.org.uk-southbank");
   await expect(finder.getByRole("status")).toHaveText("1–9 of 9 screenings");
   await page.evaluate(() => {
@@ -117,6 +136,13 @@ test("a local cinema choice drops out when the global filters exclude it", async
     dispatchEvent(new PopStateEvent("popstate"));
   });
   await expect(finder.getByRole("status")).toHaveText("1–12 of 21 screenings");
-  await expect(finder.getByRole("combobox", { name: "Screening cinema" })).toHaveValue("");
+  await expect(finder.getByRole("combobox", { name: "Cinema", exact: true })).toHaveValue("");
   await expect(showtimes.locator(".showtime-day li", { hasText: "BFI Southbank" })).toHaveCount(0);
+  // Going back to the earlier filters keeps the programme unfiltered rather than silently
+  // restoring the old cinema choice.
+  await page.evaluate(() => {
+    history.back();
+  });
+  await expect(finder.getByRole("status")).toHaveText("1–12 of 30 screenings");
+  await expect(finder.getByRole("combobox", { name: "Cinema", exact: true })).toHaveValue("");
 });

@@ -615,8 +615,9 @@
 }
 
 /* Busy programmes: films with more than one page of screenings get date and cinema choices
-   and pages of 12. Selects follow the filter-field convention; every row keeps its height as
-   choices and pages change, so the list below holds still. */
+   and pages of 12. Selects follow the filter-field convention; the count takes the shared
+   small status size (.prose-small); every row keeps its height as choices and pages change,
+   so the list below holds still. */
 :root .showtimes {
   scroll-margin-top: 100px;
 }
@@ -652,7 +653,6 @@
   grid-column: 1 / -1;
   margin: 0;
   min-height: 24px;
-  color: var(--muted);
   font-variant-numeric: tabular-nums;
 }
 :root .programme-pagination {
