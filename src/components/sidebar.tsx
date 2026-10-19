@@ -12,18 +12,20 @@ function NavLink({
   className,
   state,
   onChange,
+  current = state.path === path,
 }: {
   path: string;
   children: ComponentChildren;
   className?: string;
   state: ViewState;
   onChange: (changes: Partial<ViewState>, push?: boolean) => void;
+  current?: boolean;
 }) {
   return (
     <PageLink
       href={path}
       class={className}
-      aria-current={state.path === path ? "page" : undefined}
+      aria-current={current ? "page" : undefined}
       onNavigate={() => onChange({ path, page: 1 }, true)}
     >
       {children}
@@ -154,6 +156,15 @@ export function Sidebar({ state, meta, onChange, account, welcome = false }: Pro
             </NavLink>
           )}
         </nav>
+        <NavLink
+          state={state}
+          onChange={onChange}
+          path="/welcome"
+          className="about-link"
+          current={welcome}
+        >
+          Welcome
+        </NavLink>
         <NavLink state={state} onChange={onChange} path="/how-to-use" className="about-link">
           How to use
         </NavLink>
