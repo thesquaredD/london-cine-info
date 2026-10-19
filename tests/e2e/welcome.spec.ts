@@ -149,10 +149,97 @@ test("How to use renders the guide and links to each real action", async ({ page
   ] as const) {
     await guide.getByRole("link", { name }).click();
     await expect(page).toHaveURL(url);
+    // With nothing saved, Choose my cinemas goes straight to the chooser.
+    if (name === "Choose my cinemas")
+      await expect(page.getByRole("dialog", { name: "Manage my cinemas" })).toBeVisible();
     await page.goto("/how-to-use");
   }
+  await page.route("https://api.postcodes.io/**", (route) =>
+    route.fulfill({
+      json: { result: { latitude: 51.5074, longitude: -0.1278, postcode: "WC2N 5DU" } },
+    }),
+  );
   await guide.getByRole("button", { name: "Find cinemas near me" }).click();
-  await expect(page.getByRole("dialog", { name: "Find nearby cinemas" })).toBeVisible();
+  const nearby = page.getByRole("dialog", { name: "Find nearby cinemas" });
+  await expect(nearby).toBeVisible();
+  await nearby.getByRole("textbox", { name: "Postcode" }).fill("WC2N 5DU");
+  await nearby.getByRole("button", { name: "Find", exact: true }).click();
+  await nearby.getByRole("button", { name: "Show films", exact: true }).click();
+  // Showing films leaves the guide for the programme, filtered to the nearby cinemas.
+  await expect(nearby).toBeHidden();
+  await expect(page).toHaveURL(/^[^?]*\/\?(.*&)?venue=/);
+  expect(new URL(page.url()).pathname).toBe("/");
+  await expect(page.locator(".film-row").first()).toBeVisible();
+  await expect(page.getByRole("button", { name: "Change nearby cinemas" })).toBeVisible();
+});
+
+test("closing Near me opened from the welcome page returns to the Near me shortcut", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Find cinemas near me" }).click();
+  const nearby = page.getByRole("dialog", { name: "Find nearby cinemas" });
+  await expect(nearby).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(nearby).toBeHidden();
+  const nearMe = page.getByRole("button", { name: "Near me", exact: true });
+  await expect(nearMe).toBeFocused();
+  await expect(nearMe).toHaveAttribute("aria-haspopup", "dialog");
+  await expect(nearMe).not.toHaveAttribute("aria-pressed", /.*/);
+});
+
+test("the welcome page skip link focuses the content and no film page is current", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await expect(welcomeHeading(page)).toBeVisible();
+  await expect(
+    page
+      .getByRole("navigation", { name: "Film pages", includeHidden: true })
+      .first()
+      .locator("[aria-current]"),
+  ).toHaveCount(0);
+  await page.keyboard.press("Tab");
+  const skip = page.getByRole("link", { name: "Skip to films" });
+  await expect(skip).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(page.locator("#main-content")).toBeFocused();
+  // Browsing films makes All movies current again.
+  await page.getByRole("link", { name: "Browse all films" }).click();
+  await expect(
+    page
+      .getByRole("navigation", { name: "Film pages", includeHidden: true })
+      .first()
+      .getByRole("link", { name: "All movies", includeHidden: true }),
+  ).toHaveAttribute("aria-current", "page");
+});
+
+test("the guide's example screenings use the real row layout", async ({ page }) => {
+  for (const width of [320, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto("/how-to-use");
+    const example = page.getByRole("figure", { name: "A film’s screenings" });
+    await expect(example.locator(".showtimes .screening-details")).toHaveCount(2);
+    const rows = await example.locator(".showtime-day li").evaluateAll((items) =>
+      items.map((item) => {
+        const box = (selector: string) => item.querySelector(selector)!.getBoundingClientRect();
+        const venue = box(".screening-venue");
+        const book = box(".booking-action");
+        const overlap =
+          venue.left < book.right &&
+          book.left < venue.right &&
+          venue.top < book.bottom &&
+          book.top < venue.bottom;
+        return { venue: venue.width, row: item.getBoundingClientRect().width, overlap };
+      }),
+    );
+    for (const row of rows) {
+      expect(row.overlap, `${width}px`).toBe(false);
+      // The venue keeps at least half the row instead of collapsing beside the action.
+      expect(row.venue, `${width}px`).toBeGreaterThan(row.row / 2 - 40);
+      expect(row.venue, `${width}px`).toBeGreaterThan(120);
+    }
+  }
 });
 
 test("a keyboard-focused logo is always inside the strip", async ({ page }) => {

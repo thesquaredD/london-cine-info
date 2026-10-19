@@ -8,7 +8,8 @@ export type ShortcutItem = {
   id: string;
   label: string;
   group: "when" | "personal";
-  active: boolean;
+  /** Undefined for a shortcut that opens a dialog rather than toggling a filter. */
+  active?: boolean;
   disabled?: boolean;
   title?: string;
   changes?: Partial<ViewState>;
@@ -66,6 +67,7 @@ export function shortcutItems({
         page: 1,
       },
     });
-  items.push({ id: "nearby", label: "Near me", group: "personal", active: false });
+  // Near me opens the nearby finder; it is not a toggle.
+  items.push({ id: "nearby", label: "Near me", group: "personal" });
   return items;
 }

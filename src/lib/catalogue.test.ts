@@ -3,6 +3,7 @@ import type { Film } from "../shared/data";
 import {
   PAGE_SIZE,
   pageRows,
+  showsCatalogue,
   readView,
   viewUrl,
   selectFilms,
@@ -281,5 +282,14 @@ describe("pageRows", () => {
       ["d1:a", "Agnès"],
       ["d1:b", "Agnès"],
     ]);
+  });
+});
+
+describe("showsCatalogue", () => {
+  it("is true for film and event listings only", () => {
+    for (const path of ["/", "/new", "/events", "/watchlist", "/radar"])
+      expect(showsCatalogue(path)).toBe(true);
+    for (const path of ["/how-to-use", "/welcome", "/about", "/account", "/my-calendar"])
+      expect(showsCatalogue(path)).toBe(false);
   });
 });

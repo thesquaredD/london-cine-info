@@ -325,3 +325,39 @@ test("signed-in nearby search never saves over account cinemas", async ({ page }
   expect(new URL(page.url()).searchParams.getAll("venue")).toEqual(["bfi.org.uk"]);
   expect(writes).toEqual([]);
 });
+
+test("Cancel returns focus to the control that started the request", async ({ page }) => {
+  await page.route("https://api.postcodes.io/**", () => {
+    // Never answers: the postcode check stays in progress until cancelled.
+  });
+  const dialog = await openNearby(page);
+  const cancel = dialog.getByRole("button", { name: "Cancel", exact: true });
+  const locate = dialog.getByRole("button", { name: "Use my location", exact: true });
+  await locate.click();
+  await cancel.click();
+  await expect(cancel).toBeHidden();
+  await expect(locate).toBeFocused();
+
+  const postcode = dialog.getByRole("textbox", { name: "Postcode" });
+  await postcode.fill("WC2N 5DU");
+  await dialog.getByRole("button", { name: "Find", exact: true }).click();
+  await expect(status(dialog)).toContainText("Checking");
+  await cancel.click();
+  await expect(postcode).toBeFocused();
+});
+
+test("the cinema list does not move when Select all appears", async ({ page }) => {
+  await page.route("https://api.postcodes.io/**", (route) =>
+    route.fulfill({ json: { result: TRAFALGAR } }),
+  );
+  const dialog = await openNearby(page);
+  const heading = dialog.locator(".nearby-finder-heading");
+  const list = dialog.locator(".nearby-finder-list");
+  const before = await Promise.all([heading.boundingBox(), list.boundingBox()]);
+  await dialog.getByRole("textbox", { name: "Postcode" }).fill("WC2N 5DU");
+  await dialog.getByRole("button", { name: "Find", exact: true }).click();
+  await expect(dialog.getByRole("button", { name: /^(Select|Clear) all$/ })).toBeVisible();
+  const after = await Promise.all([heading.boundingBox(), list.boundingBox()]);
+  expect(after[0]!.height).toBe(before[0]!.height);
+  expect(after[1]!.y).toBe(before[1]!.y);
+});

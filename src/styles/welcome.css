@@ -179,6 +179,11 @@
 .guide-example .showtime-day ul {
   margin: 0;
 }
+/* The example reuses the real screenings container; it has no loading state to reserve. */
+:root .guide-example .showtimes {
+  min-height: 0;
+  background: transparent;
+}
 .guide-example .shortcut-strip {
   padding: 0;
 }

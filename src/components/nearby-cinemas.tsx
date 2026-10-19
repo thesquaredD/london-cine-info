@@ -118,7 +118,14 @@ export function NearbyCinemas({
   }
   function cancel() {
     gate.current.cancel();
+    const from = status.kind;
     setStatus(origin ? { kind: "found", label: origin.label } : { kind: "idle" });
+    // Cancel disappears with the request; keep focus on the control that started it.
+    const target =
+      from === "locating"
+        ? dialog.current?.querySelector<HTMLElement>(".nearby-finder-device")
+        : dialog.current?.querySelector<HTMLElement>("#nearby-postcode");
+    target?.focus();
   }
   const failedPostcode = status.kind === "failed" && status.source === "postcode";
   const allSelected = venues.length > 0 && selected.length === venues.length;
@@ -130,8 +137,10 @@ export function NearbyCinemas({
       title={NEARBY_TITLE}
       onClose={onClose}
       restoreTo={() =>
+        // The opener is gone (welcome page, guide): return to Near me, else the page heading.
         document.querySelector<HTMLElement>(".nearby-context button") ??
-        document.querySelector<HTMLElement>(".shortcut-strip button") ??
+        document.querySelector<HTMLElement>('.shortcut-strip [data-shortcut="nearby"]') ??
+        document.getElementById("page-title") ??
         document.querySelector<HTMLElement>(".menu-button")
       }
     >

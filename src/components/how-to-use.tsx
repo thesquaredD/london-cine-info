@@ -2,6 +2,7 @@ import { useEffect, useState } from "preact/hooks";
 import type { ComponentChildren } from "preact";
 import { usePreferenceFocus } from "../lib/preference-focus";
 import { PageLink } from "./page-link";
+import { ScreeningRow } from "./screening-row";
 
 const SECTIONS = [
   ["find", "Find and book"],
@@ -138,33 +139,30 @@ export function HowToUse({
               <li>Choose Book to buy tickets on the cinema’s website.</li>
             </ol>
             <Example label="A film’s screenings">
-              <div class="showtime-day">
-                <h3>Friday 23 October</h3>
-                <ul>
-                  <li>
-                    <time>18:30</time>
-                    <span class="time-dot" aria-hidden="true" />
-                    <div class="screening-info">
-                      <span class="screening-venue">Prince Charles Cinema</span>
-                      <span class="booking-action">Book</span>
-                      <div class="screening-tags">
-                        <span class="badge">35mm</span>
-                        <span class="badge accessibility">Subtitled</span>
-                      </div>
-                    </div>
-                  </li>
-                  <li class="sold-out">
-                    <time>20:45</time>
-                    <span class="time-dot" aria-hidden="true" />
-                    <div class="screening-info">
-                      <span class="screening-venue">BFI Southbank</span>
-                      <span class="booking-action">Details</span>
-                      <div class="screening-tags">
-                        <span class="badge sold-out-badge">Sold out</span>
-                      </div>
-                    </div>
-                  </li>
-                </ul>
+              <div class="showtimes">
+                <div class="showtime-day">
+                  <h3>Friday 23 October</h3>
+                  <ul>
+                    <ScreeningRow
+                      localTime="18:30"
+                      venue="Prince Charles Cinema"
+                      tags={[
+                        { key: "35mm", label: "35mm" },
+                        { key: "subtitled", label: "Subtitled", kind: "accessibility" },
+                      ]}
+                    >
+                      <span class="booking-action">Book ↗</span>
+                    </ScreeningRow>
+                    <ScreeningRow
+                      localTime="20:45"
+                      venue="BFI Southbank"
+                      soldOut
+                      tags={[{ key: "sold-out", label: "Sold out", kind: "sold-out" }]}
+                    >
+                      <span class="booking-action">Details ↗</span>
+                    </ScreeningRow>
+                  </ul>
+                </div>
               </div>
             </Example>
             <p class="prose-small">

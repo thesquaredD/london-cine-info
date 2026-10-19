@@ -15,6 +15,10 @@ export const PAGES = [
   { path: "/my-calendar", name: "My calendar" },
   { path: "/radar", name: "Radar" },
 ] as const;
+/** Pages that list films or events, so a cinema filter shows its results there. */
+export function showsCatalogue(path: string): boolean {
+  return path !== "/my-calendar" && PAGES.some((page) => page.path === path);
+}
 export const RATINGS: { key: RatingKey; name: string; short: string; scale: string }[] = [
   { key: "lb", name: "Letterboxd", short: "LB", scale: "/5" },
   { key: "im", name: "IMDb", short: "IMDb", scale: "/10" },

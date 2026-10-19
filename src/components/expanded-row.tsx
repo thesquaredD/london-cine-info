@@ -6,6 +6,7 @@ import type { DataMeta, Film, FilmShowtimes, RatingKey } from "../shared/data";
 import { RATINGS, formatDate, runtime } from "../lib/catalogue";
 import { loadShowtimes } from "../lib/data";
 import { openFeedback } from "../lib/feedback";
+import { ScreeningRow } from "./screening-row";
 
 import type { CalendarInput } from "../shared/calendar";
 import type { CalendarState } from "../lib/calendar";
@@ -239,78 +240,73 @@ export function ExpandedRow({
                       };
                       const saved = calendar?.find(event);
                       return (
-                        <li
+                        <ScreeningRow
                           key={`${row.time}-${row.venue}-${index}`}
-                          class={row.soldOut ? "sold-out" : ""}
+                          dateTime={new Date(row.time).toISOString()}
+                          localTime={row.localTime}
+                          venue={venue?.name ?? row.venue}
+                          soldOut={row.soldOut}
+                          tags={[
+                            ...(row.soldOut
+                              ? [{ key: "sold-out", label: "Sold out", kind: "sold-out" as const }]
+                              : []),
+                            ...row.formats
+                              .filter((format) => format !== "standard")
+                              .map((format) => ({
+                                key: format,
+                                label:
+                                  meta.facets.format.find((option) => option.id === format)
+                                    ?.label ?? format,
+                              })),
+                            ...row.accessibility.map((flag) => ({
+                              key: flag,
+                              label:
+                                meta.facets.accessibility.find((option) => option.id === flag)
+                                  ?.label ?? flag,
+                              kind: "accessibility" as const,
+                            })),
+                          ]}
+                          note={
+                            [row.screen && `Screen ${row.screen}`, row.notes]
+                              .filter(Boolean)
+                              .join(" · ") || undefined
+                          }
                         >
-                          <time dateTime={new Date(row.time).toISOString()}>{row.localTime}</time>
-                          <span class="time-dot" aria-hidden="true" />
-                          <div class="screening-info">
-                            <div class="screening-details">
-                              <span class="screening-venue">{venue?.name ?? row.venue}</span>
-                              <div class="screening-tags">
-                                {row.soldOut && <span class="badge sold-out-badge">Sold out</span>}
-                                {row.formats
-                                  .filter((format) => format !== "standard")
-                                  .map((format) => (
-                                    <span class="badge" key={format}>
-                                      {meta.facets.format.find((option) => option.id === format)
-                                        ?.label ?? format}
-                                    </span>
-                                  ))}
-                                {row.accessibility.map((flag) => (
-                                  <span class="badge accessibility" key={flag}>
-                                    {meta.facets.accessibility.find((option) => option.id === flag)
-                                      ?.label ?? flag}
-                                  </span>
-                                ))}
-                              </div>
-                              {(row.notes || row.screen) && (
-                                <small>
-                                  {[row.screen && `Screen ${row.screen}`, row.notes]
-                                    .filter(Boolean)
-                                    .join(" · ")}
-                                </small>
-                              )}
-                            </div>
-                            <div class="screening-actions">
-                              <a
-                                class="booking-action"
-                                href={row.bookingUrl}
-                                onClick={() =>
-                                  capture(
-                                    row.bookingFallback
-                                      ? "screening_details_clicked"
-                                      : "booking_clicked",
-                                    {
-                                      film_id: film.id,
-                                      venue_id: row.venue,
-                                      sold_out: row.soldOut,
-                                      booking_fallback: row.bookingFallback,
-                                      path: state.path,
-                                      watchlist: state.path === "/watchlist" || !!state.watchlist,
-                                    },
-                                  )
-                                }
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                aria-label={`${row.bookingFallback || row.soldOut ? "Screening details for" : "Book"} ${film.ti} at ${venue?.name ?? row.venue} ${row.localTime}`}
-                              >
-                                {row.bookingFallback || row.soldOut ? "Details ↗" : "Book ↗"}
-                              </a>
-                              {onCalendar && (
-                                <button
-                                  class="add-calendar"
-                                  aria-haspopup="dialog"
-                                  aria-label={`${saved ? "View saved screening" : "Add to calendar"}: ${film.ti} at ${venue?.name ?? row.venue} ${date} ${row.localTime}`}
-                                  onClick={() => onCalendar(event)}
-                                >
-                                  {saved ? "In my calendar" : "Add to calendar"}
-                                </button>
-                              )}
-                            </div>
-                          </div>
-                        </li>
+                          <a
+                            class="booking-action"
+                            href={row.bookingUrl}
+                            onClick={() =>
+                              capture(
+                                row.bookingFallback
+                                  ? "screening_details_clicked"
+                                  : "booking_clicked",
+                                {
+                                  film_id: film.id,
+                                  venue_id: row.venue,
+                                  sold_out: row.soldOut,
+                                  booking_fallback: row.bookingFallback,
+                                  path: state.path,
+                                  watchlist: state.path === "/watchlist" || !!state.watchlist,
+                                },
+                              )
+                            }
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            aria-label={`${row.bookingFallback || row.soldOut ? "Screening details for" : "Book"} ${film.ti} at ${venue?.name ?? row.venue} ${row.localTime}`}
+                          >
+                            {row.bookingFallback || row.soldOut ? "Details ↗" : "Book ↗"}
+                          </a>
+                          {onCalendar && (
+                            <button
+                              class="add-calendar"
+                              aria-haspopup="dialog"
+                              aria-label={`${saved ? "View saved screening" : "Add to calendar"}: ${film.ti} at ${venue?.name ?? row.venue} ${date} ${row.localTime}`}
+                              onClick={() => onCalendar(event)}
+                            >
+                              {saved ? "In my calendar" : "Add to calendar"}
+                            </button>
+                          )}
+                        </ScreeningRow>
                       );
                     })}
                   </ul>

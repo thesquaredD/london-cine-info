@@ -55,7 +55,7 @@
   justify-content: center;
   gap: 6px;
   min-width: 44px;
-  min-height: 42px;
+  min-height: 44px;
   padding: 0 12px;
   border: 0;
   border-radius: 0;
@@ -410,9 +410,21 @@
 }
 
 /* ---------- Film details sheet ---------- */
-.poster-film-dialog {
-  width: min(960px, calc(100vw - 32px));
-  max-width: 960px;
+/*
+ * A fixed size, so the sheet does not jump or grow while screenings load. Phones keep the
+ * full-width bottom sheet from base.css and only fix its height.
+ */
+@media (min-width: 800px) {
+  :root .poster-film-dialog[open] {
+    width: min(960px, calc(100vw - 32px));
+    max-width: 960px;
+    height: 85dvh;
+  }
+}
+@media (max-width: 799px) {
+  :root .poster-film-dialog[open] {
+    height: 90dvh;
+  }
 }
 .poster-film-dialog .dialog-body {
   padding: 0;

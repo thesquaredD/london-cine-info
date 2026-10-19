@@ -34,9 +34,11 @@ type Props = {
   account: AccountState;
   state: ViewState;
   meta: DataMeta | null;
+  /** The welcome page sits at "/" on a first visit but is not the All movies page. */
+  welcome?: boolean;
   onChange: (changes: Partial<ViewState>, push?: boolean) => void;
 };
-export function Sidebar({ state, meta, onChange, account }: Props) {
+export function Sidebar({ state, meta, onChange, account, welcome = false }: Props) {
   const friends = useFriendContext();
   const count = friends?.pendingIncoming ?? 0;
   return (
@@ -60,7 +62,7 @@ export function Sidebar({ state, meta, onChange, account }: Props) {
                     director: "",
                     ...(!hasCustomSort(state) ? defaultSort(page.path) : {}),
                   })}
-                  aria-current={state.path === page.path ? "page" : undefined}
+                  aria-current={!welcome && state.path === page.path ? "page" : undefined}
                   onClick={(event) => {
                     if (
                       event.button ||
