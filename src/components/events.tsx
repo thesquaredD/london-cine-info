@@ -173,7 +173,7 @@ export function Events({
                             }
                             target="_blank"
                             rel="noopener noreferrer"
-                            aria-label={`${row.bookingFallback ? "Screening details for" : "Book"} ${row.title} at ${venue?.name ?? row.venue} ${row.localTime}`}
+                            aria-label={`${row.bookingFallback || row.soldOut ? "Screening details for" : "Book"} ${row.title} at ${venue?.name ?? row.venue} ${row.localTime}`}
                           >
                             {row.bookingFallback || row.soldOut ? "Details" : "Book"}{" "}
                             <ExternalLinkIcon />

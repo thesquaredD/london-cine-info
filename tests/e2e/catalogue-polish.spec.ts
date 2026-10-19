@@ -70,7 +70,9 @@ test("Events show occurrences and only matching event dates", async ({ page }) =
   const live = page.locator(".event-row").filter({ hasText: "Fixture Classic A" });
   await expect(live).toContainText("Live score");
   await expect(live.locator("time")).toHaveText("14:00");
-  await expect(live.getByRole("link", { name: /^Book/ })).toBeVisible();
+  await expect(
+    live.getByRole("link", { name: /^Screening details for Fixture Classic A/ }),
+  ).toBeVisible();
   await live.getByRole("button", { name: "Film details", exact: true }).click();
   await expect(page.locator(".showtime-day")).toHaveCount(1);
   await page.goto("/events?day=2026-10-04");

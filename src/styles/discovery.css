@@ -599,6 +599,7 @@
   background: var(--panel);
   color: var(--fg);
   text-decoration: none;
+  border: 1px solid var(--line);
   border-radius: 2px;
 }
 :root .film-info .film-links {

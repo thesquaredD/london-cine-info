@@ -38,6 +38,18 @@ export function ExpandedRow({
   const [attempt, setAttempt] = useState(0);
   const [posterFailed, setPosterFailed] = useState(false);
   const [shareMessage, setShareMessage] = useState("");
+  const shareTimers = useRef<number[]>([]);
+  // Clear then re-set so screen readers announce every share, and drop the message after a
+  // while; the status region keeps its height, so nothing around it moves.
+  const announceShare = (message: string) => {
+    shareTimers.current.forEach((timer) => window.clearTimeout(timer));
+    setShareMessage("");
+    shareTimers.current = [
+      window.setTimeout(() => setShareMessage(message), 100),
+      window.setTimeout(() => setShareMessage(""), 5000),
+    ];
+  };
+  useEffect(() => () => shareTimers.current.forEach((timer) => window.clearTimeout(timer)), []);
   const [overviewExpanded, setOverviewExpanded] = useState(false);
   const [overviewOverflow, setOverviewOverflow] = useState(false);
   const synopsis = useRef<HTMLParagraphElement>(null);
@@ -147,7 +159,7 @@ export function ExpandedRow({
                   })}
                 </div>
               )}
-              <div class="film-provider-links" aria-label="Film websites">
+              <div class="film-provider-links" role="group" aria-label="Film websites">
                 {filmProviderLinks(film).map((provider) => (
                   <a
                     key={provider.name}
@@ -177,9 +189,9 @@ export function ExpandedRow({
                       } else if (!url.searchParams.has("film"))
                         url.searchParams.set("film", film.id);
                       await navigator.clipboard.writeText(url.href);
-                      setShareMessage("Film link copied");
+                      announceShare("Film link copied");
                     } catch {
-                      setShareMessage("Copy this page’s address to share the film.");
+                      announceShare("Copy the address bar to share.");
                     }
                   }}
                 >

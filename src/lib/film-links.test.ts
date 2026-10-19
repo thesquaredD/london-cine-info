@@ -34,7 +34,7 @@ describe("filmProviderLinks", () => {
       },
       {
         name: "IMDb",
-        href: "https://www.imdb.com/find/?q=Paris%2C%20Texas%201984&s=tt",
+        href: "https://www.imdb.com/find/?q=Paris%2C%20Texas%201984&s=tt&ttype=ft",
         label: "Find on IMDb",
       },
     ]);
@@ -42,6 +42,11 @@ describe("filmProviderLinks", () => {
 
   it("omits the year from the IMDb search when it is unknown", () => {
     const [, imdb] = filmProviderLinks({ ti: "Shorts", ye: null, ra: ratings });
-    expect(imdb?.href).toBe("https://www.imdb.com/find/?q=Shorts&s=tt");
+    expect(imdb?.href).toBe("https://www.imdb.com/find/?q=Shorts&s=tt&ttype=ft");
+  });
+
+  it("searches Letterboxd with a space where the title has a slash", () => {
+    const [letterboxd] = filmProviderLinks({ ti: "Face/Off", ye: 1997, ra: ratings });
+    expect(letterboxd?.href).toBe("https://letterboxd.com/search/films/Face%20Off/");
   });
 });
