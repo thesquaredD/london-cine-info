@@ -57,8 +57,8 @@ test("Nearby applies temporary cinemas without replacing saved choices", async (
   await page.getByRole("button", { name: "Near me", exact: true }).click();
   const nearby = page.getByRole("dialog", { name: "Find nearby cinemas", exact: true });
   await nearby.getByPlaceholder("e.g. SW1A 2AA").fill("SW1A 2AA");
-  await nearby.getByRole("button", { name: "Find location", exact: true }).click();
-  const apply = nearby.getByRole("button", { name: "Show films at these cinemas", exact: true });
+  await nearby.getByRole("button", { name: "Find", exact: true }).click();
+  const apply = nearby.getByRole("button", { name: "Show films", exact: true });
   await expect(apply).toBeEnabled();
   await apply.click();
   expect(new URL(page.url()).searchParams.getAll("venue").length).toBeGreaterThan(0);
