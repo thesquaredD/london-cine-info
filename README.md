@@ -335,5 +335,6 @@ none, opens the film, and the address is then rewritten to the current title’s
 - **Clipboard.** When copying is refused, the link appears selected in a field across the
   screening (or film) with Done; a later copy that works clears it.
 
-Verification: `npm run e2e -- tests/e2e/film-sharing.spec.ts`. That spec also checks that
-Share adds no height to screening rows at 1280, 768 and 390px.
+Verification: `npm run e2e -- tests/e2e/film-sharing.spec.ts`. That spec also checks, from
+320 to 1280px, that screening rows are no taller than the same page with Share removed;
+`screening-layout.spec.ts` checks the venue keeps at least half the row.

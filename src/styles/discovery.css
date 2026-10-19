@@ -495,18 +495,25 @@
 :root .screening-actions .booking-action {
   white-space: nowrap;
 }
-/* Share is a 44px icon, so it fits the Book line in the stacked column too: the calendar
-   action takes the line below, and rows keep the height they had without Share. */
-:root .screening-actions:has(.share-screening) {
-  flex-direction: row;
-  flex-wrap: wrap;
-  width: calc(7em + 50px);
+/*
+ * Share is a 44px icon and must not take space the venue needs or make rows taller. In the
+ * stacked column (26-44rem) it sits under the time, in the time column's spare space, so the
+ * column keeps its 7em; on one line (44rem and wider) Book and the calendar action give up
+ * their slack instead (see below); on the time line it simply joins the actions.
+ */
+:root .showtime-day li:has(.share-screening) {
+  position: relative;
 }
-:root .screening-actions:has(.share-screening) .booking-action {
-  flex: 1 1 0;
+:root .screening-actions .share-screening {
+  position: absolute;
+  top: 46px;
+  left: 10px;
 }
-:root .screening-actions:has(.share-screening) .add-calendar {
-  order: 1;
+/* The How to use example mirrors the real actions with spans. */
+:root span.add-calendar {
+  background: var(--shade);
+  color: var(--fg);
+  border-radius: 2px;
 }
 :root .share-screening-control {
   display: contents;
@@ -602,8 +609,8 @@
   :root .screening-actions {
     width: 6.5em;
   }
-  :root .screening-actions:has(.share-screening) {
-    width: calc(6.5em + 50px);
+  :root .screening-actions .share-screening {
+    left: 8px;
   }
   :root .screening-actions .booking-action {
     font-size: 16px;
@@ -615,23 +622,33 @@
 /* A wide list (44rem keeps the venue at least half the row) puts the calendar action beside
    Book, each in its own fixed-width column. */
 @container screenings (min-width: 44rem) {
-  :root .screening-actions,
-  :root .screening-actions:has(.share-screening) {
+  :root .screening-actions {
     flex-direction: row;
-    flex-wrap: nowrap;
     width: auto;
-  }
-  :root .screening-actions:has(.share-screening) .booking-action {
-    flex: none;
-  }
-  :root .screening-actions:has(.share-screening) .add-calendar {
-    order: 0;
   }
   :root .screening-actions .booking-action {
     width: 7em;
   }
   :root .screening-actions .add-calendar {
     width: 9em;
+  }
+  /* With Share on the line, Book and the calendar action shrink to their longest labels
+     ("Details", "Add to calendar") and the row's gaps close a little, so the line is about
+     as wide as Book and the calendar action were alone and the venue keeps half the row. */
+  :root .showtime-day li:has(.share-screening) {
+    column-gap: 8px;
+  }
+  :root .screening-actions .share-screening {
+    position: static;
+  }
+  :root .screening-actions:has(.share-screening) :is(.booking-action, .add-calendar) {
+    padding-inline: 6px;
+  }
+  :root .screening-actions:has(.share-screening) .booking-action {
+    width: 6em;
+  }
+  :root .screening-actions:has(.share-screening) .add-calendar {
+    width: 7.75em;
   }
 }
 /*
@@ -648,8 +665,7 @@
   :root .showtime-day li > .time-dot {
     display: none;
   }
-  :root .screening-actions,
-  :root .screening-actions:has(.share-screening) {
+  :root .screening-actions {
     flex-direction: row;
     flex-wrap: wrap;
     justify-content: flex-end;
@@ -660,11 +676,21 @@
     width: auto;
     min-width: 6em;
   }
+  :root .screening-actions .share-screening {
+    position: static;
+  }
+  /* With Share on the time line, a tight row lets the calendar label take two lines inside
+     its 44px button rather than wrapping the actions onto a second line. */
+  :root .screening-actions:has(.share-screening) {
+    flex-wrap: nowrap;
+  }
   :root .screening-actions:has(.share-screening) .booking-action {
     flex: none;
   }
   :root .screening-actions:has(.share-screening) .add-calendar {
-    order: 0;
+    flex: 0 1 auto;
+    min-width: 4.5em;
+    padding-inline: 6px;
   }
 }
 

@@ -353,39 +353,51 @@ test("a showing moved within the hour still opens, labelled as changed", async (
   await expect(page.locator(".shared-screening")).toContainText("Picturehouse Central");
 });
 
-// Rows measured on the stack base (a66078d), before Share existed, with the fixture data.
-const BASE_HEIGHTS = {
-  1280: { film: [88, 71, 61, 60], events: [135, 103], guide: [79, 78] },
-  768: { film: [90, 71, 61, 60], events: [153, 118], guide: [79, 78] },
-  390: { film: [130, 111, 90, 89], events: [205, 118], guide: [118, 117] },
-};
-for (const [width, base] of Object.entries(BASE_HEIGHTS)) {
+// Each page is measured twice in the same run: as served, then with every Share removed
+// (as before Share existed), so fonts and scrollbars of the machine cancel out.
+for (const width of [1280, 1024, 900, 768, 390, 320]) {
   test(`Share adds no height to screening rows at ${width}px`, async ({ page }, info) => {
     test.skip(info.project.name !== "desktop", "Sets its own viewport");
-    await page.setViewportSize({ width: Number(width), height: 900 });
-    const heights = (selector: string) =>
-      page
-        .locator(selector)
-        .evaluateAll((nodes) =>
-          nodes.map((node) => Math.round(node.getBoundingClientRect().height)),
-        );
-    const near = (actual: number[], expected: number[]) => {
-      expect(actual).toHaveLength(expected.length);
-      actual.forEach((value, index) =>
-        expect(Math.abs(value - expected[index]!)).toBeLessThanOrEqual(1),
+    await page.setViewportSize({ width, height: 900 });
+    const measure = (selector: string) =>
+      page.locator(selector).evaluateAll((nodes) =>
+        nodes.map((node) => {
+          const row = node.getBoundingClientRect();
+          const share = node.querySelector(".share-screening")?.getBoundingClientRect();
+          return {
+            height: Math.round(row.height),
+            // Share stays inside its row.
+            inside:
+              !share ||
+              (share.top >= row.top - 0.5 &&
+                share.bottom <= row.bottom + 0.5 &&
+                share.left >= row.left - 0.5 &&
+                share.right <= row.right + 0.5),
+          };
+        }),
       );
+    const compare = async (path: string, selector: string) => {
+      await page.goto(path);
+      await expect(page.locator(`${selector} .share-screening`).first()).toBeVisible();
+      const shown = await measure(selector);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+        true,
+      );
+      await page.evaluate(() =>
+        document
+          .querySelectorAll(".share-screening-control, .guide-example .share-screening")
+          .forEach((node) => node.remove()),
+      );
+      const without = await measure(selector);
+      expect(shown.map((row) => row.inside)).not.toContain(false);
+      // Never taller; at 320px rows are even shorter, as the calendar label may take two lines.
+      expect(shown).toHaveLength(without.length);
+      shown.forEach((row, index) => expect(row.height).toBeLessThanOrEqual(without[index]!.height));
+      if (width >= 390)
+        expect(shown.map((row) => row.height)).toEqual(without.map((row) => row.height));
     };
-    await page.goto("/?film=classic-a");
-    await expect(page.locator(".showtime-day li .share-screening")).toHaveCount(4);
-    near(await heights(".showtime-day li"), base.film);
-    await page.goto("/events");
-    await expect(page.locator(".event-row .share-screening").first()).toBeVisible();
-    near(await heights(".event-row"), base.events);
-    await page.goto("/how-to-use");
-    await expect(page.locator(".guide-example .share-screening").first()).toBeVisible();
-    near(await heights(".guide-example .showtime-day li"), base.guide);
-    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
-      true,
-    );
+    await compare("/?film=classic-a", ".showtime-day li");
+    await compare("/events", ".event-row");
+    await compare("/how-to-use", ".guide-example .showtime-day li");
   });
 }

@@ -156,6 +156,7 @@ export function HowToUse({
                       <span class="booking-action">
                         Book <ExternalLinkIcon />
                       </span>
+                      <span class="add-calendar">Add to calendar</span>
                       <span class="share-screening">
                         <ShareIcon />
                         <span class="sr-only">Share</span>
@@ -170,6 +171,7 @@ export function HowToUse({
                       <span class="booking-action">
                         Details <ExternalLinkIcon />
                       </span>
+                      <span class="add-calendar">Add to calendar</span>
                       <span class="share-screening">
                         <ShareIcon />
                         <span class="sr-only">Share</span>
