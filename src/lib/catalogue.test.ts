@@ -254,6 +254,23 @@ describe("pageRows", () => {
     );
     expect(pageRows(sorted, { ...state, page: 9 }).page).toBe(2);
   });
+  it("carries a release-date group across a page boundary", () => {
+    const films = Array.from({ length: PAGE_SIZE + 10 }, (_, index) =>
+      film(`c${String(index).padStart(3, "0")}`, {
+        rd: index < PAGE_SIZE - 5 ? "2026-11-01" : "2026-11-08",
+      }),
+    );
+    const state = { ...view, path: "/calendar" };
+    const first = pageRows(films, { ...state, page: 1 });
+    const second = pageRows(films, { ...state, page: 2 });
+    expect(first.visible.at(-1)!.group!.id).toBe("release-2026-11-08");
+    expect(second.visible[0]!.group).toEqual(first.visible.at(-1)!.group);
+    expect(second.visible[0]!.group!.count).toBe(15);
+    expect(second.start).toBe(PAGE_SIZE);
+    expect([...first.visible, ...second.visible].map((row) => row.key)).toEqual(
+      tableRows(films, state).map((row) => row.key),
+    );
+  });
   it("keeps retrospective director groups and their row keys", () => {
     const films = [
       film("a", { di: [{ id: "d1", name: "Agnès" }], retro: ["d1"] }),

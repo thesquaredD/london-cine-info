@@ -135,3 +135,62 @@ test("posters respect hidden watchlist ratings", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator(".poster-info-facts", { hasText: "LB" }).first()).toBeAttached();
 });
+
+test("a film opened from a link returns focus to its poster, and Back does not reopen it", async ({
+  page,
+}) => {
+  await page.addInitScript(() => localStorage.setItem("london-cine.film-view.v1", "posters"));
+  await page.goto("/");
+  const key = await page.locator(".poster-item").nth(1).getAttribute("data-film-key");
+  await page.goto(`/?film=${encodeURIComponent(key!)}`);
+  const dialog = page.locator(".poster-film-dialog");
+  await expect(dialog.locator(".film-expanded")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
+  await expect(page.locator(`[data-film-key="${key}"] .poster-card`)).toBeFocused();
+
+  // Opened by a press, closed, then Back: the previous page shows, not the dialog again.
+  await page.goto("/");
+  await page.locator(".poster-card").first().click();
+  await expect(dialog.locator(".film-expanded")).toBeVisible();
+  await page.getByRole("button", { name: /^Close / }).click();
+  await expect(dialog).toBeHidden();
+  expect(new URL(page.url()).searchParams.get("film")).toBeNull();
+  await page.goBack();
+  await expect(page.locator(".poster-card").first()).toBeVisible();
+  await expect(dialog).toBeHidden();
+});
+
+test("the list keeps its own control hover and row toggling", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "Pointer hover only");
+  await page.goto("/?sort=title&order=asc");
+  const chip = page.getByRole("button", { name: "Clear sort" });
+  await chip.hover();
+  expect(await chip.evaluate((node) => getComputedStyle(node).textDecorationLine)).toBe(
+    "underline",
+  );
+  const row = page.locator(".film-row .film-title").first();
+  await row.click();
+  await expect(page.locator(".expanded-row")).toBeVisible();
+  await row.click();
+  await expect(page.locator(".expanded-row")).toHaveCount(0);
+
+  await page.getByRole("button", { name: "Posters" }).click();
+  await chip.hover();
+  expect(await chip.evaluate((node) => getComputedStyle(node).textDecorationLine)).toBe("none");
+  const next = page.getByRole("button", { name: "Next page" });
+  const box = await next.boundingBox();
+  if (box) expect(Math.min(box.width, box.height)).toBeGreaterThanOrEqual(44);
+});
+
+test.describe("touch", () => {
+  test.use({ hasTouch: true });
+  test("one tap opens a poster's details and screenings", async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem("london-cine.film-view.v1", "posters"));
+    await page.goto("/");
+    const card = page.locator(".poster-card").first();
+    await card.tap();
+    await expect(page.locator(".poster-film-dialog .film-expanded")).toBeVisible();
+    expect(new URL(page.url()).searchParams.get("film")).toBeTruthy();
+  });
+});

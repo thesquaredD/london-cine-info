@@ -33,7 +33,9 @@ export function Dialog({
     return () => {
       if (node.open) node.close();
       const target =
-        previous?.isConnected && previous.getClientRects().length ? previous : restore.current?.();
+        previous?.isConnected && previous !== document.body && previous.getClientRects().length
+          ? previous
+          : restore.current?.();
       target?.focus();
     };
   }, [open]);

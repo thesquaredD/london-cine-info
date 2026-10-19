@@ -288,6 +288,7 @@ export function App() {
   function changeFilmView(view: FilmView) {
     if (view === filmView) return;
     saveFilmView(view);
+    capture("film_view_changed", { view, path: state.path });
     // Keep the open film in view rather than reopening it as a dialog.
     viewAnchor.current = state.film ?? null;
     if (state.film) change({ film: undefined }, false);
@@ -998,16 +999,22 @@ export function App() {
                       </strong>{" "}
                       <span class="result-context">matching your choices</span>
                     </p>
-                    <div class="results-tools">
+                    {supportsPosters(state.path) ? (
+                      <div class="results-tools">
+                        <MobileSort
+                          hideRatings={hideRatings}
+                          state={effectiveState}
+                          onChange={change}
+                        />
+                        <ViewSwitch value={filmView} onChange={changeFilmView} />
+                      </div>
+                    ) : (
                       <MobileSort
                         hideRatings={hideRatings}
                         state={effectiveState}
                         onChange={change}
                       />
-                      {supportsPosters(state.path) && (
-                        <ViewSwitch value={filmView} onChange={changeFilmView} />
-                      )}
-                    </div>
+                    )}
                   </div>
                   <div
                     class="active-filters"

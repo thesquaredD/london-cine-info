@@ -1,4 +1,4 @@
-import { useState } from "preact/hooks";
+import { useRef, useState } from "preact/hooks";
 import { capture } from "../lib/analytics";
 import { displayTitle, type DisplayState, type FilmView } from "../lib/display";
 import { pageRows, RATINGS, runtime, type TableRow, type ViewState } from "../lib/catalogue";
@@ -17,11 +17,21 @@ function posterSources(url: string) {
   if (!match) return {};
   return {
     srcset: `${match[1]}w185${match[2]} 185w, ${match[1]}w342${match[2]} 342w`,
-    sizes: "(max-width: 599px) 45vw, (max-width: 1099px) 25vw, 200px",
+    sizes: "(max-width: 479px) 46vw, (max-width: 599px) 31vw, (max-width: 1099px) 25vw, 200px",
   };
 }
 
-export function PosterArt({ film, title }: { film: Film; title: string }) {
+/** The first rows are visible straight away, so they skip lazy loading. */
+const EAGER_POSTERS = 12;
+export function PosterArt({
+  film,
+  title,
+  eager = false,
+}: {
+  film: Film;
+  title: string;
+  eager?: boolean;
+}) {
   const [failed, setFailed] = useState(false);
   return film.po && !failed ? (
     <img
@@ -31,7 +41,8 @@ export function PosterArt({ film, title }: { film: Film; title: string }) {
       alt=""
       width={342}
       height={513}
-      loading="lazy"
+      loading={eager ? "eager" : "lazy"}
+      fetchpriority={eager ? "high" : "auto"}
       decoding="async"
       onError={() => setFailed(true)}
     />
@@ -119,6 +130,11 @@ export function PosterGrid({
     ? RATINGS.find((source) => source.key === display.ratingOrder[0])
     : undefined;
   const active = visible.find((row) => row.key === expanded);
+  // Remember the last open film so focus can return to its poster after the dialog closes,
+  // including when it was opened from a link or by a click that did not focus the poster.
+  const lastOpen = useRef<string | null>(null);
+  if (active) lastOpen.current = active.key;
+  const order = new Map(visible.map((row, index) => [row.key, index]));
   function open(row: TableRow) {
     capture("film_opened", {
       film_id: row.film.id,
@@ -128,6 +144,8 @@ export function PosterGrid({
     });
     onExpand(row.key);
   }
+  // Replace rather than push, so Back does not reopen a film the reader just closed.
+  const close = () => onChange({ film: undefined }, false);
   if (!films.length)
     return showEmpty ? (
       <EmptyState directorName={directorName} state={state} meta={meta} onChange={onChange} />
@@ -179,7 +197,11 @@ export function PosterGrid({
                       onClick={() => open(row)}
                     >
                       <span class="poster-frame">
-                        <PosterArt film={film} title={title} />
+                        <PosterArt
+                          film={film}
+                          title={title}
+                          eager={(order.get(key) ?? EAGER_POSTERS) < EAGER_POSTERS}
+                        />
                         {marked(film) && (
                           <span class="poster-mark" aria-hidden="true">
                             ▣
@@ -213,7 +235,14 @@ export function PosterGrid({
         open={!!active}
         title={active ? displayTitle(active.film, display.titleMode) : "Film screenings"}
         className="modal-dialog poster-film-dialog"
-        onClose={() => onExpand(null)}
+        onClose={close}
+        restoreTo={() =>
+          lastOpen.current
+            ? document.querySelector<HTMLElement>(
+                `[data-film-key="${CSS.escape(lastOpen.current)}"] .poster-card`,
+              )
+            : null
+        }
       >
         {active && (
           <table class="film-table poster-detail-table">

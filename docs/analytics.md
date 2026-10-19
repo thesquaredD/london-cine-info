@@ -20,16 +20,16 @@ different people, so the dashboard compares their counts rather than using a con
 
 ## Event contract
 
-| Area           | Events                                                                                                           | Useful properties                                                              |
-| -------------- | ---------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| Visits         | `$pageview`                                                                                                      | route, visit source/referrer domain/UTMs, landing route, device type           |
-| Discovery      | `search_performed`, `filters_changed`, `film_opened`, `booking_clicked`, `screening_details_clicked`             | settled query, result count, filter values, film/venue IDs, sold out           |
-| Accounts       | `account_opened`, `sign_in_requested`, `sign_in_verified`, `signup_completed`, `account_deleted`                 | opaque actor; verified signups only once                                       |
-| Own watchlist  | `watchlist_connected`, `watchlist_disconnected`, `watchlist_used`, `watchlist_import_requested/completed/failed` | result/item count, first import, duration, manual/scheduled                    |
-| Preferences    | `digest_preference_changed`, `friends_digest_preference_changed`, `app_username_saved`                           | enabled/weekday or first setup; no usernames                                   |
-| Friends        | `friend_request_sent/accepted/cancelled/declined`, `friend_removed`, `shared_watchlists_used`                    | selection counts, all-friends flag, any/all match, result count; no friend IDs |
-| Public imports | `public_watchlist_import_requested/completed/failed/cancelled`                                                   | item count, duration, controlled failure category                              |
-| Failures       | `api_request_failed`, `catalogue_load_failed`, `showtimes_load_failed`                                           | allowlisted endpoint, status, controlled failure category                      |
+| Area           | Events                                                                                                                    | Useful properties                                                                     |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| Visits         | `$pageview`                                                                                                               | route, visit source/referrer domain/UTMs, landing route, device type                  |
+| Discovery      | `search_performed`, `filters_changed`, `film_opened`, `booking_clicked`, `screening_details_clicked`, `film_view_changed` | settled query, result count, filter values, film/venue IDs, sold out, list or posters |
+| Accounts       | `account_opened`, `sign_in_requested`, `sign_in_verified`, `signup_completed`, `account_deleted`                          | opaque actor; verified signups only once                                              |
+| Own watchlist  | `watchlist_connected`, `watchlist_disconnected`, `watchlist_used`, `watchlist_import_requested/completed/failed`          | result/item count, first import, duration, manual/scheduled                           |
+| Preferences    | `digest_preference_changed`, `friends_digest_preference_changed`, `app_username_saved`                                    | enabled/weekday or first setup; no usernames                                          |
+| Friends        | `friend_request_sent/accepted/cancelled/declined`, `friend_removed`, `shared_watchlists_used`                             | selection counts, all-friends flag, any/all match, result count; no friend IDs        |
+| Public imports | `public_watchlist_import_requested/completed/failed/cancelled`                                                            | item count, duration, controlled failure category                                     |
+| Failures       | `api_request_failed`, `catalogue_load_failed`, `showtimes_load_failed`                                                    | allowlisted endpoint, status, controlled failure category                             |
 
 Search/filter capture waits 600ms for a settled action and loaded results; background updates do
 not create repeated search events. Import outcomes are emitted only after the authoritative D1

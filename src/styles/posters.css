@@ -339,23 +339,23 @@
   box-shadow: inset 0 0 0 2px var(--brass);
 }
 
-/* ---------- Controls beside the posters follow the same treatment ---------- */
+/* ---------- Controls beside the posters follow the same treatment ----------
+ * Only while posters are showing: the list, Events and Radar keep the site's usual hover.
+ * The view switch is new, so it follows the treatment on every page that offers it. */
+:root[data-poster-hover] .view-switch button,
 :root[data-poster-hover]
-  :is(
-    .view-switch button,
-    .results-heading .mobile-sort-trigger,
-    .pagination button,
-    .active-filters button
-  ) {
+  .main-column:has(.poster-view)
+  :is(.results-heading .mobile-sort-trigger, .pagination button, .active-filters button) {
   transition:
     background-color 120ms,
     box-shadow 120ms,
     color 120ms;
 }
 @media (hover: hover) and (pointer: fine) {
+  :root[data-poster-hover] .view-switch button:hover:not(:disabled),
   :root[data-poster-hover]
+    .main-column:has(.poster-view)
     :is(
-      .view-switch button,
       .results-heading .mobile-sort-trigger,
       .pagination button,
       .active-filters button
@@ -363,9 +363,10 @@
     text-decoration: none;
     color: var(--fg);
   }
+  :root[data-poster-hover="edge"] .view-switch button:hover:not(:disabled),
   :root[data-poster-hover="edge"]
+    .main-column:has(.poster-view)
     :is(
-      .view-switch button,
       .results-heading .mobile-sort-trigger,
       .pagination button,
       .active-filters button
@@ -373,8 +374,11 @@
     box-shadow: inset 0 0 0 1px var(--brass);
   }
   :root:is([data-poster-hover="strip"], [data-poster-hover="overlay"])
+    .view-switch
+    button:hover:not(:disabled),
+  :root:is([data-poster-hover="strip"], [data-poster-hover="overlay"])
+    .main-column:has(.poster-view)
     :is(
-      .view-switch button,
       .results-heading .mobile-sort-trigger,
       .pagination button,
       .active-filters button
@@ -390,6 +394,18 @@
     box-shadow:
       inset 0 0 0 1px var(--brass),
       inset 0 -2px 0 var(--brass);
+  }
+}
+
+/* ---------- Page controls: 44px targets with posters, on touch and on narrow screens ---------- */
+.main-column:has(.poster-view) .page-controls :is(button, select) {
+  min-width: 44px;
+  min-height: 44px;
+}
+@media (max-width: 799px), (pointer: coarse) {
+  .page-controls :is(button, select) {
+    min-width: 44px;
+    min-height: 44px;
   }
 }
 
@@ -411,7 +427,10 @@
 @media (prefers-reduced-motion: reduce) {
   .poster-info,
   .poster-frame::after,
-  :root[data-poster-hover] :is(.view-switch button, .pagination button) {
+  :root[data-poster-hover] .view-switch button,
+  :root[data-poster-hover]
+    .main-column:has(.poster-view)
+    :is(.results-heading .mobile-sort-trigger, .pagination button, .active-filters button) {
     transition: none;
   }
 }
