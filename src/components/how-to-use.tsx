@@ -1,3 +1,4 @@
+import { ExternalLinkIcon } from "./external-link-icon";
 import { useEffect, useState } from "preact/hooks";
 import type { ComponentChildren } from "preact";
 import { usePreferenceFocus } from "../lib/preference-focus";
@@ -151,7 +152,9 @@ export function HowToUse({
                         { key: "subtitled", label: "Subtitled", kind: "accessibility" },
                       ]}
                     >
-                      <span class="booking-action">Book ↗</span>
+                      <span class="booking-action">
+                        Book <ExternalLinkIcon />
+                      </span>
                     </ScreeningRow>
                     <ScreeningRow
                       localTime="20:45"
@@ -159,7 +162,9 @@ export function HowToUse({
                       soldOut
                       tags={[{ key: "sold-out", label: "Sold out", kind: "sold-out" }]}
                     >
-                      <span class="booking-action">Details ↗</span>
+                      <span class="booking-action">
+                        Details <ExternalLinkIcon />
+                      </span>
                     </ScreeningRow>
                   </ul>
                 </div>

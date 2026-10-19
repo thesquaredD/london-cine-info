@@ -1,3 +1,5 @@
+import { ExternalLinkIcon } from "./external-link-icon";
+import { filmProviderLinks } from "../lib/film-links";
 import { capture } from "../lib/analytics";
 import { screeningMatcher } from "../lib/filters";
 import type { ViewState } from "../lib/catalogue";
@@ -36,6 +38,18 @@ export function ExpandedRow({
   const [attempt, setAttempt] = useState(0);
   const [posterFailed, setPosterFailed] = useState(false);
   const [shareMessage, setShareMessage] = useState("");
+  const shareTimers = useRef<number[]>([]);
+  // Clear then re-set so screen readers announce every share, and drop the message after a
+  // while; the status region keeps its height, so nothing around it moves.
+  const announceShare = (message: string) => {
+    shareTimers.current.forEach((timer) => window.clearTimeout(timer));
+    setShareMessage("");
+    shareTimers.current = [
+      window.setTimeout(() => setShareMessage(message), 100),
+      window.setTimeout(() => setShareMessage(""), 5000),
+    ];
+  };
+  useEffect(() => () => shareTimers.current.forEach((timer) => window.clearTimeout(timer)), []);
   const [overviewExpanded, setOverviewExpanded] = useState(false);
   const [overviewOverflow, setOverviewOverflow] = useState(false);
   const synopsis = useRef<HTMLParagraphElement>(null);
@@ -145,10 +159,22 @@ export function ExpandedRow({
                   })}
                 </div>
               )}
+              <div class="film-provider-links" role="group" aria-label="Film websites">
+                {filmProviderLinks(film).map((provider) => (
+                  <a
+                    key={provider.name}
+                    href={provider.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {provider.label} <ExternalLinkIcon />
+                  </a>
+                ))}
+              </div>
               <div class="film-links">
                 {film.tr && (
                   <a class="trailer-link" href={film.tr} target="_blank" rel="noopener noreferrer">
-                    Watch trailer ↗
+                    Watch trailer <ExternalLinkIcon />
                   </a>
                 )}
                 <button
@@ -163,9 +189,9 @@ export function ExpandedRow({
                       } else if (!url.searchParams.has("film"))
                         url.searchParams.set("film", film.id);
                       await navigator.clipboard.writeText(url.href);
-                      setShareMessage("Film link copied");
+                      announceShare("Film link copied");
                     } catch {
-                      setShareMessage("Copy this page’s address to share the film.");
+                      announceShare("Copy the address bar to share.");
                     }
                   }}
                 >
@@ -179,11 +205,9 @@ export function ExpandedRow({
                 >
                   Report a listing problem
                 </button>
-                {shareMessage && (
-                  <span role="status" class="share-status">
-                    {shareMessage}
-                  </span>
-                )}
+              </div>
+              <div role="status" class="share-status">
+                {shareMessage}
               </div>
             </div>
           </div>
@@ -294,7 +318,8 @@ export function ExpandedRow({
                             rel="noopener noreferrer"
                             aria-label={`${row.bookingFallback || row.soldOut ? "Screening details for" : "Book"} ${film.ti} at ${venue?.name ?? row.venue} ${row.localTime}`}
                           >
-                            {row.bookingFallback || row.soldOut ? "Details ↗" : "Book ↗"}
+                            {row.bookingFallback || row.soldOut ? "Details" : "Book"}{" "}
+                            <ExternalLinkIcon />
                           </a>
                           {onCalendar && (
                             <button

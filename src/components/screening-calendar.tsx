@@ -2,6 +2,7 @@ import type { AccountState } from "../lib/account";
 import { downloadScreening, downloadEvents, type CalendarState } from "../lib/calendar";
 import type { CalendarInput } from "../shared/calendar";
 import { Dialog } from "./dialog";
+import { ExternalLinkIcon } from "./external-link-icon";
 export const calendarDate = (time: number) =>
   new Intl.DateTimeFormat("en-GB", {
     weekday: "short",
@@ -196,7 +197,7 @@ export function MyCalendar({
                       </p>
                       <div class="calendar-actions">
                         <a href={event.bookingUrl} target="_blank" rel="noopener noreferrer">
-                          Cinema booking page ↗
+                          Cinema booking page <ExternalLinkIcon />
                         </a>
                         <button onClick={() => downloadEvents([event])}>Download .ics</button>
                         <button

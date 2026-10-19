@@ -9,6 +9,38 @@ function strip(page: Page) {
   return page.getByRole("group", { name: "Shortcuts" });
 }
 
+test("opened film shows provider links and sharing does not move the screenings", async ({
+  page,
+}) => {
+  // Fail the second copy so both the success and the fallback message are checked.
+  await page.addInitScript(() => {
+    let copies = 0;
+    Object.defineProperty(navigator, "clipboard", {
+      value: {
+        writeText: async () => {
+          if (++copies > 1) throw new Error("denied");
+        },
+      },
+    });
+  });
+  await page.goto("/");
+  await page.getByRole("button", { name: "Fixture Classic A", exact: true }).click();
+  const providers = page.getByRole("group", { name: "Film websites" });
+  await expect(providers.getByRole("link", { name: "Open on Letterboxd" })).toBeVisible();
+  await expect(providers.getByRole("link", { name: "Open on IMDb" })).toBeVisible();
+  const showtimes = page.locator(".showtimes");
+  await expect(page.locator(".booking-action").first()).toBeVisible();
+  const top = (await showtimes.boundingBox())!.y;
+  const status = page.locator(".share-status");
+  const share = page.getByRole("button", { name: "Share film", exact: true });
+  await share.click();
+  await expect(status).toHaveText("Film link copied");
+  expect((await showtimes.boundingBox())!.y).toBe(top);
+  await share.click();
+  await expect(status).toHaveText("Copy the address bar to share.");
+  expect((await showtimes.boundingBox())!.y).toBe(top);
+});
+
 test("film links survive refresh and Back; compact details remain visible", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "Fixture Classic A", exact: true }).click();

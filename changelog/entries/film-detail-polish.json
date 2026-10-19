@@ -1,0 +1,7 @@
+{
+  "id": "film-detail-polish",
+  "type": "improved",
+  "title": "Open a film on Letterboxd or IMDb",
+  "body": "An opened film now has buttons to view it on Letterboxd and IMDb. Booking and trailer links show a clearer external-link icon, and the film’s buttons no longer jump when you share it.",
+  "visibility": "public"
+}
