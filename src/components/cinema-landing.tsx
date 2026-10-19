@@ -10,7 +10,7 @@ const FEATURED: Featured[] = [
   { id: "princecharlescinema.com", name: "Prince Charles", logo: "prince-charles-cinema.svg" },
   { id: "bfi.org.uk-southbank", name: "BFI Southbank", logo: "bfi-southbank.svg" },
   { id: "closeupfilmcentre.com", name: "Close-Up", logo: null, type: "closeup" },
-  { id: "riocinema.org.uk", name: "Rio", logo: "riocinema.png" },
+  { id: "riocinema.org.uk", name: "Rio", logo: "rio-cinema-lettering.png" },
   { id: "genesiscinema.co.uk", name: "Genesis", logo: "genesiscinema.png" },
   {
     id: "picturehouses.com-central",
