@@ -41,7 +41,10 @@ test("the built changelog is reachable from the menu and its links work", async 
   const article = page.getByRole("article", { name: "What’s new" });
   await expect(article.getByRole("heading", { name: "What’s new" })).toBeFocused();
   await expect(article.getByText("Preview · these notes are not necessarily live.")).toBeVisible();
-  // The real build output: committed fragments, served beside the app.
+  // The real build output: committed fragments, served beside the app. Older entries sit
+  // behind "Show older changes" once newer ones fill the first page.
+  if (!(await article.locator("#whats-new").count()))
+    await article.getByRole("button", { name: "Show older changes" }).click();
   await expect(article.locator("#whats-new")).toContainText("See what has changed");
   await article.getByRole("link", { name: "Open Account →" }).click();
   await expect(page).toHaveURL("/account");
