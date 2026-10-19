@@ -1,0 +1,7 @@
+{
+  "id": "simpler-nearby-cinemas",
+  "type": "improved",
+  "title": "Find cinemas near you on one screen",
+  "body": "Near me now lists every cinema within your chosen range, nearest first and all ticked. Untick any you want to skip, then choose Show films; your saved My cinemas stay as they are.",
+  "visibility": "public"
+}

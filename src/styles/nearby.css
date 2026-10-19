@@ -1,0 +1,235 @@
+/* Nearby cinemas: compact controls, reserved feedback, results beneath, actions pinned below. */
+@media (min-width: 800px) {
+  :root .nearby-finder[open] {
+    width: min(640px, calc(100vw - 32px));
+    height: min(720px, 85dvh);
+  }
+}
+.nearby-finder-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+.nearby-finder-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(7.5em, auto);
+  align-items: end;
+  gap: 8px 12px;
+  padding: 12px 16px 0;
+  flex-shrink: 0;
+}
+:root .nearby-finder-controls form {
+  display: grid;
+  gap: 4px;
+}
+.nearby-finder-range {
+  display: grid;
+  gap: 4px;
+}
+.nearby-finder-field {
+  display: flex;
+  gap: 8px;
+}
+:root .nearby-finder :is(input:not([type="checkbox"]), select, .nearby-finder-controls button) {
+  min-height: 44px;
+}
+:root .nearby-finder-field input {
+  flex: 1;
+  min-width: 0;
+}
+.nearby-finder-field button,
+.nearby-finder-device {
+  padding-inline: 14px;
+  white-space: nowrap;
+}
+/* Feedback has its own slot below the controls, so messages never move what is being used. */
+.nearby-finder-status {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 12px;
+  min-block-size: 44px;
+  padding: 0 0 0 10px;
+  border-left: 3px solid var(--line);
+  font-size: var(--prose-small);
+  color: var(--muted);
+}
+:root .nearby-finder-status p {
+  margin: 0;
+  font-size: var(--prose-small);
+  color: inherit;
+}
+.nearby-finder-status.is-busy {
+  border-left-color: var(--brass);
+}
+.nearby-finder-status.is-success {
+  border-left-color: var(--rating);
+  color: var(--fg);
+}
+.nearby-finder-status.is-error {
+  border-left-color: var(--link);
+  color: var(--fg);
+}
+:root .nearby-finder-link {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 8px;
+  border: 0;
+  background: none;
+  color: var(--link);
+  text-decoration: underline;
+  font-size: var(--prose-small);
+  flex-shrink: 0;
+}
+.nearby-finder-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+  margin-top: 8px;
+  padding: 0 8px 0 16px;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  font-size: var(--prose-small);
+  color: var(--muted);
+  flex-shrink: 0;
+}
+.nearby-finder-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0 16px;
+}
+.nearby-finder-list:focus-visible {
+  outline: 2px solid var(--original);
+  outline-offset: -2px;
+}
+:root .nearby-finder-empty {
+  margin: 0;
+  padding: 24px 0;
+  color: var(--muted);
+}
+:root .nearby-finder-choice {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 52px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--line);
+  font-weight: 400;
+  cursor: pointer;
+}
+:root .nearby-finder-choice input {
+  width: 18px;
+  height: 18px;
+  margin: 0 2px;
+  padding: 0;
+  accent-color: var(--brass);
+}
+.nearby-finder-name {
+  display: grid;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.nearby-finder-name small,
+.nearby-finder-distance {
+  font-size: var(--prose-small);
+  color: var(--muted);
+}
+.nearby-finder-distance {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.nearby-finder-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--line);
+  background: var(--panel);
+  flex-shrink: 0;
+}
+:root .nearby-finder-footer p {
+  flex: 1 1 14em;
+  margin: 0;
+  font-size: var(--prose-small);
+  color: var(--muted);
+}
+:root .nearby-finder-footer .booking-action {
+  min-height: 44px;
+  white-space: nowrap;
+  padding-inline: 20px;
+}
+:root .nearby-finder-footer .booking-action:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+@media (max-width: 559px) {
+  .nearby-finder-controls {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    padding-inline: 12px;
+  }
+  .nearby-finder-controls form {
+    grid-column: 1 / -1;
+  }
+  .nearby-finder-device {
+    width: 100%;
+  }
+  .nearby-finder-heading {
+    padding-left: 12px;
+  }
+  .nearby-finder-list {
+    padding: 0 12px;
+  }
+  .nearby-finder-footer {
+    padding: 10px 12px;
+    flex-wrap: nowrap;
+  }
+  :root .nearby-finder-footer p {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+}
+@media (max-width: 799px) {
+  /* The bottom sheet rises above an on-screen keyboard so Show films stays reachable. */
+  :root .nearby-finder[open] {
+    bottom: var(--nearby-keyboard, 0px);
+    height: min(90dvh, calc(100dvh - var(--nearby-keyboard, 0px) - 8px));
+  }
+}
+/* Short screens (phone landscape, keyboard open): scroll everything, keep actions pinned. */
+@media (max-height: 520px) {
+  :root .nearby-finder[open] {
+    height: calc(100dvh - var(--nearby-keyboard, 0px) - 16px);
+  }
+  :root .nearby-finder .dialog-body {
+    overflow-y: auto;
+  }
+  .nearby-finder-body {
+    flex: none;
+    min-height: 100%;
+  }
+  .nearby-finder-list {
+    flex: 1 0 auto;
+    overflow: visible;
+  }
+  .nearby-finder-footer {
+    position: sticky;
+    bottom: 0;
+  }
+}
+@media (max-height: 520px) and (min-width: 560px) {
+  .nearby-finder-controls {
+    grid-template-columns: minmax(0, 1fr) auto minmax(7.5em, auto);
+  }
+  .nearby-finder-controls form {
+    grid-column: auto;
+  }
+}

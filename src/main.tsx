@@ -8,6 +8,7 @@ import "./styles/picturehouse.css";
 import "./styles/discovery.css";
 import "./styles/changelog.css";
 import "./styles/feedback.css";
+import "./styles/nearby.css";
 
 document.documentElement.dataset.theme = "dark";
 initAnalytics();

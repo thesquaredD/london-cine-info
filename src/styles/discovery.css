@@ -146,10 +146,6 @@
   font-weight: 400;
   text-decoration: none;
 }
-:root .nearby-apply {
-  display: grid;
-  gap: 12px;
-}
 :root .calendar-heading button {
   width: 44px;
   min-height: 44px;
@@ -309,10 +305,6 @@
   :root .showtime-day time {
     font-size: 19px;
   }
-}
-
-:root .nearby-dialog .favourite-options label {
-  grid-template-columns: minmax(0, 1fr);
 }
 
 :root .film-about {

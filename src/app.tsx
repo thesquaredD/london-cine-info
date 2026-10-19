@@ -22,6 +22,7 @@ import type { CalendarInput } from "./shared/calendar";
 import { useCinemas } from "./lib/cinemas";
 import { ShortcutStrip } from "./components/shortcut-strip";
 import { MyCinemas } from "./components/my-cinemas";
+import { NearbyCinemas } from "./components/nearby-cinemas";
 import { Events, EventTypeFilter } from "./components/events";
 import { matchingEvents, eventFacetCounts } from "./lib/events";
 import { EVENT_TYPES } from "./data/event-rules";
@@ -240,6 +241,7 @@ export function App() {
   const cinemas = useCinemas(account);
   const [cinemasOpen, setCinemasOpen] = useState(false);
   const [nearbyOpen, setNearbyOpen] = useState(false);
+  const [nearbyApplied, setNearbyApplied] = useState<string[] | null>(null);
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
     const update = () => setNow(new Date());
@@ -725,21 +727,20 @@ export function App() {
           {meta && (
             <>
               <MyCinemas cinemas={cinemas} meta={meta} open={cinemasOpen} onClose={closeCinemas} />
-              <MyCinemas
-                cinemas={cinemas}
+              <NearbyCinemas
                 meta={meta}
                 open={nearbyOpen}
                 onClose={() => setNearbyOpen(false)}
-                nearby={{
-                  onApply: (venues) => {
-                    change({
-                      myCinemas: false,
-                      filters: { ...state.filters, venue: venues },
-                      excluded: { ...state.excluded, venue: [] },
-                      page: 1,
-                    });
-                    setNearbyOpen(false);
-                  },
+                onApply={(venues) => {
+                  // A temporary cinema filter: saved My cinemas are left untouched.
+                  change({
+                    myCinemas: false,
+                    filters: { ...state.filters, venue: venues },
+                    excluded: { ...state.excluded, venue: [] },
+                    page: 1,
+                  });
+                  setNearbyApplied(venues);
+                  setNearbyOpen(false);
                 }}
               />
             </>
@@ -925,6 +926,17 @@ export function App() {
                       )}
                     </div>
                   )}
+                  {!myCinemasActive &&
+                    nearbyApplied &&
+                    nearbyApplied.join("|") === (state.filters.venue ?? []).join("|") && (
+                      <div class="cinema-context nearby-context">
+                        <span>
+                          Nearby · {nearbyApplied.length}{" "}
+                          {nearbyApplied.length === 1 ? "cinema" : "cinemas"}
+                        </span>
+                        <button onClick={() => setNearbyOpen(true)}>Change nearby cinemas</button>
+                      </div>
+                    )}
                   {cinemas.storageError && !cinemasOpen && (
                     <p role="status">
                       {cinemas.storageError}{" "}
