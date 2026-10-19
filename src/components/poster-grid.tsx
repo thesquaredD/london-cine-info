@@ -208,16 +208,9 @@ export function PosterGrid({
                           </span>
                         )}
                         <span class="poster-info" aria-hidden="true">
-                          <span class="poster-info-title">
-                            {title}
-                            {original && <i>{original}</i>}
-                          </span>
+                          <span class="poster-info-title">{title}</span>
                           <span class="poster-info-facts">{facts.join(" · ")}</span>
-                          <span class="poster-info-count">{count}</span>
                         </span>
-                      </span>
-                      <span class="poster-caption" aria-hidden="true">
-                        {title}
                       </span>
                     </button>
                     <span id={describe} class="sr-only">

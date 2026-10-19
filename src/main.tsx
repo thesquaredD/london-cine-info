@@ -1,7 +1,6 @@
 import { initAnalytics } from "./lib/analytics";
 import { render } from "preact";
 import { App } from "./app";
-import { applyPosterReview } from "./lib/poster-review";
 import "./styles/base.css";
 import "./styles/prose.css";
 import "./styles/friends.css";
@@ -14,6 +13,5 @@ import "./styles/posters.css";
 import "./styles/welcome.css";
 
 document.documentElement.dataset.theme = "dark";
-applyPosterReview(document.documentElement, location.search);
 initAnalytics();
 render(<App />, document.getElementById("app")!);
