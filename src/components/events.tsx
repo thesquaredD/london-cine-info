@@ -179,14 +179,6 @@ export function Events({
                             {row.bookingFallback || row.soldOut ? "Details" : "Book"}{" "}
                             <ExternalLinkIcon />
                           </a>
-                          {/* Shared links open the film's catalogue sheet, so only listed films. */}
-                          {film && (
-                            <ShareScreening
-                              film={film}
-                              row={row}
-                              venue={venue?.name ?? row.venue}
-                            />
-                          )}
                           {onCalendar && (
                             <button
                               class="add-calendar"
@@ -195,6 +187,14 @@ export function Events({
                             >
                               {saved ? "In my calendar" : "Add to calendar"}
                             </button>
+                          )}
+                          {/* Shared links open the film's catalogue sheet, so only listed films. */}
+                          {film && (
+                            <ShareScreening
+                              film={film}
+                              row={row}
+                              venue={venue?.name ?? row.venue}
+                            />
                           )}
                           {film && (
                             <button

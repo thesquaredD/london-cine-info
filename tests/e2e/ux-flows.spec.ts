@@ -37,7 +37,7 @@ test("opened film shows provider links and sharing does not move the screenings"
   await expect(status).toHaveText("Film link copied");
   expect((await showtimes.boundingBox())!.y).toBe(top);
   await share.click();
-  await expect(status).toHaveText("Copy the film link below.");
+  await expect(status).toHaveText("Copy the film link from the selected field.");
   await expect(page.getByRole("textbox", { name: "Film link", exact: true })).toHaveValue(
     /\/film\/classic-a\/fixture-classic-a\/$/,
   );
@@ -45,7 +45,7 @@ test("opened film shows provider links and sharing does not move the screenings"
   const withField = (await showtimes.boundingBox())!.y;
   expect(withField).toBeGreaterThanOrEqual(top);
   await share.click();
-  await expect(status).toHaveText("Copy the film link below.");
+  await expect(status).toHaveText("Copy the film link from the selected field.");
   expect((await showtimes.boundingBox())!.y).toBe(withField);
 });
 

@@ -1,4 +1,5 @@
 import { Notice } from "./components/notice";
+import { filmSlug } from "./lib/sharing";
 import { CinemaLanding } from "./components/cinema-landing";
 import { HowToUse } from "./components/how-to-use";
 import { rememberWelcomeDismissed, showsWelcomeOnArrival, welcomeDismissed } from "./lib/welcome";
@@ -606,7 +607,9 @@ export function App() {
     if (state.path === "/account") capture("account_opened");
   }, [state.path]);
   const sharedFilmMissing =
-    !!catalogue && !!state.filmSlug && !catalogue.films.some((film) => film.id === state.film);
+    !!catalogue &&
+    state.filmSlug !== undefined &&
+    !catalogue.films.some((film) => film.id === state.film);
   // An open film names the tab, so a shared or bookmarked film reads as that film.
   const openFilm = state.film
     ? catalogue?.films.find((film) => film.id === state.film || state.film!.endsWith(`:${film.id}`))
@@ -632,10 +635,16 @@ export function App() {
     // A film that has left the catalogue stays in a named link's URL so the notice can explain.
     if (sharedFilmMissing) return;
     const index = tableRows(selected, state).findIndex((row) => row.key === expanded);
-    if (index < 0) change({ film: undefined }, false);
-    // A named film link opens on the catalogue page that holds the film.
-    else if (state.filmSlug && state.page !== Math.floor(index / PAGE_SIZE) + 1) {
-      const next = { ...state, page: Math.floor(index / PAGE_SIZE) + 1 };
+    if (index < 0) {
+      change({ film: undefined }, false);
+      return;
+    }
+    if (state.filmSlug === undefined) return;
+    // A named film link opens on the catalogue page that holds the film, and its address
+    // takes the current title's slug, so stale, missing or mistyped slugs correct themselves.
+    const film = tableRows(selected, state)[index]!.film;
+    const next = { ...state, page: Math.floor(index / PAGE_SIZE) + 1, filmSlug: filmSlug(film.ti) };
+    if (next.page !== state.page || next.filmSlug !== state.filmSlug) {
       setState(next);
       window.history.replaceState(null, "", viewUrl(next));
     }

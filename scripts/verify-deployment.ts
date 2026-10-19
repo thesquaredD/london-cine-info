@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { readFile, writeFile } from "node:fs/promises";
+import { readdir, readFile, writeFile } from "node:fs/promises";
 import type { ChangelogBundle, VersionManifest } from "../src/shared/changelog";
 
 // Confirms a Pages deployment serves the revision and notes built in this run, then writes a
@@ -10,6 +10,18 @@ const targets = (process.env.VERIFY_URLS ?? "")
   .filter((url) => /^https?:\/\/[a-z0-9.:-]+$/.test(url));
 if (!targets.length) throw new Error("VERIFY_URLS must list origins to check");
 
+// One built film page: link previews depend on Pages serving these static entries rather
+// than the generic app shell.
+const ogTitle = (html: string) =>
+  /<meta property="og:title" content="([^"]*)"/.exec(html)?.[1] ?? null;
+const [filmId] = await readdir("dist/film");
+const [slug] = filmId ? await readdir(`dist/film/${filmId}`) : [];
+const filmPage = {
+  path: `/film/${filmId}/${slug}/`,
+  title: slug ? ogTitle(await readFile(`dist/film/${filmId}/${slug}/index.html`, "utf8")) : null,
+};
+if (!filmPage.title) throw new Error("dist/film has no film page with og:title to verify");
+
 async function check(origin: string) {
   const read = async (path: string) => {
     const response = await fetch(`${origin}${path}?revision=${expected.revision}`, {
@@ -19,9 +31,10 @@ async function check(origin: string) {
     if (!response.ok) throw new Error(`${origin}${path} returned ${response.status}`);
     return response.text();
   };
-  const [versionText, content] = await Promise.all([
+  const [versionText, content, filmHtml] = await Promise.all([
     read("/version.json"),
     read("/changelog.json"),
+    read(filmPage.path),
   ]);
   const version = JSON.parse(versionText) as VersionManifest;
   const bundle = JSON.parse(content) as ChangelogBundle;
@@ -30,6 +43,8 @@ async function check(origin: string) {
     bundle.revision !== expected.revision && `changelog built from ${bundle.revision}`,
     createHash("sha256").update(content).digest("hex") !== expected.changelogHash &&
       "changelog content differs from this build",
+    ogTitle(filmHtml) !== filmPage.title &&
+      `${filmPage.path} does not serve its link-preview title`,
   ].filter(Boolean);
   if (problems.length) throw new Error(`${origin}: ${problems.join("; ")}`);
 }

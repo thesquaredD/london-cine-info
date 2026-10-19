@@ -8,8 +8,7 @@ export type ScreeningTag = { key: string; label: string; kind?: "accessibility" 
  * sit inside `.showtimes` (the `screenings` container) for its responsive rules to apply.
  */
 export function ScreeningRow({
-  highlighted,
-  sharedTitle,
+  sharedLabel,
   dateTime,
   localTime,
   venue,
@@ -17,10 +16,13 @@ export function ScreeningRow({
   tags,
   note,
   children,
+  after,
 }: {
-  /** The screening a shared link points at: labelled, tinted and focusable for the link. */
-  highlighted?: boolean;
-  sharedTitle?: string;
+  /**
+   * Marks the screening a shared link points at: the row is tinted and this visible label,
+   * which takes focus on arrival, is read before the row's own content.
+   */
+  sharedLabel?: string;
   dateTime?: string;
   localTime: string;
   venue: string;
@@ -29,24 +31,22 @@ export function ScreeningRow({
   note?: string;
   /** The actions column: Book and, where offered, the calendar action. */
   children: ComponentChildren;
+  /** A line across the whole row below it, such as a link to copy by hand. */
+  after?: ComponentChildren;
 }) {
   return (
     <li
-      class={[soldOut && "sold-out", highlighted && "shared-screening"].filter(Boolean).join(" ")}
-      tabIndex={highlighted ? -1 : undefined}
-      aria-label={
-        highlighted
-          ? `Shared screening${sharedTitle ? `: ${sharedTitle}` : ""}, ${localTime} at ${venue}`
-          : undefined
-      }
+      class={[soldOut && "sold-out", sharedLabel && "shared-screening"].filter(Boolean).join(" ")}
     >
       <time dateTime={dateTime}>{localTime}</time>
       <span class="time-dot" aria-hidden="true" />
       <div class="screening-info">
         <div class="screening-details">
-          {highlighted && (
-            <span class="shared-screening-label">
-              Shared screening{sharedTitle ? ` · ${sharedTitle}` : ""}
+          {sharedLabel && (
+            <span class="shared-screening-label" tabIndex={-1}>
+              {sharedLabel}
+              {/* Focus lands here, after the time, so say the time too. */}
+              <span class="sr-only">, {localTime}</span>
             </span>
           )}
           <span class="screening-venue">{venue}</span>
@@ -70,6 +70,7 @@ export function ScreeningRow({
         </div>
         <div class="screening-actions">{children}</div>
       </div>
+      {after && <div class="screening-after">{after}</div>}
     </li>
   );
 }

@@ -1,5 +1,6 @@
 import type { Film } from "../../src/shared/data";
 import { filmPath } from "../../src/lib/sharing";
+import { SITE_HOST } from "../../src/shared/analytics";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import type { Plugin } from "vite";
@@ -21,19 +22,36 @@ function absolutePoster(poster: string | null | undefined) {
   }
 }
 
-export function filmPage(html: string, film: Pick<Film, "ti" | "ye" | "po">): string {
+// Production origin for canonical URLs: the same host analytics reports pages under, unless
+// a build sets SITE_URL (as the Pages functions' wrangler vars do).
+export const SITE_ORIGIN = new URL(process.env.SITE_URL || `https://${SITE_HOST}`).origin;
+
+export function filmPage(
+  html: string,
+  film: Pick<Film, "id" | "ti" | "ye" | "po">,
+  origin = SITE_ORIGIN,
+): string {
   const title = escape(`${film.ti}${film.ye ? ` (${film.ye})` : ""} — London Ciné Info`);
   const description = escape(
     `Find London cinema screenings for ${film.ti}, choose a showing and book with the cinema.`,
   );
   const poster = absolutePoster(film.po);
+  const url = escape(new URL(filmPath(film), origin).href);
   const meta = [
+    `<link rel="canonical" href="${url}" />`,
+    `<meta property="og:url" content="${url}" />`,
     `<meta property="og:title" content="${title}" />`,
     `<meta property="og:description" content="${description}" />`,
     `<meta property="og:type" content="website" />`,
     `<meta property="og:site_name" content="London Ciné Info" />`,
-    `<meta name="twitter:card" content="${poster ? "summary_large_image" : "summary"}" />`,
-    ...(poster ? [`<meta property="og:image" content="${escape(poster)}" />`] : []),
+    // Posters are portrait (w342); a large card would crop them, so the small card it is.
+    `<meta name="twitter:card" content="summary" />`,
+    ...(poster
+      ? [
+          `<meta property="og:image" content="${escape(poster)}" />`,
+          `<meta property="og:image:alt" content="${escape(`${film.ti} poster`)}" />`,
+        ]
+      : []),
   ];
   return html
     .replace(/<title>.*?<\/title>/s, () => `<title>${title}</title>`)

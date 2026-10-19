@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { shareUrl } from "../../src/lib/sharing";
+import { screeningId, shareUrl } from "../../src/lib/sharing";
 import type { Showtime } from "../../src/shared/data";
 
 const film = { id: "classic-a", ti: "Fixture Classic A" };
@@ -89,7 +89,15 @@ test("built film pages carry crawler-readable preview metadata", async ({ reques
     'property="og:title" content="Fixture Classic A (1977) — London Ciné Info"',
   );
   expect(html).toMatch(/property="og:image" content="https:\/\/[^"]+"/);
-  expect(html).toContain('name="twitter:card" content="summary_large_image"');
+  // Portrait posters: the small card, which does not crop them.
+  expect(html).toContain('name="twitter:card" content="summary"');
+  expect(html).toContain(
+    '<link rel="canonical" href="https://london-cine.info/film/classic-a/fixture-classic-a/" />',
+  );
+  expect(html).toContain(
+    'property="og:url" content="https://london-cine.info/film/classic-a/fixture-classic-a/"',
+  );
+  expect(html).toContain('property="og:image:alt" content="Fixture Classic A poster"');
   expect(html).toContain('<div id="app">');
   // No poster: a text card and no image tag.
   const plain = await (await request.get("/film/classic-c/fixture-classic-c/")).text();
@@ -108,7 +116,8 @@ test("a shared screening on page 3 opens highlighted, focused and stays there", 
   await page.goto(shared(rows[31]));
   const target = page.locator(".shared-screening");
   await expect(target).toBeVisible();
-  await expect(target).toBeFocused();
+  // Focus lands on the visible label, so the row's own content is still read after it.
+  await expect(target.locator(".shared-screening-label")).toBeFocused();
   await expect(target).toBeInViewport();
   await expect(target).toContainText("Shared screening · Fixture Classic A");
   await expect(target).toContainText("Picturehouse Central");
@@ -133,16 +142,14 @@ test("a shared screening on page 3 opens highlighted, focused and stays there", 
   await expect(page.locator(".shared-screening")).toBeVisible();
   // Its own Share copies the same screening.
   await target.getByRole("button", { name: /^Share screening:/ }).click();
-  expect(new URL(await copied(page)).searchParams.get("screening")).toBe(
-    JSON.stringify([rows[31]!.venue, rows[31]!.time, rows[31]!.screen]),
-  );
+  expect(new URL(await copied(page)).searchParams.get("screening")).toBe(screeningId(rows[31]!));
   await page.screenshot({ path: test.info().outputPath("shared-screening.png") });
 });
 
 test("a shared screening hidden by the date choice says so and can be shown", async ({ page }) => {
   await busyProgramme(page);
   await page.goto(shared(rows[31]));
-  await expect(page.locator(".shared-screening")).toBeFocused();
+  await expect(page.locator(".shared-screening-label")).toBeFocused();
   await page
     .getByRole("group", { name: "Find a screening" })
     .getByRole("combobox", { name: "Date" })
@@ -213,7 +220,7 @@ test("an event screening shares a link that opens it highlighted", async ({ page
   const url = new URL(await copied(page));
   expect(url.pathname).toBe("/film/classic-a/fixture-classic-a/");
   await page.goto(url.pathname + url.search);
-  await expect(page.locator(".shared-screening")).toBeFocused();
+  await expect(page.locator(".shared-screening-label")).toBeFocused();
   await expect(page.locator(".shared-screening")).toContainText("Prince Charles");
 });
 
@@ -245,7 +252,8 @@ test("screening share feedback re-announces and moves nothing", async ({ page })
   });
   const share = row.getByRole("button", { name: /^Share screening:/ });
   await share.click();
-  await expect(row.locator(".share-screening")).toHaveText("Copied");
+  // The share glyph swaps for a check at the same size.
+  await expect(row.locator(".share-screening .share-icon path")).toHaveAttribute("d", /^M4 10\.5/);
   await expect(status).toHaveText("Screening link copied");
   await share.click();
   await expect(status).toHaveText("Screening link copied");
@@ -260,28 +268,124 @@ test("screening share feedback re-announces and moves nothing", async ({ page })
   expect(errors).toEqual([]);
 });
 
-test("clipboard failure exposes selectable links", async ({ page }) => {
-  await page.addInitScript(() =>
+test("clipboard failure offers the link selected, across the row, until it is not needed", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    (window as unknown as { refuse: boolean }).refuse = true;
     Object.defineProperty(navigator, "clipboard", {
       configurable: true,
       value: {
         writeText: async () => {
-          throw new Error("denied");
+          if ((window as unknown as { refuse: boolean }).refuse) throw new Error("denied");
         },
       },
-    }),
-  );
+    });
+  });
   await page.goto("/?film=classic-a");
   await page.getByRole("button", { name: "Share film", exact: true }).click();
-  await expect(page.getByRole("textbox", { name: "Film link", exact: true })).toHaveValue(
-    /\/film\/classic-a\/fixture-classic-a\/$/,
-  );
-  await page
-    .getByRole("button", { name: /^Share screening:/ })
-    .first()
-    .click();
-  await expect(page.getByRole("textbox", { name: "Screening link", exact: true })).toHaveValue(
-    /screening=/,
-  );
+  const filmLink = page.getByRole("textbox", { name: "Film link", exact: true });
+  await expect(filmLink).toHaveValue(/\/film\/classic-a\/fixture-classic-a\/$/);
+  await expect(filmLink).toBeFocused();
+  const selected = () =>
+    page.evaluate(() => {
+      const field = document.activeElement as HTMLInputElement;
+      return field.value.slice(field.selectionStart ?? 0, field.selectionEnd ?? 0);
+    });
+  expect(await selected()).toBe(await filmLink.inputValue());
+
+  // Done puts it away and returns focus to Share film.
+  await page.getByRole("button", { name: "Done", exact: true }).click();
+  await expect(filmLink).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Share film", exact: true })).toBeFocused();
+
+  const row = page.locator(".showtime-day li").first();
+  await row.getByRole("button", { name: /^Share screening:/ }).click();
+  const link = row.getByRole("textbox", { name: "Screening link", exact: true });
+  await expect(link).toHaveValue(/screening=princecharlescinema\.com~\d{8}T\d{4}Z~/);
+  await expect(link).toBeFocused();
+  expect(await selected()).toBe(await link.inputValue());
+  // The field spans the screening row, not the narrow actions column.
+  const field = (await link.boundingBox())!;
+  const actions = (await row.locator(".screening-actions").boundingBox())!;
+  const venue = (await row.locator(".screening-venue").boundingBox())!;
+  expect(field.width).toBeGreaterThan(actions.width);
+  expect(field.x).toBeLessThanOrEqual(venue.x);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+
+  // A later copy that works clears it.
+  await page.evaluate(() => ((window as unknown as { refuse: boolean }).refuse = false));
+  await row.getByRole("button", { name: /^Share screening:/ }).click();
+  await expect(link).toHaveCount(0);
+  // Escape puts it away too, back on the screening's Share.
+  await page.evaluate(() => ((window as unknown as { refuse: boolean }).refuse = true));
+  await row.getByRole("button", { name: /^Share screening:/ }).click();
+  await expect(link).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(link).toHaveCount(0);
+  await expect(row.getByRole("button", { name: /^Share screening:/ })).toBeFocused();
 });
+
+test("stale, missing or mistyped slugs correct themselves to the film's title", async ({
+  page,
+}) => {
+  for (const path of [
+    "/film/classic-a/an-old-title/",
+    "/film/classic-a/",
+    "/film/classic-a/Fixture-Classic-A",
+  ]) {
+    await page.goto(path);
+    await expect(page.locator(".film-expanded")).toBeVisible();
+    await expect(page).toHaveURL(/\/film\/classic-a\/fixture-classic-a\/$/);
+  }
+  // The screening survives the correction.
+  await page.goto(`/film/classic-a/old/?screening=${encodeURIComponent(screeningId(rows[0]!))}`);
+  await expect(page).toHaveURL(/\/film\/classic-a\/fixture-classic-a\/\?screening=/);
+});
+
+test("a showing moved within the hour still opens, labelled as changed", async ({ page }) => {
+  await busyProgramme(page);
+  // 25 minutes after the day's last Picturehouse showing: it is the only one within the hour.
+  await page.goto(shared({ ...rows[31]!, time: rows[31]!.time + 25 * 60000 }));
+  await expect(page.locator(".shared-screening-label")).toHaveText(
+    /^Shared screening \(time changed\) · Fixture Classic A/,
+  );
+  await expect(page.locator(".shared-screening")).toContainText("Picturehouse Central");
+});
+
+// Rows measured on the stack base (a66078d), before Share existed, with the fixture data.
+const BASE_HEIGHTS = {
+  1280: { film: [88, 71, 61, 60], events: [135, 103], guide: [79, 78] },
+  768: { film: [90, 71, 61, 60], events: [153, 118], guide: [79, 78] },
+  390: { film: [130, 111, 90, 89], events: [205, 118], guide: [118, 117] },
+};
+for (const [width, base] of Object.entries(BASE_HEIGHTS)) {
+  test(`Share adds no height to screening rows at ${width}px`, async ({ page }, info) => {
+    test.skip(info.project.name !== "desktop", "Sets its own viewport");
+    await page.setViewportSize({ width: Number(width), height: 900 });
+    const heights = (selector: string) =>
+      page
+        .locator(selector)
+        .evaluateAll((nodes) =>
+          nodes.map((node) => Math.round(node.getBoundingClientRect().height)),
+        );
+    const near = (actual: number[], expected: number[]) => {
+      expect(actual).toHaveLength(expected.length);
+      actual.forEach((value, index) =>
+        expect(Math.abs(value - expected[index]!)).toBeLessThanOrEqual(1),
+      );
+    };
+    await page.goto("/?film=classic-a");
+    await expect(page.locator(".showtime-day li .share-screening")).toHaveCount(4);
+    near(await heights(".showtime-day li"), base.film);
+    await page.goto("/events");
+    await expect(page.locator(".event-row .share-screening").first()).toBeVisible();
+    near(await heights(".event-row"), base.events);
+    await page.goto("/how-to-use");
+    await expect(page.locator(".guide-example .share-screening").first()).toBeVisible();
+    near(await heights(".guide-example .showtime-day li"), base.guide);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+      true,
+    );
+  });
+}
