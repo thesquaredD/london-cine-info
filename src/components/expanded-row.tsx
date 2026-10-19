@@ -269,23 +269,25 @@ export function ExpandedRow({
                               rel="noopener noreferrer"
                               aria-label={`${row.bookingFallback || row.soldOut ? "Screening details for" : "Book"} ${film.ti} at ${venue?.name ?? row.venue} ${row.localTime}`}
                             >
-                              {row.bookingFallback || row.soldOut ? "Details ↗" : "Book ↗"}
+                              {row.bookingFallback || row.soldOut ? "Details" : "Book"}
                             </a>
-                            {row.soldOut && <span class="badge sold-out-badge">Sold out</span>}
-                            {row.formats
-                              .filter((format) => format !== "standard")
-                              .map((format) => (
-                                <span class="badge" key={format}>
-                                  {meta.facets.format.find((option) => option.id === format)
-                                    ?.label ?? format}
+                            <div class="screening-tags">
+                              {row.soldOut && <span class="badge sold-out-badge">Sold out</span>}
+                              {row.formats
+                                .filter((format) => format !== "standard")
+                                .map((format) => (
+                                  <span class="badge" key={format}>
+                                    {meta.facets.format.find((option) => option.id === format)
+                                      ?.label ?? format}
+                                  </span>
+                                ))}
+                              {row.accessibility.map((flag) => (
+                                <span class="badge accessibility" key={flag}>
+                                  {meta.facets.accessibility.find((option) => option.id === flag)
+                                    ?.label ?? flag}
                                 </span>
                               ))}
-                            {row.accessibility.map((flag) => (
-                              <span class="badge accessibility" key={flag}>
-                                {meta.facets.accessibility.find((option) => option.id === flag)
-                                  ?.label ?? flag}
-                              </span>
-                            ))}
+                            </div>
                             {onCalendar && (
                               <button
                                 class="add-calendar"

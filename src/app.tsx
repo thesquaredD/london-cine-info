@@ -1,3 +1,4 @@
+import { DiscoveryDesigns } from "./components/discovery-designs";
 import { Notice } from "./components/notice";
 import { EmptyState } from "./components/empty-state";
 import { MobileSort } from "./components/mobile-sort";
@@ -222,6 +223,7 @@ function About({
 
 const EMPTY_FILMS: Film[] = [];
 export function App() {
+  const [designReview, setDesignReview] = useState(import.meta.env.VITE_DISCOVERY_DESIGNS === "1");
   const account = useAccount();
   const calendar = useCalendar(account);
   const [calendarEvent, setCalendarEvent] = useState<CalendarInput | null>(null);
@@ -755,7 +757,13 @@ export function App() {
               />
             </div>
           )}
-          {state.path === "/account" ? (
+          {designReview && catalogue ? (
+            <DiscoveryDesigns
+              films={catalogue.films}
+              meta={catalogue.meta}
+              onExit={() => setDesignReview(false)}
+            />
+          ) : state.path === "/account" ? (
             <AccountPage
               account={account}
               matches={watchlistMatches}

@@ -473,3 +473,74 @@
   min-width: 0;
   max-width: 100%;
 }
+
+/* A booking action has its own column; format and access tags wrap under the venue. */
+:root .screening-info {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 104px;
+  grid-template-rows: auto auto auto;
+  align-items: start;
+  column-gap: 12px;
+  row-gap: 6px;
+}
+:root .screening-info .screening-venue {
+  grid-column: 1;
+  grid-row: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+:root .screening-info .booking-action {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: start;
+  width: 104px;
+  min-height: 44px;
+  box-sizing: border-box;
+}
+:root .screening-tags {
+  grid-column: 1;
+  grid-row: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  min-width: 0;
+}
+:root .screening-tags:empty {
+  display: none;
+}
+:root .screening-info .add-calendar {
+  grid-column: 2;
+  grid-row: 2 / span 2;
+  width: 104px;
+  align-self: start;
+  min-height: 44px;
+}
+:root .screening-info > small {
+  grid-column: 1;
+  grid-row: 3;
+  min-width: 0;
+}
+@media (max-width: 799px) {
+  :root .showtime-day li {
+    grid-template-columns: 48px minmax(0, 1fr);
+    gap: 8px;
+    align-items: start;
+  }
+  :root .showtime-day .time-dot {
+    display: none;
+  }
+  :root .screening-info {
+    grid-template-columns: minmax(0, 1fr) 72px;
+    column-gap: 8px;
+  }
+  :root .screening-info :is(.booking-action, .add-calendar) {
+    width: 72px;
+    padding-inline: 6px;
+  }
+  :root .screening-info .screening-venue {
+    font-size: 16px;
+  }
+  :root .screening-info .add-calendar {
+    font-size: 13px;
+  }
+}

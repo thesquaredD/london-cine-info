@@ -1,0 +1,7 @@
+{
+  "id": "booking-button-alignment",
+  "type": "fixed",
+  "title": "Keep booking buttons aligned",
+  "body": "Screening formats and accessibility tags wrap beneath the cinema name, keeping the Book button in its own column on phones and larger screens.",
+  "visibility": "public"
+}

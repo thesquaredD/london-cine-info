@@ -1,0 +1,8 @@
+{
+  "id": "discovery-design-studies",
+  "type": "improved",
+  "title": "Discovery design studies",
+  "body": "Local alternatives for first visits, guidance, cinema location and poster browsing.",
+  "visibility": "internal",
+  "reason": "Local design study behind a disabled preview flag. No production behaviour changes."
+}
