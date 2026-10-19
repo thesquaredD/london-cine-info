@@ -68,7 +68,7 @@ test("a page turn from far down brings the programme top back and focuses the co
   page,
 }) => {
   const showtimes = await openBusyFilm(page);
-  const count = showtimes.getByRole("status");
+  const count = showtimes.locator(".programme-count");
   const next = showtimes.getByRole("button", { name: "Next screenings" });
   await next.scrollIntoViewIfNeeded();
   // The Next button sits below the fold, so the programme top starts out of view.

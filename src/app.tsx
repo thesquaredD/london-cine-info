@@ -1,4 +1,5 @@
 import { Notice } from "./components/notice";
+import { filmSlug } from "./lib/sharing";
 import { CinemaLanding } from "./components/cinema-landing";
 import { HowToUse } from "./components/how-to-use";
 import { rememberWelcomeDismissed, showsWelcomeOnArrival, welcomeDismissed } from "./lib/welcome";
@@ -557,7 +558,15 @@ export function App() {
     const navigates = changes.path !== undefined && changes.path !== state.path;
     const resetsFilm =
       navigates || changes.sort || (changes.page !== undefined && changes.page !== state.page);
-    const next = { ...state, ...changes, ...(resetsFilm ? { film: undefined } : {}) };
+    // A shared link's name and screening belong to the film it opened; any other film, or
+    // closing it, returns to the ordinary ?film= address.
+    const changesFilm = "film" in changes && changes.film !== state.film;
+    const next = {
+      ...state,
+      ...changes,
+      ...(resetsFilm || changesFilm ? { filmSlug: undefined, screening: undefined } : {}),
+      ...(resetsFilm ? { film: undefined } : {}),
+    };
     const url = viewUrl(next);
     if (url !== `${window.location.pathname}${window.location.search}`) {
       if (push) window.history.pushState(null, "", url);
@@ -597,9 +606,17 @@ export function App() {
   useEffect(() => {
     if (state.path === "/account") capture("account_opened");
   }, [state.path]);
+  const sharedFilmMissing =
+    !!catalogue &&
+    state.filmSlug !== undefined &&
+    !catalogue.films.some((film) => film.id === state.film);
+  // An open film names the tab, so a shared or bookmarked film reads as that film.
+  const openFilm = state.film
+    ? catalogue?.films.find((film) => film.id === state.film || state.film!.endsWith(`:${film.id}`))
+    : undefined;
   useEffect(() => {
-    document.title = `${pageTitle} — London Ciné Info`;
-  }, [pageTitle]);
+    document.title = `${openFilm?.ti ?? pageTitle} — London Ciné Info`;
+  }, [pageTitle, openFilm]);
   useEffect(() => {
     if (drawerOpen && !drawer.current?.open) drawer.current?.showModal();
     if (!drawerOpen && drawer.current?.open) drawer.current.close();
@@ -614,13 +631,23 @@ export function App() {
     }
   }, [catalogue, selected.length, state]);
   useEffect(() => {
-    if (
-      catalogue &&
-      state.path !== "/radar" &&
-      expanded &&
-      !tableRows(selected, state).some((row) => row.key === expanded)
-    )
+    if (!catalogue || !expanded || state.path === "/radar") return;
+    // A film that has left the catalogue stays in a named link's URL so the notice can explain.
+    if (sharedFilmMissing) return;
+    const index = tableRows(selected, state).findIndex((row) => row.key === expanded);
+    if (index < 0) {
       change({ film: undefined }, false);
+      return;
+    }
+    if (state.filmSlug === undefined) return;
+    // A named film link opens on the catalogue page that holds the film, and its address
+    // takes the current title's slug, so stale, missing or mistyped slugs correct themselves.
+    const film = tableRows(selected, state)[index]!.film;
+    const next = { ...state, page: Math.floor(index / PAGE_SIZE) + 1, filmSlug: filmSlug(film.ti) };
+    if (next.page !== state.page || next.filmSlug !== state.filmSlug) {
+      setState(next);
+      window.history.replaceState(null, "", viewUrl(next));
+    }
   }, [expanded, selected, state, catalogue]);
   useEffect(() => {
     if (!myCinemasActive || cinemas.loading) return;
@@ -1267,6 +1294,20 @@ export function App() {
                     </div>
                   }
                 />
+              )}
+              {sharedFilmMissing && (
+                <Notice
+                  kind="status"
+                  heading
+                  title="This film is no longer listed"
+                  actions={
+                    <button onClick={() => change({ film: undefined }, true)}>
+                      Browse current films
+                    </button>
+                  }
+                >
+                  <p>Its screenings may have ended or changed since the link was shared.</p>
+                </Notice>
               )}
               {catalogue && myCinemasUnavailable && (
                 <div class="empty-state" aria-label="My cinemas setup">

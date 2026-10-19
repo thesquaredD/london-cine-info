@@ -1,10 +1,14 @@
 import { ExternalLinkIcon } from "./external-link-icon";
 import { filmProviderLinks } from "../lib/film-links";
+import { findSharedScreening, shareUrl } from "../lib/sharing";
+import { CopyFallback } from "./copy-fallback";
+import { Notice } from "./notice";
+import { ShareScreening } from "./share-screening";
 import { capture } from "../lib/analytics";
 import { screeningMatcher } from "../lib/filters";
 import type { ViewState } from "../lib/catalogue";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
-import type { DataMeta, Film, FilmShowtimes, RatingKey } from "../shared/data";
+import type { DataMeta, Film, FilmShowtimes, RatingKey, Showtime } from "../shared/data";
 import { RATINGS, formatDate, runtime } from "../lib/catalogue";
 import { loadShowtimes } from "../lib/data";
 import { openFeedback } from "../lib/feedback";
@@ -38,6 +42,11 @@ export function ExpandedRow({
   const [attempt, setAttempt] = useState(0);
   const [posterFailed, setPosterFailed] = useState(false);
   const [shareMessage, setShareMessage] = useState("");
+  const [shareFallback, setShareFallback] = useState("");
+  // A screening link the clipboard refused, shown across that screening's row.
+  const [rowFallback, setRowFallback] = useState<{ row: Showtime; url: string } | null>(null);
+  // The shared link this sheet last scrolled to, so later renders leave the reader in place.
+  const arrived = useRef("");
   const shareTimers = useRef<number[]>([]);
   // Clear then re-set so screen readers announce every share, and drop the message after a
   // while; the status region keeps its height, so nothing around it moves.
@@ -146,7 +155,16 @@ export function ExpandedRow({
   }, [allRows, chosenDate, chosenVenue]);
   const programmePage: number | null = paging?.key === choiceKey ? paging.page : null;
   const pageCount = Math.max(1, Math.ceil(matchingRows.length / pageSize));
-  const currentPage = Math.min(programmePage ?? 0, pageCount - 1);
+  // The shared screening, looked up in the whole programme so filters cannot change which
+  // one it is. It opens on its own page; a reset (no chosen page) returns there too.
+  const shared = useMemo(
+    () => findSharedScreening(state.screening, data ? Object.values(data.days).flat() : []),
+    [data, state.screening],
+  );
+  const sharedRow = shared?.row;
+  const sharedIndex = sharedRow ? matchingRows.findIndex(({ row }) => row === sharedRow) : -1;
+  const sharedPage = sharedIndex < 0 ? 0 : Math.floor(sharedIndex / pageSize);
+  const currentPage = Math.min(programmePage ?? sharedPage, pageCount - 1);
   const start = currentPage * pageSize;
   const visibleRows = matchingRows.slice(start, start + pageSize);
   const visibleDays = [...new Set(visibleRows.map(({ date }) => date))].map(
@@ -166,6 +184,25 @@ export function ExpandedRow({
     }
     programmeStatus.current?.focus({ preventScroll: true });
   };
+  // Listed but outside the matching rows: hidden by the local date/cinema choice, or else by
+  // the global filters.
+  const sharedHiddenLocally = sharedIndex < 0 && allRows.some(({ row }) => row === sharedRow);
+  useEffect(() => {
+    // The slug may be corrected after arrival; that is still the same arrival.
+    const named = state.filmSlug !== undefined;
+    const link = `${film.id}|${state.screening ?? (named ? "named" : "")}`;
+    if (!data || (!state.screening && !named) || arrived.current === link) return;
+    arrived.current = link;
+    const target = programme.current?.querySelector<HTMLElement>(".shared-screening");
+    if (target) {
+      target.scrollIntoView({ block: "center" });
+      target.querySelector<HTMLElement>(".shared-screening-label")?.focus({ preventScroll: true });
+    } else if (state.screening) programme.current?.scrollIntoView({ block: "start" });
+    else
+      programme.current
+        ?.closest(".expanded-row")
+        ?.previousElementSibling?.scrollIntoView({ block: "start" });
+  }, [data, state.screening, state.filmSlug !== undefined]);
   const genres = film.ge.map(
     (id) => meta.facets.genre.find((genre) => genre.id === id)?.label ?? id,
   );
@@ -259,18 +296,15 @@ export function ExpandedRow({
                 <button
                   class="share-film"
                   onClick={async () => {
+                    // A clean named link: the sender's filters, page and sort stay behind.
+                    const url = shareUrl(film, location.origin);
                     try {
-                      const url = new URL(window.location.href);
-                      if (url.pathname === "/events") {
-                        url.pathname = "/";
-                        url.searchParams.delete("eventType");
-                        url.searchParams.set("film", film.id);
-                      } else if (!url.searchParams.has("film"))
-                        url.searchParams.set("film", film.id);
-                      await navigator.clipboard.writeText(url.href);
+                      await navigator.clipboard.writeText(url);
+                      setShareFallback("");
                       announceShare("Film link copied");
                     } catch {
-                      announceShare("Copy the address bar to share.");
+                      setShareFallback(url);
+                      announceShare("Copy the film link from the selected field.");
                     }
                   }}
                 >
@@ -288,9 +322,42 @@ export function ExpandedRow({
               <div role="status" class="share-status">
                 {shareMessage}
               </div>
+              {shareFallback && (
+                <CopyFallback
+                  label="Film link"
+                  value={shareFallback}
+                  onDismiss={() => setShareFallback("")}
+                />
+              )}
             </div>
           </div>
-          <div class="showtimes" ref={programme}>
+          <div class="showtimes" ref={programme} tabIndex={-1}>
+            {data && state.screening && sharedIndex < 0 && (
+              <Notice
+                kind="status"
+                heading
+                title={
+                  sharedRow ? "Shared screening is hidden" : "Shared screening is no longer listed"
+                }
+                actions={
+                  sharedHiddenLocally ? (
+                    <button onClick={() => choose("", "")}>Show all dates and cinemas</button>
+                  ) : sharedRow ? (
+                    <a href={shareUrl(film, location.origin, sharedRow)}>
+                      Show the shared screening
+                    </a>
+                  ) : undefined
+                }
+              >
+                <p>
+                  {sharedHiddenLocally
+                    ? "The date or cinema chosen below leaves it out."
+                    : sharedRow
+                      ? "Your current filters leave it out. The shared link shows it without them."
+                      : "It may have ended or changed since the link was shared. The film’s other screenings are below."}
+                </p>
+              </Notice>
+            )}
             {data && findable && (
               <div class="programme-controls" role="group" aria-label="Find a screening">
                 <label>
@@ -390,6 +457,20 @@ export function ExpandedRow({
                       return (
                         <ScreeningRow
                           key={`${row.time}-${row.venue}-${index}`}
+                          sharedLabel={
+                            row === sharedRow
+                              ? `Shared screening${shared?.timeChanged ? " (time changed)" : ""} · ${film.ti}`
+                              : undefined
+                          }
+                          after={
+                            rowFallback?.row === row && (
+                              <CopyFallback
+                                label="Screening link"
+                                value={rowFallback.url}
+                                onDismiss={() => setRowFallback(null)}
+                              />
+                            )
+                          }
                           dateTime={new Date(row.time).toISOString()}
                           localTime={row.localTime}
                           venue={venue?.name ?? row.venue}
@@ -455,6 +536,12 @@ export function ExpandedRow({
                               {saved ? "In my calendar" : "Add to calendar"}
                             </button>
                           )}
+                          <ShareScreening
+                            film={film}
+                            row={row}
+                            venue={venue?.name ?? row.venue}
+                            onFallback={(url) => setRowFallback(url ? { row, url } : null)}
+                          />
                         </ScreeningRow>
                       );
                     })}

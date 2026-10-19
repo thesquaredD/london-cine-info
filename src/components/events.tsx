@@ -1,4 +1,5 @@
 import { ExternalLinkIcon } from "./external-link-icon";
+import { ShareScreening } from "./share-screening";
 import { directorLabel } from "../lib/filters";
 import { EmptyState } from "./empty-state";
 import { capture } from "../lib/analytics";
@@ -186,6 +187,14 @@ export function Events({
                             >
                               {saved ? "In my calendar" : "Add to calendar"}
                             </button>
+                          )}
+                          {/* Shared links open the film's catalogue sheet, so only listed films. */}
+                          {film && (
+                            <ShareScreening
+                              film={film}
+                              row={row}
+                              venue={venue?.name ?? row.venue}
+                            />
                           )}
                           {film && (
                             <button

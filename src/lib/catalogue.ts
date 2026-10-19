@@ -30,6 +30,11 @@ export type SortKey =
 export type ViewState = YearSelection & {
   myCinemas?: boolean;
   film?: string;
+  // Set by a named /film/<id>/<slug>/ link (possibly "" or stale until the catalogue loads
+  // and corrects it); the slug is descriptive, the ID is the identity.
+  filmSlug?: string;
+  // A shared screening within the open film (see screeningId in sharing.ts).
+  screening?: string;
   independent?: boolean;
   path: string;
   search: string;
@@ -113,6 +118,8 @@ function validDateChoice(value: string) {
 }
 export function readView(url: URL): ViewState {
   const sort = url.searchParams.get("sort");
+  // Any slug, or none, still opens the film; the app then rewrites it to the current title's.
+  const filmRoute = /^\/film\/([A-Za-z0-9_-]+)(?:\/([^/]*))?\/?$/.exec(url.pathname);
   const path = [
     ...PAGES.map((page) => page.path),
     "/account",
@@ -130,7 +137,9 @@ export function readView(url: URL): ViewState {
     : "/";
   const state: ViewState = {
     myCinemas: url.searchParams.get("cinemas") === "mine",
-    film: url.searchParams.get("film") || undefined,
+    film: filmRoute?.[1] || url.searchParams.get("film") || undefined,
+    filmSlug: filmRoute ? (filmRoute[2] ?? "") : undefined,
+    screening: url.searchParams.get("screening") || undefined,
     independent: url.searchParams.get("independent") === "1",
     path,
     search: url.searchParams.get("q") ?? "",
@@ -222,7 +231,9 @@ export function readView(url: URL): ViewState {
 export function viewUrl(state: ViewState): string {
   const query = new URLSearchParams();
   if (state.myCinemas) query.set("cinemas", "mine");
-  if (state.film) query.set("film", state.film);
+  const namedFilm = state.path === "/" && !!state.film && state.filmSlug !== undefined;
+  if (state.film && !namedFilm) query.set("film", state.film);
+  if (state.film && state.screening) query.set("screening", state.screening);
   if (state.independent) query.set("independent", "1");
   if (state.search) query.set("q", state.search);
   if (state.path === "/radar" && state.filmGauge) query.set("filmGauge", state.filmGauge);
@@ -245,7 +256,11 @@ export function viewUrl(state: ViewState): string {
     query.set("sort", state.sort);
   if (state.direction !== "desc") query.set("order", state.direction);
   if (state.page > 1) query.set("page", String(state.page));
-  return `${state.path}${query.size ? `?${query}` : ""}`;
+  const path = namedFilm
+    ? `/film/${encodeURIComponent(state.film!)}/${state.filmSlug ? `${encodeURIComponent(state.filmSlug)}/` : ""}`
+    : state.path;
+  // `~` is unreserved in URLs; keeping it literal keeps shared screening references readable.
+  return `${path}${query.size ? `?${String(query).replaceAll("%7E", "~")}` : ""}`;
 }
 export function selectFilms(films: Film[], state: ViewState): Film[] {
   const terms = normalize(state.search.trim()).split(/\s+/).filter(Boolean);

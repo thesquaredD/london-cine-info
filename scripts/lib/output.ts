@@ -18,9 +18,14 @@ const exists = async (path: string) => {
 };
 
 export async function writeDataset(dataset: Dataset, root: string): Promise<DataManifest> {
-  // Leave space for Vite's entry points and static assets within Pages' 20k limit.
-  if (dataset.showtimes.length > 19_900)
-    throw new Error("Too many showtime files for Cloudflare Pages");
+  // Pages allows 20k files. Each film has a showtime file here and a link-preview page
+  // (dist/film/<id>/<slug>/index.html, see film-pages.ts); leave 100 for Vite's entry points,
+  // the data files and static assets.
+  if (dataset.showtimes.length + dataset.films.length > 19_900)
+    throw new Error(
+      `Too many files for Cloudflare Pages: ${dataset.showtimes.length} showtime files and ` +
+        `${dataset.films.length} film pages`,
+    );
   const filmJson = json(dataset.films),
     metaJson = json(dataset.meta),
     eventJson = json(buildEventIndex(dataset.films, dataset.showtimes));

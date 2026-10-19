@@ -309,3 +309,32 @@ keeps reviewed venue IDs and source links, including independent commercial and 
 cinemas. Unknown venues are excluded, not inferred independent from missing chain metadata. This
 is a maintained selection, not a complete ownership register; review and add venue IDs with a
 source when coverage changes. It does not alter My cinemas or saved preferences.
+
+## Film and screening links
+
+Share film copies a clean `/film/<id>/<title>/` link, independent of the sender’s filters,
+watchlists and page. The film ID is the identity; the title slug is descriptive. Any slug, or
+none, opens the film, and the address is then rewritten to the current title’s slug. Old
+`?film=` links still open the film.
+
+- **Link previews.** Each build emits a small HTML page per film (`scripts/lib/film-pages.ts`)
+  with its title, description, canonical URL and `og:url` (on `SITE_URL`, default the
+  production host in `src/shared/analytics.ts`) and, for an absolute https poster, `og:image`
+  with alt text. Portrait posters use the small `summary` card. Films that have left the
+  catalogue get the SPA fallback, which shows “This film is no longer listed”. `/film/*` is
+  served `no-cache`; `npm run deployment:verify` checks one film page’s `og:title`.
+- **File count.** Film pages count towards Pages’ 20,000-file limit with the showtime files;
+  `scripts/lib/output.ts` refuses a dataset that would exceed it.
+- **Catalogue page.** A named link opens the catalogue page that holds the film.
+- **Screenings.** Every screening, including Events, has a Share icon after its other actions.
+  The `screening` value reads `<venue>~<UTC start, 20261025T0130Z>~<screen>`, independent of
+  booking URLs and row position. The link opens the programme page holding that screening,
+  labelled, tinted and focused. If the screen changed, the same cinema and start still match
+  when unique; a showing moved by up to an hour on the same day matches when unique, labelled
+  “time changed”. A screening that has gone, or that filters hide, gets a notice instead.
+- **Clipboard.** When copying is refused, the link appears selected in a field across the
+  screening (or film) with Done; a later copy that works clears it.
+
+Verification: `npm run e2e -- tests/e2e/film-sharing.spec.ts`. That spec also checks, from
+320 to 1280px, that screening rows are no taller than the same page with Share removed;
+`screening-layout.spec.ts` checks the venue keeps at least half the row.

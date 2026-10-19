@@ -18,6 +18,8 @@ export const CLEAR_FILTERS = {
   myCinemas: false,
   film: undefined,
   independent: false,
+  filmSlug: undefined,
+  screening: undefined,
   sortExplicit: undefined,
   eventType: "",
   filmGauge: undefined,
