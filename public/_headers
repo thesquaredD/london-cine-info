@@ -13,3 +13,6 @@
   Cache-Control: no-cache
 /version.json
   Cache-Control: no-cache
+/cinemas/*
+  Cache-Control: public, max-age=86400
+  Content-Security-Policy: default-src 'none'; style-src 'unsafe-inline'; img-src 'self' data:; sandbox

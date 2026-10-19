@@ -167,7 +167,13 @@ test("load retries, system theme, sheet keyboard and no persistent storage", asy
   if ((page.viewportSize()?.width ?? 1200) < 800) {
     await expect(page.locator("th:visible")).toHaveCount(2);
   }
-  expect(await page.evaluate(() => [localStorage.length, sessionStorage.length])).toEqual([0, 0]);
+  // The config pre-dismisses the welcome page; nothing else is stored while browsing.
+  expect(
+    await page.evaluate(() => [
+      Object.keys(localStorage).filter((key) => key !== "london-cine.welcome-dismissed.v1").length,
+      sessionStorage.length,
+    ]),
+  ).toEqual([0, 0]);
   expect(await context.cookies()).toEqual([]);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });

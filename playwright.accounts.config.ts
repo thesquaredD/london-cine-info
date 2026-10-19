@@ -11,7 +11,21 @@ export default defineConfig({
     : join(homedir(), ".Codex/london-cine-info/watchlist/verification"),
   fullyParallel: false,
   workers: 1,
-  use: { baseURL: "http://localhost:4174", trace: "retain-on-failure", video: "on" },
+  use: {
+    baseURL: "http://localhost:4174",
+    // Existing specs exercise the catalogue; the welcome page has its own spec.
+    storageState: {
+      cookies: [],
+      origins: [
+        {
+          origin: "http://localhost:4174",
+          localStorage: [{ name: "london-cine.welcome-dismissed.v1", value: "true" }],
+        },
+      ],
+    },
+    trace: "retain-on-failure",
+    video: "on",
+  },
   projects: [
     { name: "desktop", use: { viewport: { width: 1200, height: 900 } } },
     { name: "mobile", use: { viewport: { width: 390, height: 844 } } },

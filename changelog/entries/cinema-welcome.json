@@ -1,0 +1,9 @@
+{
+  "id": "cinema-welcome",
+  "type": "added",
+  "title": "A welcome page for first visits",
+  "body": "Your first visit starts with London’s cinemas and quick ways to browse all films, open a cinema’s programme or find cinemas near you. Shared and saved links still open exactly where they point, and you can return to the welcome page from About.",
+  "visibility": "public",
+  "href": "/welcome",
+  "linkLabel": "See the welcome page"
+}

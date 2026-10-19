@@ -3,7 +3,20 @@ export default defineConfig({
   testDir: "./tests/e2e",
   fullyParallel: true,
   retries: process.env.CI ? 1 : 0,
-  use: { baseURL: "http://127.0.0.1:4173", trace: "retain-on-failure" },
+  use: {
+    baseURL: "http://127.0.0.1:4173",
+    // Existing specs exercise the catalogue; the welcome page has its own spec.
+    storageState: {
+      cookies: [],
+      origins: [
+        {
+          origin: "http://127.0.0.1:4173",
+          localStorage: [{ name: "london-cine.welcome-dismissed.v1", value: "true" }],
+        },
+      ],
+    },
+    trace: "retain-on-failure",
+  },
   projects: [
     { name: "desktop", use: { viewport: { width: 1200, height: 900 } } },
     { name: "mobile", use: { viewport: { width: 390, height: 844 } } },

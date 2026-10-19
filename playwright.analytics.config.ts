@@ -6,7 +6,21 @@ export default defineConfig({
   outputDir: process.env.CI
     ? "test-results/analytics"
     : join(homedir(), ".Codex/london-cine-info/analytics/verification"),
-  use: { baseURL: "http://127.0.0.1:4185", video: "on", trace: "retain-on-failure" },
+  use: {
+    baseURL: "http://127.0.0.1:4185",
+    // Existing specs exercise the catalogue; the welcome page has its own spec.
+    storageState: {
+      cookies: [],
+      origins: [
+        {
+          origin: "http://127.0.0.1:4185",
+          localStorage: [{ name: "london-cine.welcome-dismissed.v1", value: "true" }],
+        },
+      ],
+    },
+    video: "on",
+    trace: "retain-on-failure",
+  },
   projects: [
     { name: "desktop", use: { viewport: { width: 1200, height: 900 } } },
     { name: "mobile", use: { viewport: { width: 390, height: 844 } } },

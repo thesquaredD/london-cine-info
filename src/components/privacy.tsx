@@ -70,7 +70,7 @@ export function Privacy({ onNavigate }: { onNavigate: (path: string) => void }) 
           Privacy
         </h2>
         <p class="prose-meta">
-          Last updated 12 October 2026 · Operator Diogo Diogo ·{" "}
+          Last updated 19 October 2026 · Operator Diogo Diogo ·{" "}
           <a href={`mailto:${contact}`}>Contact</a>
         </p>
       </header>
@@ -243,9 +243,10 @@ export function Privacy({ onNavigate }: { onNavigate: (path: string) => void }) 
                     <td>Local storage</td>
                     <td>
                       Local storage holds guest favourite cinemas, a random cinema-preference
-                      identifier and the hide-watchlist-ratings setting. Guest choices stay separate
-                      from signed-in favourites; a merge receipt prevents repeated imports of the
-                      same guest choices into an account.
+                      identifier, the hide-watchlist-ratings setting and whether you have moved on
+                      from the welcome page. Guest choices stay separate from signed-in favourites;
+                      a merge receipt prevents repeated imports of the same guest choices into an
+                      account.
                     </td>
                     <td>Until you clear site data.</td>
                   </tr>

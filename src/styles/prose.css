@@ -707,3 +707,87 @@
     padding: 24px 16px;
   }
 }
+
+/* Welcome page and How to use guide share the reading scale. */
+.prose ol {
+  padding-left: 22px;
+  margin: 0 0 var(--prose-gap);
+}
+.prose ol li::marker {
+  color: var(--brass);
+}
+.welcome-page .welcome-line {
+  display: block;
+}
+.welcome-page .welcome-counts {
+  margin: 16px 0 0;
+}
+.welcome-venue-name {
+  font-size: var(--prose-small);
+  line-height: 1.3;
+}
+.welcome-wordmark {
+  font-size: var(--prose-h2);
+  font-weight: 500;
+  line-height: 1.1;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-align: center;
+}
+.welcome-motion,
+.guide-example .shortcut-strip button {
+  font-size: var(--prose-small);
+}
+.prose.welcome-page .cinema-welcome-foot {
+  margin-top: 20px;
+}
+.guide-example .guide-result {
+  margin: 8px 0 0;
+}
+.prose .guide-lists {
+  grid-template-columns: 7em minmax(0, 1fr);
+}
+@media (max-width: 799px) {
+  .prose.cinema-welcome.welcome-page {
+    padding-block: 20px 32px;
+  }
+  .welcome-page .cinema-welcome-heading {
+    margin-bottom: 20px;
+  }
+  .welcome-page .cinema-welcome-heading h2 {
+    font-size: var(--prose-h1);
+  }
+  .prose .welcome-page .prose-lede,
+  .welcome-page .prose-lede {
+    margin-bottom: 0;
+  }
+  .welcome-page.cinema-welcome-logos .cinema-logo-heading {
+    margin-top: 24px;
+  }
+}
+.welcome-secondary {
+  font-size: 16px;
+}
+@media (max-height: 500px) and (orientation: landscape) {
+  .prose.cinema-welcome.welcome-page {
+    padding-block: 16px 24px;
+  }
+  .welcome-page .cinema-welcome-heading {
+    margin-bottom: 12px;
+  }
+  .welcome-page .cinema-welcome-heading h2 {
+    font-size: var(--prose-h1);
+  }
+  .welcome-page .welcome-line {
+    display: inline;
+  }
+  .welcome-page .prose-lede {
+    margin-bottom: 0;
+  }
+  .welcome-page .welcome-counts {
+    margin-top: 8px;
+  }
+  .welcome-page.cinema-welcome-logos .cinema-logo-heading {
+    margin-top: 12px;
+  }
+}

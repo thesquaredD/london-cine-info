@@ -1,0 +1,9 @@
+{
+  "id": "how-to-use-guide",
+  "type": "added",
+  "title": "A short guide to using the site",
+  "body": "How to use shows, with small examples, how to find and book a screening, set up your watchlist, choose a film together and save your cinemas. It is optional and links straight to each feature.",
+  "visibility": "public",
+  "href": "/how-to-use",
+  "linkLabel": "Open How to use"
+}
