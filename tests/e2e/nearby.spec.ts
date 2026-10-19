@@ -78,12 +78,19 @@ test("postcode, range and unchecked cinemas apply as a temporary filter", async 
   const range = dialog.getByLabel("Range", { exact: true });
   await expect(range).toBeVisible();
   const before = await range.boundingBox();
+  const heading = dialog.locator(".nearby-finder-heading");
+  const headingBefore = (await heading.boundingBox())!.y;
   await dialog.getByRole("textbox", { name: "Postcode" }).fill("nw16xe");
   await dialog.getByRole("button", { name: "Find", exact: true }).click();
   await expect(status(dialog)).toHaveText("Checking postcode…");
   await expect(dialog.getByRole("button", { name: "Show films" })).toBeDisabled();
+  // Cancel appears inside the reserved slot; the results below do not move.
+  await expect(dialog.getByRole("button", { name: "Cancel", exact: true })).toBeVisible();
+  expect((await heading.boundingBox())!.y).toBeCloseTo(headingBefore, 0);
   release();
   await expect(status(dialog)).toContainText("2 cinemas within 2 miles of NW1 6XE.");
+  await expect(heading).toContainText("Cinemas within 2 miles of NW1 6XE");
+  await expect(dialog.getByRole("textbox", { name: "Postcode" })).toHaveValue("NW1 6XE");
   // Feedback has reserved space: the controls stay where they were.
   expect((await range.boundingBox())!.y).toBeCloseTo(before!.y, 0);
 
@@ -139,6 +146,55 @@ test("postcode, range and unchecked cinemas apply as a temporary filter", async 
   await page.getByRole("button", { name: "Near me", exact: true }).click();
   await expect(prince).not.toBeChecked();
   expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
+});
+
+test("a new location keeps exclusions, a failure keeps the labelled list, typing wins", async ({
+  page,
+}) => {
+  let release!: () => void;
+  const held = new Promise<void>((resolve) => (release = resolve));
+  await page.route("https://api.postcodes.io/**", async (route) => {
+    const url = route.request().url();
+    if (url.includes("ZZ")) return route.fulfill({ status: 404, json: {} });
+    if (url.includes("WC2N")) {
+      await held;
+      return route.fulfill({ json: { result: TRAFALGAR } });
+    }
+    return route.fulfill({ json: { result: MARYLEBONE } });
+  });
+  const dialog = await openNearby(page);
+  const input = dialog.getByRole("textbox", { name: "Postcode" });
+  const heading = dialog.locator(".nearby-finder-heading");
+  const prince = dialog.getByRole("checkbox", { name: "Prince Charles Cinema", exact: true });
+  await input.fill("NW1 6XE");
+  await input.press("Enter");
+  await expect(status(dialog)).toContainText("of NW1 6XE.");
+  await prince.uncheck();
+
+  // A failed search says the list still belongs to the previous location.
+  await input.fill("ZZ1 1ZZ");
+  await input.press("Enter");
+  await expect(status(dialog)).toContainText("We couldn’t find that postcode");
+  await expect(status(dialog)).toContainText("Still showing cinemas near NW1 6XE.");
+  await expect(heading).toContainText("Cinemas within 2 miles of NW1 6XE");
+  await expect(input).toHaveAttribute("aria-invalid", "true");
+
+  // Typing during a lookup is not overwritten by the tidied result.
+  await input.fill("wc2n5du");
+  await input.press("Enter");
+  await expect(status(dialog)).toHaveText("Checking postcode…");
+  await input.fill("WC2N 5");
+  release();
+  await expect(status(dialog)).toContainText("cinemas within 2 miles of WC2N 5DU.");
+  await expect(heading).toContainText("of WC2N 5DU");
+  await expect(input).toHaveValue("WC2N 5");
+
+  // The cinema unticked near NW1 6XE stays unticked for the new location.
+  await expect(prince).not.toBeChecked();
+  await expect(
+    dialog.getByRole("checkbox", { name: "Picturehouse Central", exact: true }),
+  ).toBeChecked();
+  await expect(dialog.getByRole("checkbox", { name: "BFI Southbank", exact: true })).toBeChecked();
 });
 
 test("invalid, unknown and failing postcodes explain how to recover", async ({ page }) => {
@@ -221,8 +277,9 @@ test("a slower earlier lookup never replaces the latest location", async ({ page
   await dialog.getByRole("button", { name: "Cancel", exact: true }).click();
   await expect(status(dialog)).toContainText("of WC2N 5DU.");
   await geo(page).succeed(EDINBURGH.latitude, EDINBURGH.longitude);
-  await page.waitForTimeout(100);
-  await expect(status(dialog)).toContainText("of WC2N 5DU.");
+  // Any render from that stale answer settles before the next input event is handled.
+  await dialog.getByLabel("Range", { exact: true }).selectOption("3");
+  await expect(status(dialog)).toContainText("within 3 miles of WC2N 5DU.");
   await expect(dialog.getByRole("checkbox").first()).toBeVisible();
 });
 

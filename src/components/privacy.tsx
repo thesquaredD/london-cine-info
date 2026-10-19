@@ -170,10 +170,12 @@ export function Privacy({ onNavigate }: { onNavigate: (path: string) => void }) 
               </dd>
               <dt>Near me</dt>
               <dd>
-                Near me is optional. With your browser’s permission, location coordinates are used
-                in the browser to calculate cinema distances. A postcode you enter is sent to
-                postcodes.io to look up coordinates. We save your chosen cinema IDs, rather than the
-                postcode or coordinates, to your cinema preferences.
+                Near me is optional. A postcode you enter is sent to postcodes.io to look up its
+                coordinates; with your browser’s permission, your device location can be used
+                instead. Distances are worked out in your browser, and the postcode and coordinates
+                are never stored or sent to us. The cinemas you pick become a filter in the page
+                address and are not saved. Only cinemas you add in My cinemas are saved, as cinema
+                IDs, to your cinema preferences.
               </dd>
             </dl>
           </section>

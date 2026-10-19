@@ -18,17 +18,17 @@ Sources checked on 12 October 2026:
 
 Verify policy statements against implementation when changing data practices:
 
-| Topic                                                       | Implementation                                        |
-| ----------------------------------------------------------- | ----------------------------------------------------- |
-| Account creation, request limits, updates and deletion      | `functions/api/[[path]].ts` and migrations            |
-| Single-use 15-minute sign-in links; rolling 90-day sessions | API and `server/security.ts`                          |
-| Favourite cinemas and location lookup                       | `src/lib/cinemas.ts`, `src/components/my-cinemas.tsx` |
-| Friend access and removal                                   | `server/friends.ts`, `server/friend-queries.ts`       |
-| One-hour public-list cache                                  | `server/public-watchlists.ts`                         |
-| Expired record cleanup                                      | `scripts/refresh-watchlists.ts`                       |
-| Browser identifiers, measurements, privacy guards           | `src/lib/analytics.ts`, `src/shared/analytics.ts`     |
-| Request analytics opt-out and independent scheduled metrics | `server/analytics.ts`, API and importer               |
-| Feedback payload, Send-only capture, opt-out fallback       | `src/shared/feedback.ts`, `src/lib/feedback.ts`       |
+| Topic                                                       | Implementation                                                                                                  |
+| ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Account creation, request limits, updates and deletion      | `functions/api/[[path]].ts` and migrations                                                                      |
+| Single-use 15-minute sign-in links; rolling 90-day sessions | API and `server/security.ts`                                                                                    |
+| Favourite cinemas and location lookup                       | `src/lib/cinemas.ts`, `src/components/my-cinemas.tsx`, `src/lib/nearby.ts`, `src/components/nearby-cinemas.tsx` |
+| Friend access and removal                                   | `server/friends.ts`, `server/friend-queries.ts`                                                                 |
+| One-hour public-list cache                                  | `server/public-watchlists.ts`                                                                                   |
+| Expired record cleanup                                      | `scripts/refresh-watchlists.ts`                                                                                 |
+| Browser identifiers, measurements, privacy guards           | `src/lib/analytics.ts`, `src/shared/analytics.ts`                                                               |
+| Request analytics opt-out and independent scheduled metrics | `server/analytics.ts`, API and importer                                                                         |
+| Feedback payload, Send-only capture, opt-out fallback       | `src/shared/feedback.ts`, `src/lib/feedback.ts`                                                                 |
 
 The browser analytics switch stops new collection and sends the existing request-level opt-out
 header. It does not promise to cancel already queued delivery, delete historical analytics,

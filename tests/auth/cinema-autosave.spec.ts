@@ -210,7 +210,7 @@ test("postcode failures, denied location and borough filters keep selected cinem
   );
   await dialog.getByLabel("Your postcode").fill("INVALID");
   await dialog.getByRole("button", { name: "Find location", exact: true }).click();
-  await expect(dialog.getByRole("alert")).toContainText("Enter a valid UK postcode");
+  await expect(dialog.getByRole("alert")).toContainText("Enter a UK postcode");
   await dialog.getByText("Borough · All", { exact: true }).click();
   await dialog.locator(".borough-options input").last().check();
   await expect(

@@ -930,7 +930,10 @@ export function App() {
                     nearbyApplied &&
                     nearbyApplied.join("|") === (state.filters.venue ?? []).join("|") && (
                       <div class="cinema-context nearby-context">
-                        <span>Nearby · {nearbyApplied.length} cinemas</span>
+                        <span>
+                          Nearby · {nearbyApplied.length}{" "}
+                          {nearbyApplied.length === 1 ? "cinema" : "cinemas"}
+                        </span>
                         <button onClick={() => setNearbyOpen(true)}>Change nearby cinemas</button>
                       </div>
                     )}

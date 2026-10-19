@@ -3,6 +3,7 @@ import type { DataMeta, Venue } from "../shared/data";
 import {
   LocationError,
   createRequestGate,
+  runLatest,
   locateDevice,
   lookupPostcode,
   nearbyVenues,
@@ -178,6 +179,11 @@ describe("device location", () => {
       (error: LocationError) => error.kind,
     );
 
+  it("times out when the permission prompt is never answered", async () => {
+    const ignored = { getCurrentPosition: () => undefined };
+    expect(await kind(locateDevice(ignored, 10000, 5))).toBe("timeout");
+  });
+
   it("maps success, denial, timeout and unavailable positions", async () => {
     expect(
       await locateDevice(geolocation({ coords: { latitude: 51.5, longitude: -0.1 } })),
@@ -209,20 +215,35 @@ describe("request gate", () => {
     expect(gate.isCurrent(second.id)).toBe(false);
   });
 
-  it("drops a slow earlier result that resolves after a later one", async () => {
+  it("drops a slow earlier result even when the work ignores the abort", async () => {
     const gate = createRequestGate();
-    const shown: string[] = [];
-    let releaseSlow!: () => void;
-    async function run(label: string, wait: Promise<void>) {
-      const { id } = gate.start();
-      await wait;
-      if (gate.isCurrent(id)) shown.push(label);
-    }
-    const slow = run("first", new Promise((resolve) => (releaseSlow = resolve)));
-    await run("second", Promise.resolve());
-    releaseSlow();
-    await slow;
-    expect(shown).toEqual(["second"]);
+    let releaseSlow!: (value: string) => void;
+    let failSlow!: (error: Error) => void;
+    // Neither request listens to its signal, so only the gate can protect the latest result.
+    const slow = runLatest(gate, () => new Promise<string>((resolve) => (releaseSlow = resolve)));
+    const fast = runLatest(gate, async () => "second");
+    expect(await fast).toEqual({ ok: true, value: "second" });
+    releaseSlow("first");
+    expect(await slow).toBeNull();
+
+    const failing = runLatest(
+      gate,
+      () => new Promise<string>((_ok, reject) => (failSlow = reject)),
+    );
+    const later = runLatest(gate, async () => "later");
+    failSlow(new Error("late failure"));
+    expect(await failing).toBeNull();
+    expect(await later).toEqual({ ok: true, value: "later" });
+
+    const cancelled = runLatest(
+      gate,
+      () => new Promise<string>((resolve) => (releaseSlow = resolve)),
+    );
+    gate.cancel();
+    releaseSlow("after cancel");
+    expect(await cancelled).toBeNull();
+    const error = new LocationError("denied", "device");
+    expect(await runLatest(gate, async () => Promise.reject(error))).toEqual({ ok: false, error });
   });
 });
 
@@ -239,6 +260,15 @@ describe("status messages", () => {
       text: "No cinemas within 2 miles of N1. Try a wider range.",
       tone: "error",
     });
+    expect(
+      statusMessage(
+        { kind: "failed", error: "not-found", source: "postcode", previous: "N1" },
+        4,
+        2,
+      ).text,
+    ).toBe(
+      "We couldn’t find that postcode. Check it and try again. Still showing cinemas near N1.",
+    );
     for (const [error, source, pattern] of [
       ["invalid", "postcode", /UK postcode/],
       ["not-found", "postcode", /couldn’t find/],

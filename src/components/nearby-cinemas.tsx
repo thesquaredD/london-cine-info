@@ -5,6 +5,7 @@ import {
   LocationError,
   NEARBY_RANGES,
   createRequestGate,
+  runLatest,
   locateDevice,
   lookupPostcode,
   milesLabel,
@@ -43,6 +44,7 @@ export function NearbyCinemas({
   const [status, setStatus] = useState<NearbyStatus>({ kind: "idle" });
   const gate = useRef(createRequestGate());
   const dialog = useRef<HTMLDivElement>(null);
+  const list = useRef<HTMLDivElement>(null);
   useEffect(() => () => gate.current.cancel(), []);
   useEffect(() => {
     if (open) return;
@@ -73,31 +75,46 @@ export function NearbyCinemas({
   async function run(
     kind: "checking" | "locating",
     find: (signal: AbortSignal) => Promise<FoundLocation>,
+    submitted?: string,
   ) {
-    const { id, signal } = gate.current.start();
     setStatus({ kind });
-    try {
-      const found = await find(signal);
-      if (!gate.current.isCurrent(id)) return;
-      setOrigin(found);
-      setStatus({ kind: "found", label: found.label });
-      if (found.source === "postcode") setPostcode(found.label);
-      // On touch screens, close the keyboard so the list and Show films are in view.
-      const active = document.activeElement as HTMLElement | null;
-      if (active?.id === "nearby-postcode" && matchMedia("(pointer: coarse)").matches)
-        active.blur();
-    } catch (failure) {
-      if (!gate.current.isCurrent(id)) return;
-      setStatus(
-        failure instanceof LocationError
-          ? { kind: "failed", error: failure.kind, source: failure.source }
-          : {
-              kind: "failed",
-              error: "service",
-              source: kind === "locating" ? "device" : "postcode",
-            },
-      );
+    const outcome = await runLatest(gate.current, find);
+    if (!outcome) return;
+    if (!outcome.ok) {
+      const failure = outcome.error;
+      setStatus({
+        kind: "failed",
+        ...(failure instanceof LocationError
+          ? { error: failure.kind, source: failure.source }
+          : { error: "service", source: kind === "locating" ? "device" : "postcode" }),
+        previous: origin?.label,
+      });
+      return;
     }
+    const found = outcome.value;
+    setOrigin(found);
+    setStatus({ kind: "found", label: found.label });
+    // Tidy the postcode only if the reader hasn't typed something else meanwhile.
+    if (found.source === "postcode")
+      setPostcode((current) => (current === submitted ? found.label : current));
+    const active = document.activeElement as HTMLElement | null;
+    // On touch screens, close the keyboard so the list and Show films are in view.
+    if (active?.id === "nearby-postcode" && matchMedia("(pointer: coarse)").matches) active.blur();
+    // On short screens the results start below the fold; bring them into view.
+    if (matchMedia("(max-height: 520px)").matches)
+      requestAnimationFrame(() => {
+        // Scroll the sheet body itself; scrollIntoView would also move the clipped dialog.
+        const heading = list.current?.previousElementSibling;
+        const scroller = list.current?.closest(".dialog-body");
+        if (!heading || !scroller) return;
+        scroller.scrollTo({
+          top:
+            heading.getBoundingClientRect().top -
+            scroller.getBoundingClientRect().top +
+            scroller.scrollTop,
+          behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+        });
+      });
   }
   function cancel() {
     gate.current.cancel();
@@ -124,7 +141,7 @@ export function NearbyCinemas({
             class="nearby-finder-postcode"
             onSubmit={(event) => {
               event.preventDefault();
-              void run("checking", (signal) => lookupPostcode(postcode, signal));
+              void run("checking", (signal) => lookupPostcode(postcode, signal), postcode);
             }}
           >
             <label for="nearby-postcode">Postcode</label>
@@ -185,7 +202,9 @@ export function NearbyCinemas({
         </div>
         <div class="nearby-finder-heading">
           <span id="nearby-list-label">
-            {origin ? `Cinemas within ${milesLabel(range)} · nearest first` : "Nearby cinemas"}
+            {origin
+              ? `Cinemas within ${milesLabel(range)} of ${origin.label} · nearest first`
+              : "Nearby cinemas"}
           </span>
           {venues.length > 1 && (
             <button
@@ -198,6 +217,7 @@ export function NearbyCinemas({
           )}
         </div>
         <div
+          ref={list}
           class="nearby-finder-list"
           role="group"
           aria-labelledby="nearby-list-label"

@@ -84,63 +84,83 @@ export async function lookupPostcode(
 ): Promise<FoundLocation> {
   const postcode = normalisePostcode(input);
   if (!postcode) throw new LocationError("invalid", "postcode");
-  let response: Response;
-  try {
-    response = await fetcher(
-      `https://api.postcodes.io/${postcode.full ? "postcodes" : "outcodes"}/${encodeURIComponent(postcode.code)}`,
-      {
-        referrerPolicy: "no-referrer",
-        signal: AbortSignal.any([signal, AbortSignal.timeout(timeout)]),
-      },
-    );
-  } catch (failure) {
+  // Combined by hand: AbortSignal.any and AbortSignal.timeout are missing on older iOS Safari.
+  const request = new AbortController();
+  let timedOut = false;
+  const timer = setTimeout(() => {
+    timedOut = true;
+    request.abort();
+  }, timeout);
+  const forward = () => request.abort(signal.reason);
+  if (signal.aborted) forward();
+  else signal.addEventListener("abort", forward, { once: true });
+  const fail = (failure: unknown, kind: LocationFailure) => {
     if (signal.aborted) throw failure;
-    throw new LocationError(
-      failure instanceof Error && failure.name === "TimeoutError" ? "timeout" : "network",
-      "postcode",
-    );
-  }
-  if (response.status === 404) throw new LocationError("not-found", "postcode");
-  if (!response.ok) throw new LocationError("service", "postcode");
-  let data: { result?: { latitude?: unknown; longitude?: unknown; postcode?: unknown } };
-  try {
-    data = await response.json();
-  } catch (failure) {
-    if (signal.aborted) throw failure;
-    throw new LocationError("service", "postcode");
-  }
-  const point = { lat: Number(data.result?.latitude), lon: Number(data.result?.longitude) };
-  if (!validCoordinates(point)) throw new LocationError("not-found", "postcode");
-  return {
-    point,
-    label: typeof data.result?.postcode === "string" ? data.result.postcode : postcode.code,
-    source: "postcode",
+    throw new LocationError(timedOut ? "timeout" : kind, "postcode");
   };
+  try {
+    let response: Response;
+    try {
+      response = await fetcher(
+        `https://api.postcodes.io/${postcode.full ? "postcodes" : "outcodes"}/${encodeURIComponent(postcode.code)}`,
+        { referrerPolicy: "no-referrer", signal: request.signal },
+      );
+    } catch (failure) {
+      return fail(failure, "network");
+    }
+    if (response.status === 404) throw new LocationError("not-found", "postcode");
+    if (!response.ok) throw new LocationError("service", "postcode");
+    let data: { result?: { latitude?: unknown; longitude?: unknown; postcode?: unknown } };
+    try {
+      data = await response.json();
+    } catch (failure) {
+      return fail(failure, "service");
+    }
+    const point = { lat: Number(data.result?.latitude), lon: Number(data.result?.longitude) };
+    if (!validCoordinates(point)) throw new LocationError("not-found", "postcode");
+    return {
+      point,
+      label: typeof data.result?.postcode === "string" ? data.result.postcode : postcode.code,
+      source: "postcode",
+    };
+  } finally {
+    clearTimeout(timer);
+    signal.removeEventListener("abort", forward);
+  }
 }
 
 type GeolocationLike = Pick<Geolocation, "getCurrentPosition">;
+/**
+ * The browser's own timeout excludes the permission prompt, so an ignored prompt would wait
+ * forever; `patience` bounds the whole request, prompt included.
+ */
 export function locateDevice(
   geolocation: GeolocationLike | undefined,
   timeout = NEARBY_TIMEOUT,
+  patience = NEARBY_TIMEOUT * 3,
 ): Promise<FoundLocation> {
   return new Promise((resolve, reject) => {
     if (!geolocation) {
       reject(new LocationError("unavailable", "device"));
       return;
     }
+    const timer = setTimeout(() => reject(new LocationError("timeout", "device")), patience);
     geolocation.getCurrentPosition(
       (position) => {
+        clearTimeout(timer);
         const point = { lat: position.coords.latitude, lon: position.coords.longitude };
         if (validCoordinates(point)) resolve({ point, label: "your location", source: "device" });
         else reject(new LocationError("unavailable", "device"));
       },
-      (failure) =>
+      (failure) => {
+        clearTimeout(timer);
         reject(
           new LocationError(
             failure?.code === 1 ? "denied" : failure?.code === 3 ? "timeout" : "unavailable",
             "device",
           ),
-        ),
+        );
+      },
       { timeout, maximumAge: 60000 },
     );
   });
@@ -170,12 +190,36 @@ export function createRequestGate() {
   };
 }
 
+export type RequestGate = ReturnType<typeof createRequestGate>;
+/**
+ * Runs `find` as the gate's latest request. Resolves with its outcome, or with null when a
+ * later request or a cancel superseded it — whether or not the work honoured the abort.
+ */
+export async function runLatest<T>(
+  gate: RequestGate,
+  find: (signal: AbortSignal) => Promise<T>,
+): Promise<{ ok: true; value: T } | { ok: false; error: unknown } | null> {
+  const { id, signal } = gate.start();
+  try {
+    const value = await find(signal);
+    return gate.isCurrent(id) ? { ok: true, value } : null;
+  } catch (error) {
+    return gate.isCurrent(id) ? { ok: false, error } : null;
+  }
+}
+
 export type NearbyStatus =
   | { kind: "idle" }
   | { kind: "checking" }
   | { kind: "locating" }
   | { kind: "found"; label: string }
-  | { kind: "failed"; error: LocationFailure; source: "postcode" | "device" };
+  | {
+      kind: "failed";
+      error: LocationFailure;
+      source: "postcode" | "device";
+      /** The location whose cinemas are still listed, if any. */
+      previous?: string;
+    };
 
 export function milesLabel(range: number) {
   return `${range} ${range === 1 ? "mile" : "miles"}`;
@@ -208,10 +252,15 @@ export function statusMessage(
             tone: "error",
           };
     case "failed":
-      return { text: failureMessage(status.error, status.source), tone: "error" };
+      return {
+        text:
+          failureMessage(status.error, status.source) +
+          (status.previous ? ` Still showing cinemas near ${status.previous}.` : ""),
+        tone: "error",
+      };
   }
 }
-function failureMessage(error: LocationFailure, source: "postcode" | "device") {
+export function failureMessage(error: LocationFailure, source: "postcode" | "device") {
   switch (error) {
     case "invalid":
       return "Enter a UK postcode, like SW1A 2AA, or a district, like N1.";

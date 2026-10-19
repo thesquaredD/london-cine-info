@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "preact/hooks";
 import type { DataMeta } from "../shared/data";
 import type { CinemasState } from "../lib/cinemas";
 import { distanceMiles, validCoordinates, withinRadius, type Coordinates } from "../lib/distance";
+import { LocationError, failureMessage, lookupPostcode } from "../lib/nearby";
 import { Dialog } from "./dialog";
 export function MyCinemas({
   cinemas,
@@ -78,31 +79,23 @@ export function MyCinemas({
     setLocationError("");
     setLocating(false);
   }
+  const lookupController = useRef<AbortController | null>(null);
   async function lookup() {
     const request = ++locationRequest.current;
-    const requestedPostcode = postcode.trim();
+    lookupController.current?.abort();
+    const controller = (lookupController.current = new AbortController());
     setLocating(true);
     setLocationError("");
     try {
-      const response = await fetch(
-        `https://api.postcodes.io/postcodes/${encodeURIComponent(requestedPostcode)}`,
-        { referrerPolicy: "no-referrer", signal: AbortSignal.timeout(10000) },
-      );
-      if (!response.ok)
-        throw new Error(
-          response.status === 404
-            ? "Enter a valid UK postcode."
-            : "Postcode lookup is unavailable. Try again.",
-        );
-      const data = await response.json();
-      acceptLocation(
-        { lat: data.result?.latitude, lon: data.result?.longitude },
-        request,
-        requestedPostcode,
-      );
+      const found = await lookupPostcode(postcode, controller.signal);
+      acceptLocation(found.point, request, found.label);
     } catch (failure) {
       if (request === locationRequest.current) {
-        setLocationError(failure instanceof Error ? failure.message : "Postcode lookup failed.");
+        setLocationError(
+          failure instanceof LocationError
+            ? failureMessage(failure.kind, failure.source)
+            : "Postcode lookup failed.",
+        );
         setLocating(false);
       }
     }
@@ -399,48 +392,46 @@ export function MyCinemas({
         {!groups.size && <p>No listed cinemas match these filters.</p>}
       </fieldset>
       <div class="cinema-selection-footer">
-        <>
-          <section class="selected-cinemas" aria-label="Selected cinemas">
-            <h3>Selected cinemas · {draft.length}</h3>
-            {draft.length ? (
-              <ul>
-                {draft.map((id) => {
-                  const venue = meta.venues.find((value) => value.id === id);
-                  const name = venue?.name ?? `${id} · not in current listings`;
-                  return (
-                    <li key={id}>
-                      <button
-                        type="button"
-                        disabled={cinemas.loading}
-                        aria-label={`Remove ${name}`}
-                        onClick={() =>
-                          setDraft((value) => value.filter((selected) => selected !== id))
-                        }
-                      >
-                        {name} <span aria-hidden="true">×</span>
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-            ) : (
-              <p>No cinemas selected yet.</p>
-            )}
-          </section>
-          <div class="cinema-done-row">
-            <div class="cinema-save-status">
-              <p role="status">
-                {cinemas.busy
-                  ? "Saving…"
-                  : cinemas.saved && !cinemas.storageError && !cinemas.error
-                    ? "Saved"
-                    : "Changes save automatically."}
-              </p>
-              <span>{cinemas.signedIn ? "Synced to your account" : "In this browser"}</span>
-            </div>
-            <button onClick={onClose}>Done</button>
+        <section class="selected-cinemas" aria-label="Selected cinemas">
+          <h3>Selected cinemas · {draft.length}</h3>
+          {draft.length ? (
+            <ul>
+              {draft.map((id) => {
+                const venue = meta.venues.find((value) => value.id === id);
+                const name = venue?.name ?? `${id} · not in current listings`;
+                return (
+                  <li key={id}>
+                    <button
+                      type="button"
+                      disabled={cinemas.loading}
+                      aria-label={`Remove ${name}`}
+                      onClick={() =>
+                        setDraft((value) => value.filter((selected) => selected !== id))
+                      }
+                    >
+                      {name} <span aria-hidden="true">×</span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : (
+            <p>No cinemas selected yet.</p>
+          )}
+        </section>
+        <div class="cinema-done-row">
+          <div class="cinema-save-status">
+            <p role="status">
+              {cinemas.busy
+                ? "Saving…"
+                : cinemas.saved && !cinemas.storageError && !cinemas.error
+                  ? "Saved"
+                  : "Changes save automatically."}
+            </p>
+            <span>{cinemas.signedIn ? "Synced to your account" : "In this browser"}</span>
           </div>
-        </>
+          <button onClick={onClose}>Done</button>
+        </div>
       </div>
     </Dialog>
   );
