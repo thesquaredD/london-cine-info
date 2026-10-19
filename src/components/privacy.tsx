@@ -242,12 +242,17 @@ export function Privacy({ onNavigate }: { onNavigate: (path: string) => void }) 
                   <tr>
                     <td>Local storage</td>
                     <td>
-                      Local storage holds guest favourite cinemas, a random cinema-preference
-                      identifier, the hide-watchlist-ratings setting, whether you browse films as a
-                      list or as posters, which Radar sections you have collapsed and whether you
-                      have moved on from the welcome page. Guest choices stay separate from
-                      signed-in favourites; a merge receipt prevents repeated imports of the same
-                      guest choices into an account.
+                      Local storage holds:
+                      <ul>
+                        <li>guest favourite cinemas</li>
+                        <li>a random cinema-preference identifier</li>
+                        <li>the hide-watchlist-ratings setting</li>
+                        <li>whether you browse films as a list or as posters</li>
+                        <li>which Radar sections you have collapsed</li>
+                        <li>whether you have moved on from the welcome page</li>
+                      </ul>
+                      Guest choices stay separate from signed-in favourites; a merge receipt
+                      prevents repeated imports of the same guest choices into an account.
                     </td>
                     <td>Until you clear site data.</td>
                   </tr>

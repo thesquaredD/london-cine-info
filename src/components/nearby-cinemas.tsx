@@ -124,7 +124,12 @@ export function NearbyCinemas({
     const target =
       from === "locating"
         ? dialog.current?.querySelector<HTMLElement>(".nearby-finder-device")
-        : dialog.current?.querySelector<HTMLElement>("#nearby-postcode");
+        : matchMedia("(pointer: coarse)").matches
+          ? // Focusing the field would reopen the on-screen keyboard.
+            dialog.current?.querySelector<HTMLElement>(
+              ".nearby-finder-postcode button[type=submit]",
+            )
+          : dialog.current?.querySelector<HTMLElement>("#nearby-postcode");
     target?.focus();
   }
   const failedPostcode = status.kind === "failed" && status.source === "postcode";
