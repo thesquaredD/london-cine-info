@@ -8,6 +8,8 @@ export type ScreeningTag = { key: string; label: string; kind?: "accessibility" 
  * sit inside `.showtimes` (the `screenings` container) for its responsive rules to apply.
  */
 export function ScreeningRow({
+  highlighted,
+  sharedTitle,
   dateTime,
   localTime,
   venue,
@@ -16,6 +18,9 @@ export function ScreeningRow({
   note,
   children,
 }: {
+  /** The screening a shared link points at: labelled, tinted and focusable for the link. */
+  highlighted?: boolean;
+  sharedTitle?: string;
   dateTime?: string;
   localTime: string;
   venue: string;
@@ -26,11 +31,24 @@ export function ScreeningRow({
   children: ComponentChildren;
 }) {
   return (
-    <li class={soldOut ? "sold-out" : ""}>
+    <li
+      class={[soldOut && "sold-out", highlighted && "shared-screening"].filter(Boolean).join(" ")}
+      tabIndex={highlighted ? -1 : undefined}
+      aria-label={
+        highlighted
+          ? `Shared screening${sharedTitle ? `: ${sharedTitle}` : ""}, ${localTime} at ${venue}`
+          : undefined
+      }
+    >
       <time dateTime={dateTime}>{localTime}</time>
       <span class="time-dot" aria-hidden="true" />
       <div class="screening-info">
         <div class="screening-details">
+          {highlighted && (
+            <span class="shared-screening-label">
+              Shared screening{sharedTitle ? ` · ${sharedTitle}` : ""}
+            </span>
+          )}
           <span class="screening-venue">{venue}</span>
           <div class="screening-tags">
             {tags.map((tag) => (

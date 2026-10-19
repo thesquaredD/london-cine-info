@@ -309,3 +309,22 @@ keeps reviewed venue IDs and source links, including independent commercial and 
 cinemas. Unknown venues are excluded, not inferred independent from missing chain metadata. This
 is a maintained selection, not a complete ownership register; review and add venue IDs with a
 source when coverage changes. It does not alter My cinemas or saved preferences.
+
+## Film and screening links
+
+Share film copies a clean `/film/<id>/<title>/` link, independent of the sender’s filters,
+watchlists and page. The film ID is the identity; the title slug is descriptive, so a renamed
+film keeps working. Old `?film=` links still open the film.
+
+- **Link previews.** Each build emits a small HTML page per film (`scripts/lib/film-pages.ts`)
+  with its title, description and, when it has an absolute https poster, `og:image`. The
+  same app boots from it. Films that have left the catalogue get the SPA fallback, which shows
+  “This film is no longer listed”. `/film/*` is served `no-cache`.
+- **Catalogue page.** A named link opens the catalogue page that holds the film.
+- **Screenings.** Every screening row, including Events, has Share. The `screening` query value
+  is the venue ID, exact UTC start and screen as JSON, independent of booking URLs and row
+  position. The link opens the programme page holding that screening, labelled, tinted and
+  focused. A screening that has gone, or that filters hide, gets a notice instead.
+- **Clipboard.** When copying is refused, a selectable field shows the link.
+
+Verification: `npm run e2e -- tests/e2e/film-sharing.spec.ts`.

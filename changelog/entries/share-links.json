@@ -1,0 +1,7 @@
+{
+  "id": "share-links",
+  "type": "improved",
+  "title": "Share a film or a single screening",
+  "body": "Shared film links now carry the film’s name and show it in link previews. Each screening has its own Share button, and the link opens that screening highlighted.",
+  "visibility": "public"
+}

@@ -433,7 +433,7 @@
 
 /*
  * Screening rows. Each row is time, venue details (name, tags, screen notes) and an actions
- * column holding Book and the calendar action. Tags and notes grow the details column, never
+ * column holding Book, Share and the calendar action. Tags and notes grow the details column, never
  * the actions column, so Book stays level with its venue name. The layout responds to the
  * width of the screenings list rather than the window, so it holds in the desktop sheet,
  * the phone sheet and under browser zoom.
@@ -486,11 +486,47 @@
 }
 :root .screening-actions {
   grid-area: actions;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
+  /* Book and a fixed 60px Share share the first line; the calendar action spans below. */
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 60px;
+  align-items: start;
   gap: 6px;
-  width: 7em;
+  width: 10em;
+}
+:root .screening-actions .add-calendar {
+  grid-column: 1 / -1;
+}
+/* The control's parts sit straight in the actions grid (or the events' flex row). */
+:root .share-screening-control {
+  display: contents;
+}
+/* The How to use example shows Share as a span; it matches the button. */
+:root span.share-screening {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+}
+:root .share-screening {
+  box-sizing: border-box;
+  width: 60px;
+  min-height: 44px;
+  margin: 0;
+  padding: 6px 4px;
+  line-height: 1.2;
+  text-align: center;
+}
+/* The copy fallback takes a line of its own after the actions, so nothing beside it moves. */
+:root .share-fallback {
+  order: 1;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  grid-column: 1 / -1;
+  flex-basis: 100%;
 }
 :root .screening-actions .booking-action {
   white-space: nowrap;
@@ -526,7 +562,7 @@
     font-size: 16px;
   }
   :root .screening-actions {
-    width: 6.5em;
+    width: 10em;
   }
   :root .screening-actions .booking-action {
     font-size: 16px;
@@ -535,18 +571,15 @@
     font-size: 13px;
   }
 }
-/* A wide list (44rem keeps the venue at least half the row) puts the calendar action beside
-   Book, each in its own fixed-width column. */
-@container screenings (min-width: 44rem) {
+/* A wide list (52rem keeps the venue at least half the row) puts Book, Share and the
+   calendar action on one line, each in its own fixed-width column. */
+@container screenings (min-width: 52rem) {
   :root .screening-actions {
-    flex-direction: row;
+    grid-template-columns: 7em 60px 9em;
     width: auto;
   }
-  :root .screening-actions .booking-action {
-    width: 7em;
-  }
   :root .screening-actions .add-calendar {
-    width: 9em;
+    grid-column: auto;
   }
 }
 /*
@@ -564,15 +597,9 @@
     display: none;
   }
   :root .screening-actions {
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: flex-end;
+    grid-template-columns: minmax(72px, 1fr) 60px;
     justify-self: end;
-    width: auto;
-  }
-  :root .screening-actions :is(.booking-action, .add-calendar) {
-    width: auto;
-    min-width: 6em;
+    width: min(100%, 210px);
   }
 }
 
@@ -677,4 +704,22 @@
     grid-column: 2;
     grid-row: 2;
   }
+}
+
+/* A shared screening link opens on its row: labelled, tinted and focused. */
+:root :is(.showtimes, .film-row, .film-expanded) {
+  scroll-margin-top: 100px;
+}
+:root .showtime-day .shared-screening {
+  background: color-mix(in srgb, var(--brass) 14%, var(--panel));
+  /* The rule sits inside the row's own padding, so its columns line up with the others. */
+  box-shadow: inset 3px 0 var(--brass);
+  scroll-margin-top: 100px;
+}
+:root .shared-screening-label {
+  color: var(--brass);
+  font-weight: 500;
+}
+:root .film-info .share-fallback {
+  margin-top: 4px;
 }

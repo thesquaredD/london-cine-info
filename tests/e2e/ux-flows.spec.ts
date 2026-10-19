@@ -37,8 +37,16 @@ test("opened film shows provider links and sharing does not move the screenings"
   await expect(status).toHaveText("Film link copied");
   expect((await showtimes.boundingBox())!.y).toBe(top);
   await share.click();
-  await expect(status).toHaveText("Copy the address bar to share.");
-  expect((await showtimes.boundingBox())!.y).toBe(top);
+  await expect(status).toHaveText("Copy the film link below.");
+  await expect(page.getByRole("textbox", { name: "Film link", exact: true })).toHaveValue(
+    /\/film\/classic-a\/fixture-classic-a\/$/,
+  );
+  // The copy fallback adds its field once, after the controls; repeating it moves nothing.
+  const withField = (await showtimes.boundingBox())!.y;
+  expect(withField).toBeGreaterThanOrEqual(top);
+  await share.click();
+  await expect(status).toHaveText("Copy the film link below.");
+  expect((await showtimes.boundingBox())!.y).toBe(withField);
 });
 
 test("film links survive refresh and Back; compact details remain visible", async ({ page }) => {
@@ -48,7 +56,10 @@ test("film links survive refresh and Back; compact details remain visible", asyn
   const filmUrl = page.url();
   await page.context().grantPermissions(["clipboard-read", "clipboard-write"]);
   await page.getByRole("button", { name: "Share film", exact: true }).click();
-  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(filmUrl);
+  // The shared link names the film and leaves the sender's view behind.
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(
+    new URL("/film/classic-a/fixture-classic-a/", filmUrl).href,
+  );
   await page.reload();
   await expect(page.locator(".poster")).toBeVisible();
   await expect(page.locator(".film-facts")).toContainText("1977");

@@ -155,6 +155,7 @@ export function HowToUse({
                       <span class="booking-action">
                         Book <ExternalLinkIcon />
                       </span>
+                      <span class="share-screening">Share</span>
                     </ScreeningRow>
                     <ScreeningRow
                       localTime="20:45"
@@ -165,14 +166,16 @@ export function HowToUse({
                       <span class="booking-action">
                         Details <ExternalLinkIcon />
                       </span>
+                      <span class="share-screening">Share</span>
                     </ScreeningRow>
                   </ul>
                 </div>
               </div>
             </Example>
             <p class="prose-small">
-              Sold-out screenings show Details instead of Book. Add to calendar saves the screening;
-              it does not buy a ticket.
+              Sold-out screenings show Details instead of Book. Share copies a link that opens the
+              film with that screening highlighted. Add to calendar saves the screening; it does not
+              buy a ticket.
             </p>
             <div class="prose-links guide-actions">
               <PageLink href="/" onNavigate={onNavigate}>
