@@ -537,15 +537,6 @@ h3 {
   gap: 5px;
   min-width: 0;
 }
-.screening-info > a {
-  text-decoration: none;
-  font-size: 15px;
-  color: var(--fg);
-  overflow-wrap: anywhere;
-}
-.screening-info > a:hover {
-  text-decoration: underline;
-}
 .screening-info small {
   display: block;
   width: 100%;
@@ -926,8 +917,7 @@ h3 {
   .showtime-day h3 {
     font-size: 13px;
   }
-  .showtime-day time,
-  .screening-info > a {
+  .showtime-day time {
     font-size: 13px;
   }
   .time-dot {

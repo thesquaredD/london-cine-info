@@ -263,10 +263,6 @@
   padding: 8px 10px;
   gap: 8px;
 }
-:root .screening-info > a {
-  font-size: 14px;
-  font-weight: 600;
-}
 :root .film-row td {
   border-bottom: 1px solid #e4dfd3;
 }
@@ -759,8 +755,7 @@
   font-size: 14px;
   font-weight: 400;
 }
-:root
-  :is(.rating-chip, .mobile-sort-score, .screening-info > a, .showtime-day h3, th button, strong) {
+:root :is(.rating-chip, .mobile-sort-score, .showtime-day h3, th button, strong) {
   font-weight: 500;
 }
 @media (max-width: 760px) {
@@ -997,9 +992,6 @@ html {
   }
   :root .showtime-day time {
     font-size: 22px;
-  }
-  :root .screening-info > a {
-    font-size: 18px;
   }
   :root .screening-info small {
     font-size: 15px;

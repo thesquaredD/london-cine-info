@@ -296,7 +296,7 @@ export function ExpandedRow({
                                 rel="noopener noreferrer"
                                 aria-label={`${row.bookingFallback || row.soldOut ? "Screening details for" : "Book"} ${film.ti} at ${venue?.name ?? row.venue} ${row.localTime}`}
                               >
-                                {row.bookingFallback || row.soldOut ? "Details" : "Book"}
+                                {row.bookingFallback || row.soldOut ? "Details ↗" : "Book ↗"}
                               </a>
                               {onCalendar && (
                                 <button

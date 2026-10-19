@@ -500,6 +500,9 @@
   gap: 6px;
   width: 7em;
 }
+:root .screening-actions .booking-action {
+  white-space: nowrap;
+}
 :root .screening-actions :is(.booking-action, .add-calendar) {
   display: inline-flex;
   align-items: center;
@@ -531,7 +534,7 @@
     font-size: 16px;
   }
   :root .screening-actions {
-    width: 5.5em;
+    width: 6.5em;
   }
   :root .screening-actions .booking-action {
     font-size: 16px;
@@ -540,8 +543,9 @@
     font-size: 13px;
   }
 }
-/* A wide list puts the calendar action beside Book, each in its own fixed-width column. */
-@container screenings (min-width: 35rem) {
+/* A wide list (44rem keeps the venue at least half the row) puts the calendar action beside
+   Book, each in its own fixed-width column. */
+@container screenings (min-width: 44rem) {
   :root .screening-actions {
     flex-direction: row;
     width: auto;
@@ -553,8 +557,12 @@
     width: 9em;
   }
 }
-/* A very narrow list puts the actions on the time line and gives the venue the full width. */
-@container screenings (max-width: 20rem) {
+/*
+ * Below about 26rem a separate actions column would leave the venue name less than half the
+ * row (phones, the 800-1000px desktop sheet, phone landscape), so the actions move onto the
+ * time line and the venue name gets the full width.
+ */
+@container screenings (max-width: 26rem) {
   :root .showtime-day li {
     grid-template-columns: max-content minmax(0, 1fr);
     grid-template-areas: "time actions" "details details";
@@ -572,6 +580,6 @@
   }
   :root .screening-actions :is(.booking-action, .add-calendar) {
     width: auto;
-    min-width: 5.5em;
+    min-width: 6em;
   }
 }

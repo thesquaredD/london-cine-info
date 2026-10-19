@@ -1,3 +1,4 @@
+import "../styles/discovery-designs.css";
 import { NearbyStudy } from "./nearby-study";
 import { CinemaWelcome } from "./cinema-welcome";
 import { useEffect, useState } from "preact/hooks";

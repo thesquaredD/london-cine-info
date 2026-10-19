@@ -1034,3 +1034,142 @@ dialog.study-film-dialog[open] {
     height: 90dvh;
   }
 }
+
+/* Design-review study text, moved from prose.css so production builds do not ship it. */
+.prose.study-review {
+  max-width: none;
+  padding: 20px 24px;
+  background: var(--panel);
+}
+.study-review h2 {
+  font-size: var(--prose-h2);
+}
+.study-review .study-variants {
+  margin-bottom: var(--prose-gap);
+}
+.study-review p:last-child {
+  margin-bottom: 0;
+}
+.study-welcome .study-actions {
+  margin-block: 20px;
+}
+.study-welcome .study-choices {
+  margin-top: var(--prose-section);
+}
+.study-choices strong {
+  font-size: var(--prose-h2);
+  font-weight: 500;
+  line-height: 1.2;
+}
+.study-choices span {
+  font-size: var(--prose-body);
+  line-height: var(--prose-leading);
+}
+.study-choices .prose-eyebrow {
+  font-size: var(--prose-eyebrow);
+}
+.prose.study-welcome-compact {
+  padding-block: 24px;
+}
+.study-welcome-compact .study-choices {
+  margin-top: 16px;
+}
+.study-welcome-compact h2 {
+  font-size: var(--prose-h2);
+}
+.study-guide-tabs {
+  margin-block: 24px;
+}
+.study-guide-example {
+  margin-top: 24px;
+}
+.study-guide-example ol {
+  padding-left: 20px;
+  margin-block: 0 20px;
+}
+.study-demo .study-poster {
+  margin-bottom: 16px;
+}
+.study-demo strong {
+  font-weight: 500;
+}
+.study-list-person {
+  margin-bottom: 16px;
+}
+.study-list-person span {
+  font-size: var(--prose-eyebrow);
+  color: var(--brass);
+  letter-spacing: 0.1em;
+}
+.study-demo-result {
+  margin-top: 16px;
+}
+.study-cinema-page > .study-variants,
+.study-state-picker,
+.study-cinema-surface {
+  margin-bottom: 20px;
+}
+.study-location-form p {
+  margin: 0;
+}
+.study-poster-heading.prose {
+  max-width: none;
+  padding: 28px 24px 0;
+}
+.study-film-card strong {
+  font-size: var(--prose-lede);
+  font-weight: 500;
+  line-height: 1.2;
+}
+.study-film-card :is(span, small) {
+  font-size: var(--prose-small);
+  line-height: 1.3;
+}
+.study-caption.prose {
+  padding: 20px 24px;
+  max-width: none;
+  border-top: 1px solid var(--line);
+}
+.study-review-bar {
+  font-size: var(--prose-eyebrow);
+  letter-spacing: 0.08em;
+}
+@media (max-width: 799px) {
+  .prose.study-review,
+  .prose.study-welcome,
+  .prose.study-guide,
+  .prose.study-cinema-page {
+    padding: 24px 16px;
+  }
+  .study-welcome .study-choices {
+    margin-top: 24px;
+  }
+  .study-guide-tabs button {
+    font-size: var(--prose-body);
+  }
+}
+.cinema-welcome-heading .study-actions {
+  margin-top: 24px;
+}
+.study-review summary {
+  font-size: var(--prose-small);
+}
+.study-review[open] > h2 {
+  margin-top: 16px;
+}
+:root .study-film-card strong {
+  font-size: 16px;
+  line-height: 1.25;
+}
+:root .study-film-card :is(span, small) {
+  font-size: 13px;
+  line-height: 1.3;
+}
+@media (max-width: 799px) {
+  :root .study-film-card strong {
+    font-size: 17px;
+  }
+  :root .study-film-card :is(span, small) {
+    font-size: 14px;
+  }
+}
