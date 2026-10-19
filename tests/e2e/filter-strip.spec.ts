@@ -93,3 +93,35 @@ test("strip wraps without overflow and eight guest items fit the height budget",
   ).toBe(true);
   await page.screenshot({ path: join(evidence, `guest-cinemas-${width}.png`) });
 });
+test("Independent cinemas chip, sheet checkbox, reload and Clear all agree", async ({ page }) => {
+  await page.goto("/");
+  const strip = page.getByRole("group", { name: "Shortcuts" });
+  const chip = strip.getByRole("button", { name: "Independent cinemas", exact: true });
+  await expect(page.locator(".film-row")).toHaveCount(6);
+  await chip.click();
+  await expect(chip).toHaveAttribute("aria-pressed", "true");
+  await expect(page).toHaveURL(/[?&]independent=1/);
+  await expect(page.getByRole("button", { name: "Independent cinemas ×" })).toBeVisible();
+  const independentRows = await page.locator(".film-row").count();
+  expect(independentRows).toBeLessThan(6);
+  await page.reload();
+  await expect(page.locator(".film-row")).toHaveCount(independentRows);
+  await page.locator(".all-filters").click();
+  const sheet = page.getByRole("dialog", { name: "Filters", exact: true });
+  await sheet.locator('[data-filter="venue"] > summary').click();
+  await expect(sheet.locator('[data-filter="venue"] > summary')).toContainText("Independent only");
+  const box = sheet.getByRole("checkbox", { name: "Independent cinemas only" });
+  await expect(box).toBeChecked();
+  await expect(box).toHaveAccessibleDescription(/cinemas we’ve checked/i);
+  await page.keyboard.press("Escape");
+  await page.getByRole("button", { name: "Clear all", exact: true }).click();
+  await expect(chip).toHaveAttribute("aria-pressed", "false");
+  await expect(page).not.toHaveURL(/independent=1/);
+  await expect(page.locator(".film-row")).toHaveCount(6);
+});
+test("a chain cinema with Independent on gets the generic empty title", async ({ page }) => {
+  await page.goto("/?independent=1&venue=picturehouses.com-central&day=today");
+  const empty = page.locator(".empty-state");
+  await expect(empty.getByRole("heading", { level: 2 })).toHaveText("No films match these filters");
+  await expect(empty.getByRole("button", { name: /Include all cinema types/ })).toBeVisible();
+});

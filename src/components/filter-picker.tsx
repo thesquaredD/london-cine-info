@@ -13,6 +13,8 @@ type Props = {
   onChange: (values: string[], excluded: string[]) => void;
   idPrefix: string;
   children?: ComponentChildren;
+  /** Rendered above the actions and options, so it is reached before a long option list. */
+  before?: ComponentChildren;
   summaryValue?: string;
 };
 export function FilterPicker({
@@ -25,6 +27,7 @@ export function FilterPicker({
   onChange,
   idPrefix,
   children,
+  before,
   summaryValue,
 }: Props) {
   const [open, setOpen] = useState(false);
@@ -92,6 +95,7 @@ export function FilterPicker({
       </summary>
       {open && (
         <div class="picker-content">
+          {before}
           {filterKey !== "day" && options.length > 8 && (
             <>
               <label class="sr-only" for={`${id}-search`}>

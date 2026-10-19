@@ -45,7 +45,7 @@ describe("personalized shortcuts", () => {
     expect(items.find((item) => item.id === "cinemas")?.disabled).toBe(true);
     expect(items.find((item) => item.id === "cinemas")?.changes?.filters?.venue).toEqual(["bfi"]);
   });
-  it("orders both personal shortcuts before Nearby", () => {
+  it("orders My watchlist, then the cinema group ending in Nearby", () => {
     expect(
       labels({
         ...base,
@@ -53,6 +53,15 @@ describe("personalized shortcuts", () => {
         cinemas: { venues: ["bfi"], loading: false },
       }).slice(-4),
     ).toEqual(["My watchlist", "My cinemas", "Independent cinemas", "Near me"]);
+    expect(
+      shortcutItems({
+        ...base,
+        account: { user, watchlist },
+        cinemas: { venues: ["bfi"], loading: false },
+      })
+        .slice(-4)
+        .map((item) => item.group),
+    ).toEqual(["personal", "where", "where", "where"]);
   });
   it("treats Near me as a dialog opener, not a toggle", () => {
     const nearby = shortcutItems(base).find((item) => item.id === "nearby");

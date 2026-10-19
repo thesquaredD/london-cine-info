@@ -128,3 +128,21 @@ it("year selections exclude events whose film year is unknown or unavailable", (
     matchingEvents([orphan], dataset.films, dataset.meta, { ...state, decades: [1990] }, now),
   ).toHaveLength(0);
 });
+it("Independent cinemas limits events and their counts to listed venues", async () => {
+  const { isIndependentCinema } = await import("../data/independent-cinemas");
+  const entries = buildEventIndex(dataset.films, dataset.showtimes);
+  const all = readView(new URL("https://test.local/events"));
+  const on = readView(new URL("https://test.local/events?independent=1"));
+  const venueOf = (event: EventOccurrence) => ({ id: event.venue });
+  const listed = matchingEvents(entries, dataset.films, dataset.meta, all, now).filter((event) =>
+    isIndependentCinema(venueOf(event)),
+  );
+  const independent = matchingEvents(entries, dataset.films, dataset.meta, on, now);
+  expect(listed.length).toBeGreaterThan(0);
+  expect(matchingEvents(entries, dataset.films, dataset.meta, all, now).length).toBeGreaterThan(
+    listed.length,
+  );
+  expect(independent.map((event) => event.id)).toEqual(listed.map((event) => event.id));
+  const venues = eventFacetCounts(entries, dataset.films, dataset.meta, on, now).venue;
+  for (const [id, count] of venues) if (count) expect(isIndependentCinema({ id })).toBe(true);
+});

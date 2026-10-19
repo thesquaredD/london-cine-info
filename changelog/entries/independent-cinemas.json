@@ -2,6 +2,6 @@
   "id": "independent-cinemas",
   "type": "added",
   "title": "Show only independent cinemas",
-  "body": "Use the Independent cinemas shortcut, or the option under Cinema in Filters, to see screenings at independently run and charitable cinemas only. It works alongside your other filters and does not change My cinemas.",
+  "body": "Use the Independent cinemas shortcut, or the option under Cinema in Filters, to see screenings only at cinemas we’ve checked are independent, charities or run by a public or educational body. The list is selective, so cinemas we haven’t checked yet are left out; it works alongside your other filters.",
   "visibility": "public"
 }

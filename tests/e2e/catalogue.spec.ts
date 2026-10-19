@@ -361,7 +361,10 @@ test("filter controls stay stationary through selection, clearing and changing c
     const option =
       name === "Day"
         ? picker.locator(".calendar-grid").getByRole("button").first()
-        : picker.getByRole("checkbox").first();
+        : name === "Cinema"
+          ? // The Independent checkbox sits above the venue options.
+            picker.locator(".filter-options").getByRole("checkbox").first()
+          : picker.getByRole("checkbox").first();
     await option.scrollIntoViewIfNeeded();
     const frame = await picker.boundingBox();
     const control = await option.boundingBox();

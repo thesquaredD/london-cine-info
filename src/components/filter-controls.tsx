@@ -65,7 +65,33 @@ export function FilterControls({
                 summaryValue={
                   key === "time" && (state.from || state.to)
                     ? `Starts ${state.from || "00:00"}–${state.to || "23:59"}`
-                    : undefined
+                    : key === "venue" && state.independent && !state.excluded.venue?.length
+                      ? state.filters.venue?.length
+                        ? `${state.filters.venue.length} selected · independent only`
+                        : "Independent only"
+                      : undefined
+                }
+                before={
+                  key === "venue" && (
+                    <div class="independent-filter">
+                      <label class="availability-filter">
+                        <input
+                          type="checkbox"
+                          checked={!!state.independent}
+                          aria-describedby={`${idPrefix}-independent-hint`}
+                          onChange={(event) =>
+                            onChange({ independent: event.currentTarget.checked, page: 1 })
+                          }
+                        />
+                        Independent cinemas only
+                      </label>
+                      <p class="filter-hint" id={`${idPrefix}-independent-hint`}>
+                        Shows cinemas we’ve checked that are independent, charities or run by a
+                        public or educational body. Chains, and cinemas we haven’t checked yet, are
+                        left out.
+                      </p>
+                    </div>
+                  )
                 }
                 onChange={(values, excluded) =>
                   onChange({
@@ -75,24 +101,6 @@ export function FilterControls({
                   })
                 }
               >
-                {key === "venue" && (
-                  <>
-                    <label class="availability-filter">
-                      <input
-                        type="checkbox"
-                        checked={!!state.independent}
-                        onChange={(event) =>
-                          onChange({ independent: event.currentTarget.checked, page: 1 })
-                        }
-                      />
-                      Independent cinemas only
-                    </label>
-                    <p class="filter-hint">
-                      Independently run and charitable cinemas on our maintained list. Chain cinemas
-                      and unverified venues are excluded.
-                    </p>
-                  </>
-                )}
                 {key === "time" && (
                   <>
                     <p class="filter-hint">

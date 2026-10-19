@@ -7,7 +7,8 @@ import { dateShortcut, eveningShortcut, isEvening } from "./filters";
 export type ShortcutItem = {
   id: string;
   label: string;
-  group: "when" | "personal";
+  /** when = dates, personal = account lists, where = which cinemas. */
+  group: "when" | "personal" | "where";
   /** Undefined for a shortcut that opens a dialog rather than toggling a filter. */
   active?: boolean;
   disabled?: boolean;
@@ -57,7 +58,7 @@ export function shortcutItems({
     items.push({
       id: "cinemas",
       label: "My cinemas",
-      group: "personal",
+      group: "where",
       active: !!state.myCinemas,
       disabled: cinemas.loading,
       changes: {
@@ -70,11 +71,11 @@ export function shortcutItems({
   items.push({
     id: "independent",
     label: "Independent cinemas",
-    group: "personal",
+    group: "where",
     active: !!state.independent,
     changes: { independent: !state.independent, page: 1 },
   });
   // Near me opens the nearby finder; it is not a toggle.
-  items.push({ id: "nearby", label: "Near me", group: "personal" });
+  items.push({ id: "nearby", label: "Near me", group: "where" });
   return items;
 }
