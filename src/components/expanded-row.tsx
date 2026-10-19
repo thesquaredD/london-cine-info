@@ -1,3 +1,5 @@
+import { ExternalLinkIcon } from "./external-link-icon";
+import { filmProviderLinks } from "../lib/film-links";
 import { capture } from "../lib/analytics";
 import { screeningMatcher } from "../lib/filters";
 import type { ViewState } from "../lib/catalogue";
@@ -145,10 +147,22 @@ export function ExpandedRow({
                   })}
                 </div>
               )}
+              <div class="film-provider-links" aria-label="Film websites">
+                {filmProviderLinks(film).map((provider) => (
+                  <a
+                    key={provider.name}
+                    href={provider.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {provider.label} <ExternalLinkIcon />
+                  </a>
+                ))}
+              </div>
               <div class="film-links">
                 {film.tr && (
                   <a class="trailer-link" href={film.tr} target="_blank" rel="noopener noreferrer">
-                    Watch trailer ↗
+                    Watch trailer <ExternalLinkIcon />
                   </a>
                 )}
                 <button
@@ -179,11 +193,9 @@ export function ExpandedRow({
                 >
                   Report a listing problem
                 </button>
-                {shareMessage && (
-                  <span role="status" class="share-status">
-                    {shareMessage}
-                  </span>
-                )}
+              </div>
+              <div role="status" class="share-status">
+                {shareMessage}
               </div>
             </div>
           </div>
@@ -294,7 +306,8 @@ export function ExpandedRow({
                             rel="noopener noreferrer"
                             aria-label={`${row.bookingFallback || row.soldOut ? "Screening details for" : "Book"} ${film.ti} at ${venue?.name ?? row.venue} ${row.localTime}`}
                           >
-                            {row.bookingFallback || row.soldOut ? "Details ↗" : "Book ↗"}
+                            {row.bookingFallback || row.soldOut ? "Details" : "Book"}{" "}
+                            <ExternalLinkIcon />
                           </a>
                           {onCalendar && (
                             <button

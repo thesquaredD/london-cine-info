@@ -1,3 +1,4 @@
+import { ExternalLinkIcon } from "./external-link-icon";
 import { directorLabel } from "../lib/filters";
 import { EmptyState } from "./empty-state";
 import { capture } from "../lib/analytics";
@@ -174,7 +175,8 @@ export function Events({
                             rel="noopener noreferrer"
                             aria-label={`${row.bookingFallback ? "Screening details for" : "Book"} ${row.title} at ${venue?.name ?? row.venue} ${row.localTime}`}
                           >
-                            {row.bookingFallback || row.soldOut ? "Details ↗" : "Book ↗"}
+                            {row.bookingFallback || row.soldOut ? "Details" : "Book"}{" "}
+                            <ExternalLinkIcon />
                           </a>
                           {onCalendar && (
                             <button
