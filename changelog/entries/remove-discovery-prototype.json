@@ -1,0 +1,8 @@
+{
+  "id": "remove-discovery-prototype",
+  "type": "improved",
+  "title": "Remove the discovery design prototype",
+  "body": "Removes the local design-review prototype and its unused styles.",
+  "visibility": "internal",
+  "reason": "Deletes the local discovery design study, its disabled preview flag, its study-only styles and an unused design preview notice. None of it shipped in production builds, so readers see no change."
+}

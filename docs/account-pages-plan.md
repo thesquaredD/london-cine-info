@@ -231,7 +231,7 @@ Signed out:
 2. Compare card (`.social-plan` markup reused, rendered as a bordered card): "Find a film
    together", two Letterboxd fields, "Find films in common". Submit behaviour unchanged
    (`addTemporary` both, `update({ selected, mode: "all" })`, then `onNavigate()` to `/` with
-   the lists applied). `VITE_UX_PREVIEW` notice stays.
+   the lists applied). (The `VITE_UX_PREVIEW` design-preview notice was later removed.)
 3. Section "Keep friends for next time": one paragraph and a "Sign in" link to `/account`.
 
 Signed in:
