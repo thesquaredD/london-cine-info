@@ -1,4 +1,7 @@
 import { Notice } from "./components/notice";
+import { CinemaLanding } from "./components/cinema-landing";
+import { HowToUse } from "./components/how-to-use";
+import { rememberWelcomeDismissed, showsWelcomeOnArrival, welcomeDismissed } from "./lib/welcome";
 import { EmptyState } from "./components/empty-state";
 import { MobileSort } from "./components/mobile-sort";
 import { capture } from "./lib/analytics";
@@ -201,10 +204,19 @@ function About({
         <h2 id="about-device">What stays on your device</h2>
         <p>
           Favourite cinemas are saved in your browser, or in your account while signed in. Accounts
-          use a necessary session cookie. Theme choices last for this visit. Opening a poster or
-          following an external link contacts that provider.
+          use a necessary session cookie. Leaving the welcome page is remembered so it is not shown
+          again. Theme choices last for this visit. Opening a poster or following an external link
+          contacts that provider.
         </p>
         <div class="prose-links">
+          <PageLink href="/how-to-use" onNavigate={onNavigate}>
+            How to use
+          </PageLink>
+          <span aria-hidden="true">·</span>
+          <PageLink href="/welcome" onNavigate={onNavigate}>
+            Welcome page
+          </PageLink>
+          <span aria-hidden="true">·</span>
           <PageLink href="/privacy" onNavigate={onNavigate}>
             Privacy policy
           </PageLink>
@@ -219,7 +231,8 @@ function About({
         </div>
       </section>
       <p class="prose-small prose-closing">
-        A personal, non-commercial project by Diogo Diogo. A London take on{" "}
+        London Ciné Info is independent and not affiliated with any cinema. Names and logos belong
+        to their venues. A personal, non-commercial project by Diogo Diogo. A London take on{" "}
         <a href="https://paris-cine.info">paris-cine.info</a>.
       </p>
     </article>
@@ -261,6 +274,16 @@ export function App() {
   }, []);
   const watched = useMemo(() => new Set(account.watchlist?.slugs ?? []), [account.watchlist]);
   const [state, setState] = useState(() => readView(new URL(window.location.href)));
+  // First unfiltered visit to the catalogue root shows the welcome page; links are never redirected.
+  const [welcome, setWelcome] = useState(() =>
+    showsWelcomeOnArrival(new URL(window.location.href), welcomeDismissed()),
+  );
+  function dismissWelcome() {
+    if (!welcome) return;
+    rememberWelcomeDismissed();
+    setWelcome(false);
+  }
+  const landing = state.path === "/welcome" || (welcome && viewUrl(state) === "/");
   const myCinemasActive = !!state.myCinemas;
   const [catalogue, setCatalogue] = useState<{
     films: Film[];
@@ -319,18 +342,21 @@ export function App() {
   const meta = catalogue?.meta ?? null;
   const [yearOpenRequest, setYearOpenRequest] = useState(0);
   const yearDecades = useMemo(() => catalogueDecades(catalogue?.films ?? []), [catalogue]);
-  const pageTitle =
-    PAGES.find((page) => page.path === state.path)?.name ??
-    {
-      "/account": "Account",
-      "/friends": "Friends",
-      "/settings": "Settings",
-      "/changelog": "What’s new",
-      "/privacy": "Privacy",
-      "/auth/verify": "Sign in",
-      "/unsubscribe": "Unsubscribe",
-    }[state.path] ??
-    "About";
+  const pageTitle = landing
+    ? "Welcome"
+    : (PAGES.find((page) => page.path === state.path)?.name ??
+      {
+        "/account": "Account",
+        "/friends": "Friends",
+        "/settings": "Settings",
+        "/changelog": "What’s new",
+        "/privacy": "Privacy",
+        "/how-to-use": "How to use",
+        "/welcome": "Welcome",
+        "/auth/verify": "Sign in",
+        "/unsubscribe": "Unsubscribe",
+      }[state.path] ??
+      "About");
   const hasActiveChoices = Boolean(
     friends.choices.selected.length ||
     state.filmGauge ||
@@ -501,6 +527,8 @@ export function App() {
     now,
   ]);
   function change(changes: Partial<ViewState>, push = !("search" in changes)) {
+    // Any deliberate navigation or filter choice leaves the welcome page for good.
+    if (push) dismissWelcome();
     if (
       "search" in changes &&
       "excluded" in changes &&
@@ -567,6 +595,9 @@ export function App() {
     window.addEventListener("popstate", onPop);
     return () => window.removeEventListener("popstate", onPop);
   }, []);
+  useEffect(() => {
+    if (welcome && viewUrl(state) !== "/") dismissWelcome();
+  }, [state]);
   useEffect(() => {
     if (state.path === "/account") capture("account_opened");
   }, [state.path]);
@@ -737,6 +768,7 @@ export function App() {
                   )
                     return;
                   event.preventDefault();
+                  dismissWelcome();
                   change({ ...clearFilters("/"), path: "/" }, true);
                 }}
               >
@@ -748,7 +780,9 @@ export function App() {
           </header>
           <FeedbackDialog dataVersion={meta?.generatedAt} onNavigate={navigateTo} />
           <div class="tagline">The database of London cinema screenings</div>
-          <h2 class="sr-only">{pageTitle}</h2>
+          <h2 class="sr-only" id="page-title" tabIndex={-1}>
+            {pageTitle}
+          </h2>
           {meta && (
             <>
               <MyCinemas cinemas={cinemas} meta={meta} open={cinemasOpen} onClose={closeCinemas} />
@@ -798,6 +832,37 @@ export function App() {
               films={catalogue.films}
               meta={catalogue.meta}
               onExit={() => setDesignReview(false)}
+            />
+          ) : landing ? (
+            <CinemaLanding
+              meta={meta}
+              onBrowse={() => {
+                if (state.path === "/welcome") change({ ...clearFilters("/"), path: "/" }, true);
+                else dismissWelcome();
+                requestAnimationFrame(() => document.getElementById("page-title")?.focus());
+              }}
+              onNearby={() => {
+                if (state.path === "/welcome") change({ ...clearFilters("/"), path: "/" }, true);
+                else dismissWelcome();
+                setNearbyOpen(true);
+              }}
+              onVenue={(venue) =>
+                change(
+                  { ...clearFilters("/"), path: "/", filters: { venue: [venue] }, page: 1 },
+                  true,
+                )
+              }
+              onNavigate={navigateTo}
+            />
+          ) : state.path === "/how-to-use" ? (
+            <HowToUse
+              onNavigate={(href) =>
+                // Only links that carry a view (e.g. tonight, My cinemas) replace the current one.
+                href.includes("?")
+                  ? change(readView(new URL(href, location.origin)), true)
+                  : navigateTo(href)
+              }
+              onNearby={() => setNearbyOpen(true)}
             />
           ) : state.path === "/account" ? (
             <AccountPage

@@ -116,6 +116,8 @@ export function readView(url: URL): ViewState {
     "/changelog",
     "/about",
     "/privacy",
+    "/how-to-use",
+    "/welcome",
     "/auth/verify",
     "/unsubscribe",
   ].includes(url.pathname)

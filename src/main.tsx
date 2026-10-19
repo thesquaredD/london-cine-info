@@ -11,6 +11,7 @@ import "./styles/changelog.css";
 import "./styles/feedback.css";
 import "./styles/nearby.css";
 import "./styles/posters.css";
+import "./styles/welcome.css";
 
 document.documentElement.dataset.theme = "dark";
 applyPosterReview(document.documentElement, location.search);

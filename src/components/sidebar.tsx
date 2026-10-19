@@ -152,6 +152,9 @@ export function Sidebar({ state, meta, onChange, account }: Props) {
             </NavLink>
           )}
         </nav>
+        <NavLink state={state} onChange={onChange} path="/how-to-use" className="about-link">
+          How to use
+        </NavLink>
         <NavLink state={state} onChange={onChange} path="/changelog" className="about-link">
           What’s new
         </NavLink>
