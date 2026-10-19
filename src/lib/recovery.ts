@@ -17,6 +17,11 @@ export function recoverySuggestions(
       label: "Include sold-out screenings",
       changes: { available: false, page: 1 },
     });
+  if (state.independent)
+    candidates.push({
+      label: "Include all cinema types",
+      changes: { independent: false, page: 1 },
+    });
   if (state.filters.day?.length || state.excluded.day?.length || state.tonight) {
     const tomorrow = addDays(londonDate(now), 1);
     candidates.push({

@@ -5,6 +5,7 @@ import type { DataMeta } from "../shared/data";
 import type { ViewState } from "../lib/catalogue";
 import { hasYears, yearSummary } from "../lib/years";
 import { EVENT_TYPES } from "../data/event-rules";
+import { isIndependentCinema } from "../data/independent-cinemas";
 
 /** Uses the same facet labels as the active-filter chips; each action clears one group. */
 export function EmptyState({
@@ -60,6 +61,8 @@ export function EmptyState({
     if (time) time.label += `, ${label}`;
     else add("range", label, "Any start time", { from: "", to: "", tonight: false });
   }
+  if (state.independent)
+    add("independent", "Independent cinemas", "All cinema types", { independent: false });
   if (state.short) add("short", "Under 2 hours", "Any runtime", { short: false });
   if (state.available)
     add("available", "Not sold out", "Include sold-out screenings", { available: false });
@@ -77,8 +80,11 @@ export function EmptyState({
     state.filters.day?.length === 1 && !state.excluded.day?.length
       ? choices.find((choice) => choice.key === "day" && !choice.excluded)?.label
       : undefined;
+  // "Nothing on Today at X" would blame the day when Independent excludes X itself.
   const cinema =
-    state.filters.venue?.length === 1 && !state.excluded.venue?.length
+    state.filters.venue?.length === 1 &&
+    !state.excluded.venue?.length &&
+    (!state.independent || isIndependentCinema({ id: state.filters.venue[0]! }))
       ? choices.find((choice) => choice.key === "venue" && !choice.excluded)?.label
       : undefined;
   const title =

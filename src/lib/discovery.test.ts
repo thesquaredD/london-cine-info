@@ -17,6 +17,9 @@ import {
 import { readView, viewUrl } from "./catalogue";
 import { radarEntries, radarFilms } from "./radar";
 import { recoverySuggestions } from "./recovery";
+import { clearFilters } from "./filters";
+import { discoveryProperties } from "./discovery-analytics";
+import { missingIndependentCinemas } from "../data/independent-cinemas";
 let meta: DataMeta, prototype: Film;
 beforeAll(async () => {
   const fixture = JSON.parse(
@@ -315,4 +318,71 @@ it("Evening preserves chosen dates and other filters, clears conflicting times, 
       now,
     ).map((film) => film.id),
   ).toEqual(["1", "2"]);
+});
+describe("Independent cinemas", () => {
+  const showtime = (venue: string) => ({
+    venue,
+    time: Date.parse("2026-10-03T19:00:00Z"),
+    localTime: "20:00",
+    formats: ["standard"],
+    accessibility: [],
+    soldOut: false,
+    screen: null,
+    notes: null,
+    category: "movie" as const,
+    bookingUrl: "https://test.local",
+    bookingFallback: false,
+  });
+  it("keeps listed venues and excludes chain or unreviewed venues", () => {
+    const matcher = screeningMatcher(meta, state("independent=1"), now);
+    expect(matcher.showtime("2026-10-03", showtime("princecharlescinema.com"))).toBe(true);
+    expect(matcher.showtime("2026-10-03", showtime("picturehouses.com-central"))).toBe(false);
+    expect(matcher.showtime("2026-10-03", showtime("outside.example"))).toBe(false);
+    const all = screeningMatcher(meta, state(), now);
+    expect(all.showtime("2026-10-03", showtime("picturehouses.com-central"))).toBe(true);
+  });
+  const at = (id: string) => meta.venues.findIndex((venue) => venue.id === id);
+  it("offers Include all cinema types, keeping venue picks, with the film count", () => {
+    const input = film("chain-only", [
+      row("2026-10-04T17:00:00Z", "standard", at("picturehouses.com-central")),
+    ]);
+    const current = state("independent=1&venue=picturehouses.com-central");
+    expect(filterFilms([input], meta, current, now)).toHaveLength(0);
+    const suggestion = recoverySuggestions([input], meta, current, now).find(
+      (s) => s.label === "Include all cinema types",
+    );
+    expect(suggestion?.count).toBe(1);
+    const next = { ...current, ...suggestion!.changes };
+    expect(next.independent).toBe(false);
+    expect(next.filters.venue).toEqual(["picturehouses.com-central"]);
+  });
+  it("is reset by Clear filters and reported to analytics", () => {
+    expect({ ...state("independent=1"), ...clearFilters("/") }.independent).toBe(false);
+    expect(discoveryProperties(state("independent=1")).filter_values).toContain("independent:true");
+    expect(discoveryProperties(state()).filter_keys).not.toContain("independent");
+  });
+  it("narrows Radar venue counts to listed cinemas", () => {
+    const input = film("radar-mix", [
+      row("2026-10-04T17:00:00Z", "standard", at("picturehouses.com-central")),
+      row("2026-10-04T19:00:00Z", "standard", at("princecharlescinema.com")),
+    ]);
+    const all = facetCounts([input], meta, state("", "/radar"), now).venue;
+    const on = facetCounts([input], meta, state("independent=1", "/radar"), now).venue;
+    expect(all.get("picturehouses.com-central")).toBe(1);
+    expect(on.get("picturehouses.com-central") ?? 0).toBe(0);
+    expect(on.get("princecharlescinema.com")).toBe(1);
+  });
+  it("reports allowlisted IDs that are missing from the dataset", () => {
+    const missing = missingIndependentCinemas(meta.venues);
+    expect(missing).toContain("riocinema.org.uk");
+    expect(missing).not.toContain("princecharlescinema.com");
+  });
+  it("round-trips independent=1 and omits it when off", () => {
+    const on = state("independent=1");
+    expect(on.independent).toBe(true);
+    expect(viewUrl(on)).toBe("/?independent=1");
+    expect(readView(new URL(viewUrl(on), "https://test.local"))).toEqual(on);
+    expect(state("independent=yes").independent).toBe(false);
+    expect(viewUrl({ ...on, independent: false })).toBe("/");
+  });
 });

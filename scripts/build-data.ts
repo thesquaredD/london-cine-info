@@ -7,6 +7,7 @@ import { loadBoroughs } from "./lib/boroughs";
 import { loadLiveData } from "./lib/releases";
 import { buildDataset } from "./lib/transform";
 import { writeDataset } from "./lib/output";
+import { missingIndependentCinemas } from "../src/data/independent-cinemas";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
 const { values } = parseArgs({
@@ -30,6 +31,12 @@ try {
     boroughs: await loadBoroughs(),
   });
   const manifest = await writeDataset(dataset, root);
+  // The fixture holds only a few venues, so the check is for live data only.
+  const missingIndependent = values.fixture ? [] : missingIndependentCinemas(dataset.meta.venues);
+  if (missingIndependent.length)
+    console.warn(
+      `Independent cinema IDs not in the dataset (review src/data/independent-cinemas.ts): ${missingIndependent.join(", ")}`,
+    );
   console.log(
     JSON.stringify(
       {

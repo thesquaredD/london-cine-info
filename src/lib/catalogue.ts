@@ -30,6 +30,7 @@ export type SortKey =
 export type ViewState = YearSelection & {
   myCinemas?: boolean;
   film?: string;
+  independent?: boolean;
   path: string;
   search: string;
   filters: Partial<Record<FacetKey, string[]>>;
@@ -130,6 +131,7 @@ export function readView(url: URL): ViewState {
   const state: ViewState = {
     myCinemas: url.searchParams.get("cinemas") === "mine",
     film: url.searchParams.get("film") || undefined,
+    independent: url.searchParams.get("independent") === "1",
     path,
     search: url.searchParams.get("q") ?? "",
     filmGauge: ["35mm", "70mm"].includes(url.searchParams.get("filmGauge") ?? "")
@@ -221,6 +223,7 @@ export function viewUrl(state: ViewState): string {
   const query = new URLSearchParams();
   if (state.myCinemas) query.set("cinemas", "mine");
   if (state.film) query.set("film", state.film);
+  if (state.independent) query.set("independent", "1");
   if (state.search) query.set("q", state.search);
   if (state.path === "/radar" && state.filmGauge) query.set("filmGauge", state.filmGauge);
   if (state.eventType) query.set("eventType", state.eventType);

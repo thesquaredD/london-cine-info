@@ -360,6 +360,7 @@ export function App() {
     state.director ||
     state.from ||
     state.to ||
+    state.independent ||
     state.available ||
     state.watchlist ||
     state.short ||
@@ -465,6 +466,7 @@ export function App() {
       state.excluded,
       state.from,
       state.to,
+      state.independent,
       state.available,
       state.decades,
       state.years,
@@ -514,6 +516,7 @@ export function App() {
     state.excluded,
     state.from,
     state.to,
+    state.independent,
     state.available,
     state.short,
     state.tonight,
@@ -1194,6 +1197,11 @@ export function App() {
                           NOT {label} ×
                         </button>
                       ))}
+                    {state.independent && (
+                      <button onClick={() => change({ independent: false, page: 1 })}>
+                        Independent cinemas ×
+                      </button>
+                    )}
                     {state.short && (
                       <button onClick={() => change({ short: false, page: 1 })}>
                         Under 2 hours ×
