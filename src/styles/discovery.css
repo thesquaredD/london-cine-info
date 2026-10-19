@@ -132,17 +132,6 @@
   border: 0;
   text-decoration: underline;
 }
-:root .screening-info {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-}
-:root .screening-venue {
-  flex: 1 1 220px;
-  font-size: 17px;
-}
 :root .booking-action {
   display: inline-flex;
   align-items: center;
@@ -156,22 +145,6 @@
   font-size: 16px;
   font-weight: 400;
   text-decoration: none;
-}
-:root .screening-info .booking-action {
-  order: 3;
-}
-:root .screening-info .add-calendar {
-  order: 4;
-  font-size: 14px;
-  min-height: 36px;
-  margin: 0;
-}
-:root .screening-info > .badge {
-  order: 5;
-}
-:root .screening-info > small {
-  order: 6;
-  flex-basis: 100%;
 }
 :root .nearby-apply {
   display: grid;
@@ -333,14 +306,6 @@
     margin: 0;
     justify-self: start;
   }
-  :root .screening-venue {
-    flex-basis: 100%;
-    font-size: 17px;
-  }
-  :root .screening-info :is(.booking-action, .add-calendar) {
-    min-height: 44px;
-    font-size: 16px;
-  }
   :root .showtime-day time {
     font-size: 19px;
   }
@@ -474,32 +439,48 @@
   max-width: 100%;
 }
 
-/* A booking action has its own column; format and access tags wrap under the venue. */
-:root .screening-info {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 104px;
-  grid-template-rows: auto auto auto;
-  align-items: start;
-  column-gap: 12px;
-  row-gap: 6px;
+/*
+ * Screening rows. Each row is time, venue details (name, tags, screen notes) and an actions
+ * column holding Book and the calendar action. Tags and notes grow the details column, never
+ * the actions column, so Book stays level with its venue name. The layout responds to the
+ * width of the screenings list rather than the window, so it holds in the desktop sheet,
+ * the phone sheet and under browser zoom.
+ */
+:root .showtimes {
+  container: screenings / inline-size;
+  /* Loading, error and empty states share the space the list will take, so the sheet holds still. */
+  min-height: 240px;
 }
-:root .screening-info .screening-venue {
-  grid-column: 1;
-  grid-row: 1;
+:root .showtime-day li {
+  grid-template-columns: max-content max-content minmax(0, 1fr) max-content;
+  grid-template-areas: "time dot details actions";
+  align-items: baseline;
+  column-gap: 10px;
+}
+:root .showtime-day li > time {
+  grid-area: time;
+  /* Equal-width times keep every venue name on the same left edge. */
+  min-width: 2.6em;
+  font-variant-numeric: tabular-nums;
+}
+:root .showtime-day li > .time-dot {
+  grid-area: dot;
+}
+:root .screening-info {
+  display: contents;
+}
+:root .screening-details {
+  grid-area: details;
+  display: grid;
+  gap: 6px;
   min-width: 0;
+}
+:root .screening-venue {
+  font-size: 17px;
+  line-height: 1.3;
   overflow-wrap: anywhere;
 }
-:root .screening-info .booking-action {
-  grid-column: 2;
-  grid-row: 1;
-  align-self: start;
-  width: 104px;
-  min-height: 44px;
-  box-sizing: border-box;
-}
 :root .screening-tags {
-  grid-column: 1;
-  grid-row: 2;
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
@@ -508,39 +489,89 @@
 :root .screening-tags:empty {
   display: none;
 }
-:root .screening-info .add-calendar {
-  grid-column: 2;
-  grid-row: 2 / span 2;
-  width: 104px;
-  align-self: start;
-  min-height: 44px;
+:root .screening-details > small {
+  margin: 0;
 }
-:root .screening-info > small {
-  grid-column: 1;
-  grid-row: 3;
-  min-width: 0;
+:root .screening-actions {
+  grid-area: actions;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  width: 7em;
+}
+:root .screening-actions :is(.booking-action, .add-calendar) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 44px;
+  min-height: 44px;
+  margin: 0;
+  padding: 6px 8px;
+  line-height: 1.2;
+  text-align: center;
+  overflow-wrap: normal;
+  word-break: normal;
+}
+:root .screening-actions .add-calendar {
+  font-size: 14px;
 }
 @media (max-width: 799px) {
-  :root .showtime-day li {
-    grid-template-columns: 48px minmax(0, 1fr);
-    gap: 8px;
-    align-items: start;
-  }
-  :root .showtime-day .time-dot {
+  :root .showtime-day li > .time-dot {
     display: none;
   }
-  :root .screening-info {
-    grid-template-columns: minmax(0, 1fr) 72px;
+  :root .showtime-day li {
+    grid-template-columns: max-content minmax(0, 1fr) max-content;
+    grid-template-areas: "time details actions";
     column-gap: 8px;
   }
-  :root .screening-info :is(.booking-action, .add-calendar) {
-    width: 72px;
-    padding-inline: 6px;
-  }
-  :root .screening-info .screening-venue {
+  :root .screening-venue {
     font-size: 16px;
   }
-  :root .screening-info .add-calendar {
+  :root .screening-actions {
+    width: 5.5em;
+  }
+  :root .screening-actions .booking-action {
+    font-size: 16px;
+  }
+  :root .screening-actions .add-calendar {
     font-size: 13px;
+  }
+}
+/* A wide list puts the calendar action beside Book, each in its own fixed-width column. */
+@container screenings (min-width: 35rem) {
+  :root .screening-actions {
+    flex-direction: row;
+    width: auto;
+  }
+  :root .screening-actions .booking-action {
+    width: 7em;
+  }
+  :root .screening-actions .add-calendar {
+    width: 9em;
+  }
+}
+/* A very narrow list puts the actions on the time line and gives the venue the full width. */
+@container screenings (max-width: 20rem) {
+  :root .showtime-day li {
+    grid-template-columns: max-content minmax(0, 1fr);
+    grid-template-areas: "time actions" "details details";
+    row-gap: 8px;
+  }
+  :root .showtime-day li > .time-dot {
+    display: none;
+  }
+  :root .screening-actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    justify-self: end;
+    width: auto;
+  }
+  :root .screening-actions :is(.booking-action, .add-calendar) {
+    width: auto;
+    min-width: 5.5em;
   }
 }
