@@ -543,3 +543,167 @@
   outline: 2px solid var(--brass);
   outline-offset: 4px;
 }
+
+/* Design review: shared reading scale, including the compact welcome alternative. */
+/* Venue-led discovery studies follow the shared reading scale. */
+.prose.cinema-welcome {
+  max-width: 1160px;
+  padding: 48px 36px;
+}
+.cinema-welcome-heading {
+  max-width: 680px;
+  margin-bottom: 36px;
+}
+.cinema-welcome-heading h2 {
+  font-size: 42px;
+  line-height: 1.08;
+}
+.cinema-portrait-caption {
+  margin-top: 14px;
+}
+.cinema-portrait-caption strong {
+  font-size: var(--prose-h2);
+  font-weight: 400;
+}
+.cinema-portrait-caption > span {
+  font-size: var(--prose-small);
+}
+.cinema-welcome-foot {
+  margin-top: 28px;
+}
+.cinema-photo-credits {
+  margin-top: 20px;
+  font-size: var(--prose-small);
+  color: var(--muted);
+}
+.cinema-welcome-quiet .cinema-welcome-heading {
+  margin-bottom: 24px;
+}
+.prose.nearby-start {
+  max-width: 620px;
+  margin: 48px auto;
+  padding: 36px;
+}
+.nearby-start .nearby-postcode {
+  margin-top: 28px;
+}
+.nearby-start .nearby-privacy {
+  margin-top: 20px;
+}
+.prose.nearby-results,
+.prose.nearby-films-head {
+  max-width: 860px;
+  padding: 36px 28px;
+}
+.nearby-results .nearby-context {
+  margin-bottom: 16px;
+}
+.nearby-results .nearby-secondary {
+  margin-top: 12px;
+}
+.nearby-venue strong {
+  font-size: var(--prose-lede);
+  font-weight: 400;
+}
+.nearby-venue span {
+  font-size: var(--prose-small);
+  line-height: 1.3;
+}
+.nearby-used-cinemas {
+  margin-block: 20px;
+}
+.nearby-test-controls {
+  font-size: var(--prose-small);
+}
+.nearby-test-controls :is(p, label) {
+  display: block;
+  margin-top: 12px;
+}
+@media (max-width: 799px) {
+  .prose.cinema-welcome {
+    padding: 28px 16px;
+  }
+  .cinema-welcome-heading h2 {
+    font-size: 34px;
+  }
+  .cinema-welcome-heading {
+    margin-bottom: 28px;
+  }
+  .cinema-portrait-caption strong {
+    font-size: 18px;
+  }
+  .prose.nearby-start {
+    margin: 20px 12px;
+    width: auto;
+    padding: 24px 18px;
+  }
+  .prose.nearby-results,
+  .prose.nearby-films-head {
+    padding: 28px 16px;
+  }
+  .nearby-start h2,
+  .nearby-results h2 {
+    font-size: 28px;
+  }
+  .nearby-start .prose-footer {
+    margin-top: 28px;
+  }
+}
+/* Status occupies a stable, readable slot; no clipped messages or disappearing controls. */
+.nearby-postcode #nearby-status {
+  min-block-size: 4.65em;
+}
+.nearby-postcode #nearby-status p {
+  margin: 0;
+}
+.nearby-results .prose-footer > p {
+  min-block-size: 3.1em;
+  margin: 0;
+}
+.nearby-save-feedback {
+  min-block-size: 4.65em;
+  margin: 0;
+}
+/* Compact discovery surfaces retain the shared text scale. */
+.nearby-simple-controls {
+  margin-top: 24px;
+}
+.nearby-simple-status {
+  padding-top: 10px;
+}
+.nearby-simple-status p {
+  font-size: var(--prose-small);
+  line-height: 1.5;
+}
+.nearby-list-heading {
+  padding: 10px 0;
+  font-size: var(--prose-small);
+}
+.nearby-choice strong {
+  font-size: var(--prose-body);
+  line-height: 1.3;
+  font-weight: 400;
+}
+.nearby-choice small {
+  font-size: var(--prose-small);
+  color: var(--muted);
+  line-height: 1.3;
+}
+.nearby-simple .nearby-simple-footer {
+  margin: 0 0 16px;
+  padding-top: 16px;
+}
+.nearby-simple .nearby-simple-footer p {
+  font-size: var(--prose-small);
+}
+.cinema-welcome-logos .cinema-logo-heading {
+  margin-top: 48px;
+}
+.cinema-logo-heading p {
+  margin: 0;
+}
+@media (max-width: 799px) {
+  .prose.nearby-simple {
+    padding: 24px 16px;
+  }
+}

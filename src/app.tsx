@@ -221,7 +221,19 @@ function About({
 }
 
 const EMPTY_FILMS: Film[] = [];
+// The design-review study is a local prototype. The flag is a build-time constant, so
+// production builds drop the dynamic import and the study's code and styles entirely.
+const DESIGN_REVIEW = import.meta.env.VITE_DISCOVERY_DESIGNS === "1";
+type DiscoveryDesignsComponent = typeof import("./components/discovery-designs").DiscoveryDesigns;
 export function App() {
+  const [designReview, setDesignReview] = useState(DESIGN_REVIEW);
+  const [DiscoveryDesigns, setDiscoveryDesigns] = useState<DiscoveryDesignsComponent | null>(null);
+  useEffect(() => {
+    if (DESIGN_REVIEW)
+      void import("./components/discovery-designs").then((module) =>
+        setDiscoveryDesigns(() => module.DiscoveryDesigns),
+      );
+  }, []);
   const account = useAccount();
   const calendar = useCalendar(account);
   const [calendarEvent, setCalendarEvent] = useState<CalendarInput | null>(null);
@@ -755,7 +767,13 @@ export function App() {
               />
             </div>
           )}
-          {state.path === "/account" ? (
+          {DESIGN_REVIEW && designReview && DiscoveryDesigns && catalogue ? (
+            <DiscoveryDesigns
+              films={catalogue.films}
+              meta={catalogue.meta}
+              onExit={() => setDesignReview(false)}
+            />
+          ) : state.path === "/account" ? (
             <AccountPage
               account={account}
               matches={watchlistMatches}

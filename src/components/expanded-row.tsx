@@ -246,63 +246,69 @@ export function ExpandedRow({
                           <time dateTime={new Date(row.time).toISOString()}>{row.localTime}</time>
                           <span class="time-dot" aria-hidden="true" />
                           <div class="screening-info">
-                            <span class="screening-venue">{venue?.name ?? row.venue}</span>
-                            <a
-                              class="booking-action"
-                              href={row.bookingUrl}
-                              onClick={() =>
-                                capture(
-                                  row.bookingFallback
-                                    ? "screening_details_clicked"
-                                    : "booking_clicked",
-                                  {
-                                    film_id: film.id,
-                                    venue_id: row.venue,
-                                    sold_out: row.soldOut,
-                                    booking_fallback: row.bookingFallback,
-                                    path: state.path,
-                                    watchlist: state.path === "/watchlist" || !!state.watchlist,
-                                  },
-                                )
-                              }
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              aria-label={`${row.bookingFallback || row.soldOut ? "Screening details for" : "Book"} ${film.ti} at ${venue?.name ?? row.venue} ${row.localTime}`}
-                            >
-                              {row.bookingFallback || row.soldOut ? "Details ↗" : "Book ↗"}
-                            </a>
-                            {row.soldOut && <span class="badge sold-out-badge">Sold out</span>}
-                            {row.formats
-                              .filter((format) => format !== "standard")
-                              .map((format) => (
-                                <span class="badge" key={format}>
-                                  {meta.facets.format.find((option) => option.id === format)
-                                    ?.label ?? format}
-                                </span>
-                              ))}
-                            {row.accessibility.map((flag) => (
-                              <span class="badge accessibility" key={flag}>
-                                {meta.facets.accessibility.find((option) => option.id === flag)
-                                  ?.label ?? flag}
-                              </span>
-                            ))}
-                            {onCalendar && (
-                              <button
-                                class="add-calendar"
-                                aria-haspopup="dialog"
-                                aria-label={`${saved ? "View saved screening" : "Add to calendar"}: ${film.ti} at ${venue?.name ?? row.venue} ${date} ${row.localTime}`}
-                                onClick={() => onCalendar(event)}
+                            <div class="screening-details">
+                              <span class="screening-venue">{venue?.name ?? row.venue}</span>
+                              <div class="screening-tags">
+                                {row.soldOut && <span class="badge sold-out-badge">Sold out</span>}
+                                {row.formats
+                                  .filter((format) => format !== "standard")
+                                  .map((format) => (
+                                    <span class="badge" key={format}>
+                                      {meta.facets.format.find((option) => option.id === format)
+                                        ?.label ?? format}
+                                    </span>
+                                  ))}
+                                {row.accessibility.map((flag) => (
+                                  <span class="badge accessibility" key={flag}>
+                                    {meta.facets.accessibility.find((option) => option.id === flag)
+                                      ?.label ?? flag}
+                                  </span>
+                                ))}
+                              </div>
+                              {(row.notes || row.screen) && (
+                                <small>
+                                  {[row.screen && `Screen ${row.screen}`, row.notes]
+                                    .filter(Boolean)
+                                    .join(" · ")}
+                                </small>
+                              )}
+                            </div>
+                            <div class="screening-actions">
+                              <a
+                                class="booking-action"
+                                href={row.bookingUrl}
+                                onClick={() =>
+                                  capture(
+                                    row.bookingFallback
+                                      ? "screening_details_clicked"
+                                      : "booking_clicked",
+                                    {
+                                      film_id: film.id,
+                                      venue_id: row.venue,
+                                      sold_out: row.soldOut,
+                                      booking_fallback: row.bookingFallback,
+                                      path: state.path,
+                                      watchlist: state.path === "/watchlist" || !!state.watchlist,
+                                    },
+                                  )
+                                }
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                aria-label={`${row.bookingFallback || row.soldOut ? "Screening details for" : "Book"} ${film.ti} at ${venue?.name ?? row.venue} ${row.localTime}`}
                               >
-                                {saved ? "In my calendar" : "Add to calendar"}
-                              </button>
-                            )}
-                            {(row.notes || row.screen) && (
-                              <small>
-                                {[row.screen && `Screen ${row.screen}`, row.notes]
-                                  .filter(Boolean)
-                                  .join(" · ")}
-                              </small>
-                            )}
+                                {row.bookingFallback || row.soldOut ? "Details ↗" : "Book ↗"}
+                              </a>
+                              {onCalendar && (
+                                <button
+                                  class="add-calendar"
+                                  aria-haspopup="dialog"
+                                  aria-label={`${saved ? "View saved screening" : "Add to calendar"}: ${film.ti} at ${venue?.name ?? row.venue} ${date} ${row.localTime}`}
+                                  onClick={() => onCalendar(event)}
+                                >
+                                  {saved ? "In my calendar" : "Add to calendar"}
+                                </button>
+                              )}
+                            </div>
                           </div>
                         </li>
                       );

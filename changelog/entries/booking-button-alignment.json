@@ -1,0 +1,7 @@
+{
+  "id": "booking-button-alignment",
+  "type": "fixed",
+  "title": "Tidier screening times",
+  "body": "Each screening now keeps its Book button level with the cinema name, with formats, accessibility tags and screen notes listed underneath. On narrow screens the cinema name gets the full width, and the screenings list no longer jumps while it loads.",
+  "visibility": "public"
+}
