@@ -55,7 +55,7 @@ alone.
 | `.prose-head`    | Title plus a `·`-separated meta line (last updated, operator, contact).                                |
 | `.prose-lede`    | The lede.                                                                                              |
 | `.prose-summary` | "In short" card: panel background, 2px brass top rule, eyebrow, three or four bullets.                 |
-| `.prose-map`     | Sticky "On this page" list with a brass marker on the current section; a `<details>` on the phone.     |
+| `.prose-map`     | Sticky "On this page" list, 44px links, brass marker on the current section; `<details>` below 900px.  |
 | `.prose-two`     | 200px map column plus content; one column below 900px.                                                 |
 | `.prose-section` | Hairline above, 16px to the heading, `scroll-margin-top`, numbered heading optional.                   |
 | `.prose ul`      | Brass markers, 6px between items, two levels at most.                                                  |

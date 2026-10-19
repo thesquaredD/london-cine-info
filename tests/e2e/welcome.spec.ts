@@ -17,6 +17,9 @@ test("a first unfiltered visit shows the welcome page and dismissal is remembere
   await expect(welcomeHeading(page)).toBeVisible();
   await expect(page.locator(".film-row")).toHaveCount(0);
   await expect(page).toHaveURL(/\/$/);
+  await expect(
+    page.getByText("London Ciné Info is independent and not affiliated with any cinema."),
+  ).toBeVisible();
   await page.getByRole("link", { name: "Browse all films" }).click();
   await expect(page.locator(".film-row")).toHaveCount(6);
   await expect(page).toHaveURL(/\/$/);
@@ -65,8 +68,8 @@ test("find cinemas near me opens the nearby search", async ({ page }) => {
   await expect(welcomeHeading(page)).toHaveCount(0);
 });
 
-test("the welcome page stays reachable and its logos can be paused", async ({ page }) => {
-  // The fixture lists three featured venues; the full set scrolls.
+// The fixture lists three featured venues; the full set of eight scrolls.
+async function allFeaturedVenues(page: Page) {
   await page.route("**/data/meta.*.json", async (route) => {
     const meta = await (await route.fetch()).json();
     const base = meta.venues[0];
@@ -80,6 +83,10 @@ test("the welcome page stays reachable and its logos can be paused", async ({ pa
       meta.venues.push({ ...base, id, name: id });
     await route.fulfill({ json: meta });
   });
+}
+
+test("the welcome page stays reachable and its logos can be paused", async ({ page }) => {
+  await allFeaturedVenues(page);
   await page.goto("/about");
   await page.getByRole("link", { name: "Welcome page" }).click();
   await expect(page).toHaveURL(/\/welcome$/);
@@ -146,4 +153,100 @@ test("How to use renders the guide and links to each real action", async ({ page
   }
   await guide.getByRole("button", { name: "Find cinemas near me" }).click();
   await expect(page.getByRole("dialog", { name: "Find nearby cinemas" })).toBeVisible();
+});
+
+test("a keyboard-focused logo is always inside the strip", async ({ page }) => {
+  if ((page.viewportSize()?.width ?? 1200) >= 800)
+    await page.setViewportSize({ width: 1440, height: 900 });
+  await allFeaturedVenues(page);
+  await page.goto("/");
+  const strip = page.locator(".welcome-strip");
+  await expect(strip).toHaveClass(/is-moving/);
+  // Wait until the strip has carried the first logo well off its starting point.
+  await expect
+    .poll(
+      () =>
+        page.locator(".welcome-track").evaluate((node) => {
+          const transform = getComputedStyle(node).transform;
+          return transform === "none" ? 0 : new DOMMatrix(transform).m41;
+        }),
+      { timeout: 20000 },
+    )
+    .toBeLessThan(-60);
+  const venues = page.getByRole("list", { name: "Start with a cinema" }).getByRole("link");
+  await expect(venues).toHaveCount(8);
+  await page.getByRole("button", { name: "Pause logos" }).focus();
+  await page.keyboard.press("Tab");
+  await expect(venues.first()).toBeFocused();
+  for (const venue of [venues.first(), venues.last()]) {
+    await venue.focus();
+    await expect(strip).toHaveClass(/is-static/);
+    const [box, bounds] = await Promise.all([venue.boundingBox(), strip.boundingBox()]);
+    expect(box && bounds).toBeTruthy();
+    expect(box!.x).toBeGreaterThanOrEqual(bounds!.x - 1);
+    expect(box!.x + box!.width).toBeLessThanOrEqual(bounds!.x + bounds!.width + 1);
+    expect(box!.y).toBeGreaterThanOrEqual(bounds!.y - 1);
+    expect(box!.y + box!.height).toBeLessThanOrEqual(bounds!.y + bounds!.height + 1);
+  }
+  // Leaving the strip resumes the motion.
+  await page.getByRole("link", { name: "See how it works" }).focus();
+  await expect(strip).toHaveClass(/is-moving/);
+});
+
+test("guide links without a query keep the current view, like the sidebar", async ({ page }) => {
+  await page.goto("/?venue=princecharlescinema.com");
+  await expect(page.locator(".film-row").first()).toBeVisible();
+  await openPages(page);
+  await page
+    .getByRole("link", { name: "How to use", exact: true })
+    .filter({ visible: true })
+    .click();
+  await expect(page).toHaveURL(/\/how-to-use\?venue=princecharlescinema\.com$/);
+  const sidebarHref = await page
+    .getByRole("navigation", { name: "Film pages", includeHidden: true })
+    .first()
+    .getByRole("link", { name: "Watchlist", exact: true, includeHidden: true })
+    .getAttribute("href");
+  await page
+    .getByRole("article", { name: "How to use London Ciné Info" })
+    .getByRole("link", { name: "Open Watchlist" })
+    .click();
+  await expect(page).toHaveURL(/\/watchlist\?venue=princecharlescinema\.com$/);
+  expect(sidebarHref).toBe("/watchlist?venue=princecharlescinema.com");
+});
+
+test("back and forward from the welcome page do not bring it back", async ({ page }) => {
+  await page.goto("/");
+  await expect(welcomeHeading(page)).toBeVisible();
+  await page
+    .getByRole("list", { name: "Start with a cinema" })
+    .getByRole("link", { name: /Prince Charles/ })
+    .click();
+  await expect(page).toHaveURL(/venue=princecharlescinema\.com/);
+  await page.goBack();
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.locator(".film-row")).toHaveCount(6);
+  await expect(welcomeHeading(page)).toHaveCount(0);
+  await page.goForward();
+  await expect(page).toHaveURL(/venue=princecharlescinema\.com/);
+  await expect(welcomeHeading(page)).toHaveCount(0);
+});
+
+test("a search leaves the welcome page and clearing it does not restore it", async ({ page }) => {
+  await page.goto("/");
+  await expect(welcomeHeading(page)).toBeVisible();
+  // A search arriving through history (e.g. a shared search link opened in place).
+  await page.evaluate(() => {
+    history.pushState(null, "", "/?q=Titre");
+    dispatchEvent(new PopStateEvent("popstate"));
+  });
+  await expect(welcomeHeading(page)).toHaveCount(0);
+  await expect(page.locator(".film-row").first()).toBeVisible();
+  await page.getByRole("button", { name: "Remove search filter" }).click();
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.locator(".film-row")).toHaveCount(6);
+  await expect(welcomeHeading(page)).toHaveCount(0);
+  await page.reload();
+  await expect(page.locator(".film-row")).toHaveCount(6);
+  await expect(welcomeHeading(page)).toHaveCount(0);
 });

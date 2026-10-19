@@ -56,13 +56,13 @@ export function HowToUse({
   onNearby: () => void;
 }) {
   const article = usePreferenceFocus();
-  const [phone, setPhone] = useState(() => matchMedia("(max-width: 699px)").matches);
+  const [phone, setPhone] = useState(() => matchMedia("(max-width: 899px)").matches);
   const [current, setCurrent] = useState(location.hash.slice(1) || "find");
   const [watchlistOnly, setWatchlistOnly] = useState(true);
   const [match, setMatch] = useState<"all" | "any">("all");
   const [mine, setMine] = useState(true);
   useEffect(() => {
-    const media = matchMedia("(max-width: 699px)");
+    const media = matchMedia("(max-width: 899px)");
     const change = () => setPhone(media.matches);
     media.addEventListener("change", change);
     return () => media.removeEventListener("change", change);
@@ -255,7 +255,7 @@ export function HowToUse({
               </p>
             </Example>
             <ul>
-              <li>No account or friend request is needed; these lists last for this visit.</li>
+              <li>No account or friend request is needed; these lists last for this session.</li>
               <li>
                 With accounts, choose an app username in Account and send a friend request. Accepted
                 friends can filter films by each other’s watchlist.

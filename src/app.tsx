@@ -204,8 +204,9 @@ function About({
         <h2 id="about-device">What stays on your device</h2>
         <p>
           Favourite cinemas are saved in your browser, or in your account while signed in. Accounts
-          use a necessary session cookie. Theme choices last for this visit. Opening a poster or
-          following an external link contacts that provider.
+          use a necessary session cookie. Leaving the welcome page is remembered so it is not shown
+          again. Theme choices last for this visit. Opening a poster or following an external link
+          contacts that provider.
         </p>
         <div class="prose-links">
           <PageLink href="/how-to-use" onNavigate={onNavigate}>
@@ -230,7 +231,8 @@ function About({
         </div>
       </section>
       <p class="prose-small prose-closing">
-        A personal, non-commercial project by Diogo Diogo. A London take on{" "}
+        London Ciné Info is independent and not affiliated with any cinema. Names and logos belong
+        to their venues. A personal, non-commercial project by Diogo Diogo. A London take on{" "}
         <a href="https://paris-cine.info">paris-cine.info</a>.
       </p>
     </article>
@@ -854,7 +856,12 @@ export function App() {
             />
           ) : state.path === "/how-to-use" ? (
             <HowToUse
-              onNavigate={(href) => change(readView(new URL(href, location.origin)), true)}
+              onNavigate={(href) =>
+                // Only links that carry a view (e.g. tonight, My cinemas) replace the current one.
+                href.includes("?")
+                  ? change(readView(new URL(href, location.origin)), true)
+                  : navigateTo(href)
+              }
               onNearby={() => setNearbyOpen(true)}
             />
           ) : state.path === "/account" ? (

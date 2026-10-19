@@ -208,8 +208,10 @@
   min-width: 0;
 }
 .prose-map a {
-  display: block;
-  padding: 5px 0 5px 10px;
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 0 0 10px;
   color: var(--muted);
   text-decoration: none;
 }
@@ -766,7 +768,7 @@
   }
 }
 .welcome-secondary {
-  font-size: 16px;
+  font-size: var(--prose-body);
 }
 @media (max-height: 500px) and (orientation: landscape) {
   .prose.cinema-welcome.welcome-page {
@@ -790,4 +792,57 @@
   .welcome-page.cinema-welcome-logos .cinema-logo-heading {
     margin-top: 12px;
   }
+}
+
+/* Welcome actions and guide examples use the shared spacing tokens. */
+.welcome-page .welcome-actions {
+  margin-top: calc(var(--prose-gap) * 2);
+}
+.guide-example {
+  max-width: var(--prose-measure);
+  margin: 0 0 var(--prose-gap);
+  padding: 14px 18px;
+}
+.guide-example figcaption {
+  margin-bottom: var(--prose-gap);
+}
+.guide-example .guide-toggle {
+  margin-block: var(--prose-gap);
+}
+.prose .guide-actions {
+  margin-top: var(--prose-gap);
+}
+.prose .guide-footer {
+  margin-top: var(--prose-section);
+}
+@media (max-width: 799px) {
+  .welcome-page .welcome-actions {
+    margin-top: var(--prose-gap);
+  }
+}
+@media (max-height: 500px) and (orientation: landscape) {
+  .welcome-page .welcome-actions {
+    margin-top: var(--prose-gap);
+  }
+}
+/* Close-Up's own mark: its name in Impact capitals. Android lacks Impact, so a condensed
+   system face at the medium weight stands in; no faux bold on Impact itself. */
+.welcome-wordmark-closeup {
+  font-family: Impact, Haettenschweiler, "Arial Narrow Bold", "sans-serif-condensed", sans-serif;
+  font-size: var(--prose-h1);
+  font-weight: 500;
+  font-stretch: condensed;
+  font-synthesis: none;
+  letter-spacing: 0.01em;
+  line-height: 1;
+  white-space: nowrap;
+  color: var(--fg);
+}
+@media (max-width: 799px) {
+  .welcome-wordmark-closeup {
+    font-size: calc(var(--prose-h2) * 1.25);
+  }
+}
+.prose .welcome-disclaimer {
+  margin: var(--prose-gap) 0 0;
 }

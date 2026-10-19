@@ -3,7 +3,6 @@
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
-  margin-top: 24px;
 }
 :root .welcome-actions > * {
   min-height: 48px;
@@ -173,15 +172,9 @@
 
 /* How to use: examples sit beside the steps on wide screens and follow them on phones. */
 .guide-example {
-  margin: 0 0 var(--prose-gap);
-  padding: 16px 18px;
   background: var(--panel);
   border-left: 3px solid var(--brass);
-  max-width: 560px;
   min-width: 0;
-}
-.guide-example figcaption {
-  margin-bottom: 8px;
 }
 .guide-example .showtime-day ul {
   margin: 0;
@@ -201,7 +194,6 @@
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-block: 8px;
 }
 .guide-toggle button {
   padding: 8px 14px;
@@ -214,15 +206,9 @@
   color: var(--active-fg);
   border-color: transparent;
 }
-.guide-actions {
-  margin-top: 8px;
-}
 .guide-actions a,
 .guide-actions button {
   min-height: 44px;
-}
-.guide-footer {
-  margin-top: var(--prose-section);
 }
 :root .guide-footer .booking-action {
   min-height: 44px;
@@ -231,17 +217,11 @@
   .welcome-page .cinema-welcome-heading > .prose-eyebrow {
     display: none;
   }
-  .welcome-actions {
-    margin-top: 16px;
-  }
 }
 /* Phone landscape: keep the cinemas in view rather than a full-screen hero. */
 @media (max-height: 500px) and (orientation: landscape) {
   .welcome-page .cinema-welcome-heading > .prose-eyebrow {
     display: none;
-  }
-  .welcome-actions {
-    margin-top: 12px;
   }
   .welcome-actions > * {
     flex: 0 1 auto;

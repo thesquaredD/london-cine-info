@@ -1,11 +1,15 @@
 import { useEffect, useState } from "preact/hooks";
 import type { DataMeta } from "../shared/data";
 
-/** Featured venues. Logos are self-hosted copies of each cinema's own published mark. */
-const FEATURED: { id: string; name: string; logo: string | null; wide?: boolean }[] = [
+/**
+ * Featured venues. Logos are self-hosted copies of each cinema's own published mark.
+ * Close-Up's mark is its name in Impact capitals, so it is set as styled text rather than an image.
+ */
+type Featured = { id: string; name: string; logo: string | null; wide?: boolean; type?: string };
+const FEATURED: Featured[] = [
   { id: "princecharlescinema.com", name: "Prince Charles", logo: "prince-charles-cinema.svg" },
   { id: "bfi.org.uk-southbank", name: "BFI Southbank", logo: "bfi-southbank.svg" },
-  { id: "closeupfilmcentre.com", name: "Close-Up", logo: null },
+  { id: "closeupfilmcentre.com", name: "Close-Up", logo: null, type: "closeup" },
   { id: "riocinema.org.uk", name: "Rio", logo: "riocinema.png" },
   { id: "genesiscinema.co.uk", name: "Genesis", logo: "genesiscinema.png" },
   {
@@ -38,14 +42,14 @@ function useReducedMotion() {
   return reduced;
 }
 
-function VenueMark({ name, logo, wide }: { name: string; logo: string | null; wide?: boolean }) {
+function VenueMark({ name, logo, wide, type }: Featured) {
   const [failed, setFailed] = useState(false);
   return (
     <span class={`welcome-mark ${wide ? "is-wide" : ""}`} aria-hidden="true">
       {logo && !failed ? (
         <img src={`/cinemas/${logo}`} alt="" loading="lazy" onError={() => setFailed(true)} />
       ) : (
-        <span class="welcome-wordmark">{name}</span>
+        <span class={`welcome-wordmark ${type ? `welcome-wordmark-${type}` : ""}`}>{name}</span>
       )}
     </span>
   );
@@ -75,6 +79,10 @@ export function CinemaLanding({
     ? FEATURED.filter((venue) => meta.venues.some(({ id }) => id === venue.id))
     : FEATURED;
   const moving = !reduced && venues.length > 3;
+  // Keyboard focus inside the strip shows every venue in place, so a focused logo is never
+  // clipped or carried away by the animation.
+  const [focused, setFocused] = useState(false);
+  const animate = moving && !focused;
   const entries = (copy: boolean) =>
     venues.map((venue) => (
       <li key={venue.id}>
@@ -145,19 +153,28 @@ export function CinemaLanding({
         )}
       </div>
       <div
-        class={`welcome-strip ${moving ? "is-moving" : "is-static"} ${paused ? "is-paused" : ""}`}
+        class={`welcome-strip ${animate ? "is-moving" : "is-static"} ${paused ? "is-paused" : ""}`}
+        onFocusIn={() => setFocused(true)}
+        onFocusOut={(event) => {
+          const next = event.relatedTarget as Node | null;
+          if (!next || !event.currentTarget.contains(next)) setFocused(false);
+        }}
       >
         <div class="welcome-track">
           <ul class="welcome-set" aria-labelledby="welcome-venues">
             {entries(false)}
           </ul>
-          {moving && (
+          {animate && (
             <ul class="welcome-set" aria-hidden="true">
               {entries(true)}
             </ul>
           )}
         </div>
       </div>
+      <p class="prose-small welcome-disclaimer">
+        London Ciné Info is independent and not affiliated with any cinema. Names and logos belong
+        to their venues.
+      </p>
       <div class="cinema-welcome-foot welcome-foot">
         <a
           href="/how-to-use"
@@ -169,7 +186,6 @@ export function CinemaLanding({
         >
           See how it works
         </a>
-        <p class="prose-small">Cinema names and logos belong to their venues.</p>
       </div>
     </article>
   );

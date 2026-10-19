@@ -14,10 +14,10 @@ export function Privacy({ onNavigate }: { onNavigate: (path: string) => void }) 
     window.addEventListener("cine-analytics-choice", changed);
     return () => window.removeEventListener("cine-analytics-choice", changed);
   }, []);
-  const [phone, setPhone] = useState(() => matchMedia("(max-width: 699px)").matches);
+  const [phone, setPhone] = useState(() => matchMedia("(max-width: 899px)").matches);
   const [current, setCurrent] = useState(location.hash.slice(1) || "operator");
   useEffect(() => {
-    const media = matchMedia("(max-width: 699px)");
+    const media = matchMedia("(max-width: 899px)");
     const change = () => setPhone(media.matches);
     media.addEventListener("change", change);
     return () => media.removeEventListener("change", change);
