@@ -1,0 +1,8 @@
+{
+  "id": "rio-logo-cache",
+  "type": "fixed",
+  "title": "Rename the Rio logo file",
+  "body": "Serve the corrected Rio logo under a new file name.",
+  "visibility": "internal",
+  "reason": "Logo files are cached for a day, so the fix from the rio-logo note was still served stale. Renaming the file makes the existing public note true immediately."
+}
