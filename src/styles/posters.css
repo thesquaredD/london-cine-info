@@ -120,10 +120,13 @@
   gap: var(--poster-gap);
 }
 @media (max-width: 599px) {
+  /* Phones: three posters per row at every width. */
   .poster-view {
-    --poster-min: 128px;
-    --poster-gap: 14px 10px;
+    --poster-gap: 12px 8px;
     padding-inline: 10px;
+  }
+  .poster-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 @media (min-width: 1100px) {
@@ -200,7 +203,8 @@
   -webkit-line-clamp: 6;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
+  hyphens: auto;
   font-size: 15px;
   line-height: 1.25;
   font-weight: 500;
@@ -208,6 +212,15 @@
 .poster-fallback-note {
   color: var(--brass);
   font-size: 12px;
+}
+@media (max-width: 599px) {
+  /* Three narrow posters per row: keep long titles readable. */
+  .poster-fallback {
+    padding: 10px 8px;
+  }
+  .poster-fallback-title {
+    font-size: 13px;
+  }
 }
 .poster-mark {
   position: absolute;

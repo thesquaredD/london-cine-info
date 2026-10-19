@@ -1,0 +1,7 @@
+{
+  "id": "poster-grid-phones",
+  "type": "improved",
+  "title": "Three posters per row on phones",
+  "body": "Posters on phones are smaller, three to a row, so you can see more films at once.",
+  "visibility": "public"
+}

@@ -238,3 +238,21 @@ test("the poster film sheet holds its size and place while screenings load", asy
     await page.keyboard.press("Escape");
   }
 });
+
+test("phones show three posters per row", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "Widths are set per test");
+  await page.addInitScript(() => localStorage.setItem("london-cine.film-view.v1", "posters"));
+  for (const width of [320, 390, 599]) {
+    await page.setViewportSize({ width, height: 800 });
+    await page.goto("/");
+    await expect(page.locator(".poster-item").nth(3)).toBeVisible();
+    const tops = await page
+      .locator(".poster-item")
+      .evaluateAll((nodes) => nodes.slice(0, 4).map((node) => node.getBoundingClientRect().top));
+    expect(
+      tops.filter((top) => top === tops[0]),
+      `${width}px`,
+    ).toHaveLength(3);
+    expect(tops[3], `${width}px`).toBeGreaterThan(tops[0]);
+  }
+});
