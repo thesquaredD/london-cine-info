@@ -204,7 +204,7 @@ test("postcode failures, denied location and borough filters keep selected cinem
   await dialog.getByRole("checkbox", { name: "BFI Southbank", exact: true }).check();
   await dialog.getByRole("button", { name: /^Location/ }).click();
   await dialog.getByRole("button", { name: "Use my location", exact: true }).click();
-  await expect(dialog.getByRole("alert")).toContainText("Location permission was denied");
+  await expect(dialog.getByRole("alert")).toContainText("Location access is blocked");
   await page.route("https://api.postcodes.io/**", (route) =>
     route.fulfill({ status: 404, json: { error: "Invalid postcode" } }),
   );

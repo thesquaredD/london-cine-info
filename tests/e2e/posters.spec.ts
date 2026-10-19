@@ -194,3 +194,47 @@ test.describe("touch", () => {
     expect(new URL(page.url()).searchParams.get("film")).toBeTruthy();
   });
 });
+
+test("the poster film sheet holds its size and place while screenings load", async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== "desktop", "Widths are set per test");
+  // Each width holds the screenings until the loading sheet has been measured.
+  let release = () => {};
+  let held = Promise.resolve();
+  await page.route(/\/showtimes[^/]*\/[^/]+\.json$/, async (route) => {
+    await held;
+    await route.continue();
+  });
+  await page.addInitScript(() => localStorage.setItem("london-cine.film-view.v1", "posters"));
+  for (const [width, height] of [
+    [320, 640],
+    [390, 844],
+    [1440, 900],
+  ] as const) {
+    held = new Promise<void>((resolve) => (release = resolve));
+    await page.setViewportSize({ width, height });
+    await page.goto("/");
+    await page.locator(".poster-card").first().click();
+    const dialog = page.locator(".poster-film-dialog");
+    await expect(dialog.getByText("Loading screenings…")).toBeVisible();
+    await dialog.evaluate((node) =>
+      Promise.all(node.getAnimations({ subtree: true }).map((animation) => animation.finished)),
+    );
+    const loading = await dialog.boundingBox();
+    release();
+    await expect(dialog.locator(".showtime-day").first()).toBeVisible();
+    const loaded = await dialog.boundingBox();
+    expect(loaded, `${width}px`).toEqual(loading);
+    // Phones get the full-width bottom sheet; wider screens a centred sheet.
+    if (width < 800) {
+      // Classic scrollbars (Linux CI) take up to 16px beside the fixed sheet; phones overlay them.
+      expect(loaded!.x).toBe(0);
+      expect(loaded!.width).toBeGreaterThanOrEqual(width - 16);
+    } else {
+      expect(loaded!.width).toBeLessThanOrEqual(960);
+      expect(loaded!.x).toBeGreaterThan(0);
+    }
+    await page.keyboard.press("Escape");
+  }
+});

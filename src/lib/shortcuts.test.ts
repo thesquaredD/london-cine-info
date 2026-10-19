@@ -53,6 +53,11 @@ describe("personalized shortcuts", () => {
       }).slice(-3),
     ).toEqual(["My watchlist", "My cinemas", "Near me"]);
   });
+  it("treats Near me as a dialog opener, not a toggle", () => {
+    const nearby = shortcutItems(base).find((item) => item.id === "nearby");
+    expect(nearby?.active).toBeUndefined();
+    expect(nearby?.changes).toBeUndefined();
+  });
   it("keeps active My cinemas visible after the last venue is removed", () => {
     const items = shortcutItems({ ...base, state: { ...base.state, myCinemas: true } });
     expect(items.find((item) => item.id === "cinemas")?.active).toBe(true);

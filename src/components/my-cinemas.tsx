@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "preact/hooks";
 import type { DataMeta } from "../shared/data";
 import type { CinemasState } from "../lib/cinemas";
 import { distanceMiles, validCoordinates, withinRadius, type Coordinates } from "../lib/distance";
-import { LocationError, failureMessage, lookupPostcode } from "../lib/nearby";
+import { LocationError, failureMessage, locateDevice, lookupPostcode } from "../lib/nearby";
 import { Dialog } from "./dialog";
 export function MyCinemas({
   cinemas,
@@ -100,27 +100,24 @@ export function MyCinemas({
       }
     }
   }
-  function locate() {
+  async function locate() {
     const request = ++locationRequest.current;
-    if (!navigator.geolocation) {
-      setLocationError("Location is unavailable. Enter a postcode instead.");
-      return;
-    }
+    lookupController.current?.abort();
     setLocating(true);
     setLocationError("");
-    navigator.geolocation.getCurrentPosition(
-      (result) =>
-        acceptLocation({ lat: result.coords.latitude, lon: result.coords.longitude }, request),
-      () => {
-        if (request === locationRequest.current) {
-          setLocationError(
-            "Location permission was denied or location is unavailable. Enter a postcode or browse by borough.",
-          );
-          setLocating(false);
-        }
-      },
-      { timeout: 10000, maximumAge: 60000 },
-    );
+    try {
+      const found = await locateDevice(
+        "geolocation" in navigator ? navigator.geolocation : undefined,
+      );
+      acceptLocation(found.point, request);
+    } catch (failure) {
+      if (request === locationRequest.current) {
+        setLocationError(
+          failureMessage(failure instanceof LocationError ? failure.kind : "unavailable", "device"),
+        );
+        setLocating(false);
+      }
+    }
   }
   const distances = new Map(
     meta.venues.map((venue) => [venue.id, origin ? distanceMiles(origin, venue) : null]),
@@ -146,6 +143,7 @@ export function MyCinemas({
       onClose={onClose}
       restoreTo={() =>
         document.querySelector<HTMLElement>(".empty-state button") ??
+        document.querySelector<HTMLElement>(".cinema-context button") ??
         document.querySelector<HTMLElement>("#cinemas button") ??
         document.querySelector<HTMLElement>(".menu-button")
       }
@@ -248,7 +246,7 @@ export function MyCinemas({
                     </button>
                   </div>
                 </form>
-                <button disabled={locating} onClick={locate}>
+                <button disabled={locating} onClick={() => void locate()}>
                   Use my location
                 </button>
                 {locating && <p role="status">Finding location…</p>}

@@ -96,6 +96,10 @@ h3 {
 .skip-link:focus {
   top: 10px;
 }
+/* The skip link focuses the whole content column; it needs no ring of its own. */
+.main-column:focus {
+  outline: none;
+}
 .app-layout {
   display: grid;
   grid-template-columns: var(--sidebar-width) minmax(0, 1fr);

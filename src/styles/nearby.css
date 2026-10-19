@@ -88,7 +88,8 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  min-height: 44px;
+  /* Room for the 44px Select all link plus both hairlines, so the list never shifts. */
+  min-height: 46px;
   margin-top: 8px;
   padding: 0 8px 0 16px;
   border-top: 1px solid var(--line);

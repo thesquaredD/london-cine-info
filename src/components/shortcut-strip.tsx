@@ -17,7 +17,9 @@ export function ShortcutStrip(
             <span class="strip-sep" aria-hidden="true" />
           )}
           <button
-            aria-pressed={item.active}
+            data-shortcut={item.id}
+            aria-pressed={item.changes ? !!item.active : undefined}
+            aria-haspopup={item.changes ? undefined : "dialog"}
             disabled={item.disabled}
             title={item.title}
             onClick={() => (item.changes ? props.onChange(item.changes) : props.onNearby())}

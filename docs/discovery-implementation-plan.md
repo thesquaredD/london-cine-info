@@ -1,7 +1,8 @@
 # Discovery and onboarding implementation plan
 
-Status: proposed implementation plan. The local prototype establishes the direction;
-the hover treatment remains provisional and requires design review.
+Status: integrated in the app. The design review chose the compact information strip (option 2 in
+stage 1) as the poster hover treatment; the edge and overlay variants and the optional title
+line beneath posters were removed.
 
 ## Scope
 

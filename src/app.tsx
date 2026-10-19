@@ -76,6 +76,7 @@ import {
   hasCustomSort,
   sortLabel,
   selectFilms,
+  showsCatalogue,
   sortFilms,
   tableRows,
   viewUrl,
@@ -202,12 +203,16 @@ function About({
       </section>
       <section class="prose-section" aria-labelledby="about-device">
         <h2 id="about-device">What stays on your device</h2>
-        <p>
-          Favourite cinemas are saved in your browser, or in your account while signed in. Accounts
-          use a necessary session cookie. Leaving the welcome page is remembered so it is not shown
-          again. Theme choices last for this visit. Opening a poster or following an external link
-          contacts that provider.
-        </p>
+        <ul>
+          <li>Favourite cinemas are saved in your browser, or in your account while signed in.</li>
+          <li>Accounts use a necessary session cookie.</li>
+          <li>
+            Your browser remembers whether you view films as a list or as posters, which Radar
+            sections you collapsed and that you have left the welcome page.
+          </li>
+          <li>Theme choices last for this visit.</li>
+          <li>Opening a poster or following an external link contacts that provider.</li>
+        </ul>
         <div class="prose-links">
           <PageLink href="/how-to-use" onNavigate={onNavigate}>
             How to use
@@ -677,6 +682,7 @@ export function App() {
     state,
     account,
     meta,
+    welcome: landing,
     onChange: change,
   };
   const filterProps = {
@@ -693,7 +699,17 @@ export function App() {
   return (
     <FriendsContext.Provider value={friends}>
       <div class={`app-layout ${collapsed ? "sidebar-collapsed" : ""}`}>
-        <a class="skip-link" href="#main-content">
+        <a
+          class="skip-link"
+          href="#main-content"
+          onClick={(event) => {
+            // Move focus, not just the scroll position, so the next Tab starts in the content.
+            event.preventDefault();
+            const main = document.getElementById("main-content");
+            main?.focus({ preventScroll: true });
+            main?.scrollIntoView({ block: "start" });
+          }}
+        >
           Skip to films
         </a>
         <aside class="desktop-sidebar" aria-label="Pages">
@@ -723,7 +739,7 @@ export function App() {
           </button>
           <Sidebar {...sidebarProps} />
         </dialog>
-        <main class="main-column" id="main-content">
+        <main class="main-column" id="main-content" tabIndex={-1}>
           <WatchlistsDialog onNavigate={navigateTo} />
           {!friends.panel && !["/account", "/friends"].includes(state.path) && <FriendsFeedback />}
           <header class="masthead">
@@ -779,8 +795,10 @@ export function App() {
                 open={nearbyOpen}
                 onClose={() => setNearbyOpen(false)}
                 onApply={(venues) => {
-                  // A temporary cinema filter: saved My cinemas are left untouched.
+                  // A temporary cinema filter: saved My cinemas are left untouched. Opened
+                  // from a page without films (the guide), it goes on to all films.
                   change({
+                    ...(showsCatalogue(state.path) ? {} : { path: "/" }),
                     myCinemas: false,
                     filters: { ...state.filters, venue: venues },
                     excluded: { ...state.excluded, venue: [] },
@@ -838,12 +856,14 @@ export function App() {
             />
           ) : state.path === "/how-to-use" ? (
             <HowToUse
-              onNavigate={(href) =>
+              onNavigate={(href) => {
                 // Only links that carry a view (e.g. tonight, My cinemas) replace the current one.
-                href.includes("?")
-                  ? change(readView(new URL(href, location.origin)), true)
-                  : navigateTo(href)
-              }
+                if (!href.includes("?")) return navigateTo(href);
+                const view = readView(new URL(href, location.origin));
+                change(view, true);
+                // With nothing saved yet, go straight to choosing cinemas, not an empty list.
+                if (view.myCinemas && !cinemas.loading && !cinemas.venues.length) openCinemas();
+              }}
               onNearby={() => setNearbyOpen(true)}
             />
           ) : state.path === "/account" ? (
