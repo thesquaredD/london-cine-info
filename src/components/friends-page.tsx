@@ -137,9 +137,6 @@ export function FriendsPage({ onNavigate }: { onNavigate: (path: string) => void
       {m.notice && <p role="status">{m.notice}</p>}
       <section class="social-plan" aria-labelledby="compare-h">
         <h3 id="compare-h">Find a film together</h3>
-        {import.meta.env.VITE_UX_PREVIEW === "1" && (
-          <p class="preview-notice">Design preview: username imports use sample watchlists.</p>
-        )}
         <p>Find London screenings for films on both your public Letterboxd watchlists.</p>
         <form
           class="social-plan-form"
