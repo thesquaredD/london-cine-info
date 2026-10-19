@@ -486,12 +486,6 @@ h3 {
 .rating-card.missing {
   color: var(--muted);
 }
-.trailer-link {
-  display: block;
-  margin-top: 12px;
-  text-align: center;
-  font-size: 12px;
-}
 .showtimes {
   background: var(--panel);
   border: 1px solid var(--line);
@@ -905,9 +899,6 @@ h3 {
   }
   .rating-card strong {
     font-size: 18px;
-  }
-  .trailer-link {
-    margin-top: 8px;
   }
   .poster-overlay {
     padding: 6px;

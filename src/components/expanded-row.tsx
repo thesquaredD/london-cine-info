@@ -275,24 +275,29 @@ export function ExpandedRow({
                   })}
                 </div>
               )}
-              <div class="film-provider-links" role="group" aria-label="Film websites">
+              <div class="film-actions" role="group" aria-label="Film links">
+                {film.tr && (
+                  <a
+                    class="trailer-link"
+                    href={film.tr}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Watch trailer"
+                  >
+                    Trailer <ExternalLinkIcon />
+                  </a>
+                )}
                 {filmProviderLinks(film).map((provider) => (
                   <a
                     key={provider.name}
                     href={provider.href}
                     target="_blank"
                     rel="noopener noreferrer"
+                    aria-label={provider.label}
                   >
-                    {provider.label} <ExternalLinkIcon />
+                    {provider.name} <ExternalLinkIcon />
                   </a>
                 ))}
-              </div>
-              <div class="film-links">
-                {film.tr && (
-                  <a class="trailer-link" href={film.tr} target="_blank" rel="noopener noreferrer">
-                    Watch trailer <ExternalLinkIcon />
-                  </a>
-                )}
                 <button
                   class="share-film"
                   onClick={async () => {
@@ -310,6 +315,8 @@ export function ExpandedRow({
                 >
                   Share film
                 </button>
+              </div>
+              <div class="film-links">
                 <button
                   class="feedback-link"
                   onClick={() =>

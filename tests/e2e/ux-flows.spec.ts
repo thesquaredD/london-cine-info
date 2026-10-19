@@ -25,7 +25,7 @@ test("opened film shows provider links and sharing does not move the screenings"
   });
   await page.goto("/");
   await page.getByRole("button", { name: "Fixture Classic A", exact: true }).click();
-  const providers = page.getByRole("group", { name: "Film websites" });
+  const providers = page.getByRole("group", { name: "Film links" });
   await expect(providers.getByRole("link", { name: "Open on Letterboxd" })).toBeVisible();
   await expect(providers.getByRole("link", { name: "Open on IMDb" })).toBeVisible();
   const showtimes = page.locator(".showtimes");

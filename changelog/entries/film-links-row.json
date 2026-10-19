@@ -1,0 +1,7 @@
+{
+  "id": "film-links-row",
+  "type": "improved",
+  "title": "Tidier links on an opened film",
+  "body": "Trailer, Letterboxd, IMDb and Share film now sit together as one row of matching buttons under the ratings, so the film panel is shorter and easier to scan. Report a listing problem stays as a plain link beneath them.",
+  "visibility": "public"
+}
