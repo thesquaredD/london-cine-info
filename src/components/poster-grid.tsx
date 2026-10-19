@@ -17,7 +17,7 @@ function posterSources(url: string) {
   if (!match) return {};
   return {
     srcset: `${match[1]}w185${match[2]} 185w, ${match[1]}w342${match[2]} 342w`,
-    sizes: "(max-width: 479px) 46vw, (max-width: 599px) 31vw, (max-width: 1099px) 25vw, 200px",
+    sizes: "(max-width: 599px) 31vw, (max-width: 1099px) 25vw, 200px",
   };
 }
 
