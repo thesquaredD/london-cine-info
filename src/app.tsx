@@ -34,8 +34,13 @@ import {
   readHideRatings,
   HIDE_RATINGS_STORAGE,
   watchlistDisplay,
+  readFilmView,
+  saveFilmView,
+  supportsPosters,
   type DisplayState,
+  type FilmView,
 } from "./lib/display";
+import { PosterGrid, ViewSwitch } from "./components/poster-grid";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import { useAccount } from "./lib/account";
 import {
@@ -277,6 +282,26 @@ export function App() {
     hideWatchlistRatings: readHideRatings(),
     ratingOrder: [...DEFAULT_DISPLAY.ratingOrder],
   }));
+  const [filmView, setFilmView] = useState<FilmView>(() => readFilmView());
+  const posters = filmView === "posters" && supportsPosters(state.path);
+  const viewAnchor = useRef<string | null>(null);
+  function changeFilmView(view: FilmView) {
+    if (view === filmView) return;
+    saveFilmView(view);
+    capture("film_view_changed", { view, path: state.path });
+    // Keep the open film in view rather than reopening it as a dialog.
+    viewAnchor.current = state.film ?? null;
+    if (state.film) change({ film: undefined }, false);
+    setFilmView(view);
+  }
+  useEffect(() => {
+    const key = viewAnchor.current;
+    viewAnchor.current = null;
+    if (key)
+      document
+        .querySelector(`[data-film-key="${CSS.escape(key)}"]`)
+        ?.scrollIntoView({ block: "nearest" });
+  }, [filmView]);
   const effectiveDisplay = watchlistDisplay(display, state);
   const hideRatings = effectiveDisplay.ratingOrder.length === 0;
   const effectiveState: ViewState =
@@ -960,7 +985,7 @@ export function App() {
                   {state.path === "/events" && (
                     <EventTypeFilter state={effectiveState} onChange={change} />
                   )}
-                  <div class="results-heading">
+                  <div class={`results-heading ${posters ? "has-posters" : ""}`}>
                     <p class="result-status" role="status" aria-live="polite">
                       <strong>
                         {resultCount.toLocaleString("en-GB")}{" "}
@@ -974,11 +999,22 @@ export function App() {
                       </strong>{" "}
                       <span class="result-context">matching your choices</span>
                     </p>
-                    <MobileSort
-                      hideRatings={hideRatings}
-                      state={effectiveState}
-                      onChange={change}
-                    />
+                    {supportsPosters(state.path) ? (
+                      <div class="results-tools">
+                        <MobileSort
+                          hideRatings={hideRatings}
+                          state={effectiveState}
+                          onChange={change}
+                        />
+                        <ViewSwitch value={filmView} onChange={changeFilmView} />
+                      </div>
+                    ) : (
+                      <MobileSort
+                        hideRatings={hideRatings}
+                        state={effectiveState}
+                        onChange={change}
+                      />
+                    )}
                   </div>
                   <div
                     class="active-filters"
@@ -1201,6 +1237,28 @@ export function App() {
                     watched={account.user ? watched : undefined}
                     calendar={calendar}
                     onCalendar={openScreeningCalendar}
+                    onChange={change}
+                  />
+                ) : posters ? (
+                  <PosterGrid
+                    directorName={directorLabel(state, catalogue.films)}
+                    films={selected}
+                    showEmpty={
+                      !suggestions.length &&
+                      !(
+                        state.path === "/watchlist" &&
+                        (!account.user?.username || !account.watchlist?.fetchedAt)
+                      )
+                    }
+                    calendar={calendar}
+                    onCalendar={openScreeningCalendar}
+                    now={now}
+                    display={effectiveDisplay}
+                    watched={account.user ? watched : undefined}
+                    meta={catalogue.meta}
+                    state={effectiveState}
+                    expanded={expanded}
+                    onExpand={setExpanded}
                     onChange={change}
                   />
                 ) : (

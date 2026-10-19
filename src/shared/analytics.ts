@@ -12,6 +12,7 @@ export const ANALYTICS_EVENTS = [
   "filters_changed",
   "watchlist_used",
   "film_opened",
+  "film_view_changed",
   "booking_clicked",
   "screening_details_clicked",
   "catalogue_load_failed",
@@ -120,6 +121,7 @@ const propertyNames = new Set([
   "all_friends",
   "match_mode",
   "first_setup",
+  "view",
 ]);
 
 // Search text is intentional; credentials/contact details pasted into it are not.

@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
 import type { Film } from "../shared/data";
-import { readView, viewUrl, selectFilms, sortFilms, tableRows } from "./catalogue";
+import {
+  PAGE_SIZE,
+  pageRows,
+  readView,
+  viewUrl,
+  selectFilms,
+  sortFilms,
+  tableRows,
+} from "./catalogue";
 function film(id: string, overrides: Partial<Film> = {}): Film {
   return {
     id,
@@ -228,4 +236,50 @@ it("preserves Radar film links and the Events highlights view", () => {
     const state = readView(new URL(query, "https://example.com"));
     expect(readView(new URL(viewUrl(state), "https://example.com"))).toEqual(state);
   }
+});
+
+describe("pageRows", () => {
+  it("gives list and poster views the same rows, keys and page", () => {
+    const films = Array.from({ length: PAGE_SIZE + 5 }, (_, index) =>
+      film(`f${String(index).padStart(3, "0")}`, { ye: 1900 + (index % 40) }),
+    );
+    const state = { ...view, sort: "year" as const, direction: "asc" as const, page: 2 };
+    const sorted = sortFilms(films, state.sort, state.direction);
+    const { visible, page, pageCount, start } = pageRows(sorted, state);
+    expect({ page, pageCount, start }).toEqual({ page: 2, pageCount: 2, start: PAGE_SIZE });
+    expect(visible.map((row) => row.key)).toEqual(
+      tableRows(sorted, state)
+        .slice(PAGE_SIZE)
+        .map((row) => row.key),
+    );
+    expect(pageRows(sorted, { ...state, page: 9 }).page).toBe(2);
+  });
+  it("carries a release-date group across a page boundary", () => {
+    const films = Array.from({ length: PAGE_SIZE + 10 }, (_, index) =>
+      film(`c${String(index).padStart(3, "0")}`, {
+        rd: index < PAGE_SIZE - 5 ? "2026-11-01" : "2026-11-08",
+      }),
+    );
+    const state = { ...view, path: "/calendar" };
+    const first = pageRows(films, { ...state, page: 1 });
+    const second = pageRows(films, { ...state, page: 2 });
+    expect(first.visible.at(-1)!.group!.id).toBe("release-2026-11-08");
+    expect(second.visible[0]!.group).toEqual(first.visible.at(-1)!.group);
+    expect(second.visible[0]!.group!.count).toBe(15);
+    expect(second.start).toBe(PAGE_SIZE);
+    expect([...first.visible, ...second.visible].map((row) => row.key)).toEqual(
+      tableRows(films, state).map((row) => row.key),
+    );
+  });
+  it("keeps retrospective director groups and their row keys", () => {
+    const films = [
+      film("a", { di: [{ id: "d1", name: "Agnès" }], retro: ["d1"] }),
+      film("b", { di: [{ id: "d1", name: "Agnès" }], retro: ["d1"] }),
+    ];
+    const state = { ...view, path: "/retrospectives" };
+    expect(pageRows(films, state).visible.map((row) => [row.key, row.group?.name])).toEqual([
+      ["d1:a", "Agnès"],
+      ["d1:b", "Agnès"],
+    ]);
+  });
 });
