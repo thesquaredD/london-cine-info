@@ -1,0 +1,417 @@
+/*
+ * Poster browsing and the List / Posters switch.
+ *
+ * Every hover, focus and selection state here changes colour, opacity or an inset shadow
+ * only, never box geometry, so nothing in the grid or toolbar moves.
+ *
+ * The three `data-poster-hover` treatments (edge, strip, overlay) and `data-poster-title`
+ * are set by src/lib/poster-review.ts for design review. Once one is chosen, keep its rules
+ * and delete the others.
+ */
+
+/* ---------- Results toolbar ---------- */
+/* The count keeps its width; sort and the view switch wrap beneath it when space runs out. */
+:root .results-heading:has(.results-tools) {
+  flex-wrap: wrap;
+  row-gap: 6px;
+}
+:root .results-heading:has(.results-tools) .result-status {
+  flex: none;
+}
+:root .results-tools {
+  display: flex;
+  flex: 0 1 auto;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  min-width: 0;
+  margin-left: auto;
+}
+:root .results-tools .mobile-sort-trigger {
+  min-width: 0;
+}
+:root .results-heading.has-posters .mobile-sort-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 44px;
+  margin: 0;
+  max-width: 100%;
+}
+:root .results-heading.has-posters .mobile-sort-trigger .control-caret {
+  margin: 0 2px 3px 6px;
+  transform: rotate(45deg);
+}
+.view-switch {
+  display: inline-flex;
+  flex: none;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  background: var(--panel);
+}
+.view-switch button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 44px;
+  min-height: 42px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 13px;
+}
+.view-switch button + button {
+  border-left: 1px solid var(--line);
+}
+.view-switch button[aria-pressed="true"] {
+  color: var(--fg);
+  background: var(--shade);
+  box-shadow: inset 0 -2px 0 var(--brass);
+}
+.view-icon {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+  flex: none;
+}
+@media (max-width: 479px) {
+  .view-switch button {
+    padding: 0;
+  }
+  .view-switch-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+}
+
+/* ---------- Grid ---------- */
+.poster-view {
+  --poster-min: 150px;
+  --poster-gap: 18px 14px;
+  padding: 12px 12px 24px;
+}
+.poster-section + .poster-section {
+  margin-top: 24px;
+}
+.poster-group {
+  margin: 0 0 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--line);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--fg);
+}
+.poster-group small {
+  margin-left: 6px;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--muted);
+}
+.poster-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(var(--poster-min), 100%), 1fr));
+  gap: var(--poster-gap);
+}
+@media (max-width: 599px) {
+  .poster-view {
+    --poster-min: 128px;
+    --poster-gap: 14px 10px;
+    padding-inline: 10px;
+  }
+}
+@media (min-width: 1100px) {
+  .poster-view {
+    --poster-min: 164px;
+    padding-inline: 16px;
+  }
+}
+.poster-item {
+  min-width: 0;
+}
+
+/* ---------- Card ---------- */
+.poster-card {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  font: inherit;
+}
+:root .poster-card:hover:not(:disabled),
+:root .poster-card:active:not(:disabled) {
+  background: transparent;
+  text-decoration: none;
+}
+.poster-card:focus-visible {
+  outline: none;
+}
+.poster-frame {
+  position: relative;
+  display: block;
+  aspect-ratio: 2 / 3;
+  overflow: hidden;
+  border-radius: 3px;
+  background: var(--shade);
+}
+/* Resting hairline; hover and focus recolour it rather than adding a border. */
+.poster-frame::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--fg) 14%, transparent);
+  pointer-events: none;
+  transition: box-shadow 120ms;
+}
+.poster-card:focus-visible .poster-frame {
+  outline: 2px solid var(--original);
+  outline-offset: 3px;
+}
+.poster-art {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.poster-fallback {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 14px 12px;
+  border-block: 2px solid var(--brass);
+  background: var(--panel);
+  color: var(--fg);
+}
+.poster-fallback-title {
+  display: -webkit-box;
+  -webkit-line-clamp: 6;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  font-size: 15px;
+  line-height: 1.25;
+  font-weight: 500;
+}
+.poster-fallback-note {
+  color: var(--brass);
+  font-size: 12px;
+}
+.poster-mark {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--bg) 85%, transparent);
+  color: var(--brass);
+  font-size: 13px;
+  line-height: 1;
+}
+.poster-caption {
+  display: none;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--fg);
+}
+:root[data-poster-title] .poster-caption {
+  display: block;
+}
+
+/* ---------- Details inside the poster (shared) ---------- */
+.poster-info {
+  position: absolute;
+  inset: auto 0 0;
+  z-index: 2;
+  display: grid;
+  gap: 2px;
+  padding: 8px 10px 9px;
+  color: var(--fg);
+  font-size: 12px;
+  line-height: 1.35;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms;
+}
+.poster-info-title {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 13px;
+  font-weight: 500;
+}
+.poster-info-title i {
+  display: none;
+  font-weight: 400;
+  color: var(--muted);
+}
+.poster-info-facts,
+.poster-info-count {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--muted);
+}
+.poster-info-count {
+  display: none;
+}
+
+/* Edge and strip share the compact strip: one line of title, one line of facts. */
+:root:is([data-poster-hover="edge"], [data-poster-hover="strip"]) .poster-info {
+  background: color-mix(in srgb, var(--bg) 94%, transparent);
+  border-top: 1px solid color-mix(in srgb, var(--brass) 55%, transparent);
+}
+
+/* Overlay: a short gradient panel with the full summary, leaving the upper artwork clear. */
+:root[data-poster-hover="overlay"] .poster-info {
+  gap: 3px;
+  padding: 40px 10px 10px;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    color-mix(in srgb, var(--bg) 88%, transparent) 36px
+  );
+}
+:root[data-poster-hover="overlay"] .poster-info-title {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  white-space: normal;
+}
+:root[data-poster-hover="overlay"] .poster-info-title i {
+  display: block;
+  font-size: 12px;
+}
+:root[data-poster-hover="overlay"] .poster-info-count {
+  display: block;
+  color: var(--fg);
+}
+
+/* Keyboard focus always reveals details, whatever the treatment. */
+.poster-card:focus-visible .poster-info {
+  opacity: 1;
+}
+
+/* Pointer hover. Touch never sees these; one tap opens the film. */
+@media (hover: hover) and (pointer: fine) {
+  .poster-card {
+    cursor: pointer;
+  }
+  /* A short delay stops details flashing while the pointer sweeps across the grid. */
+  :root:is([data-poster-hover="strip"], [data-poster-hover="overlay"])
+    .poster-card:hover
+    .poster-info {
+    opacity: 1;
+    transition-delay: 90ms;
+  }
+  :root[data-poster-hover="edge"] .poster-card:hover .poster-frame::after {
+    box-shadow: inset 0 0 0 2px var(--brass);
+  }
+  :root:is([data-poster-hover="strip"], [data-poster-hover="overlay"])
+    .poster-card:hover
+    .poster-frame::after {
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--brass) 70%, transparent);
+  }
+}
+.poster-card:focus-visible .poster-frame::after {
+  box-shadow: inset 0 0 0 2px var(--brass);
+}
+
+/* ---------- Controls beside the posters follow the same treatment ---------- */
+:root[data-poster-hover]
+  :is(
+    .view-switch button,
+    .results-heading .mobile-sort-trigger,
+    .pagination button,
+    .active-filters button
+  ) {
+  transition:
+    background-color 120ms,
+    box-shadow 120ms,
+    color 120ms;
+}
+@media (hover: hover) and (pointer: fine) {
+  :root[data-poster-hover]
+    :is(
+      .view-switch button,
+      .results-heading .mobile-sort-trigger,
+      .pagination button,
+      .active-filters button
+    ):hover:not(:disabled) {
+    text-decoration: none;
+    color: var(--fg);
+  }
+  :root[data-poster-hover="edge"]
+    :is(
+      .view-switch button,
+      .results-heading .mobile-sort-trigger,
+      .pagination button,
+      .active-filters button
+    ):hover:not(:disabled) {
+    box-shadow: inset 0 0 0 1px var(--brass);
+  }
+  :root:is([data-poster-hover="strip"], [data-poster-hover="overlay"])
+    :is(
+      .view-switch button,
+      .results-heading .mobile-sort-trigger,
+      .pagination button,
+      .active-filters button
+    ):hover:not(:disabled) {
+    background-color: var(--shade);
+  }
+  :root:is([data-poster-hover="strip"], [data-poster-hover="overlay"])
+    .view-switch
+    button[aria-pressed="true"]:hover {
+    box-shadow: inset 0 -2px 0 var(--brass);
+  }
+  :root[data-poster-hover="edge"] .view-switch button[aria-pressed="true"]:hover {
+    box-shadow:
+      inset 0 0 0 1px var(--brass),
+      inset 0 -2px 0 var(--brass);
+  }
+}
+
+/* ---------- Film details sheet ---------- */
+.poster-film-dialog {
+  width: min(960px, calc(100vw - 32px));
+  max-width: 960px;
+}
+.poster-film-dialog .dialog-body {
+  padding: 0;
+}
+.poster-detail-table {
+  table-layout: auto;
+}
+.poster-detail-table > tbody > tr > td {
+  padding: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .poster-info,
+  .poster-frame::after,
+  :root[data-poster-hover] :is(.view-switch button, .pagination button) {
+    transition: none;
+  }
+}

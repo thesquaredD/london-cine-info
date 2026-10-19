@@ -1,0 +1,7 @@
+{
+  "id": "poster-view",
+  "type": "added",
+  "title": "Browse films as posters",
+  "body": "Switch between List and Posters above the results to see the same films as a wall of posters. Select a poster to see its details and screenings; your choice is remembered on this device.",
+  "visibility": "public"
+}

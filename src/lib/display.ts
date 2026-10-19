@@ -39,3 +39,45 @@ export function watchlistDisplay(
     ? { ...display, ratingOrder: [] }
     : display;
 }
+
+/** List or poster browsing for film results. Events and Radar keep their own layouts. */
+export type FilmView = "list" | "posters";
+export const FILM_VIEW_STORAGE = "london-cine.film-view.v1";
+export const POSTER_VIEW_PATHS = [
+  "/",
+  "/new",
+  "/classics",
+  "/retrospectives",
+  "/calendar",
+  "/watchlist",
+];
+export function supportsPosters(path: string): boolean {
+  return POSTER_VIEW_PATHS.includes(path);
+}
+export function readFilmView(storage: Pick<Storage, "getItem"> | null = safeStorage()): FilmView {
+  try {
+    return storage?.getItem(FILM_VIEW_STORAGE) === "posters" ? "posters" : "list";
+  } catch {
+    return "list";
+  }
+}
+/** Returns false when the choice could not be remembered beyond this visit. */
+export function saveFilmView(
+  view: FilmView,
+  storage: Pick<Storage, "setItem"> | null = safeStorage(),
+): boolean {
+  try {
+    if (!storage) return false;
+    storage.setItem(FILM_VIEW_STORAGE, view);
+    return true;
+  } catch {
+    return false;
+  }
+}
+function safeStorage(): Storage | null {
+  try {
+    return typeof localStorage === "undefined" ? null : localStorage;
+  } catch {
+    return null;
+  }
+}

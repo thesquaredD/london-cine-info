@@ -366,3 +366,11 @@ export function tableRows(films: Film[], state: ViewState): TableRow[] {
       })),
     );
 }
+/** The rows on the current page. List and poster views both read results through this. */
+export function pageRows(films: Film[], state: ViewState) {
+  const rows = tableRows(films, state);
+  const pageCount = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+  const page = Math.min(state.page, pageCount);
+  const start = (page - 1) * PAGE_SIZE;
+  return { rows, page, pageCount, start, visible: rows.slice(start, start + PAGE_SIZE) };
+}

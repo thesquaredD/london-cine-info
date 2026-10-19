@@ -8,14 +8,14 @@ import type { DataMeta, Film } from "../shared/data";
 import {
   hasCustomSort,
   sortLabel,
-  PAGE_SIZE,
   RATINGS,
-  tableRows,
+  pageRows,
   nextSort,
   type SortKey,
   type ViewState,
 } from "../lib/catalogue";
 import { ExpandedRow } from "./expanded-row";
+import { Pagination } from "./pagination";
 
 import type { CalendarInput } from "../shared/calendar";
 import type { CalendarState } from "../lib/calendar";
@@ -65,10 +65,7 @@ export function FilmTable({
     : undefined;
   const marked = (film: Film) => !!watched?.has(letterboxdSlug(film.ra.lb?.url) ?? "");
   const ratings = display.ratingOrder.map((key) => RATINGS.find((rating) => rating.key === key)!);
-  const rows = tableRows(films, state);
-  const pageCount = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
-  const page = Math.min(state.page, pageCount);
-  const start = (page - 1) * PAGE_SIZE;
+  const { rows, start, visible } = pageRows(films, state);
   function toggleFilm(film: Film, key: string) {
     if (expanded !== key)
       capture("film_opened", {
@@ -130,7 +127,7 @@ export function FilmTable({
             </tr>
           </thead>
           <tbody>
-            {rows.slice(start, start + PAGE_SIZE).map(({ film, group, key }, index) => (
+            {visible.map(({ film, group, key }, index) => (
               <Fragment key={key}>
                 {group && (index === 0 || group.id !== rows[start + index - 1]?.group?.id) && (
                   <tr class={state.path === "/calendar" ? "release-group" : "director-group"}>
@@ -339,65 +336,7 @@ export function FilmTable({
       ) : showEmpty ? (
         <EmptyState directorName={directorName} state={state} meta={meta} onChange={onChange} />
       ) : null}
-      {films.length > 0 && (
-        <footer class="pagination" aria-label="Film pagination">
-          <div>
-            <strong>
-              {films.length.toLocaleString("en-GB")} {films.length === 1 ? "film" : "films"}
-            </strong>
-            {films.length > 0 && (
-              <span class="result-range">
-                {" "}
-                · {state.path === "/retrospectives" ? "rows " : ""}
-                {start + 1}–{Math.min(start + PAGE_SIZE, rows.length)}
-              </span>
-            )}
-          </div>
-          <div class="page-controls">
-            <button
-              disabled={page <= 1}
-              aria-label="Previous page"
-              onClick={() => {
-                onExpand(null);
-                onChange({ page: page - 1 });
-                window.scrollTo({ top: 0 });
-              }}
-            >
-              ‹
-            </button>
-            <label>
-              Page{" "}
-              <select
-                aria-label="Page"
-                value={page}
-                onChange={(event) => {
-                  onExpand(null);
-                  onChange({ page: Number(event.currentTarget.value) });
-                  window.scrollTo({ top: 0 });
-                }}
-              >
-                {Array.from({ length: pageCount }, (_, index) => (
-                  <option key={index} value={index + 1}>
-                    {index + 1}
-                  </option>
-                ))}
-              </select>
-              <span> of {pageCount}</span>
-            </label>
-            <button
-              disabled={page >= pageCount}
-              aria-label="Next page"
-              onClick={() => {
-                onExpand(null);
-                onChange({ page: page + 1 });
-                window.scrollTo({ top: 0 });
-              }}
-            >
-              ›
-            </button>
-          </div>
-        </footer>
-      )}
+      <Pagination films={films} state={state} onExpand={onExpand} onChange={onChange} />
     </>
   );
 }
