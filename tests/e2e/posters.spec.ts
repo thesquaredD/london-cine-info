@@ -228,8 +228,10 @@ test("the poster film sheet holds its size and place while screenings load", asy
     expect(loaded, `${width}px`).toEqual(loading);
     // Phones get the full-width bottom sheet; wider screens a centred sheet.
     if (width < 800) {
+      // clientWidth excludes classic scrollbars (Linux CI), which the sheet does not cover.
+      const pageWidth = await page.evaluate(() => document.documentElement.clientWidth);
       expect(loaded!.x).toBe(0);
-      expect(loaded!.width).toBe(width);
+      expect(loaded!.width).toBe(pageWidth);
     } else {
       expect(loaded!.width).toBeLessThanOrEqual(960);
       expect(loaded!.x).toBeGreaterThan(0);
