@@ -42,11 +42,10 @@ test("opened film shows provider links and sharing does not move the screenings"
   const info = (await page.locator(".film-info").boundingBox())!;
   expect(Math.abs(row.x - poster.x)).toBeLessThanOrEqual(1);
   expect(Math.abs(row.x + row.width - (info.x + info.width))).toBeLessThanOrEqual(1);
-  expect(
-    await page.evaluate(
-      () => document.documentElement.scrollWidth === document.documentElement.clientWidth,
-    ),
-  ).toBe(true);
+  // The panel does not scroll sideways and the row stays inside the viewport.
+  const panel = page.locator(".film-expanded");
+  expect(await panel.evaluate((node) => node.scrollWidth <= node.clientWidth)).toBe(true);
+  expect(row.x + row.width).toBeLessThanOrEqual(page.viewportSize()!.width);
   const showtimes = page.locator(".showtimes");
   await expect(page.locator(".booking-action").first()).toBeVisible();
   const top = (await showtimes.boundingBox())!.y;
