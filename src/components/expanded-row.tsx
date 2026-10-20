@@ -1,4 +1,5 @@
 import { ExternalLinkIcon } from "./external-link-icon";
+import { ImdbMark, LetterboxdMark, LinkIcon, YouTubeMark } from "./platform-marks";
 import { filmProviderLinks } from "../lib/film-links";
 import { findSharedScreening, shareUrl } from "../lib/sharing";
 import { CopyFallback } from "./copy-fallback";
@@ -275,68 +276,76 @@ export function ExpandedRow({
                   })}
                 </div>
               )}
-              <div class="film-actions" role="group" aria-label="Film links">
-                {film.tr && (
-                  <a
-                    class="trailer-link"
-                    href={film.tr}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label="Watch trailer"
-                  >
-                    Trailer <ExternalLinkIcon />
-                  </a>
-                )}
-                {filmProviderLinks(film).map((provider) => (
-                  <a
-                    key={provider.name}
-                    href={provider.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={provider.label}
-                  >
-                    {provider.name} <ExternalLinkIcon />
-                  </a>
-                ))}
-                <button
-                  class="share-film"
-                  onClick={async () => {
-                    // A clean named link: the sender's filters, page and sort stay behind.
-                    const url = shareUrl(film, location.origin);
-                    try {
-                      await navigator.clipboard.writeText(url);
-                      setShareFallback("");
-                      announceShare("Film link copied");
-                    } catch {
-                      setShareFallback(url);
-                      announceShare("Copy the film link from the selected field.");
-                    }
-                  }}
-                >
-                  Share film
-                </button>
-              </div>
-              <div class="film-links">
-                <button
-                  class="feedback-link"
-                  onClick={() =>
-                    openFeedback({ category: "listing", context: { filmId: film.id } })
-                  }
-                >
-                  Report a listing problem
-                </button>
-              </div>
-              <div role="status" class="share-status">
-                {shareMessage}
-              </div>
-              {shareFallback && (
-                <CopyFallback
-                  label="Film link"
-                  value={shareFallback}
-                  onDismiss={() => setShareFallback("")}
-                />
-              )}
             </div>
+            <div class="film-actions" role="group" aria-label="Film links">
+              {film.tr && (
+                <a
+                  class="trailer-link"
+                  href={film.tr}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Watch trailer"
+                >
+                  <YouTubeMark />
+                  Trailer
+                </a>
+              )}
+              {filmProviderLinks(film).map((provider) => (
+                <a
+                  key={provider.key}
+                  href={provider.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={provider.label}
+                >
+                  {provider.key === "imdb" ? (
+                    <ImdbMark />
+                  ) : (
+                    <>
+                      <LetterboxdMark />
+                      {provider.name}
+                    </>
+                  )}
+                </a>
+              ))}
+              <button
+                class="share-film"
+                aria-label="Share film"
+                onClick={async () => {
+                  // A clean named link: the sender's filters, page and sort stay behind.
+                  const url = shareUrl(film, location.origin);
+                  try {
+                    await navigator.clipboard.writeText(url);
+                    setShareFallback("");
+                    announceShare("Film link copied");
+                  } catch {
+                    setShareFallback(url);
+                    announceShare("Copy the film link from the selected field.");
+                  }
+                }}
+              >
+                <LinkIcon />
+                Share
+              </button>
+            </div>
+            <div class="film-links">
+              <button
+                class="feedback-link"
+                onClick={() => openFeedback({ category: "listing", context: { filmId: film.id } })}
+              >
+                Report a listing problem
+              </button>
+            </div>
+            <div role="status" class="share-status">
+              {shareMessage}
+            </div>
+            {shareFallback && (
+              <CopyFallback
+                label="Film link"
+                value={shareFallback}
+                onDismiss={() => setShareFallback("")}
+              />
+            )}
           </div>
           <div class="showtimes" ref={programme} tabIndex={-1}>
             {data && state.screening && sharedIndex < 0 && (

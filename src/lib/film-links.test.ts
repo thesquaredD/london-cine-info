@@ -16,11 +16,17 @@ describe("filmProviderLinks", () => {
     });
     expect(links).toEqual([
       {
+        key: "letterboxd",
         name: "Letterboxd",
         href: "https://letterboxd.com/film/stalker/",
         label: "Open on Letterboxd",
       },
-      { name: "IMDb", href: "https://www.imdb.com/title/tt0079944/", label: "Open on IMDb" },
+      {
+        key: "imdb",
+        name: "IMDb",
+        href: "https://www.imdb.com/title/tt0079944/",
+        label: "Open on IMDb",
+      },
     ]);
   });
 
@@ -28,11 +34,13 @@ describe("filmProviderLinks", () => {
     const links = filmProviderLinks({ ti: "Paris, Texas", ye: 1984, ra: ratings });
     expect(links).toEqual([
       {
+        key: "letterboxd",
         name: "Letterboxd",
         href: "https://letterboxd.com/search/films/Paris%2C%20Texas/",
         label: "Find on Letterboxd",
       },
       {
+        key: "imdb",
         name: "IMDb",
         href: "https://www.imdb.com/find/?q=Paris%2C%20Texas%201984&s=tt&ttype=ft",
         label: "Find on IMDb",

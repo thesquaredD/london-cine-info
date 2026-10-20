@@ -259,8 +259,7 @@
   :root .poster {
     grid-row: auto;
   }
-  :root
-    :is(.film-synopsis, .synopsis-toggle, .film-cast, .rating-cards, .film-actions, .film-links) {
+  :root :is(.film-synopsis, .synopsis-toggle, .film-cast, .rating-cards) {
     grid-column: 1 / -1;
   }
   :root .synopsis-toggle {
@@ -682,23 +681,29 @@
 :root :is(.booking-action, .trailer-link, .event-actions a) {
   gap: 6px;
 }
-/* Film actions: one row of matching quiet chips (trailer, Letterboxd, IMDb, share), each the
-   same height and trim, wrapping as the column narrows. Reporting a problem stays a plain
-   text link beneath them, as feedback entry points do everywhere else. */
+/* Film actions: a two-column grid of equal chips (trailer, Letterboxd, IMDb, share) that
+   spans the whole info column under the poster, each carrying its platform's mark in the
+   brand's own colours. Reporting a problem stays a plain text link beneath them, as feedback
+   entry points do everywhere else; the status line keeps its height so the screenings hold
+   still when a link is copied. */
+:root .film-info > :is(.film-actions, .film-links, .share-status, .share-fallback) {
+  grid-column: 1 / -1;
+}
 :root .film-actions {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 8px;
-  margin-top: 12px;
+  margin-top: 4px;
 }
 :root .film-actions :is(a, button) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 5px;
+  gap: 6px;
   margin: 0;
+  min-width: 0;
   min-height: 32px;
-  padding: 5px 10px;
+  padding: 5px 8px;
   line-height: 1.25;
   font-size: 14px;
   font-weight: 400;
@@ -713,16 +718,22 @@
 :root .film-actions :is(a, button):hover {
   border-color: var(--fg);
 }
-:root .film-actions .external-link-icon {
-  flex-basis: 14px;
-  width: 14px;
+:root .film-actions svg {
+  flex: none;
   height: 14px;
+  width: auto;
+}
+:root .film-actions .imdb-mark {
+  height: 16px;
+}
+:root .film-actions .link-icon {
   color: var(--muted);
 }
+/* Phone sizes come after the desktop chip rule: at equal specificity the later rule wins. */
 @media (max-width: 799px) {
   :root .film-actions :is(a, button) {
     min-height: 44px;
-    padding: 8px 14px;
+    padding: 8px 10px;
     font-size: 15px;
   }
 }

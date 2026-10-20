@@ -18,7 +18,9 @@ test("a first unfiltered visit shows the welcome page and dismissal is remembere
   await expect(page.locator(".film-row")).toHaveCount(0);
   await expect(page).toHaveURL(/\/$/);
   await expect(
-    page.getByText("London Ciné Info is independent and not affiliated with any cinema."),
+    page.getByText(
+      "London Ciné Info is independent and not affiliated with any cinema, Letterboxd, IMDb or YouTube.",
+    ),
   ).toBeVisible();
   await page.getByRole("link", { name: "Browse all films" }).click();
   await expect(page.locator(".film-row")).toHaveCount(6);

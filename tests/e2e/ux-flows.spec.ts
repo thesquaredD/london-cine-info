@@ -26,8 +26,27 @@ test("opened film shows provider links and sharing does not move the screenings"
   await page.goto("/");
   await page.getByRole("button", { name: "Fixture Classic A", exact: true }).click();
   const providers = page.getByRole("group", { name: "Film links" });
+  await expect(providers.getByRole("link", { name: "Watch trailer" })).toBeVisible();
   await expect(providers.getByRole("link", { name: "Open on Letterboxd" })).toBeVisible();
   await expect(providers.getByRole("link", { name: "Open on IMDb" })).toBeVisible();
+  // The chips form a grid of equal cells spanning the info column under the poster.
+  const chips = await providers.locator("a, button").all();
+  expect(chips).toHaveLength(4);
+  const boxes = await Promise.all(chips.map(async (chip) => (await chip.boundingBox())!));
+  for (const box of boxes) {
+    expect(Math.abs(box.width - boxes[0]!.width)).toBeLessThanOrEqual(1);
+    expect(Math.abs(box.height - boxes[0]!.height)).toBeLessThanOrEqual(1);
+  }
+  const row = (await providers.boundingBox())!;
+  const poster = (await page.locator(".poster").boundingBox())!;
+  const info = (await page.locator(".film-info").boundingBox())!;
+  expect(Math.abs(row.x - poster.x)).toBeLessThanOrEqual(1);
+  expect(Math.abs(row.x + row.width - (info.x + info.width))).toBeLessThanOrEqual(1);
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth === document.documentElement.clientWidth,
+    ),
+  ).toBe(true);
   const showtimes = page.locator(".showtimes");
   await expect(page.locator(".booking-action").first()).toBeVisible();
   const top = (await showtimes.boundingBox())!.y;
