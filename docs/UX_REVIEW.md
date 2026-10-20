@@ -71,3 +71,29 @@ and Cinema choices are no longer native selects: each is a 48px field opening a 
 panel (a month of days with counts and Today / Tomorrow / This weekend; cinemas by borough
 with counts and a Find field) that covers the list instead of pushing it down. This narrows
 item 3 above without hiding any screenings.
+
+## 20 October 2026: a full film column, a content-sized sheet and pagers top and bottom
+
+[Film sheet plan](film-sheet-plan.md). Measured on main at 1280×900 and 390×844 before the
+change:
+
+- the opened film's column ended about 520px down beside 950px of screenings, in the list view
+  and in the poster dialog alike;
+- the poster dialog was a fixed 960px × 85dvh box with a 68px title bar, and twelve rows made
+  it scroll, with the pager as its last item;
+- on phones the title bar and film block pushed the first screening 437px down a 760px sheet;
+- Previous / Next existed only after the twelfth row, and pressing it scrolled the list view
+  back to the programme top (a 545px jump).
+
+Changes:
+
+| Area         | Change                                                                                                                                                                                                                    |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Film column  | From 800px wide the column shows the synopsis (six lines, Read more) and a Cast line with the first five names above the Report link, in both views. Phones keep More details after the screenings.                       |
+| Poster sheet | No title bar; the film block names the film. A floating 44px close button stays in the top right corner while the sheet scrolls. The sheet is as tall as its content, up to 85dvh (92dvh on phones, with a grip).         |
+| Pager        | ‹ Previous / Next › (named Previous / Next screenings) on the count line above the first row and in a 44px bar after the last, hidden with one page. A turn swaps the rows and scrolls nothing; focus moves to the count. |
+| Phones       | Date and Cinema share one line; the pager takes its own line above the count with a short 1 / 3; Reset is a text link at the right of the count line while a date or cinema is chosen.                                    |
+
+A page turn keeps the list's height as its minimum, so a shorter last page does not pull the
+bottom pager out from under the pointer, and the programme is excluded from the browser's
+scroll anchoring, which would otherwise follow a day section moving up the list.
