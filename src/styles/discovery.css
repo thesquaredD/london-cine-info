@@ -241,6 +241,15 @@
     width: 64px;
     max-width: 64px;
   }
+  :root .poster-placeholder {
+    padding: 6px;
+    font-size: 12px;
+    line-height: 1.25;
+  }
+  :root .poster-placeholder span {
+    margin-top: 6px;
+    font-size: 11px;
+  }
   :root .film-description {
     display: block;
   }

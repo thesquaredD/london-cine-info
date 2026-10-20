@@ -414,6 +414,10 @@ h3 {
   justify-content: center;
   text-align: center;
   aspect-ratio: 2 / 3;
+  /* Keep the image's 2:3 box even when the title is long, so a failed poster never moves the
+     row below it. */
+  min-height: 0;
+  overflow: hidden;
   padding: 15px;
   background: var(--panel);
   color: var(--muted);
