@@ -1,13 +1,13 @@
-import { useEffect, useRef, useState } from "preact/hooks";
+import { useState } from "preact/hooks";
 import type { Film, Showtime } from "../shared/data";
 import { shareUrl } from "../lib/sharing";
+import { showToast } from "../lib/toast";
 import { CopyFallback } from "./copy-fallback";
-import { ShareIcon } from "./share-icon";
-
-const COPIED = "Screening link copied";
+import { LinkIcon } from "./platform-marks";
 
 /**
- * An icon button that copies a link opening this film with this screening highlighted.
+ * An icon button that copies a link opening this film with this screening highlighted, and
+ * confirms it with the app's toast. The chain-link icon never changes, so nothing moves.
  * Without `onFallback` a refused copy shows its own link field after the actions; with it,
  * the caller places the field (the film sheet gives it the whole screening row).
  */
@@ -22,20 +22,7 @@ export function ShareScreening({
   venue: string;
   onFallback?: (url: string | null) => void;
 }) {
-  const [message, setMessage] = useState("");
   const [fallback, setFallback] = useState("");
-  const timers = useRef<number[]>([]);
-  // Clear then re-set so screen readers announce every share (as Share film does), and drop
-  // the message after a while. The icon swaps at the same size, so nothing moves.
-  const announce = (text: string) => {
-    timers.current.forEach((timer) => window.clearTimeout(timer));
-    setMessage("");
-    timers.current = [
-      window.setTimeout(() => setMessage(text), 100),
-      window.setTimeout(() => setMessage(""), 5000),
-    ];
-  };
-  useEffect(() => () => timers.current.forEach((timer) => window.clearTimeout(timer)), []);
   const show = (url: string | null) => (onFallback ? onFallback(url) : setFallback(url ?? ""));
   return (
     <span class="share-screening-control">
@@ -47,18 +34,15 @@ export function ShareScreening({
           try {
             await navigator.clipboard.writeText(url);
             show(null);
-            announce(COPIED);
+            showToast("Screening link copied");
           } catch {
             show(url);
-            announce("Copy the screening link from the selected field.");
+            showToast("Copy the screening link from the selected field.");
           }
         }}
       >
-        <ShareIcon copied={message === COPIED} />
+        <LinkIcon />
       </button>
-      <span class="sr-only" role="status">
-        {message}
-      </span>
       {fallback && (
         <CopyFallback label="Screening link" value={fallback} onDismiss={() => setFallback("")} />
       )}

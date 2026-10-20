@@ -19,6 +19,7 @@ import { Privacy } from "./components/privacy";
 import { SettingsPage } from "./components/settings-page";
 import { ChangelogPage } from "./components/changelog-page";
 import { FeedbackDialog, FeedbackEntry } from "./components/feedback";
+import { ToastHost } from "./components/toast";
 import { openFeedback } from "./lib/feedback";
 import { useCalendar } from "./lib/calendar";
 import { MyCalendar, ScreeningCalendarDialog } from "./components/screening-calendar";
@@ -813,6 +814,7 @@ export function App() {
             <FeedbackEntry />
           </header>
           <FeedbackDialog dataVersion={meta?.generatedAt} onNavigate={navigateTo} />
+          <ToastHost />
           <div class="tagline">The database of London cinema screenings</div>
           <h2 class="sr-only" id="page-title" tabIndex={-1}>
             {pageTitle}
