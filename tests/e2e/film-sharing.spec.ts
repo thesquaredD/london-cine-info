@@ -127,18 +127,17 @@ test("a shared screening on page 3 opens highlighted, focused and stays there", 
     rows[31]!.bookingUrl,
   );
   await expect(page.locator(".programme-count")).toHaveText("25–36 of 40 screenings");
-  await expect(page.getByRole("navigation", { name: "Screening pages" })).toContainText(
-    "Page 3 of 4",
-  );
+  const pages = page.getByRole("navigation", { name: "Screening pages", exact: true });
+  await expect(pages).toContainText("Page 3 of 4");
   await expect(page.locator(".showtime-day li")).toHaveCount(12);
   // Nothing resets the reader away from the shared page once it settles.
   await page.waitForLoadState("networkidle");
   await expect(page.locator(".programme-count")).toHaveText("25–36 of 40 screenings");
   // Turning pages works from there, and the highlight is back on its page.
-  await page.getByRole("button", { name: "Previous screenings", exact: true }).click();
+  await pages.getByRole("button", { name: "Previous screenings", exact: true }).click();
   await expect(page.locator(".programme-count")).toHaveText("13–24 of 40 screenings");
   await expect(page.locator(".shared-screening")).toHaveCount(0);
-  await page.getByRole("button", { name: "Next screenings", exact: true }).click();
+  await pages.getByRole("button", { name: "Next screenings", exact: true }).click();
   await expect(page.locator(".shared-screening")).toBeVisible();
   // Its own Share copies the same screening.
   await target.getByRole("button", { name: /^Share screening:/ }).click();

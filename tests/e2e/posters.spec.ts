@@ -195,7 +195,7 @@ test.describe("touch", () => {
   });
 });
 
-test("the poster film sheet holds its size and place while screenings load", async ({
+test("the poster film sheet holds its width and place while screenings load", async ({
   page,
 }, testInfo) => {
   test.skip(testInfo.project.name !== "desktop", "Widths are set per test");
@@ -221,19 +221,31 @@ test("the poster film sheet holds its size and place while screenings load", asy
     await dialog.evaluate((node) =>
       Promise.all(node.getAnimations({ subtree: true }).map((animation) => animation.finished)),
     );
-    const loading = await dialog.boundingBox();
+    const loading = (await dialog.boundingBox())!;
+    // The loading list keeps its 240px, so the sheet does not start as a sliver.
+    expect(
+      (await dialog.locator(".showtimes").boundingBox())!.height,
+      `${width}px`,
+    ).toBeGreaterThanOrEqual(240);
     release();
     await expect(dialog.locator(".showtime-day").first()).toBeVisible();
-    const loaded = await dialog.boundingBox();
-    expect(loaded, `${width}px`).toEqual(loading);
-    // Phones get the full-width bottom sheet; wider screens a centred sheet.
+    const loaded = (await dialog.boundingBox())!;
+    // The sheet fits its content, so it may grow, but it keeps its width and its edge.
+    expect(loaded.width, `${width}px`).toBe(loading.width);
+    expect(loaded.x, `${width}px`).toBe(loading.x);
+    expect(loaded.height, `${width}px`).toBeGreaterThanOrEqual(loading.height);
+    // Phones get the full-width bottom sheet, up to 92% of the window; wider screens a
+    // centred sheet up to 85%.
     if (width < 800) {
       // Classic scrollbars (Linux CI) take up to 16px beside the fixed sheet; phones overlay them.
-      expect(loaded!.x).toBe(0);
-      expect(loaded!.width).toBeGreaterThanOrEqual(width - 16);
+      expect(loaded.x).toBe(0);
+      expect(loaded.width).toBeGreaterThanOrEqual(width - 16);
+      expect(Math.abs(loaded.y + loaded.height - height), `${width}px`).toBeLessThan(2);
+      expect(loaded.height).toBeLessThanOrEqual(height * 0.92 + 1);
     } else {
-      expect(loaded!.width).toBeLessThanOrEqual(960);
-      expect(loaded!.x).toBeGreaterThan(0);
+      expect(loaded.width).toBeLessThanOrEqual(960);
+      expect(loaded.x).toBeGreaterThan(0);
+      expect(loaded.height).toBeLessThanOrEqual(height * 0.85 + 1);
     }
     await page.keyboard.press("Escape");
   }
