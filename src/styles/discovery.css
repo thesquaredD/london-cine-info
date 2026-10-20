@@ -369,27 +369,43 @@
   max-width: 850px;
 }
 
+/* Desktop: the film column sits beside the screenings and carries the synopsis and cast
+   itself (phones keep them behind More details, after the screenings). It never stretches the
+   rows; a film without a synopsis simply ends after its links. */
 @media (min-width: 800px) {
   :root .film-expanded {
     display: grid;
     grid-template-columns: minmax(280px, 30%) minmax(0, 1fr);
-    grid-template-areas: "info screenings" "details screenings";
-    grid-template-rows: min-content 1fr;
+    grid-template-areas: "info screenings";
     align-items: start;
     column-gap: 24px;
     row-gap: 0;
   }
   :root .film-expanded > .film-info {
     grid-area: info;
+    align-content: start;
     margin: 0;
   }
   :root .film-expanded > .showtimes {
     grid-area: screenings;
   }
-  :root .film-expanded > .film-about {
-    grid-area: details;
-    margin-top: 8px;
-  }
+}
+:root .film-info > :is(.film-about-wide, .film-cast-line) {
+  grid-column: 1 / -1;
+}
+:root .film-info .film-about-wide {
+  margin-top: 4px;
+}
+:root .film-info .film-about-wide .film-synopsis {
+  margin: 0;
+}
+:root .film-info .film-about-wide .film-synopsis:not(.full) {
+  -webkit-line-clamp: 6;
+}
+:root .film-info .film-cast-line {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.45;
 }
 
 /* Use the compact toolbar before the full desktop controls start wrapping. */
@@ -431,6 +447,10 @@
   container: screenings / inline-size;
   /* Loading, error and empty states share the space the list will take, so the sheet holds still. */
   min-height: 240px;
+  /* A page turn swaps the rows in place. Without this the browser's scroll anchoring follows a
+     day section that moves up the list (Monday from second to first) and scrolls the page or
+     the poster sheet by hundreds of pixels. */
+  overflow-anchor: none;
 }
 :root .showtime-day li {
   grid-template-columns: max-content max-content minmax(0, 1fr) max-content;
@@ -959,10 +979,11 @@
 :root .programme-summary {
   grid-column: 1 / -1;
   display: flex;
-  align-items: baseline;
+  flex-wrap: wrap;
+  align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  padding: 10px 0;
+  gap: 8px 12px;
+  padding: 8px 0;
   font-size: 15px;
   color: var(--muted);
   font-variant-numeric: tabular-nums;
@@ -971,38 +992,85 @@
   margin: 0;
   min-width: 0;
 }
-:root .programme-page {
-  white-space: nowrap;
-}
-:root .programme-pagination button {
-  min-height: 44px;
-}
-:root .programme-pagination {
+/* Previous / Next, on the count line above the first row and in a bar after the last. The
+   same three items in both: a turn swaps the rows in place and scrolls nothing. */
+:root .programme-pager {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 8px;
-  padding: 12px;
 }
-:root .programme-pagination span {
+/* Specific enough to beat the theme's plain dialog button inside the poster sheet. */
+:root .film-expanded .showtimes .programme-pager button {
+  min-height: 44px;
+  margin: 0;
+  padding: 0 14px;
+  color: var(--fg);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  font-size: 15px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+:root .film-expanded .showtimes .programme-pager button:hover:not(:disabled) {
+  border-color: var(--fg);
+}
+:root .film-expanded .showtimes .programme-pager button:disabled {
+  color: var(--muted);
+  opacity: 0.6;
+  cursor: default;
+}
+:root .programme-pager :is(.programme-page, .programme-page-short) {
+  color: var(--fg);
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }
-/* Narrow lists stack the two fields, with Reset beside both at the right. */
+:root .programme-page-short {
+  display: none;
+}
+:root .programme-pager.programme-pagination {
+  justify-content: space-between;
+  margin: 8px 12px 10px;
+  padding: 10px 0 2px;
+  border-top: 1px solid var(--line);
+  font-size: 15px;
+}
+/* Reset as a text link at the end of the count line; only narrow lists use it. */
+:root .film-expanded .showtimes .programme-summary .programme-reset-link {
+  display: none;
+  min-height: 44px;
+  margin: 0 0 0 auto;
+  padding: 0 2px;
+  color: var(--fg);
+  background: transparent;
+  border: 0;
+  font-size: 15px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+/* Narrow lists (phones): Date and Cinema share one line, the pager takes its own line above
+   the count, and Reset becomes the link at the right of the count line. */
 @container screenings (max-width: 30rem) {
   :root .programme-controls {
-    grid-template-columns: minmax(0, 1fr) auto;
-  }
-  :root .programme-controls .choice-picker {
-    grid-column: 1;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
   :root .showtimes .programme-controls .programme-reset {
-    grid-column: 2;
-    grid-row: 1 / span 2;
+    display: none;
   }
-  :root .choice-panel.align-end {
-    right: auto;
-    left: 0;
+  :root .film-expanded .showtimes .programme-summary .programme-reset-link {
+    display: block;
+  }
+  :root .programme-summary > .programme-pager {
+    order: -1;
+    flex-basis: 100%;
+    justify-content: space-between;
+  }
+  :root .programme-pager .programme-page {
+    display: none;
+  }
+  :root .programme-pager .programme-page-short {
+    display: inline;
   }
 }
 
