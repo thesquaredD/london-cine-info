@@ -629,6 +629,14 @@
 /* A list a little over 30rem (the How to use example, the 800-1100px desktop sheet) keeps the
    one-line row, with Calendar as an icon square, so the venue name keeps its room. */
 @container screenings (max-width: 36rem) {
+  /* Tighter gaps and a 5.5em Book: on Linux the sheet is about 15px narrower than on macOS
+     (classic scrollbars), and the venue must keep at least 40% of the row there too. */
+  :root .showtime-day li {
+    column-gap: 8px;
+  }
+  :root .screening-actions .booking-action {
+    width: 5.5em;
+  }
   :root .screening-actions .add-calendar {
     width: 44px;
     padding: 0;
