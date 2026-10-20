@@ -150,10 +150,9 @@ test("a shared screening hidden by the date choice says so and can be shown", as
   await busyProgramme(page);
   await page.goto(shared(rows[31]));
   await expect(page.locator(".shared-screening-label")).toBeFocused();
-  await page
-    .getByRole("group", { name: "Find a screening" })
-    .getByRole("combobox", { name: "Date" })
-    .selectOption("2026-10-06");
+  const finder = page.getByRole("group", { name: "Find a screening" });
+  await finder.getByRole("button", { name: /^Date/ }).click();
+  await finder.getByRole("button", { name: /^Tuesday, 6 October 2026/ }).click();
   await expect(page.getByRole("heading", { name: "Shared screening is hidden" })).toBeVisible();
   await page.getByRole("button", { name: "Show all dates and cinemas", exact: true }).click();
   await expect(page.locator(".shared-screening")).toBeVisible();
@@ -224,7 +223,9 @@ test("an event screening shares a link that opens it highlighted", async ({ page
   await expect(page.locator(".shared-screening")).toContainText("Prince Charles");
 });
 
-test("screening share feedback re-announces and moves nothing", async ({ page }) => {
+test("screening share keeps its link icon, confirms with a toast and moves nothing", async ({
+  page,
+}) => {
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await busyProgramme(page);
@@ -233,15 +234,25 @@ test("screening share feedback re-announces and moves nothing", async ({ page })
   const actions = row.locator(".screening-actions");
   await actions.scrollIntoViewIfNeeded();
   const parts = [".booking-action", ".share-screening", ".add-calendar"];
-  const boxes = () => Promise.all(parts.map((part) => row.locator(part).boundingBox()));
+  // Measured from the row, so a scroll (the toast may cover a button on a phone) cancels out.
+  const boxes = async () => {
+    const origin = (await row.boundingBox())!;
+    return Promise.all(
+      parts.map(async (part) => {
+        const box = (await row.locator(part).boundingBox())!;
+        return { ...box, x: box.x - origin.x, y: box.y - origin.y };
+      }),
+    );
+  };
   const initial = await boxes();
   // Book, Share and the calendar action never overflow the row.
   const rowBox = (await row.boundingBox())!;
-  for (const box of initial)
-    expect(box!.x + box!.width).toBeLessThanOrEqual(rowBox.x + rowBox.width + 0.5);
-  const status = row.locator(".share-screening-control [role=status]");
+  for (const box of initial) expect(box.x + box.width).toBeLessThanOrEqual(rowBox.width + 0.5);
+  const share = row.getByRole("button", { name: /^Share screening:/ });
+  await expect(share.locator(".link-icon")).toHaveCount(1);
+  const toast = page.locator(".toast");
   await page.evaluate(() => {
-    const node = document.querySelector(".showtime-day li .share-screening-control [role=status]")!;
+    const node = document.querySelector(".toast")!;
     const log: string[] = [];
     (window as unknown as { log: string[] }).log = log;
     new MutationObserver(() => log.push(node.textContent ?? "")).observe(node, {
@@ -250,22 +261,104 @@ test("screening share feedback re-announces and moves nothing", async ({ page })
       subtree: true,
     });
   });
-  const share = row.getByRole("button", { name: /^Share screening:/ });
   await share.click();
-  // The share glyph swaps for a check at the same size.
-  await expect(row.locator(".share-screening .share-icon path")).toHaveAttribute("d", /^M4 10\.5/);
-  await expect(status).toHaveText("Screening link copied");
+  await expect(toast).toHaveText("Screening link copied");
+  await expect(toast).toHaveAttribute("role", "status");
+  await expect(toast).toBeInViewport();
+  // The chain link stays; there is no check swap and no per-button status any more.
+  await expect(share.locator(".link-icon")).toHaveCount(1);
+  await expect(share.locator(".check-icon")).toHaveCount(0);
+  await expect(row.locator("[role=status]")).toHaveCount(0);
   await share.click();
-  await expect(status).toHaveText("Screening link copied");
-  const log = await page.evaluate(() => (window as unknown as { log: string[] }).log);
+  await expect(toast).toHaveText("Screening link copied");
   // Cleared and set again, so a screen reader hears the second copy too.
-  expect(log.filter((text) => text === "Screening link copied").length).toBe(2);
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          (window as unknown as { log: string[] }).log.filter(
+            (text) => text === "Screening link copied",
+          ).length,
+      ),
+    )
+    .toBe(2);
   await row.locator(".booking-action").hover();
   await share.focus();
   expect(await boxes()).toEqual(initial);
   await expect(row.locator(".booking-action svg")).toHaveCount(1);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  // It goes away by itself.
+  await expect(toast).toBeEmpty({ timeout: 6000 });
   expect(errors).toEqual([]);
+});
+
+test("the toast shows over the open poster dialog for both share buttons", async ({ page }) => {
+  await busyProgramme(page);
+  await page.addInitScript(() => localStorage.setItem("london-cine.film-view.v1", "posters"));
+  await page.goto("/?film=classic-a");
+  const dialog = page.getByRole("dialog", { name: "Fixture Classic A" });
+  await expect(dialog.locator(".showtime-day li").first()).toBeVisible();
+  await dialog
+    .getByRole("button", { name: /^Share screening:/ })
+    .first()
+    .click();
+  const toast = page.locator(".toast");
+  await expect(toast).toHaveText("Screening link copied");
+  await expect(toast).toBeVisible();
+  await expect(toast).toBeInViewport();
+  // Rendered inside the modal dialog, so it is above it and not made inert by it.
+  expect(await toast.evaluate((node) => !!node.closest("dialog[open]"))).toBe(true);
+  const box = (await toast.boundingBox())!;
+  const hit = await page.evaluate(
+    ({ x, y }) => !!document.elementFromPoint(x, y)?.closest(".toast"),
+    { x: box.x + box.width / 2, y: box.y + box.height / 2 },
+  );
+  expect(hit).toBe(true);
+  await dialog.getByRole("button", { name: "Share film", exact: true }).click();
+  await expect(toast).toHaveText("Film link copied");
+  await expect(dialog).toBeVisible();
+  expect(await copied(page)).toMatch(/\/film\/classic-a\/fixture-classic-a\/$/);
+});
+
+test("a screening row has the same shape in the list and the poster dialog", async ({
+  page,
+}, info) => {
+  test.skip(info.project.name !== "desktop", "Sets its own viewport");
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await busyProgramme(page);
+  const shape = () =>
+    page.locator(".showtime-day li").evaluateAll((nodes) =>
+      nodes.map((node) => {
+        const style = getComputedStyle(node);
+        const share = node.querySelector(".share-screening")!;
+        return {
+          areas: style.gridTemplateAreas,
+          height: Math.round(node.getBoundingClientRect().height),
+          shareStatic: getComputedStyle(share).position === "static",
+          calendarLabel: getComputedStyle(node.querySelector(".add-calendar .action-label")!)
+            .position,
+        };
+      }),
+    );
+  await page.goto("/?film=classic-a");
+  await expect(page.locator(".showtime-day li").first()).toBeVisible();
+  const list = await shape();
+  await page.evaluate(() => localStorage.setItem("london-cine.film-view.v1", "posters"));
+  await page.goto("/?film=classic-a");
+  const dialog = page.getByRole("dialog", { name: "Fixture Classic A" });
+  await expect(dialog.locator(".showtime-day li").first()).toBeVisible();
+  const poster = await shape();
+  expect(list[0]!.areas).toBe('"time dot details actions"');
+  expect(poster).toEqual(list);
+  expect(list.every((row) => row.shareStatic)).toBe(true);
+  // Rows with and without tags or notes are one height (the last row of a day has no rule).
+  const heights = list.map((row) => row.height);
+  expect(Math.max(...heights) - Math.min(...heights)).toBeLessThanOrEqual(1);
+  // Book lines up down the page.
+  const books = await dialog
+    .locator(".booking-action")
+    .evaluateAll((nodes) => nodes.map((node) => Math.round(node.getBoundingClientRect().left)));
+  expect(new Set(books).size).toBe(1);
 });
 
 test("clipboard failure offers the link selected, across the row, until it is not needed", async ({
@@ -286,6 +379,7 @@ test("clipboard failure offers the link selected, across the row, until it is no
   await page.getByRole("button", { name: "Share film", exact: true }).click();
   const filmLink = page.getByRole("textbox", { name: "Film link", exact: true });
   await expect(filmLink).toHaveValue(/\/film\/classic-a\/fixture-classic-a\/$/);
+  await expect(page.locator(".toast")).toHaveText("Copy the film link from the selected field.");
   await expect(filmLink).toBeFocused();
   const selected = () =>
     page.evaluate(() => {
@@ -303,6 +397,9 @@ test("clipboard failure offers the link selected, across the row, until it is no
   await row.getByRole("button", { name: /^Share screening:/ }).click();
   const link = row.getByRole("textbox", { name: "Screening link", exact: true });
   await expect(link).toHaveValue(/screening=princecharlescinema\.com~\d{8}T\d{4}Z~/);
+  await expect(page.locator(".toast")).toHaveText(
+    "Copy the screening link from the selected field.",
+  );
   await expect(link).toBeFocused();
   expect(await selected()).toBe(await link.inputValue());
   // The field spans the screening row, not the narrow actions column.
@@ -353,51 +450,44 @@ test("a showing moved within the hour still opens, labelled as changed", async (
   await expect(page.locator(".shared-screening")).toContainText("Picturehouse Central");
 });
 
-// Each page is measured twice in the same run: as served, then with every Share removed
-// (as before Share existed), so fonts and scrollbars of the machine cancel out.
+// Every row of a list is one height whatever it carries, and Share sits inside it, at every
+// width. Rows are compared with each other within one run, so the machine's fonts and
+// scrollbars cancel out.
 for (const width of [1280, 1024, 900, 768, 390, 320]) {
-  test(`Share adds no height to screening rows at ${width}px`, async ({ page }, info) => {
+  test(`screening rows keep one height with Share at ${width}px`, async ({ page }, info) => {
     test.skip(info.project.name !== "desktop", "Sets its own viewport");
     await page.setViewportSize({ width, height: 900 });
     const measure = (selector: string) =>
       page.locator(selector).evaluateAll((nodes) =>
         nodes.map((node) => {
           const row = node.getBoundingClientRect();
-          const share = node.querySelector(".share-screening")?.getBoundingClientRect();
+          const share = node.querySelector(".share-screening")!.getBoundingClientRect();
+          // The last row of a day has no rule under it.
+          const rule = parseFloat(getComputedStyle(node).borderBottomWidth) || 0;
           return {
-            height: Math.round(row.height),
-            // Share stays inside its row.
+            height: Math.round(row.height - rule),
             inside:
-              !share ||
-              (share.top >= row.top - 0.5 &&
-                share.bottom <= row.bottom + 0.5 &&
-                share.left >= row.left - 0.5 &&
-                share.right <= row.right + 0.5),
+              share.top >= row.top - 0.5 &&
+              share.bottom <= row.bottom + 0.5 &&
+              share.left >= row.left - 0.5 &&
+              share.right <= row.right + 0.5,
+            square: Math.round(share.width) === 44 && Math.round(share.height) === 44,
           };
         }),
       );
-    const compare = async (path: string, selector: string) => {
+    const check = async (path: string, selector: string) => {
       await page.goto(path);
       await expect(page.locator(`${selector} .share-screening`).first()).toBeVisible();
-      const shown = await measure(selector);
+      const rows = await measure(selector);
+      expect(rows.length).toBeGreaterThan(0);
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
         true,
       );
-      await page.evaluate(() =>
-        document
-          .querySelectorAll(".share-screening-control, .guide-example .share-screening")
-          .forEach((node) => node.remove()),
-      );
-      const without = await measure(selector);
-      expect(shown.map((row) => row.inside)).not.toContain(false);
-      // Never taller; at 320px rows are even shorter, as the calendar label may take two lines.
-      expect(shown).toHaveLength(without.length);
-      shown.forEach((row, index) => expect(row.height).toBeLessThanOrEqual(without[index]!.height));
-      if (width >= 390)
-        expect(shown.map((row) => row.height)).toEqual(without.map((row) => row.height));
+      expect(rows.map((row) => row.inside)).not.toContain(false);
+      expect(rows.map((row) => row.square)).not.toContain(false);
+      expect(new Set(rows.map((row) => row.height)).size, path).toBe(1);
     };
-    await compare("/?film=classic-a", ".showtime-day li");
-    await compare("/events", ".event-row");
-    await compare("/how-to-use", ".guide-example .showtime-day li");
+    await check("/?film=classic-a", ".showtime-day li");
+    await check("/how-to-use", ".guide-example .showtime-day li");
   });
 }

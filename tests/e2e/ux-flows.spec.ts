@@ -49,7 +49,7 @@ test("opened film shows provider links and sharing does not move the screenings"
   const showtimes = page.locator(".showtimes");
   await expect(page.locator(".booking-action").first()).toBeVisible();
   const top = (await showtimes.boundingBox())!.y;
-  const status = page.locator(".share-status");
+  const status = page.locator(".toast");
   const share = page.getByRole("button", { name: "Share film", exact: true });
   await share.click();
   await expect(status).toHaveText("Film link copied");

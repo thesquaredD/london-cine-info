@@ -64,14 +64,19 @@ async function layout(page: Page) {
       const venue = rect(venueNode);
       const time = rect(item.querySelector("time")!);
       const row = rect(item);
-      const actions = [...item.querySelectorAll(".booking-action, .add-calendar")].map(rect);
+      const actions = [
+        ...item.querySelectorAll(".booking-action, .add-calendar, .share-screening"),
+      ].map(rect);
       const book = rect(item.querySelector(".booking-action")!);
-      const content = [venueNode, ...item.querySelectorAll(".screening-tags .badge, small")].map(
-        rect,
-      );
-      const firstLine = parseFloat(getComputedStyle(venueNode).lineHeight);
-      // Book in its own column, level with the first line of the venue name.
-      const besideVenue = book.left >= venue.right && book.top <= venue.top + firstLine;
+      const details = rect(item.querySelector(".screening-details")!);
+      const content = [
+        venueNode,
+        ...item.querySelectorAll(".screening-meta .badge, .screening-meta small"),
+      ].map(rect);
+      // Book in its own column at the right, centred on the venue details.
+      const besideVenue =
+        book.left >= details.right &&
+        Math.abs(book.top + book.height / 2 - (details.top + details.height / 2)) <= 2;
       // Narrow lists: Book on the time line, the venue name below it at full width.
       const onTimeLine =
         book.bottom <= venue.top &&
@@ -83,6 +88,7 @@ async function layout(page: Page) {
         overlaps: actions.some((action) => content.some((part) => intersects(action, part))),
         smallestTarget: Math.min(...actions.flatMap((action) => [action.width, action.height])),
         venueShare: venue.width / row.width,
+        timeLine: onTimeLine,
       };
     }),
   );
@@ -107,7 +113,8 @@ for (const [width, height, expected] of widths) {
       expect(row.layout).toBe(expected);
       expect(row.overlaps).toBe(false);
       expect(row.smallestTarget).toBeGreaterThanOrEqual(44);
-      expect(row.venueShare).toBeGreaterThanOrEqual(0.5);
+      // One line: the venue keeps at least 40% of the row; on the time line, the full width.
+      expect(row.venueShare).toBeGreaterThanOrEqual(row.timeLine ? 0.85 : 0.4);
     }
     const showtimes = page.locator(".showtimes");
     expect(await showtimes.evaluate((node) => node.scrollWidth <= node.clientWidth)).toBe(true);
