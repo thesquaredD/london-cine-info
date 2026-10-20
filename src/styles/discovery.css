@@ -87,8 +87,7 @@
   line-height: 1.45;
 }
 :root .film-description .film-genres,
-:root .film-cast,
-:root .share-status {
+:root .film-cast {
   color: var(--muted);
 }
 :root .film-cast summary {
@@ -420,11 +419,13 @@
 }
 
 /*
- * Screening rows. Each row is time, venue details (name, tags, screen notes) and an actions
- * column holding Book, the calendar action and the Share icon. Tags and notes grow the details column, never
- * the actions column, so Book stays level with its venue name. The layout responds to the
- * width of the screenings list rather than the window, so it holds in the desktop sheet,
- * the phone sheet and under browser zoom.
+ * Screening rows. Each row is time, venue details (the name, then one meta line of tags and
+ * screen notes) and the actions: Book, the calendar action and Share. The layout responds to
+ * the width of the screenings list rather than the window, so the list view, the poster
+ * dialog, the How to use example and browser zoom all get the same row: one line from 30rem
+ * up, and below it the actions on the time line with the venue at full width underneath.
+ * Rows are centred on a 60px minimum, so rows with and without tags are the same height and
+ * Book lines up down the page.
  */
 :root .showtimes {
   container: screenings / inline-size;
@@ -434,8 +435,12 @@
 :root .showtime-day li {
   grid-template-columns: max-content max-content minmax(0, 1fr) max-content;
   grid-template-areas: "time dot details actions";
-  align-items: baseline;
+  align-items: center;
   column-gap: 10px;
+  row-gap: 6px;
+  min-height: 60px;
+  box-sizing: border-box;
+  padding: 8px 12px;
 }
 :root .showtime-day li > time {
   grid-area: time;
@@ -452,7 +457,7 @@
 :root .screening-details {
   grid-area: details;
   display: grid;
-  gap: 6px;
+  gap: 2px;
   min-width: 0;
 }
 :root .screening-venue {
@@ -460,69 +465,90 @@
   line-height: 1.3;
   overflow-wrap: anywhere;
 }
-:root .screening-tags {
+:root .screening-meta {
   display: flex;
+  min-height: 18px;
   flex-wrap: wrap;
-  gap: 4px;
+  align-items: center;
+  gap: 4px 6px;
   min-width: 0;
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--muted);
 }
-:root .screening-tags:empty {
-  display: none;
+/* Badges fit the meta line's 18px, so a row with tags is no taller than one without. */
+:root .screening-meta .badge {
+  box-sizing: border-box;
+  height: 18px;
+  padding-block: 0;
+  line-height: 16px;
 }
-:root .screening-details > small {
+:root .screening-meta > small {
+  display: inline;
+  width: auto;
   margin: 0;
+  font-size: inherit;
+  color: inherit;
+  overflow-wrap: anywhere;
 }
 :root .screening-actions {
   grid-area: actions;
   display: flex;
-  flex-direction: column;
-  align-items: stretch;
+  align-items: center;
   gap: 6px;
-  width: 7em;
+}
+:root .screening-actions :is(.booking-action, .add-calendar, .share-screening) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  box-sizing: border-box;
+  flex: none;
+  height: 44px;
+  min-height: 44px;
+  margin: 0;
+  line-height: 1.2;
+  white-space: nowrap;
+  text-align: center;
 }
 :root .screening-actions .booking-action {
-  white-space: nowrap;
+  width: 6em;
+  padding: 0 8px;
 }
-/*
- * Share is a 44px icon and must not take space the venue needs or make rows taller. In the
- * stacked column (26-44rem) it sits under the time, in the time column's spare space, so the
- * column keeps its 7em; on one line (44rem and wider) Book and the calendar action give up
- * their slack instead (see below); on the time line it simply joins the actions.
- */
-:root .showtime-day li:has(.share-screening) {
-  position: relative;
+/* Calendar and Share share one quiet style: panel fill and a hairline. */
+:root .showtimes .screening-actions :is(.add-calendar, .share-screening) {
+  padding: 0 8px;
+  color: var(--fg);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  font-size: 14px;
+}
+:root .screening-actions .add-calendar {
+  width: 7.9em;
+}
+:root .screening-actions .add-calendar.is-saved {
+  color: var(--muted);
+}
+:root .showtimes .screening-actions :is(.add-calendar, .share-screening):hover {
+  border-color: var(--fg);
 }
 :root .screening-actions .share-screening {
-  position: absolute;
-  top: 46px;
-  left: 10px;
-}
-/* The How to use example mirrors the real actions with spans. */
-:root span.add-calendar {
-  background: var(--shade);
-  color: var(--fg);
-  border-radius: 2px;
+  width: 44px;
+  padding: 0;
 }
 :root .share-screening-control {
   display: contents;
 }
-:root .share-screening {
-  box-sizing: border-box;
-  display: inline-flex;
-  flex: 0 0 44px;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  margin: 0;
-  padding: 0;
-  color: var(--fg);
-  background: transparent;
-  border: 1px solid var(--line);
-  border-radius: 2px;
+:root :is(.screening-actions, .event-actions) :is(.calendar-icon, .check-icon) {
+  flex: none;
+  width: 16px;
+  height: 16px;
 }
-:root .share-icon {
-  flex: 0 0 20px;
+:root .share-screening .link-icon {
+  flex: none;
+  width: 18px;
+  height: 18px;
 }
 :root .share-fallback {
   display: flex;
@@ -548,10 +574,32 @@
 :root .event-actions .share-fallback {
   flex-basis: 100%;
 }
-/* In Events, Share matches the row's other buttons on desktop; on phones it sits under the
-   time, in the time column's spare space, so the actions line does not wrap any further. */
+/* In Events, Share and the calendar action take the row's other buttons' quiet look; on
+   phones Share sits under the time, in the time column's spare space, so the actions line
+   does not wrap any further. */
+:root .event-actions :is(.add-calendar, .share-screening) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  box-sizing: border-box;
+  margin: 0;
+  color: var(--fg);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+}
+:root .event-actions .add-calendar.is-saved {
+  color: var(--muted);
+}
 :root .event-actions .share-screening {
+  width: 44px;
   height: 32px;
+  padding: 0;
+}
+:root .event-actions .link-icon {
+  width: 18px;
+  height: 18px;
 }
 @media (max-width: 799px) {
   :root .event-row {
@@ -564,121 +612,57 @@
     height: 44px;
   }
 }
-:root .screening-actions :is(.booking-action, .add-calendar) {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
-  width: 100%;
-  min-width: 44px;
-  min-height: 44px;
-  margin: 0;
-  padding: 6px 8px;
-  line-height: 1.2;
-  text-align: center;
-  overflow-wrap: normal;
-  word-break: normal;
-}
-:root .screening-actions .add-calendar {
-  font-size: 14px;
-}
 @media (max-width: 799px) {
-  :root .showtime-day li > .time-dot {
-    display: none;
-  }
   :root .showtime-day li {
-    grid-template-columns: max-content minmax(0, 1fr) max-content;
-    grid-template-areas: "time details actions";
-    column-gap: 8px;
+    grid-template-columns: max-content max-content minmax(0, 1fr) max-content;
   }
   :root .screening-venue {
     font-size: 16px;
   }
-  :root .screening-actions {
-    width: 6.5em;
-  }
-  :root .screening-actions .share-screening {
-    left: 8px;
-  }
   :root .screening-actions .booking-action {
     font-size: 16px;
   }
-  :root .screening-actions .add-calendar {
-    font-size: 13px;
+  :root .screening-actions :is(.add-calendar, .share-screening) {
+    font-size: 14px;
   }
 }
-/* A wide list (44rem keeps the venue at least half the row) puts the calendar action beside
-   Book, each in its own fixed-width column. */
-@container screenings (min-width: 44rem) {
-  :root .screening-actions {
-    flex-direction: row;
-    width: auto;
-  }
-  :root .screening-actions .booking-action {
-    width: 7em;
-  }
-  :root .screening-actions .add-calendar {
-    width: 9em;
-  }
-  /* With Share on the line, Book and the calendar action shrink to their longest labels
-     ("Details", "Add to calendar") and the row's gaps close a little, so the line is about
-     as wide as Book and the calendar action were alone and the venue keeps half the row. */
-  :root .showtime-day li:has(.share-screening) {
+/* A list a little over 30rem (the How to use example, the 800-1100px desktop sheet) keeps the
+   one-line row, with Calendar as an icon square, so the venue name keeps its room. */
+@container screenings (max-width: 36rem) {
+  /* Tighter gaps and a 5.5em Book: on Linux the sheet is about 15px narrower than on macOS
+     (classic scrollbars), and the venue must keep at least 40% of the row there too. */
+  :root .showtime-day li {
     column-gap: 8px;
   }
-  :root .screening-actions .share-screening {
-    position: static;
+  :root .screening-actions .booking-action {
+    width: 5.5em;
   }
-  :root .screening-actions:has(.share-screening) :is(.booking-action, .add-calendar) {
-    padding-inline: 6px;
+  :root .screening-actions .add-calendar {
+    width: 44px;
+    padding: 0;
   }
-  :root .screening-actions:has(.share-screening) .booking-action {
-    width: 6em;
-  }
-  :root .screening-actions:has(.share-screening) .add-calendar {
-    width: 7.75em;
+  :root .screening-actions .add-calendar .action-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
 }
-/*
- * Below about 26rem a separate actions column would leave the venue name less than half the
- * row (phones, the 800-1000px desktop sheet, phone landscape), so the actions move onto the
- * time line and the venue name gets the full width.
- */
-@container screenings (max-width: 26rem) {
+/* Phones and other narrow lists: the actions move onto the time line, Calendar and Share are
+   44px icon squares (their names stay), and the venue gets the full width below. */
+@container screenings (max-width: 30rem) {
   :root .showtime-day li {
     grid-template-columns: max-content minmax(0, 1fr);
     grid-template-areas: "time actions" "details details";
-    row-gap: 8px;
+    row-gap: 6px;
   }
   :root .showtime-day li > .time-dot {
     display: none;
   }
   :root .screening-actions {
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: flex-end;
     justify-self: end;
-    width: auto;
-  }
-  :root .screening-actions :is(.booking-action, .add-calendar) {
-    width: auto;
-    min-width: 6em;
-  }
-  :root .screening-actions .share-screening {
-    position: static;
-  }
-  /* With Share on the time line, a tight row lets the calendar label take two lines inside
-     its 44px button rather than wrapping the actions onto a second line. */
-  :root .screening-actions:has(.share-screening) {
-    flex-wrap: nowrap;
-  }
-  :root .screening-actions:has(.share-screening) .booking-action {
-    flex: none;
-  }
-  :root .screening-actions:has(.share-screening) .add-calendar {
-    flex: 0 1 auto;
-    min-width: 4.5em;
-    padding-inline: 6px;
   }
 }
 
@@ -693,9 +677,9 @@
 /* Film actions: a two-column grid of equal chips (trailer, Letterboxd, IMDb, share) that
    spans the whole info column under the poster, each carrying its platform's mark in the
    brand's own colours. Reporting a problem stays a plain text link beneath them, as feedback
-   entry points do everywhere else; the status line keeps its height so the screenings hold
-   still when a link is copied. */
-:root .film-info > :is(.film-actions, .film-links, .share-status, .share-fallback) {
+   entry points do everywhere else. A copied link is confirmed by the app's toast, so nothing
+   here changes height. */
+:root .film-info > :is(.film-actions, .film-links, .share-fallback) {
   grid-column: 1 / -1;
 }
 :root .film-actions {
@@ -755,72 +739,317 @@
   min-height: 32px;
   color: var(--muted);
 }
-:root .share-status {
-  min-height: 24px;
-}
 
-/* Busy programmes: films with more than one page of screenings get date and cinema choices
-   and pages of 12. Selects follow the filter-field convention; the count takes the shared
-   small status size (.prose-small); every row keeps its height as choices and pages change,
-   so the list below holds still. */
+/* Busy programmes: films with more than one page of screenings get Date and Cinema choices
+   and pages of 12. Each choice is a 48px field (small label over the value) opening a panel
+   that floats over the list, so the rows never move; the count and page share one line. */
 :root .showtimes {
   scroll-margin-top: 100px;
 }
 :root .programme-controls {
+  position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
-  align-items: end;
+  align-items: stretch;
   gap: 8px;
-  padding-bottom: 12px;
+  padding: 12px 12px 0;
 }
-:root .programme-controls label {
+:root .choice-picker {
+  position: relative;
+  min-width: 0;
+}
+:root .showtimes .programme-controls .choice-field {
   display: grid;
-  gap: 6px;
-  min-width: 0;
-  font-weight: 500;
-}
-:root .programme-controls select {
+  grid-template-columns: minmax(0, 1fr) 10px;
+  grid-template-areas: "label caret" "value caret";
+  align-items: center;
+  column-gap: 10px;
+  row-gap: 1px;
+  box-sizing: border-box;
   width: 100%;
-  min-width: 0;
-  min-height: 44px;
-  text-overflow: ellipsis;
+  min-height: 48px;
+  margin: 0;
+  padding: 5px 12px;
+  text-align: left;
   color: var(--fg);
   background: var(--panel);
   border: 1px solid var(--line);
   border-radius: 2px;
-  padding: 7px 8px;
-  font-weight: 400;
 }
-:root :is(.programme-controls, .programme-pagination) button {
+:root .showtimes .programme-controls .choice-field:hover {
+  border-color: var(--fg);
+  text-decoration: none;
+}
+:root .choice-label {
+  grid-area: label;
+  font-size: 11px;
+  line-height: 1.2;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+:root .choice-value {
+  grid-area: value;
+  min-width: 0;
+  overflow: hidden;
+  font-size: 16px;
+  line-height: 1.25;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+:root .choice-field .control-caret {
+  grid-area: caret;
+  grid-column: auto;
+}
+:root .choice-picker.is-open .control-caret {
+  transform: translateY(2px) rotate(225deg);
+}
+:root .showtimes .choice-picker.has-choice .choice-field {
+  border-color: var(--brass);
+}
+:root .choice-panel {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 4px);
+  box-sizing: border-box;
+  width: max(100%, min(320px, 100cqw - 24px));
+  max-height: min(440px, 70dvh);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 12px;
+  color: var(--fg);
+  background: var(--shade);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  box-shadow: 0 10px 28px color-mix(in srgb, var(--bg) 75%, transparent);
+}
+:root .choice-panel.align-start {
+  left: 0;
+}
+:root .choice-panel.align-end {
+  right: 0;
+}
+:root .cinema-choices {
+  display: grid;
+  gap: 8px;
+}
+:root .showtimes .cinema-choices input[type="search"] {
+  box-sizing: border-box;
+  padding: 0 12px;
+  color: var(--fg);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  width: 100%;
   min-height: 44px;
 }
-:root .programme-count {
-  grid-column: 1 / -1;
-  margin: 0;
-  min-height: 24px;
+:root .choice-list .option-group {
+  margin: 8px 0 2px;
+  padding: 8px 8px 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+:root .choice-option {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 0 8px;
+  border-radius: 2px;
+  cursor: pointer;
+  font-size: 15px;
+}
+:root .choice-option small {
+  color: var(--muted);
+  font-size: 13px;
   font-variant-numeric: tabular-nums;
+}
+:root .choice-option:hover:not([aria-disabled]),
+:root .choice-option:focus-visible {
+  background: var(--panel);
+}
+:root .choice-option:focus-visible {
+  outline: 1px solid var(--brass);
+  outline-offset: -1px;
+}
+:root .choice-option[aria-selected="true"] {
+  box-shadow: inset 3px 0 var(--brass);
+}
+:root .choice-option[aria-selected="true"] .choice-option-name {
+  font-weight: 500;
+}
+:root .choice-option[aria-disabled] {
+  opacity: 0.45;
+  cursor: default;
+}
+:root .choice-empty {
+  margin: 8px;
+  color: var(--muted);
+}
+:root .date-choices {
+  max-width: none;
+}
+:root .date-choices .date-shortcuts {
+  margin: 0;
+}
+:root .showtimes .date-choices .date-shortcuts button {
+  color: var(--fg);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  min-height: 36px;
+  padding: 4px 10px;
+  font-size: 14px;
+}
+:root .showtimes .date-choices .date-shortcuts button[aria-pressed="true"] {
+  color: var(--active-fg);
+  background: var(--active-bg);
+  border-color: transparent;
+}
+:root .date-choices .date-shortcuts small {
+  color: inherit;
+  opacity: 0.75;
+}
+:root .showtimes .date-choices .calendar-grid button {
+  color: var(--fg);
+  background: var(--panel);
+  border: 1px solid transparent;
+  border-radius: 2px;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 1px;
+  min-height: 44px;
+  padding: 2px;
+  font-variant-numeric: tabular-nums;
+}
+:root .date-choices .calendar-grid button small {
+  min-height: 1.2em;
+  font-size: 11px;
+  color: var(--muted);
+}
+:root .date-choices .calendar-grid button[aria-disabled] {
+  opacity: 0.35;
+  cursor: default;
+}
+/* The chosen day is ringed, so its count stays readable. */
+:root .showtimes .date-choices .calendar-grid button[aria-pressed="true"] {
+  color: var(--fg);
+  background: var(--panel);
+  border-color: var(--brass);
+  box-shadow: inset 0 0 0 1px var(--brass);
+}
+:root .showtimes .programme-controls .programme-reset {
+  min-height: 48px;
+  margin: 0;
+  padding: 0 14px;
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 2px;
+}
+:root .showtimes .programme-controls .programme-reset:disabled {
+  opacity: 1;
+}
+:root .showtimes .programme-controls .programme-reset.is-active {
+  color: var(--fg);
+  border-color: var(--line);
+}
+:root .programme-summary {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  font-size: 15px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+:root .programme-count {
+  margin: 0;
+  min-width: 0;
+}
+:root .programme-page {
+  white-space: nowrap;
+}
+:root .programme-pagination button {
+  min-height: 44px;
 }
 :root .programme-pagination {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding-top: 12px;
+  padding: 12px;
 }
 :root .programme-pagination span {
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }
-@container screenings (max-width: 26rem) {
+/* Narrow lists stack the two fields, with Reset beside both at the right. */
+@container screenings (max-width: 30rem) {
   :root .programme-controls {
     grid-template-columns: minmax(0, 1fr) auto;
   }
-  :root .programme-controls label {
+  :root .programme-controls .choice-picker {
     grid-column: 1;
   }
-  :root .programme-controls button {
+  :root .showtimes .programme-controls .programme-reset {
     grid-column: 2;
-    grid-row: 2;
+    grid-row: 1 / span 2;
+  }
+  :root .choice-panel.align-end {
+    right: auto;
+    left: 0;
+  }
+}
+
+/* The app's one toast: a short confirmation at the bottom of the screen, above any dialog. */
+:root .toast {
+  position: fixed;
+  z-index: 1000;
+  left: 50%;
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-sizing: border-box;
+  max-width: calc(100vw - 32px);
+  padding: 10px 16px;
+  color: var(--fg);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--bg) 70%, transparent);
+  font-size: 15px;
+  line-height: 1.3;
+  opacity: 0;
+  transform: translate(-50%, 8px);
+  transition:
+    opacity 150ms ease,
+    transform 150ms ease;
+  pointer-events: none;
+}
+:root .toast.is-shown {
+  opacity: 1;
+  transform: translate(-50%, 0);
+  pointer-events: auto;
+}
+:root .toast:empty {
+  padding: 0;
+  border: 0;
+}
+:root .toast .check-icon {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  color: var(--brass);
+}
+@media (prefers-reduced-motion: reduce) {
+  :root .toast {
+    transition: none;
   }
 }
 

@@ -13,7 +13,11 @@ import type { DataMeta, Film, FilmShowtimes, RatingKey, Showtime } from "../shar
 import { RATINGS, formatDate, runtime } from "../lib/catalogue";
 import { loadShowtimes } from "../lib/data";
 import { openFeedback } from "../lib/feedback";
-import { ScreeningRow } from "./screening-row";
+import { londonDate } from "../lib/filters";
+import { showToast } from "../lib/toast";
+import { ChoicePicker } from "./choice-picker";
+import { CinemaChoices, DateChoices, dateChoiceName, inDateChoice } from "./programme-choices";
+import { CalendarActionLabel, ScreeningRow } from "./screening-row";
 
 import type { CalendarInput } from "../shared/calendar";
 import type { CalendarState } from "../lib/calendar";
@@ -42,24 +46,11 @@ export function ExpandedRow({
   const [error, setError] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const [posterFailed, setPosterFailed] = useState(false);
-  const [shareMessage, setShareMessage] = useState("");
   const [shareFallback, setShareFallback] = useState("");
   // A screening link the clipboard refused, shown across that screening's row.
   const [rowFallback, setRowFallback] = useState<{ row: Showtime; url: string } | null>(null);
   // The shared link this sheet last scrolled to, so later renders leave the reader in place.
   const arrived = useRef("");
-  const shareTimers = useRef<number[]>([]);
-  // Clear then re-set so screen readers announce every share, and drop the message after a
-  // while; the status region keeps its height, so nothing around it moves.
-  const announceShare = (message: string) => {
-    shareTimers.current.forEach((timer) => window.clearTimeout(timer));
-    setShareMessage("");
-    shareTimers.current = [
-      window.setTimeout(() => setShareMessage(message), 100),
-      window.setTimeout(() => setShareMessage(""), 5000),
-    ];
-  };
-  useEffect(() => () => shareTimers.current.forEach((timer) => window.clearTimeout(timer)), []);
   // Local "Find a screening" choices and the page belong to one film under one set of
   // global filters; `key` records which, so a stale choice reads as empty.
   const [choice, setChoice] = useState({ key: "", date: "", venue: "" });
@@ -133,7 +124,10 @@ export function ExpandedRow({
     setPaging(null);
   }, [choiceKey]);
   const local = findable && choice.key === choiceKey ? choice : { date: "", venue: "" };
-  const chosenDate = days.some(([date]) => date === local.date) ? local.date : "";
+  // A day, or Today / Tomorrow / This weekend; kept only while the programme has such a day.
+  const today = londonDate(now);
+  const chosenDate =
+    local.date && days.some(([date]) => inDateChoice(date, local.date, today)) ? local.date : "";
   const chosenVenue = allRows.some(({ row }) => row.venue === local.venue) ? local.venue : "";
   const choose = (date: string, venue: string) => {
     setChoice({ key: choiceKey, date, venue });
@@ -142,18 +136,18 @@ export function ExpandedRow({
   const { matchingRows, dateCounts, venueCounts } = useMemo(() => {
     const matchingRows = allRows.filter(
       ({ date, row }) =>
-        (!chosenDate || date === chosenDate) && (!chosenVenue || row.venue === chosenVenue),
+        inDateChoice(date, chosenDate, today) && (!chosenVenue || row.venue === chosenVenue),
     );
     const dateCounts = new Map<string, number>();
     const venueCounts = new Map<string, number>();
     for (const { date, row } of allRows) {
       if (!chosenVenue || row.venue === chosenVenue)
         dateCounts.set(date, (dateCounts.get(date) ?? 0) + 1);
-      if (!chosenDate || date === chosenDate)
+      if (inDateChoice(date, chosenDate, today))
         venueCounts.set(row.venue, (venueCounts.get(row.venue) ?? 0) + 1);
     }
     return { matchingRows, dateCounts, venueCounts };
-  }, [allRows, chosenDate, chosenVenue]);
+  }, [allRows, chosenDate, chosenVenue, today]);
   const programmePage: number | null = paging?.key === choiceKey ? paging.page : null;
   const pageCount = Math.max(1, Math.ceil(matchingRows.length / pageSize));
   // The shared screening, looked up in the whole programme so filters cannot change which
@@ -317,10 +311,10 @@ export function ExpandedRow({
                   try {
                     await navigator.clipboard.writeText(url);
                     setShareFallback("");
-                    announceShare("Film link copied");
+                    showToast("Film link copied");
                   } catch {
                     setShareFallback(url);
-                    announceShare("Copy the film link from the selected field.");
+                    showToast("Copy the film link from the selected field.");
                   }
                 }}
               >
@@ -335,9 +329,6 @@ export function ExpandedRow({
               >
                 Report a listing problem
               </button>
-            </div>
-            <div role="status" class="share-status">
-              {shareMessage}
             </div>
             {shareFallback && (
               <CopyFallback
@@ -376,47 +367,72 @@ export function ExpandedRow({
             )}
             {data && findable && (
               <div class="programme-controls" role="group" aria-label="Find a screening">
-                <label>
-                  Date
-                  <select
-                    value={chosenDate}
-                    onChange={(event) => choose(event.currentTarget.value, chosenVenue)}
-                  >
-                    <option value="">All dates</option>
-                    {days.map(([date]) => (
-                      <option key={date} value={date} disabled={!dateCounts.get(date)}>
-                        {formatDate(date)} · {count(dateCounts.get(date) ?? 0)}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label>
-                  Cinema
-                  <select
-                    value={chosenVenue}
-                    onChange={(event) => choose(chosenDate, event.currentTarget.value)}
-                  >
-                    <option value="">All cinemas</option>
-                    {programmeVenues.map((id) => (
-                      <option key={id} value={id} disabled={!venueCounts.get(id)}>
-                        {venueName(id)} · {count(venueCounts.get(id) ?? 0)}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <button disabled={!chosenDate && !chosenVenue} onClick={() => choose("", "")}>
+                <ChoicePicker label="Date" value={dateChoiceName(chosenDate)} active={!!chosenDate}>
+                  {(close) => (
+                    <DateChoices
+                      counts={dateCounts}
+                      total={
+                        allRows.filter(({ row }) => !chosenVenue || row.venue === chosenVenue)
+                          .length
+                      }
+                      today={today}
+                      chosen={chosenDate}
+                      onChoose={(value) => {
+                        choose(value, chosenVenue);
+                        close();
+                      }}
+                    />
+                  )}
+                </ChoicePicker>
+                <ChoicePicker
+                  label="Cinema"
+                  value={chosenVenue ? venueName(chosenVenue) : "All cinemas"}
+                  active={!!chosenVenue}
+                  align="end"
+                >
+                  {(close) => (
+                    <CinemaChoices
+                      options={programmeVenues.map((id) => {
+                        const borough = meta.boroughs.find(
+                          (entry) => entry.id === venues.get(id)?.borough,
+                        );
+                        return {
+                          id,
+                          name: venueName(id),
+                          group: borough?.name ?? "Other cinemas",
+                          count: venueCounts.get(id) ?? 0,
+                        };
+                      })}
+                      total={
+                        allRows.filter(({ date }) => inDateChoice(date, chosenDate, today)).length
+                      }
+                      chosen={chosenVenue}
+                      onChoose={(id) => {
+                        choose(chosenDate, id);
+                        close();
+                      }}
+                    />
+                  )}
+                </ChoicePicker>
+                <button
+                  class={`programme-reset ${chosenDate || chosenVenue ? "is-active" : ""}`}
+                  disabled={!chosenDate && !chosenVenue}
+                  onClick={() => choose("", "")}
+                >
                   Reset
                 </button>
-                <p
-                  role="status"
-                  class="programme-count prose-small"
-                  ref={programmeStatus}
-                  tabIndex={-1}
-                >
-                  {matchingRows.length
-                    ? `${count(start + 1)}–${count(start + visibleRows.length)} of ${count(matchingRows.length)} screenings`
-                    : "No screenings for this date and cinema."}
-                </p>
+                <div class="programme-summary">
+                  <p role="status" class="programme-count" ref={programmeStatus} tabIndex={-1}>
+                    {matchingRows.length
+                      ? `${count(start + 1)}–${count(start + visibleRows.length)} of ${count(matchingRows.length)} screenings`
+                      : "No screenings for this date and cinema."}
+                  </p>
+                  {pageCount > 1 && (
+                    <span class="programme-page">
+                      Page {currentPage + 1} of {pageCount}
+                    </span>
+                  )}
+                </div>
               </div>
             )}
             {!data && !error && (
@@ -544,12 +560,12 @@ export function ExpandedRow({
                           </a>
                           {onCalendar && (
                             <button
-                              class="add-calendar"
+                              class={`add-calendar ${saved ? "is-saved" : ""}`}
                               aria-haspopup="dialog"
                               aria-label={`${saved ? "View saved screening" : "Add to calendar"}: ${film.ti} at ${venue?.name ?? row.venue} ${date} ${row.localTime}`}
                               onClick={() => onCalendar(event)}
                             >
-                              {saved ? "In my calendar" : "Add to calendar"}
+                              <CalendarActionLabel saved={!!saved} />
                             </button>
                           )}
                           <ShareScreening

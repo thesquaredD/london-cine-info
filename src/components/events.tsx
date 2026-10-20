@@ -15,6 +15,7 @@ import type { DataMeta, EventOccurrence, Film } from "../shared/data";
 import type { CalendarInput } from "../shared/calendar";
 import type { CalendarState } from "../lib/calendar";
 import { ExpandedRow } from "./expanded-row";
+import { CalendarActionLabel } from "./screening-row";
 export function EventTypeFilter({
   state,
   onChange,
@@ -181,11 +182,12 @@ export function Events({
                           </a>
                           {onCalendar && (
                             <button
-                              class="add-calendar"
+                              class={`add-calendar ${saved ? "is-saved" : ""}`}
                               aria-haspopup="dialog"
+                              aria-label={`${saved ? "View saved screening" : "Add to calendar"}: ${row.title} at ${venue?.name ?? row.venue} ${date} ${row.localTime}`}
                               onClick={() => onCalendar(event)}
                             >
-                              {saved ? "In my calendar" : "Add to calendar"}
+                              <CalendarActionLabel saved={!!saved} />
                             </button>
                           )}
                           {/* Shared links open the film's catalogue sheet, so only listed films. */}

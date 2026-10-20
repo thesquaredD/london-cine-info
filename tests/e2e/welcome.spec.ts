@@ -237,9 +237,9 @@ test("the guide's example screenings use the real row layout", async ({ page }) 
     );
     for (const row of rows) {
       expect(row.overlap, `${width}px`).toBe(false);
-      // The venue keeps at least half the row instead of collapsing beside the action.
-      expect(row.venue, `${width}px`).toBeGreaterThan(row.row / 2 - 40);
-      expect(row.venue, `${width}px`).toBeGreaterThan(120);
+      // The venue keeps a good share of the row instead of collapsing beside the actions.
+      expect(row.venue, `${width}px`).toBeGreaterThan(row.row * 0.35);
+      expect(row.venue, `${width}px`).toBeGreaterThan(160);
     }
   }
 });

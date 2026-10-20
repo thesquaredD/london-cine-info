@@ -1,0 +1,7 @@
+{
+  "id": "screenings-row-share-toast",
+  "type": "improved",
+  "title": "A steadier screenings list with a copy confirmation",
+  "body": "A film’s screenings now look the same in the list and in the poster view, and copying a film or screening link shows a short confirmation. On busy films, Date and Cinema open proper pickers with the number of screenings for each day and cinema.",
+  "visibility": "public"
+}

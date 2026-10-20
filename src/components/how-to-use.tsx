@@ -1,10 +1,10 @@
 import { ExternalLinkIcon } from "./external-link-icon";
-import { ShareIcon } from "./share-icon";
+import { LinkIcon } from "./platform-marks";
 import { useEffect, useState } from "preact/hooks";
 import type { ComponentChildren } from "preact";
 import { usePreferenceFocus } from "../lib/preference-focus";
 import { PageLink } from "./page-link";
-import { ScreeningRow } from "./screening-row";
+import { CalendarActionLabel, ScreeningRow } from "./screening-row";
 
 const SECTIONS = [
   ["find", "Find and book"],
@@ -156,9 +156,11 @@ export function HowToUse({
                       <span class="booking-action">
                         Book <ExternalLinkIcon />
                       </span>
-                      <span class="add-calendar">Add to calendar</span>
+                      <span class="add-calendar">
+                        <CalendarActionLabel />
+                      </span>
                       <span class="share-screening">
-                        <ShareIcon />
+                        <LinkIcon />
                         <span class="sr-only">Share</span>
                       </span>
                     </ScreeningRow>
@@ -171,9 +173,11 @@ export function HowToUse({
                       <span class="booking-action">
                         Details <ExternalLinkIcon />
                       </span>
-                      <span class="add-calendar">Add to calendar</span>
+                      <span class="add-calendar">
+                        <CalendarActionLabel />
+                      </span>
                       <span class="share-screening">
-                        <ShareIcon />
+                        <LinkIcon />
                         <span class="sr-only">Share</span>
                       </span>
                     </ScreeningRow>
@@ -183,8 +187,8 @@ export function HowToUse({
             </Example>
             <p class="prose-small">
               Sold-out screenings show Details instead of Book. The share button copies a link that
-              opens the film with that screening highlighted. Add to calendar saves the screening;
-              it does not buy a ticket.
+              opens the film with that screening highlighted. Calendar saves the screening; it does
+              not buy a ticket.
             </p>
             <div class="prose-links guide-actions">
               <PageLink href="/" onNavigate={onNavigate}>

@@ -19,6 +19,7 @@ import { Privacy } from "./components/privacy";
 import { SettingsPage } from "./components/settings-page";
 import { ChangelogPage } from "./components/changelog-page";
 import { FeedbackDialog, FeedbackEntry } from "./components/feedback";
+import { ToastHost } from "./components/toast";
 import { openFeedback } from "./lib/feedback";
 import { useCalendar } from "./lib/calendar";
 import { MyCalendar, ScreeningCalendarDialog } from "./components/screening-calendar";
@@ -1413,6 +1414,8 @@ export function App() {
             </a>
           </div>
         </main>
+        {/* Outside main: its live region must not count among the page's own status messages. */}
+        <ToastHost />
       </div>
     </FriendsContext.Provider>
   );

@@ -1,11 +1,13 @@
 import type { ComponentChildren } from "preact";
+import { CalendarIcon, CheckIcon } from "./platform-marks";
 
 export type ScreeningTag = { key: string; label: string; kind?: "accessibility" | "sold-out" };
 
 /**
- * One screening line: time, venue details (name, tags, notes) and an actions column. Shared by
- * the film sheet and the How to use example so the guide always matches the real layout. Must
- * sit inside `.showtimes` (the `screenings` container) for its responsive rules to apply.
+ * One screening line: time, venue details (the name, then one meta line of tags and notes) and
+ * the actions. Shared by the film sheet (list view and poster dialog) and the How to use
+ * example so the guide always matches the real layout. Must sit inside `.showtimes` (the
+ * `screenings` container) for its responsive rules to apply.
  */
 export function ScreeningRow({
   sharedLabel,
@@ -29,7 +31,7 @@ export function ScreeningRow({
   soldOut?: boolean;
   tags: ScreeningTag[];
   note?: string;
-  /** The actions column: Book and, where offered, the calendar action. */
+  /** The actions: Book, the calendar action where offered, and Share. */
   children: ComponentChildren;
   /** A line across the whole row below it, such as a link to copy by hand. */
   after?: ComponentChildren;
@@ -42,15 +44,18 @@ export function ScreeningRow({
       <span class="time-dot" aria-hidden="true" />
       <div class="screening-info">
         <div class="screening-details">
-          {sharedLabel && (
-            <span class="shared-screening-label" tabIndex={-1}>
-              {sharedLabel}
-              {/* Focus lands here, after the time, so say the time too. */}
-              <span class="sr-only">, {localTime}</span>
-            </span>
-          )}
           <span class="screening-venue">{venue}</span>
-          <div class="screening-tags">
+          {/* Always present, empty or not, so every row has the same height. */}
+          <div class="screening-meta">
+            {sharedLabel && (
+              <span class="shared-screening-label" tabIndex={-1}>
+                {sharedLabel}
+                {/* Focus lands here, after the time and venue, so say them too. */}
+                <span class="sr-only">
+                  , {localTime} at {venue}
+                </span>
+              </span>
+            )}
             {tags.map((tag) => (
               <span
                 class={
@@ -65,12 +70,25 @@ export function ScreeningRow({
                 {tag.label}
               </span>
             ))}
+            {note && <small>{note}</small>}
           </div>
-          {note && <small>{note}</small>}
         </div>
         <div class="screening-actions">{children}</div>
       </div>
       {after && <div class="screening-after">{after}</div>}
     </li>
+  );
+}
+
+/**
+ * The calendar action's face: a glyph and a short label, which hides on narrow lists. The
+ * button's accessible name says the full action ("Add to calendar: …").
+ */
+export function CalendarActionLabel({ saved = false }: { saved?: boolean }) {
+  return (
+    <>
+      {saved ? <CheckIcon /> : <CalendarIcon />}
+      <span class="action-label">{saved ? "In calendar" : "Calendar"}</span>
+    </>
   );
 }

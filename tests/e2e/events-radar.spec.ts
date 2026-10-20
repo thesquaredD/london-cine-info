@@ -110,7 +110,9 @@ test("Events agenda has immediate booking, date/type filters and calendar action
   await expect(page.locator(".filter-summary [role=status]")).toContainText("1 event");
   await page.reload();
   await expect(page.getByLabel("Event type", { exact: true })).toHaveValue("score");
-  await page.getByRole("button", { name: "Add to calendar", exact: true }).click();
+  const calendarAction = page.getByRole("button", { name: /^Add to calendar:/ });
+  await expect(calendarAction).toHaveText("Calendar");
+  await calendarAction.click();
   await expect(page.getByRole("dialog", { name: "Add to calendar", exact: true })).toBeVisible();
   await page.keyboard.press("Escape");
   await page.getByRole("button", { name: "Film details", exact: true }).click();
