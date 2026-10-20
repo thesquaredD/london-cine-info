@@ -814,7 +814,6 @@ export function App() {
             <FeedbackEntry />
           </header>
           <FeedbackDialog dataVersion={meta?.generatedAt} onNavigate={navigateTo} />
-          <ToastHost />
           <div class="tagline">The database of London cinema screenings</div>
           <h2 class="sr-only" id="page-title" tabIndex={-1}>
             {pageTitle}
@@ -1415,6 +1414,8 @@ export function App() {
             </a>
           </div>
         </main>
+        {/* Outside main: its live region must not count among the page's own status messages. */}
+        <ToastHost />
       </div>
     </FriendsContext.Provider>
   );
