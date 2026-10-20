@@ -237,9 +237,9 @@ function About({
         </div>
       </section>
       <p class="prose-small prose-closing">
-        London Ciné Info is independent and not affiliated with any cinema. Names and logos belong
-        to their venues. A personal, non-commercial project by Diogo Diogo. A London take on{" "}
-        <a href="https://paris-cine.info">paris-cine.info</a>.
+        London Ciné Info is independent and not affiliated with any cinema, Letterboxd, IMDb or
+        YouTube. Names and logos belong to their owners. A personal, non-commercial project by Diogo
+        Diogo. A London take on <a href="https://paris-cine.info">paris-cine.info</a>.
       </p>
     </article>
   );

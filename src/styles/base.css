@@ -414,6 +414,10 @@ h3 {
   justify-content: center;
   text-align: center;
   aspect-ratio: 2 / 3;
+  /* Keep the image's 2:3 box even when the title is long, so a failed poster never moves the
+     row below it. */
+  min-height: 0;
+  overflow: hidden;
   padding: 15px;
   background: var(--panel);
   color: var(--muted);
@@ -485,12 +489,6 @@ h3 {
 }
 .rating-card.missing {
   color: var(--muted);
-}
-.trailer-link {
-  display: block;
-  margin-top: 12px;
-  text-align: center;
-  font-size: 12px;
 }
 .showtimes {
   background: var(--panel);
@@ -905,9 +903,6 @@ h3 {
   }
   .rating-card strong {
     font-size: 18px;
-  }
-  .trailer-link {
-    margin-top: 8px;
   }
   .poster-overlay {
     padding: 6px;

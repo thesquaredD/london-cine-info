@@ -172,8 +172,8 @@ export function CinemaLanding({
         </div>
       </div>
       <p class="prose-small welcome-disclaimer">
-        London Ciné Info is independent and not affiliated with any cinema. Names and logos belong
-        to their venues.
+        London Ciné Info is independent and not affiliated with any cinema, Letterboxd, IMDb or
+        YouTube. Names and logos belong to their owners.
       </p>
       <div class="cinema-welcome-foot welcome-foot">
         <a

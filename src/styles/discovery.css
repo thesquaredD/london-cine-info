@@ -118,20 +118,6 @@
 :root .rating-card span {
   color: var(--muted);
 }
-:root .trailer-link,
-:root .share-film {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 1.25;
-  margin: 0 16px 0 0;
-  padding: 6px 0;
-  min-height: 32px;
-  font-size: 14px;
-  background: transparent;
-  border: 0;
-  text-decoration: underline;
-}
 :root .booking-action {
   display: inline-flex;
   align-items: center;
@@ -255,6 +241,15 @@
     width: 64px;
     max-width: 64px;
   }
+  :root .poster-placeholder {
+    padding: 6px;
+    font-size: 12px;
+    line-height: 1.25;
+  }
+  :root .poster-placeholder span {
+    margin-top: 6px;
+    font-size: 11px;
+  }
   :root .film-description {
     display: block;
   }
@@ -273,7 +268,7 @@
   :root .poster {
     grid-row: auto;
   }
-  :root :is(.film-synopsis, .synopsis-toggle, .film-cast, .rating-cards, .film-links) {
+  :root :is(.film-synopsis, .synopsis-toggle, .film-cast, .rating-cards) {
     grid-column: 1 / -1;
   }
   :root .synopsis-toggle {
@@ -294,13 +289,6 @@
   }
   :root .rating-card :is(span, strong, small) {
     font-size: 14px;
-  }
-  :root .trailer-link,
-  :root .share-film {
-    font-size: 16px;
-    min-height: 44px;
-    margin: 0;
-    justify-self: start;
   }
   :root .showtime-day time {
     font-size: 19px;
@@ -699,34 +687,73 @@
   flex: 0 0 16px;
   vertical-align: middle;
 }
-:root :is(.booking-action, .film-provider-links a, .trailer-link, .event-actions a) {
+:root :is(.booking-action, .trailer-link, .event-actions a) {
   gap: 6px;
 }
-:root .film-provider-links {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 12px;
+/* Film actions: a two-column grid of equal chips (trailer, Letterboxd, IMDb, share) that
+   spans the whole info column under the poster, each carrying its platform's mark in the
+   brand's own colours. Reporting a problem stays a plain text link beneath them, as feedback
+   entry points do everywhere else; the status line keeps its height so the screenings hold
+   still when a link is copied. */
+:root .film-info > :is(.film-actions, .film-links, .share-status, .share-fallback) {
+  grid-column: 1 / -1;
 }
-:root .film-provider-links a {
+:root .film-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 4px;
+}
+:root .film-actions :is(a, button) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 44px;
-  padding: 8px 12px;
-  background: var(--panel);
+  gap: 6px;
+  margin: 0;
+  min-width: 0;
+  min-height: 32px;
+  padding: 5px 8px;
+  line-height: 1.25;
+  font-size: 14px;
+  font-weight: 400;
   color: var(--fg);
-  text-decoration: none;
+  background: var(--panel);
   border: 1px solid var(--line);
   border-radius: 2px;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+}
+:root .film-actions :is(a, button):hover {
+  border-color: var(--fg);
+}
+:root .film-actions svg {
+  flex: none;
+  height: 14px;
+  width: auto;
+}
+:root .film-actions .imdb-mark {
+  height: 16px;
+}
+:root .film-actions .link-icon {
+  color: var(--muted);
+}
+/* Phone sizes come after the desktop chip rule: at equal specificity the later rule wins. */
+@media (max-width: 799px) {
+  :root .film-actions :is(a, button) {
+    min-height: 44px;
+    padding: 8px 10px;
+    font-size: 15px;
+  }
 }
 :root .film-info .film-links {
   gap: 4px 16px;
-  margin-top: 8px;
+  margin-top: 4px;
 }
 :root .film-links :is(button, a) {
   margin: 0;
-  min-height: 44px;
+  min-height: 32px;
+  color: var(--muted);
 }
 :root .share-status {
   min-height: 24px;
