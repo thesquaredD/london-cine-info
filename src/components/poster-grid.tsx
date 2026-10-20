@@ -228,6 +228,7 @@ export function PosterGrid({
         open={!!active}
         title={active ? displayTitle(active.film, display.titleMode) : "Film screenings"}
         className="modal-dialog poster-film-dialog"
+        heading={false}
         onClose={close}
         restoreTo={() =>
           lastOpen.current
@@ -238,21 +239,36 @@ export function PosterGrid({
         }
       >
         {active && (
-          <table class="film-table poster-detail-table">
-            <tbody>
-              <ExpandedRow
-                film={active.film}
-                meta={meta}
-                state={state}
-                detailId={`details-${active.key}`}
-                columns={1}
-                ratingOrder={display.ratingOrder}
-                now={now}
-                calendar={calendar}
-                onCalendar={onCalendar}
-              />
-            </tbody>
-          </table>
+          <>
+            <div class="sheet-grip" aria-hidden="true" />
+            {/* A zero-height bar that sticks to the top of the scrolling sheet, so the close
+                button floats over the film and stays in reach however far the sheet scrolls. */}
+            <div class="dialog-close-bar">
+              <button
+                type="button"
+                class="dialog-close"
+                aria-label={`Close ${displayTitle(active.film, display.titleMode)}`}
+                onClick={close}
+              >
+                ×
+              </button>
+            </div>
+            <table class="film-table poster-detail-table">
+              <tbody>
+                <ExpandedRow
+                  film={active.film}
+                  meta={meta}
+                  state={state}
+                  detailId={`details-${active.key}`}
+                  columns={1}
+                  ratingOrder={display.ratingOrder}
+                  now={now}
+                  calendar={calendar}
+                  onCalendar={onCalendar}
+                />
+              </tbody>
+            </table>
+          </>
         )}
       </Dialog>
     </>

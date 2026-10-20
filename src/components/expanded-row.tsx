@@ -18,9 +18,25 @@ import { showToast } from "../lib/toast";
 import { ChoicePicker } from "./choice-picker";
 import { CinemaChoices, DateChoices, dateChoiceName, inDateChoice } from "./programme-choices";
 import { CalendarActionLabel, ScreeningRow } from "./screening-row";
+import { ProgrammePager } from "./programme-pager";
 
 import type { CalendarInput } from "../shared/calendar";
 import type { CalendarState } from "../lib/calendar";
+
+const WIDE = "(min-width: 800px)";
+/** Desktop widths, where the film column sits beside the screenings and has room to spare. */
+function useWide() {
+  const [wide, setWide] = useState(() => matchMedia(WIDE).matches);
+  useEffect(() => {
+    const media = matchMedia(WIDE);
+    const change = () => setWide(media.matches);
+    change();
+    media.addEventListener("change", change);
+    return () => media.removeEventListener("change", change);
+  }, []);
+  return wide;
+}
+
 export function ExpandedRow({
   film,
   meta,
@@ -55,11 +71,16 @@ export function ExpandedRow({
   // global filters; `key` records which, so a stale choice reads as empty.
   const [choice, setChoice] = useState({ key: "", date: "", venue: "" });
   const [paging, setPaging] = useState<{ key: string; page: number } | null>(null);
+  // The list's height when a page was last turned, kept as its minimum so a shorter last page
+  // does not pull the bottom pager up from under the pointer (or clamp the sheet's scroll).
+  const [held, setHeld] = useState<{ key: string; height: number } | null>(null);
   const programme = useRef<HTMLDivElement>(null);
   const programmeStatus = useRef<HTMLParagraphElement>(null);
   const [overviewExpanded, setOverviewExpanded] = useState(false);
   const [overviewOverflow, setOverviewOverflow] = useState(false);
   const synopsis = useRef<HTMLParagraphElement>(null);
+  // Desktop shows the synopsis and cast in the film column; phones keep them in More details.
+  const wide = useWide();
   useEffect(() => {
     const node = synopsis.current;
     if (!node || overviewExpanded) return;
@@ -68,7 +89,7 @@ export function ExpandedRow({
     observer.observe(node);
     measure();
     return () => observer.disconnect();
-  }, [data, overviewExpanded]);
+  }, [data, overviewExpanded, wide]);
   useEffect(() => {
     let active = true;
     setData(null);
@@ -122,6 +143,7 @@ export function ExpandedRow({
   useEffect(() => {
     setChoice({ key: "", date: "", venue: "" });
     setPaging(null);
+    setHeld(null);
   }, [choiceKey]);
   const local = findable && choice.key === choiceKey ? choice : { date: "", venue: "" };
   // A day, or Today / Tomorrow / This weekend; kept only while the programme has such a day.
@@ -132,6 +154,7 @@ export function ExpandedRow({
   const choose = (date: string, venue: string) => {
     setChoice({ key: choiceKey, date, venue });
     setPaging(null);
+    setHeld(null);
   };
   const { matchingRows, dateCounts, venueCounts } = useMemo(() => {
     const matchingRows = allRows.filter(
@@ -167,18 +190,31 @@ export function ExpandedRow({
       [date, visibleRows.filter((entry) => entry.date === date).map(({ row }) => row)] as const,
   );
   const count = (value: number) => value.toLocaleString("en-GB");
+  // A page turn swaps the rows in place and scrolls nothing, from either pager. Focus moves
+  // to the count, so the new range is announced and focus never rests on a disabled button.
   const turnPage = (page: number) => {
     setPaging({ key: choiceKey, page });
-    // Bring the programme top back only when it is out of view or low on the screen, then
-    // move focus to the count so it does not stay on an off-screen or disabled button.
-    const node = programme.current;
-    if (node) {
-      const top = node.getBoundingClientRect().top;
-      const margin = parseFloat(getComputedStyle(node).scrollMarginTop) || 0;
-      if (top < margin || top > window.innerHeight / 3) node.scrollIntoView({ block: "start" });
-    }
+    const height = programme.current?.offsetHeight;
+    if (height) setHeld({ key: choiceKey, height });
     programmeStatus.current?.focus({ preventScroll: true });
   };
+  const synopsisBlock = data?.details.overview ? (
+    <>
+      <p ref={synopsis} class={`film-synopsis ${overviewExpanded ? "full" : ""}`}>
+        {data.details.overview}
+      </p>
+      {(overviewOverflow || overviewExpanded) && (
+        <button
+          class="synopsis-toggle"
+          aria-expanded={overviewExpanded}
+          onClick={() => setOverviewExpanded(!overviewExpanded)}
+        >
+          {overviewExpanded ? "Less" : "Read more"}
+        </button>
+      )}
+    </>
+  ) : null;
+  const actors = data?.details.actors ?? [];
   // Listed but outside the matching rows: hidden by the local date/cinema choice, or else by
   // the global filters.
   const sharedHiddenLocally = sharedIndex < 0 && allRows.some(({ row }) => row === sharedRow);
@@ -322,6 +358,18 @@ export function ExpandedRow({
                 Share
               </button>
             </div>
+            {wide && synopsisBlock && (
+              <div class="film-description film-about-wide">{synopsisBlock}</div>
+            )}
+            {wide && actors.length > 0 && (
+              <p class="film-cast-line">
+                Cast ·{" "}
+                {actors
+                  .slice(0, 5)
+                  .map((actor) => actor.name)
+                  .join(", ")}
+              </p>
+            )}
             <div class="film-links">
               <button
                 class="feedback-link"
@@ -338,7 +386,12 @@ export function ExpandedRow({
               />
             )}
           </div>
-          <div class="showtimes" ref={programme} tabIndex={-1}>
+          <div
+            class="showtimes"
+            ref={programme}
+            tabIndex={-1}
+            style={held?.key === choiceKey ? { minHeight: `${held.height}px` } : undefined}
+          >
             {data && state.screening && sharedIndex < 0 && (
               <Notice
                 kind="status"
@@ -427,10 +480,19 @@ export function ExpandedRow({
                       ? `${count(start + 1)}–${count(start + visibleRows.length)} of ${count(matchingRows.length)} screenings`
                       : "No screenings for this date and cinema."}
                   </p>
+                  {/* Narrow lists have no room for a third field: Reset is a link here instead. */}
+                  {(chosenDate || chosenVenue) && (
+                    <button class="programme-reset-link" onClick={() => choose("", "")}>
+                      Reset
+                    </button>
+                  )}
                   {pageCount > 1 && (
-                    <span class="programme-page">
-                      Page {currentPage + 1} of {pageCount}
-                    </span>
+                    <ProgrammePager
+                      page={currentPage}
+                      pageCount={pageCount}
+                      onTurn={turnPage}
+                      label="Screening pages"
+                    />
                   )}
                 </div>
               </div>
@@ -581,49 +643,29 @@ export function ExpandedRow({
                 </section>
               ))}
             {data && pageCount > 1 && (
-              <nav class="programme-pagination" aria-label="Screening pages">
-                <button disabled={currentPage === 0} onClick={() => turnPage(currentPage - 1)}>
-                  Previous screenings
-                </button>
-                <span>
-                  Page {currentPage + 1} of {pageCount}
-                </span>
-                <button
-                  disabled={currentPage + 1 === pageCount}
-                  onClick={() => turnPage(currentPage + 1)}
-                >
-                  Next screenings
-                </button>
-              </nav>
+              <ProgrammePager
+                class="programme-pagination"
+                page={currentPage}
+                pageCount={pageCount}
+                onTurn={turnPage}
+                label="Screening pages, bottom"
+              />
             )}
           </div>
-          <details class="film-about">
-            <summary>More details</summary>
-            <div class="film-description">
-              {data?.details.overview && (
-                <>
-                  <p ref={synopsis} class={`film-synopsis ${overviewExpanded ? "full" : ""}`}>
-                    {data.details.overview}
-                  </p>
-                  {(overviewOverflow || overviewExpanded) && (
-                    <button
-                      class="synopsis-toggle"
-                      aria-expanded={overviewExpanded}
-                      onClick={() => setOverviewExpanded(!overviewExpanded)}
-                    >
-                      {overviewExpanded ? "Less" : "Read more"}
-                    </button>
-                  )}
-                </>
-              )}
-              {data?.details.actors.length ? (
-                <details class="film-cast">
-                  <summary>Cast</summary>
-                  <p>{data.details.actors.map((actor) => actor.name).join(", ")}</p>
-                </details>
-              ) : null}
-            </div>
-          </details>
+          {!wide && (
+            <details class="film-about">
+              <summary>More details</summary>
+              <div class="film-description">
+                {synopsisBlock}
+                {actors.length ? (
+                  <details class="film-cast">
+                    <summary>Cast</summary>
+                    <p>{actors.map((actor) => actor.name).join(", ")}</p>
+                  </details>
+                ) : null}
+              </div>
+            </details>
+          )}
         </section>
       </td>
     </tr>

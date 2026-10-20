@@ -67,7 +67,9 @@ test("opened film shows provider links and sharing does not move the screenings"
   expect((await showtimes.boundingBox())!.y).toBe(withField);
 });
 
-test("film links survive refresh and Back; compact details remain visible", async ({ page }) => {
+test("film links survive refresh and Back; compact details remain visible", async ({
+  page,
+}, testInfo) => {
   await page.goto("/");
   await page.getByRole("button", { name: "Fixture Classic A", exact: true }).click();
   await expect(page).toHaveURL(/film=classic-a/);
@@ -82,8 +84,14 @@ test("film links survive refresh and Back; compact details remain visible", asyn
   await expect(page.locator(".poster")).toBeVisible();
   await expect(page.locator(".film-facts")).toContainText("1977");
   await expect(page.locator(".booking-action").first()).toBeVisible();
-  await expect(page.locator(".film-about")).not.toHaveAttribute("open", "");
-  await page.getByText("More details", { exact: true }).click();
+  if (testInfo.project.name === "mobile") {
+    // Phones keep the synopsis behind More details, after the screenings.
+    await expect(page.locator(".film-about")).not.toHaveAttribute("open", "");
+    await page.getByText("More details", { exact: true }).click();
+  } else {
+    // Desktop shows it in the film column beside the screenings.
+    await expect(page.locator(".film-about")).toHaveCount(0);
+  }
   await expect(page.locator(".film-synopsis")).toBeVisible();
   await strip(page)
     .getByRole("button", { name: /^Tomorrow/ })

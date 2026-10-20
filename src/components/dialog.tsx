@@ -8,6 +8,7 @@ export function Dialog({
   restoreTo,
   focusKey = "",
   className = "modal-dialog",
+  heading = true,
 }: {
   className?: string;
   open: boolean;
@@ -18,6 +19,11 @@ export function Dialog({
   restoreTo?: () => HTMLElement | null;
   /** Changing this while open moves focus to the current initial element (e.g. a confirmation view). */
   focusKey?: string;
+  /**
+   * False drops the title bar; the caller then supplies its own close control. The dialog
+   * keeps its accessible name, Escape and backdrop press.
+   */
+  heading?: boolean;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   const close = useRef(onClose);
@@ -58,12 +64,14 @@ export function Dialog({
         if (event.target === ref.current) close.current();
       }}
     >
-      <div class="sheet-heading">
-        <h2>{title}</h2>
-        <button type="button" aria-label={`Close ${title.toLowerCase()}`} onClick={onClose}>
-          ×
-        </button>
-      </div>
+      {heading && (
+        <div class="sheet-heading">
+          <h2>{title}</h2>
+          <button type="button" aria-label={`Close ${title.toLowerCase()}`} onClick={onClose}>
+            ×
+          </button>
+        </div>
+      )}
       <div class="dialog-body">{open && children}</div>
     </dialog>
   );

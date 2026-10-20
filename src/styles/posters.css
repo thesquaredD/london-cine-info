@@ -334,23 +334,94 @@
 
 /* ---------- Film details sheet ---------- */
 /*
- * A fixed size, so the sheet does not jump or grow while screenings load. Phones keep the
- * full-width bottom sheet from base.css and only fix its height.
+ * As tall as its content, up to 85% of the window on desktop (92% on phones), and scrolling
+ * as one piece only beyond that. No title bar: the film block names the film, and a floating
+ * close button stays in the top right corner while the sheet scrolls. Phones keep the
+ * full-width bottom sheet from base.css and add a grip.
  */
+:root .poster-film-dialog[open] {
+  /* Not auto: a modal dialog is fixed with a zero inset, so auto would fill the window. */
+  height: fit-content;
+}
 @media (min-width: 800px) {
   :root .poster-film-dialog[open] {
     width: min(960px, calc(100vw - 32px));
     max-width: 960px;
-    height: 85dvh;
+    max-height: 85dvh;
   }
 }
 @media (max-width: 799px) {
   :root .poster-film-dialog[open] {
-    height: 90dvh;
+    max-height: 92dvh;
   }
 }
 .poster-film-dialog .dialog-body {
+  display: block;
   padding: 0;
+}
+.poster-film-dialog .sheet-grip {
+  display: none;
+}
+@media (max-width: 799px) {
+  .poster-film-dialog .sheet-grip {
+    display: block;
+    width: 36px;
+    height: 4px;
+    margin: 12px auto 0;
+    border-radius: 2px;
+    background: var(--line);
+  }
+}
+.poster-film-dialog .dialog-close-bar {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  height: 0;
+}
+/* Specific enough to beat the theme's plain dialog button. */
+:root dialog.poster-film-dialog .dialog-close-bar > .dialog-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  min-height: 44px;
+  margin: 0;
+  padding: 0;
+  color: var(--fg);
+  background: var(--shade);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+:root dialog.poster-film-dialog .dialog-close-bar > .dialog-close:hover {
+  border-color: var(--fg);
+}
+/* The list view names the film in its row; the sheet has no title bar, so it names it here. */
+:root .poster-film-dialog .film-detail-title {
+  display: block;
+  margin: 0 0 4px;
+  font-size: 19px;
+  font-weight: 400;
+}
+/* Room for the close button beside the film title and, on desktop, beside Reset. */
+:root .poster-film-dialog .film-info .film-description {
+  padding-right: 48px;
+}
+:root .poster-film-dialog .film-info .film-about-wide {
+  padding-right: 0;
+}
+@media (min-width: 800px) {
+  :root .poster-film-dialog .film-info .film-description {
+    padding-right: 0;
+  }
+  :root .poster-film-dialog .showtimes .programme-controls > .programme-reset {
+    margin-right: 36px;
+  }
 }
 .poster-detail-table {
   table-layout: auto;

@@ -1,0 +1,7 @@
+{
+  "id": "film-sheet-pagers",
+  "type": "improved",
+  "title": "Turn screening pages from the top or the bottom",
+  "body": "A film’s synopsis and cast now sit beside its screenings on larger screens, and in the poster view the film window fits its content and opens as a sheet on phones. Previous and Next appear above and below a busy film’s screenings, and turning a page no longer moves the page.",
+  "visibility": "public"
+}
