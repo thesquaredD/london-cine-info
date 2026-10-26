@@ -1,5 +1,5 @@
 import { defineConfig } from "vite";
-import { filmPages } from "./scripts/lib/film-pages";
+import { filmPages, SITE_ORIGIN } from "./scripts/lib/film-pages";
 import preact from "@preact/preset-vite";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
@@ -14,7 +14,10 @@ try {
 
 export default defineConfig({
   plugins: [preact(), filmPages()],
-  define: { "import.meta.env.VITE_APP_REVISION": JSON.stringify(revision) },
+  define: {
+    "import.meta.env.VITE_APP_REVISION": JSON.stringify(revision),
+    "import.meta.env.VITE_SITE_ORIGIN": JSON.stringify(SITE_ORIGIN),
+  },
   server: {
     proxy: process.env.ACCOUNTS_API_URL
       ? { "/api": { target: process.env.ACCOUNTS_API_URL, changeOrigin: false } }
