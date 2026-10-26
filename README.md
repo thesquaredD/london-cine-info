@@ -318,10 +318,11 @@ none, opens the film, and the address is then rewritten to the current title’s
 `?film=` links still open the film.
 
 - **Link previews.** Each build emits a small HTML page per film (`scripts/lib/film-pages.ts`)
-  with its title, description, canonical URL and `og:url` (on `SITE_URL`, default the
+  with its programme, title, description, canonical URL and `og:url` (on `SITE_URL`, default the
   production host in `src/shared/analytics.ts`) and, for an absolute https poster, `og:image`
   with alt text. Portrait posters use the small `summary` card. Films that have left the
-  catalogue get the SPA fallback, which shows “This film is no longer listed”. `/film/*` is
+  catalogue get a scoped 404 page; the app explains “This film is no longer listed” when it
+  loads. Older title slugs for a known film still recover in the app. `/film/*` is
   served `no-cache`; `npm run deployment:verify` checks one film page’s `og:title`.
 - **File count.** Film pages count towards Pages’ 20,000-file limit with the showtime files;
   `scripts/lib/output.ts` refuses a dataset that would exceed it.
@@ -338,3 +339,39 @@ none, opens the film, and the address is then rewritten to the current title’s
 Verification: `npm run e2e -- tests/e2e/film-sharing.spec.ts`. That spec also checks, from
 320 to 1280px, that screening rows are no taller than the same page with Share removed;
 `screening-layout.spec.ts` checks the venue keeps at least half the row.
+
+## Search and AI discovery
+
+The production build emits readable HTML for the public catalogue sections, film programmes
+and About & sources. These pages use the same dataset, category rules and prose styles as
+the app. Film pages include exact screening times, venue names, booking links and the
+programme's update time. Everyone receives the same HTML; the interactive app replaces it
+when JavaScript starts. Account features still require JavaScript.
+
+- `/sitemap.xml` lists the public catalogue sections, About and every current film. Its
+  timestamps come from the programme snapshot, not an invented publication date. Filter,
+  screening-share and account URLs are excluded.
+- `/robots.txt` points to the sitemap and allows public crawling, including the assets
+  needed to render pages; `/api/` is excluded. Personal/account pages use `noindex, follow`
+  in their HTML so crawlers can read the directive. This is not access control.
+- Titles, descriptions, canonical URLs and social previews share one definition between
+  generated HTML and in-app navigation. Query variants canonicalize to their base page;
+  named film pages retain their film canonical. `SITE_URL` sets the origin for both builds
+  and the client, defaulting to `https://london-cine.info`.
+- JSON-LD identifies the website, page and film, with supplied directors, runtime and
+  original release date where known. It does not invent reviews, ticket prices or live
+  availability. About reuses the app component with upstream releases and source limits.
+
+No `llms.txt` or special AI-only content is required. These changes make existing content
+accessible; they do not guarantee indexing, rankings or citations. After deployment, submit
+the sitemap in Google Search Console and Bing Webmaster Tools and inspect representative
+URLs. Check hosting-level bot controls separately if a crawler cannot reach the site.
+
+Verification: `npm test -- scripts/lib/seo.test.ts`, `npm run build` and
+`npm run e2e -- tests/e2e/seo.spec.ts tests/e2e/film-sharing.spec.ts`. Browser verification
+requires the handoff described in PLAN §11.5. Unknown/expired film URLs use a scoped
+`film/404.html` with `noindex` on Cloudflare Pages. This keeps the app bootable for known
+films with older or mistyped slugs, without changing the root SPA fallback. Vite preview
+does not emulate Pages' scoped 404 routing; verify the response status with Pages locally.
+Every build checks the emitted HTML, sitemap, structured data and hosting file limits.
+Deployment verification also checks the served robots file, sitemap and film programme.

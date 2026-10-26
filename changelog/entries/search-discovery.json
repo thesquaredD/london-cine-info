@@ -1,0 +1,7 @@
+{
+  "id": "search-discovery",
+  "type": "improved",
+  "title": "Read film programmes without JavaScript",
+  "body": "Public film pages include screening times, cinema names and booking links even when JavaScript is unavailable. Each programme shows when its listings were updated and links to their sources.",
+  "visibility": "public"
+}

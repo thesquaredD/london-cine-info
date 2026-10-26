@@ -68,7 +68,7 @@ test("film share names the film, drops filters and opens the film", async ({ pag
   expect(url.search).toBe("");
   await page.goto(url.pathname);
   await expect(page.locator(".film-expanded")).toBeVisible();
-  await expect(page).toHaveTitle("Fixture Classic A — London Ciné Info");
+  await expect(page).toHaveTitle("Fixture Classic A (1977) — London Ciné Info");
   await expect(
     page.getByRole("button", { name: "Fixture Classic A", exact: true }),
   ).toBeInViewport();
@@ -103,9 +103,13 @@ test("built film pages carry crawler-readable preview metadata", async ({ reques
   const plain = await (await request.get("/film/classic-c/fixture-classic-c/")).text();
   expect(plain).toContain('name="twitter:card" content="summary"');
   expect(plain).not.toContain("og:image");
-  // A film that has left the catalogue gets the app itself, which explains.
+  // A film that has left the catalogue gets the app shell, which explains on load.
+  // The shell now has site-wide previews, but must never claim to be this film.
   const missing = await (await request.get("/film/gone/old-film/")).text();
-  expect(missing).not.toContain("og:title");
+  expect(missing).toContain(
+    'property="og:title" content="London cinema listings and showtimes — London Ciné Info"',
+  );
+  expect(missing).not.toContain('"@type":"Movie"');
   expect(missing).toContain('<div id="app">');
 });
 

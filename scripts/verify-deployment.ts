@@ -14,13 +14,21 @@ if (!targets.length) throw new Error("VERIFY_URLS must list origins to check");
 // than the generic app shell.
 const ogTitle = (html: string) =>
   /<meta property="og:title" content="([^"]*)"/.exec(html)?.[1] ?? null;
-const [filmId] = await readdir("dist/film");
+const filmId = (await readdir("dist/film", { withFileTypes: true })).find((entry) =>
+  entry.isDirectory(),
+)?.name;
 const [slug] = filmId ? await readdir(`dist/film/${filmId}`) : [];
 const filmPage = {
   path: `/film/${filmId}/${slug}/`,
   title: slug ? ogTitle(await readFile(`dist/film/${filmId}/${slug}/index.html`, "utf8")) : null,
 };
 if (!filmPage.title) throw new Error("dist/film has no film page with og:title to verify");
+const searchAssets = await Promise.all(
+  ["/robots.txt", "/sitemap.xml"].map(async (path) => ({
+    path,
+    content: await readFile(`dist${path}`, "utf8"),
+  })),
+);
 
 async function check(origin: string) {
   const read = async (path: string) => {
@@ -36,6 +44,11 @@ async function check(origin: string) {
     read("/changelog.json"),
     read(filmPage.path),
   ]);
+  // These paths used to return the generic SPA HTML with a misleading 200 status.
+  for (const asset of searchAssets) {
+    if ((await read(asset.path)) !== asset.content)
+      throw new Error(`${origin}${asset.path} does not serve this build's search asset`);
+  }
   const version = JSON.parse(versionText) as VersionManifest;
   const bundle = JSON.parse(content) as ChangelogBundle;
   const problems = [
@@ -45,6 +58,8 @@ async function check(origin: string) {
       "changelog content differs from this build",
     ogTitle(filmHtml) !== filmPage.title &&
       `${filmPage.path} does not serve its link-preview title`,
+    !filmHtml.includes('id="discovery-screenings"') &&
+      `${filmPage.path} does not serve its readable programme`,
   ].filter(Boolean);
   if (problems.length) throw new Error(`${origin}: ${problems.join("; ")}`);
 }

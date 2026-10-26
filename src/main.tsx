@@ -14,4 +14,6 @@ import "./styles/welcome.css";
 
 document.documentElement.dataset.theme = "dark";
 initAnalytics();
+// Replace the readable programme for everyone alike when the interactive app starts.
+document.getElementById("static-content")?.remove();
 render(<App />, document.getElementById("app")!);
