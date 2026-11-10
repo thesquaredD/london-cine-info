@@ -69,7 +69,7 @@ test("Account navigation, browser favourites and sidebar sign out", async ({ pag
       .evaluateAll((nodes) => nodes.map((node) => node.id)),
   ).toEqual(["profile", "watchlist", "emails", "cinemas", "delete"]);
   await expect(account.getByRole("heading", { name: "Account", exact: true })).toBeFocused();
-  await expect(page).toHaveTitle("Account — London Ciné Info");
+  await expect(page).toHaveTitle("Account — Readograph");
   await expect(page.locator("dialog[open]")).toHaveCount(0);
   const fields = account.locator(".profile-fields > .pref-field");
   const app = (await fields.nth(0).boundingBox())!;

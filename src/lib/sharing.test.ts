@@ -164,7 +164,7 @@ describe("link previews", () => {
       "https://site.example",
     );
     expect(page).toContain(
-      '<meta property="og:title" content="A &lt;film&gt; &amp; &quot;you&quot; $$ $1 $` (2000) — London Ciné Info" />',
+      '<meta property="og:title" content="A &lt;film&gt; &amp; &quot;you&quot; $$ $1 $` (2000) — Readograph" />',
     );
     expect(page).toContain("<title>A &lt;film&gt; &amp; &quot;you&quot; $$ $1 $` (2000)");
     expect(page).toContain(

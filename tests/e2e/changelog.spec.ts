@@ -37,7 +37,7 @@ test("the built changelog is reachable from the menu and its links work", async 
   await page.goto("/");
   await (await sidebar(page)).getByRole("link", { name: "What’s new" }).click();
   await expect(page).toHaveURL("/changelog");
-  await expect(page).toHaveTitle("What’s new — London Ciné Info");
+  await expect(page).toHaveTitle("What’s new — Readograph");
   const article = page.getByRole("article", { name: "What’s new" });
   await expect(article.getByRole("heading", { name: "What’s new" })).toBeFocused();
   await expect(article.getByText("Preview · these notes are not necessarily live.")).toBeVisible();

@@ -32,7 +32,7 @@ test("guest Friends is a page with comparison and a sign-in link", async ({ page
   await page.goto("/friends");
   const friends = page.getByRole("article", { name: "Friends", exact: true });
   await expect(friends.getByRole("heading", { name: "Friends", exact: true })).toBeFocused();
-  await expect(page).toHaveTitle("Friends — London Ciné Info");
+  await expect(page).toHaveTitle("Friends — Readograph");
   await expect(friends.locator(":scope > section")).toHaveCount(2);
   await expect(
     friends.getByRole("region", { name: "Find a film together", exact: true }),

@@ -2,7 +2,7 @@ import type { Film } from "./data";
 import { SITE_HOST } from "./analytics";
 import { filmPath } from "../lib/sharing";
 
-export const SITE_NAME = "London Ciné Info";
+export const SITE_NAME = "Readograph";
 export const DEFAULT_ORIGIN = `https://${SITE_HOST}`;
 export const PUBLIC_PAGES = [
   {
@@ -56,27 +56,27 @@ export const PUBLIC_PAGES = [
   },
   {
     path: "/about",
-    name: "About London Ciné Info and its sources",
+    name: "About Readograph and its sources",
     description:
-      "How London Ciné Info brings together cinema screenings using Clusterflick data, with source releases, programme freshness and coverage limitations.",
+      "How Readograph brings together cinema screenings using Clusterflick data, with source releases, programme freshness and coverage limitations.",
     catalogue: false,
   },
 ] as const;
 
 const OTHER_PAGES: Record<string, { name: string; description: string; noindex?: boolean }> = {
   "/how-to-use": {
-    name: "How to use London Ciné Info",
+    name: "How to use Readograph",
     description:
       "Learn how to find films, choose a screening, book with a cinema and use watchlists, friends and favourite cinemas.",
   },
   "/privacy": {
     name: "Privacy",
     description:
-      "How London Ciné Info handles browsing, account information, watchlists and optional analytics.",
+      "How Readograph handles browsing, account information, watchlists and optional analytics.",
   },
   "/changelog": {
     name: "What’s new",
-    description: "Read about changes to London Ciné Info and its cinema listings tools.",
+    description: "Read about changes to Readograph and its cinema listings tools.",
   },
   "/watchlist": {
     name: "Your watchlist",
@@ -90,7 +90,7 @@ const OTHER_PAGES: Record<string, { name: string; description: string; noindex?:
   },
   "/account": {
     name: "Account",
-    description: "Manage your London Ciné Info account.",
+    description: "Manage your Readograph account.",
     noindex: true,
   },
   "/friends": {
@@ -100,10 +100,10 @@ const OTHER_PAGES: Record<string, { name: string; description: string; noindex?:
   },
   "/settings": {
     name: "Settings",
-    description: "Choose how London Ciné Info displays films.",
+    description: "Choose how Readograph displays films.",
     noindex: true,
   },
-  "/auth/verify": { name: "Sign in", description: "Sign in to London Ciné Info.", noindex: true },
+  "/auth/verify": { name: "Sign in", description: "Sign in to Readograph.", noindex: true },
   "/unsubscribe": {
     name: "Email preferences",
     description: "Manage cinema email preferences.",

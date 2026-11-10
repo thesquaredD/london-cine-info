@@ -721,7 +721,7 @@ export function TokenPage({
   const verify = kind === "verify";
   return (
     <article class="prose about-page">
-      <h2>{verify ? "Sign in to London Ciné Info" : "Unsubscribe from screening emails"}</h2>
+      <h2>{verify ? "Sign in to Readograph" : "Unsubscribe from screening emails"}</h2>
       <p>
         {verify
           ? "Confirm to sign in. Your link expires after 15 minutes and can be used once."

@@ -102,7 +102,7 @@ export function HowToUse({
     <article class="prose guide-page" aria-labelledby="guide-title" ref={article}>
       <header class="prose-head">
         <h2 id="guide-title" tabIndex={-1}>
-          How to use London Ciné Info
+          How to use Readograph
         </h2>
         <p class="prose-meta">Optional · four short examples</p>
       </header>

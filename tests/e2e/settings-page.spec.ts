@@ -36,7 +36,7 @@ test("sidebar preferences are pages; preview follows title mode and rating order
   await expect(page).toHaveURL("/settings");
   const settings = page.getByRole("article", { name: "Settings", exact: true });
   await expect(settings.getByRole("heading", { name: "Settings", exact: true })).toBeFocused();
-  await expect(page).toHaveTitle("Settings — London Ciné Info");
+  await expect(page).toHaveTitle("Settings — Readograph");
   await expect(page.locator("dialog[open]")).toHaveCount(0);
   expect(
     await settings

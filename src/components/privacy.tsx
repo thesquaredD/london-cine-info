@@ -70,14 +70,16 @@ export function Privacy({ onNavigate }: { onNavigate: (path: string) => void }) 
           Privacy
         </h2>
         <p class="prose-meta">
-          Last updated 19 October 2026 · Operator Diogo Diogo ·{" "}
+          Last updated 10 November 2026 · Operator Diogo Diogo ·{" "}
           <a href={`mailto:${contact}`}>Contact</a>
         </p>
       </header>
       <p class="prose-lede">
-        London Ciné Info is a personal, non-commercial service for finding cinema screenings. You
-        can browse without an account. This policy explains what happens to your information when
-        you browse, sign in or use the optional watchlist, friends and email features.
+        Readograph is a personal, non-commercial service for finding cinema screenings. You can
+        browse without an account. This policy explains what happens to your information when you
+        browse, sign in or use the optional watchlist, friends and email features. Readograph was
+        called London Ciné Info until November 2026; the service and this policy are otherwise
+        unchanged.
       </p>
       <aside class="prose-summary" aria-label="In short">
         <p class="prose-eyebrow">In short</p>
@@ -121,8 +123,8 @@ export function Privacy({ onNavigate }: { onNavigate: (path: string) => void }) 
               Who is responsible
             </h2>
             <p>
-              Diogo Diogo operates London Ciné Info and is the controller of the personal
-              information described here. For privacy questions or requests about your data, email{" "}
+              Diogo Diogo operates Readograph and is the controller of the personal information
+              described here. For privacy questions or requests about your data, email{" "}
               <a href={`mailto:${contact}`}>{contact}</a>.
             </p>
             <p>Please use email for private account details, rather than a public GitHub issue.</p>
@@ -430,7 +432,7 @@ export function Privacy({ onNavigate }: { onNavigate: (path: string) => void }) 
             <p>
               Loading film posters contacts the image provider. Opening booking, ratings, trailer or
               other external links takes you to services with their own privacy policies; booking
-              purchases are handled by the cinema or ticket provider, rather than London Ciné Info.
+              purchases are handled by the cinema or ticket provider, rather than Readograph.
             </p>
             <p>
               These providers operate internationally, so some processing can take place outside the

@@ -19,7 +19,7 @@ test("a first unfiltered visit shows the welcome page and dismissal is remembere
   await expect(page).toHaveURL(/\/$/);
   await expect(
     page.getByText(
-      "London Ciné Info is independent and not affiliated with any cinema, Letterboxd, IMDb or YouTube.",
+      "Readograph is independent and not affiliated with any cinema, Letterboxd, IMDb or YouTube.",
     ),
   ).toBeVisible();
   await page.getByRole("link", { name: "Browse all films" }).click();
@@ -125,7 +125,7 @@ test("How to use renders the guide and links to each real action", async ({ page
     .filter({ visible: true })
     .click();
   await expect(page).toHaveURL(/\/how-to-use$/);
-  const guide = page.getByRole("article", { name: "How to use London Ciné Info" });
+  const guide = page.getByRole("article", { name: "How to use Readograph" });
   await expect(guide.getByRole("complementary", { name: "In short" })).toBeVisible();
   for (const name of [
     "Find a screening and book it",
@@ -297,7 +297,7 @@ test("guide links without a query keep the current view, like the sidebar", asyn
     .getByRole("link", { name: "Watchlist", exact: true, includeHidden: true })
     .getAttribute("href");
   await page
-    .getByRole("article", { name: "How to use London Ciné Info" })
+    .getByRole("article", { name: "How to use Readograph" })
     .getByRole("link", { name: "Open Watchlist" })
     .click();
   await expect(page).toHaveURL(/\/watchlist\?venue=princecharlescinema\.com$/);
