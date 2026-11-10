@@ -1,0 +1,7 @@
+{
+  "id": "filter-bar-capitals",
+  "type": "improved",
+  "title": "Filter titles in capitals",
+  "body": "On larger screens, the Cinema, Genre and Filters controls now use the same small capitals as the quick filters, so the bar reads as one row.",
+  "visibility": "public"
+}

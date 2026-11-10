@@ -1177,3 +1177,12 @@
     font-weight: 400;
   }
 }
+
+/* Desktop bar titles (Cinema, Genre, Filters) in capitals, matching the quick filters. */
+:root .filter-bar .desktop-filters .filter-picker > summary > span,
+:root .filter-bar button.all-filters .all-filters-label {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: var(--text-1);
+  font-weight: 500;
+}
