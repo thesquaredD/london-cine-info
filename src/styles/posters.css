@@ -58,7 +58,7 @@
   border-radius: 0;
   background: transparent;
   color: var(--muted);
-  font-size: 13px;
+  font-size: var(--text-1);
 }
 .view-switch button + button {
   border-left: 1px solid var(--line);
@@ -101,13 +101,13 @@
   margin: 0 0 10px;
   padding-bottom: 6px;
   border-bottom: 1px solid var(--line);
-  font-size: 15px;
+  font-size: var(--text-3);
   font-weight: 500;
   color: var(--fg);
 }
 .poster-group small {
   margin-left: 6px;
-  font-size: 12px;
+  font-size: var(--text-1);
   font-weight: 400;
   color: var(--muted);
 }
@@ -205,13 +205,13 @@
   overflow: hidden;
   overflow-wrap: break-word;
   hyphens: auto;
-  font-size: 15px;
+  font-size: var(--text-3);
   line-height: 1.25;
   font-weight: 500;
 }
 .poster-fallback-note {
   color: var(--brass);
-  font-size: 12px;
+  font-size: var(--text-1);
 }
 @media (max-width: 599px) {
   /* Three narrow posters per row: keep long titles readable. */
@@ -219,7 +219,7 @@
     padding: 10px 8px;
   }
   .poster-fallback-title {
-    font-size: 13px;
+    font-size: var(--text-1);
   }
 }
 .poster-mark {
@@ -234,7 +234,7 @@
   border-radius: 2px;
   background: color-mix(in srgb, var(--bg) 85%, transparent);
   color: var(--brass);
-  font-size: 13px;
+  font-size: var(--text-1);
   line-height: 1;
 }
 /* ---------- Details strip inside the poster ---------- */
@@ -246,7 +246,7 @@
   gap: 2px;
   padding: 8px 10px 9px;
   color: var(--fg);
-  font-size: 12px;
+  font-size: var(--text-1);
   line-height: 1.35;
   background: color-mix(in srgb, var(--bg) 94%, transparent);
   border-top: 1px solid color-mix(in srgb, var(--brass) 55%, transparent);
@@ -258,7 +258,7 @@
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-  font-size: 13px;
+  font-size: var(--text-1);
   font-weight: 500;
 }
 .poster-info-facts {
@@ -394,7 +394,7 @@
   background: var(--shade);
   border: 1px solid var(--line);
   border-radius: 2px;
-  font-size: 20px;
+  font-size: var(--text-5);
   line-height: 1;
   cursor: pointer;
 }
@@ -405,7 +405,7 @@
 :root .poster-film-dialog .film-detail-title {
   display: block;
   margin: 0 0 4px;
-  font-size: 19px;
+  font-size: var(--text-5);
   font-weight: 400;
 }
 /* Room for the close button beside the film title and, on desktop, beside Reset. */

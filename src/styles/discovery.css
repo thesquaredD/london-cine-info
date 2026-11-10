@@ -111,7 +111,7 @@
   border: 0;
 }
 :root .rating-card :is(span, strong, small) {
-  font-size: 14px;
+  font-size: var(--text-2);
   font-weight: 400;
 }
 :root .rating-card span {
@@ -127,7 +127,7 @@
   color: var(--active-fg);
   border: 0;
   border-radius: 2px;
-  font-size: 16px;
+  font-size: var(--text-3);
   font-weight: 400;
   text-decoration: none;
 }
@@ -145,7 +145,7 @@
   background: var(--shade);
   color: var(--fg);
   border: 0;
-  font-size: 16px;
+  font-size: var(--text-3);
 }
 :root .social-plan-form label {
   display: grid;
@@ -162,7 +162,7 @@
 }
 :root :is(.radar-discovery-tabs, .event-discovery-tabs) button {
   padding: 10px 14px;
-  font-size: 16px;
+  font-size: var(--text-3);
   background: var(--shade);
   border: 0;
   min-height: 44px;
@@ -196,7 +196,7 @@
     display: grid;
     grid-template-columns: minmax(0, 1fr) 10px;
     min-height: 44px;
-    font-size: 16px;
+    font-size: var(--text-3);
     max-width: 65%;
     margin: 0;
     padding: 8px 10px;
@@ -226,7 +226,7 @@
     line-height: 1.25;
   }
   :root .director-text {
-    font-size: 16px;
+    font-size: var(--text-3);
   }
   :root .film-expanded {
     padding: 12px;
@@ -242,12 +242,12 @@
   }
   :root .poster-placeholder {
     padding: 6px;
-    font-size: 12px;
+    font-size: var(--text-1);
     line-height: 1.25;
   }
   :root .poster-placeholder span {
     margin-top: 6px;
-    font-size: 11px;
+    font-size: var(--text-1);
   }
   :root .film-description {
     display: block;
@@ -255,13 +255,13 @@
   :root .film-facts,
   :root .film-genres {
     grid-column: 2;
-    font-size: 15px;
+    font-size: var(--text-3);
   }
   :root .film-detail-title {
     display: block;
     grid-column: 2;
     margin: 0;
-    font-size: 19px;
+    font-size: var(--text-5);
     font-weight: 400;
   }
   :root .poster {
@@ -273,24 +273,24 @@
   :root .synopsis-toggle {
     justify-self: start;
     min-height: 44px;
-    font-size: 16px;
+    font-size: var(--text-3);
   }
   :root .film-description .film-synopsis {
-    font-size: 16px;
+    font-size: var(--text-3);
     margin: 0;
   }
   :root .film-cast {
-    font-size: 15px;
+    font-size: var(--text-3);
   }
   :root .rating-cards {
     margin: 0;
     gap: 10px;
   }
   :root .rating-card :is(span, strong, small) {
-    font-size: 14px;
+    font-size: var(--text-2);
   }
   :root .showtime-day time {
-    font-size: 19px;
+    font-size: var(--text-5);
   }
 }
 
@@ -303,7 +303,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 16px;
+  font-size: var(--text-3);
   color: var(--muted);
 }
 :root .film-about > summary::before {
@@ -481,7 +481,7 @@
   min-width: 0;
 }
 :root .screening-venue {
-  font-size: 17px;
+  font-size: var(--text-4);
   line-height: 1.3;
   overflow-wrap: anywhere;
 }
@@ -492,7 +492,7 @@
   align-items: center;
   gap: 4px 6px;
   min-width: 0;
-  font-size: 13px;
+  font-size: var(--text-1);
   line-height: 18px;
   color: var(--muted);
 }
@@ -542,7 +542,7 @@
   background: var(--panel);
   border: 1px solid var(--line);
   border-radius: 2px;
-  font-size: 14px;
+  font-size: var(--text-2);
 }
 :root .screening-actions .add-calendar {
   width: 7.9em;
@@ -637,13 +637,13 @@
     grid-template-columns: max-content max-content minmax(0, 1fr) max-content;
   }
   :root .screening-venue {
-    font-size: 16px;
+    font-size: var(--text-3);
   }
   :root .screening-actions .booking-action {
-    font-size: 16px;
+    font-size: var(--text-3);
   }
   :root .screening-actions :is(.add-calendar, .share-screening) {
-    font-size: 14px;
+    font-size: var(--text-2);
   }
 }
 /* A list a little over 30rem (the How to use example, the 800-1100px desktop sheet) keeps the
@@ -718,7 +718,7 @@
   min-height: 32px;
   padding: 5px 8px;
   line-height: 1.25;
-  font-size: 14px;
+  font-size: var(--text-2);
   font-weight: 400;
   color: var(--fg);
   background: var(--panel);
@@ -747,7 +747,7 @@
   :root .film-actions :is(a, button) {
     min-height: 44px;
     padding: 8px 10px;
-    font-size: 15px;
+    font-size: var(--text-3);
   }
 }
 :root .film-info .film-links {
@@ -802,7 +802,7 @@
 }
 :root .choice-label {
   grid-area: label;
-  font-size: 11px;
+  font-size: var(--text-1);
   line-height: 1.2;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -812,7 +812,7 @@
   grid-area: value;
   min-width: 0;
   overflow: hidden;
-  font-size: 16px;
+  font-size: var(--text-3);
   line-height: 1.25;
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -866,7 +866,7 @@
 :root .choice-list .option-group {
   margin: 8px 0 2px;
   padding: 8px 8px 0;
-  font-size: 12px;
+  font-size: var(--text-1);
   color: var(--muted);
 }
 :root .choice-option {
@@ -878,11 +878,11 @@
   padding: 0 8px;
   border-radius: 2px;
   cursor: pointer;
-  font-size: 15px;
+  font-size: var(--text-3);
 }
 :root .choice-option small {
   color: var(--muted);
-  font-size: 13px;
+  font-size: var(--text-1);
   font-variant-numeric: tabular-nums;
 }
 :root .choice-option:hover:not([aria-disabled]),
@@ -920,7 +920,7 @@
   border-radius: 2px;
   min-height: 36px;
   padding: 4px 10px;
-  font-size: 14px;
+  font-size: var(--text-2);
 }
 :root .showtimes .date-choices .date-shortcuts button[aria-pressed="true"] {
   color: var(--active-fg);
@@ -946,7 +946,7 @@
 }
 :root .date-choices .calendar-grid button small {
   min-height: 1.2em;
-  font-size: 11px;
+  font-size: var(--text-1);
   color: var(--muted);
 }
 :root .date-choices .calendar-grid button[aria-disabled] {
@@ -984,7 +984,7 @@
   justify-content: space-between;
   gap: 8px 12px;
   padding: 8px 0;
-  font-size: 15px;
+  font-size: var(--text-3);
   color: var(--muted);
   font-variant-numeric: tabular-nums;
 }
@@ -1008,7 +1008,7 @@
   background: var(--panel);
   border: 1px solid var(--line);
   border-radius: 2px;
-  font-size: 15px;
+  font-size: var(--text-3);
   white-space: nowrap;
   cursor: pointer;
 }
@@ -1033,7 +1033,7 @@
   margin: 8px 12px 10px;
   padding: 10px 0 2px;
   border-top: 1px solid var(--line);
-  font-size: 15px;
+  font-size: var(--text-3);
 }
 /* Reset as a text link at the end of the count line; only narrow lists use it. */
 :root .film-expanded .showtimes .programme-summary .programme-reset-link {
@@ -1044,7 +1044,7 @@
   color: var(--fg);
   background: transparent;
   border: 0;
-  font-size: 15px;
+  font-size: var(--text-3);
   text-decoration: underline;
   text-underline-offset: 3px;
   cursor: pointer;
@@ -1091,7 +1091,7 @@
   border: 1px solid var(--line);
   border-radius: 2px;
   box-shadow: 0 8px 24px color-mix(in srgb, var(--bg) 70%, transparent);
-  font-size: 15px;
+  font-size: var(--text-3);
   line-height: 1.3;
   opacity: 0;
   transform: translate(-50%, 8px);

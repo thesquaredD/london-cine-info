@@ -22,7 +22,7 @@
   border: 0;
   padding: 12px 12px 5px;
   font:
-    700 10px Arial,
+    700 var(--text-1) Arial,
     sans-serif;
   text-transform: uppercase;
 }
@@ -38,7 +38,7 @@
   background: transparent;
   text-align: left;
   justify-content: start;
-  font-size: 12px;
+  font-size: var(--text-1);
   padding: 7px 12px;
 }
 :root .sidebar-bottom {
@@ -47,7 +47,7 @@
 :root .sidebar-bottom a,
 :root .update-note {
   text-align: left;
-  font-size: 11px;
+  font-size: var(--text-1);
   margin-top: 10px;
 }
 :root .masthead {
@@ -60,13 +60,13 @@
   font-weight: 800;
 }
 :root .menu-button {
-  font-size: 19px;
+  font-size: var(--text-5);
   left: 6px;
 }
 :root .design-view-label {
   display: block;
   margin-left: auto;
-  font-size: 11px;
+  font-size: var(--text-1);
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
@@ -83,11 +83,11 @@
   flex: 1 1 180px;
   min-width: 140px;
   padding: 7px 10px;
-  font-size: 12px;
+  font-size: var(--text-3);
   background: var(--shade);
   border: 0;
   border-radius: 2px;
-  height: 32px;
+  height: 40px;
 }
 :root .desktop-filters,
 :root .desktop-filters .filter-fields {
@@ -101,7 +101,7 @@
 }
 :root .desktop-filters .filter-picker summary {
   padding: 8px 24px 8px 9px;
-  font-size: 12px;
+  font-size: var(--text-3);
 }
 :root .desktop-filters .filter-picker summary::after {
   top: 8px;
@@ -109,7 +109,7 @@
 :root .all-filters,
 :root .watchlists-trigger {
   padding: 8px 10px;
-  font-size: 12px;
+  font-size: var(--text-3);
   border: 0;
   background: var(--shade);
 }
@@ -119,34 +119,34 @@
   border: 0;
 }
 :root .filter-summary .result-status {
-  font-size: 11px;
+  font-size: var(--text-2);
 }
 :root .active-filters button {
   padding: 3px 6px;
-  font-size: 11px;
+  font-size: var(--text-2);
 }
 :root .film-table th {
   top: 48px;
   border: 0;
 }
 :root .film-table th button {
-  min-height: 32px;
+  min-height: 36px;
   padding: 6px 10px;
-  font-size: 11px;
+  font-size: var(--text-2);
   font-weight: 700;
   background: transparent;
 }
 :root .film-row td {
   border: 0;
   padding: 7px 10px;
-  font-size: 13px;
+  font-size: var(--text-3);
   line-height: 1.3;
 }
 :root .film-title {
   min-height: 28px;
 }
 :root .film-title i {
-  font-size: 11px;
+  font-size: var(--text-2);
   margin-top: 2px;
   font-style: normal;
 }
@@ -158,7 +158,7 @@
   border: 0;
   background: transparent;
   padding: 2px;
-  font-size: 13px;
+  font-size: var(--text-3);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
@@ -170,7 +170,7 @@
   padding: 7px 12px;
   border: 0;
   background: var(--shade);
-  font-size: 11px;
+  font-size: var(--text-2);
 }
 :root .film-expanded {
   padding: 12px;
@@ -204,10 +204,10 @@
     padding-left: 40px;
   }
   :root .masthead h1 {
-    font-size: 20px;
+    font-size: 1.25rem;
   }
   :root .design-view-label {
-    font-size: 9px;
+    font-size: var(--text-1);
     letter-spacing: 0;
   }
   :root .film-table th {
@@ -224,7 +224,7 @@
     padding: 7px 8px;
     border: 0;
     background: var(--shade);
-    font-size: 11px;
+    font-size: var(--text-1);
     min-height: 32px;
   }
   :root .filter-summary {
@@ -235,7 +235,7 @@
     padding: 8px;
   }
   :root .film-title {
-    font-size: 14px;
+    font-size: var(--text-2);
   }
   :root .sidebar-drawer .sidebar-content {
     padding-top: 35px;
@@ -253,7 +253,7 @@
 }
 :root .masthead .brand-info {
   font:
-    700 10px Arial,
+    700 var(--text-1) Arial,
     sans-serif;
 }
 :root .showtime-day h3 {
@@ -271,12 +271,12 @@
 }
 :root .showtime-day h3 {
   font:
-    600 11px "Space Grotesk",
+    600 var(--text-1) "Space Grotesk",
     sans-serif;
 }
 :root .showtime-day time {
   font:
-    600 15px "Space Grotesk",
+    600 var(--text-3) "Space Grotesk",
     sans-serif;
 }
 :root .time-dot {
@@ -294,7 +294,7 @@
 }
 @media (max-width: 760px) {
   :root .masthead h1 {
-    font-size: 20px;
+    font-size: 1.25rem;
   }
   :root .masthead h1 a {
     gap: 5px;
@@ -314,7 +314,7 @@
   min-height: 0;
 }
 :root .rating-card strong {
-  font-size: 16px;
+  font-size: var(--text-3);
 }
 @media (max-width: 760px) {
   :root .film-expanded {
@@ -396,7 +396,7 @@
 }
 @media (max-width: 760px) {
   :root .film-title {
-    font-size: 15px;
+    font-size: var(--text-3);
   }
 }
 :root {
@@ -410,7 +410,7 @@
   gap: 12px;
 }
 :root .masthead .brand-info {
-  font-size: 13px;
+  font-size: var(--text-1);
   font-weight: 500;
   letter-spacing: 0.14em;
   border: 0;
@@ -439,7 +439,7 @@
 }
 @media (max-width: 760px) {
   :root .masthead h1 {
-    font-size: 18px;
+    font-size: 1.125rem;
     letter-spacing: 0.045em;
   }
   :root .masthead h1 a {
@@ -447,10 +447,10 @@
   }
   :root .masthead .brand-info {
     padding-left: 6px;
-    font-size: 13px;
+    font-size: var(--text-1);
   }
   :root .film-title {
-    font-size: 14px;
+    font-size: var(--text-2);
   }
 }
 :root .masthead h1 a::before {
@@ -473,7 +473,7 @@
   content: none;
 }
 :root .masthead h1 {
-  font-size: 25px;
+  font-size: 1.5625rem;
   font-style: normal;
   letter-spacing: 0.075em;
 }
@@ -483,7 +483,7 @@
 :root .film-title {
   font-family: "Josefin Sans", Arial, sans-serif;
   font-weight: 600;
-  font-size: 16px;
+  font-size: var(--text-4);
   letter-spacing: 0.005em;
 }
 :root .film-title i {
@@ -507,20 +507,20 @@
 :root .film-row.is-expanded .film-title {
   font-family: var(--cinema-display);
   font-weight: var(--cinema-weight);
-  font-size: 20px;
+  font-size: var(--text-5);
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
 @media (max-width: 760px) {
   :root .masthead h1 {
-    font-size: 19px;
+    font-size: 1.1875rem;
     letter-spacing: 0.04em;
   }
   :root .film-title {
-    font-size: 15px;
+    font-size: var(--text-3);
   }
   :root .film-row.is-expanded .film-title {
-    font-size: 17px;
+    font-size: var(--text-4);
   }
 }
 :root {
@@ -569,14 +569,14 @@
 }
 :root .sidebar-content nav a {
   font-family: "Space Grotesk", Arial, sans-serif;
-  font-size: 13px;
+  font-size: var(--text-1);
   font-weight: 500;
   letter-spacing: 0;
 }
 :root .section-label {
   font-family: "Space Grotesk", Arial, sans-serif;
   font-weight: 500;
-  font-size: 10px;
+  font-size: var(--text-1);
   letter-spacing: 0.09em;
   color: var(--brass);
 }
@@ -612,18 +612,18 @@
 }
 :root .showtime-day h3 {
   font-family: "Space Grotesk", Arial, sans-serif;
-  font-size: 12px;
+  font-size: var(--text-1);
   letter-spacing: 0.03em;
   color: var(--fg);
   border-bottom-color: #ad915c70;
 }
 @media (max-width: 760px) {
   :root .masthead h1 {
-    font-size: 19px;
+    font-size: 1.1875rem;
   }
   :root .film-title,
   :root .film-row.is-expanded .film-title {
-    font-size: 15px;
+    font-size: var(--text-3);
   }
 }
 :root .masthead h1 a {
@@ -691,7 +691,7 @@
     min-height: 29px;
   }
   :root .masthead h1 {
-    font-size: 18px;
+    font-size: 1.125rem;
     letter-spacing: 0.025em;
   }
 }
@@ -729,10 +729,10 @@
   font-weight: 400;
 }
 :root body {
-  font-size: 15px;
+  font-size: var(--text-3);
 }
 :root :is(button, input, select, textarea) {
-  font-size: 14px;
+  font-size: var(--text-2);
 }
 :root .masthead h1,
 :root .masthead h1 .brand-name {
@@ -741,18 +741,18 @@
   letter-spacing: 0.06em;
 }
 :root .showtime-day time {
-  font-size: 16px;
+  font-size: var(--text-3);
   font-weight: 500;
   letter-spacing: 0;
 }
 :root .film-title,
 :root .film-row.is-expanded .film-title {
-  font-size: 15px;
+  font-size: var(--text-4);
   font-weight: 400;
   letter-spacing: 0;
 }
 :root .sidebar-content nav a {
-  font-size: 14px;
+  font-size: var(--text-3);
   font-weight: 400;
 }
 :root :is(.rating-chip, .mobile-sort-score, .showtime-day h3, th button, strong) {
@@ -760,7 +760,7 @@
 }
 @media (max-width: 760px) {
   :root .masthead h1 {
-    font-size: 17px;
+    font-size: 1.0625rem;
     letter-spacing: 0.025em;
   }
 }
@@ -793,7 +793,7 @@ html {
   min-height: 36px;
   padding: 0 10px;
   line-height: 1;
-  font-size: 14px;
+  font-size: var(--text-2);
   font-weight: 400;
   white-space: nowrap;
 }
@@ -810,7 +810,7 @@ html {
 }
 :root .shortcut-count {
   width: 3ch;
-  font-size: 11px;
+  font-size: var(--text-1);
   font-variant-numeric: tabular-nums;
 }
 :root .filter-bar [data-active="true"],
@@ -839,7 +839,7 @@ html {
     grid-column: 1 / -1;
     min-width: 0;
     height: 36px;
-    font-size: 16px;
+    font-size: var(--text-3);
   }
   :root .filter-bar :is(.watchlists-trigger, .all-filters) {
     width: 100%;
@@ -848,7 +848,7 @@ html {
     min-height: 44px;
     padding: 0 6px;
     justify-content: center;
-    font-size: 13px;
+    font-size: var(--text-1);
   }
   :root .mobile-sort-trigger {
     grid-column: 1 / -1;
@@ -894,13 +894,13 @@ html {
 /* Mobile uses readable type and only allocates a chip row when it has content. */
 @media (max-width: 799px) {
   :root body {
-    font-size: 17px;
+    font-size: var(--text-4);
   }
   :root :is(button, input, select, textarea) {
-    font-size: 16px;
+    font-size: var(--text-3);
   }
   :root .masthead h1 {
-    font-size: 20px;
+    font-size: 1.25rem;
   }
   :root .design-view-label {
     display: none;
@@ -911,20 +911,20 @@ html {
   }
   :root .bar-search {
     height: 44px;
-    font-size: 17px;
+    font-size: var(--text-4);
   }
   :root .filter-bar :is(.watchlists-trigger, .all-filters) {
-    font-size: 16px;
+    font-size: var(--text-3);
     justify-content: flex-start;
     padding-inline: 12px;
   }
   :root :is(.mobile-sort-trigger) {
-    font-size: 16px;
+    font-size: var(--text-3);
     min-height: 44px;
     padding: 8px 10px;
   }
   :root .shortcut-count {
-    font-size: 14px;
+    font-size: var(--text-2);
   }
   :root .filter-summary {
     min-height: 0;
@@ -932,7 +932,7 @@ html {
     row-gap: 0;
   }
   :root .filter-summary .result-status {
-    font-size: 16px;
+    font-size: var(--text-3);
     width: auto;
     min-width: 0;
   }
@@ -945,62 +945,62 @@ html {
     display: none;
   }
   :root .active-filters button {
-    font-size: 16px;
+    font-size: var(--text-3);
     min-height: 44px;
   }
   :root .film-table th button {
-    font-size: 16px;
+    font-size: var(--text-3);
   }
   :root .film-row td {
-    font-size: 17px;
+    font-size: var(--text-4);
     line-height: 1.3;
     padding: 12px 9px;
   }
   :root .film-title,
   :root .film-row.is-expanded .film-title {
-    font-size: 20px;
+    font-size: var(--text-5);
     line-height: 1.2;
     min-height: 32px;
   }
   :root .film-title i {
-    font-size: 15px;
+    font-size: var(--text-3);
   }
   :root .mobile-sort-score {
-    font-size: 15px;
+    font-size: var(--text-3);
   }
   :root .sidebar-content nav a {
-    font-size: 18px;
+    font-size: var(--text-4);
     padding-block: 12px;
   }
   :root .section-label {
-    font-size: 12px;
+    font-size: var(--text-1);
   }
   :root dialog :is(button, input, select, textarea, summary, .filter-options label) {
-    font-size: 16px;
+    font-size: var(--text-3);
   }
   :root dialog :is(button, .filter-picker > summary) {
     min-height: 44px;
   }
   :root dialog .filter-options small {
-    font-size: 14px;
+    font-size: var(--text-2);
   }
   :root :is(.calendar-help, .poster figcaption, .rating-card span, .pagination) {
-    font-size: 14px;
+    font-size: var(--text-2);
   }
   :root .showtime-day h3 {
-    font-size: 16px;
+    font-size: var(--text-3);
   }
   :root .showtime-day time {
-    font-size: 22px;
+    font-size: var(--text-6);
   }
   :root .screening-info small {
-    font-size: 15px;
+    font-size: var(--text-3);
   }
   :root .showtime-day li {
     grid-template-columns: 58px 4px minmax(0, 1fr);
   }
   :root .sidebar-drawer :is(.preferences-nav a, .signout-button) {
-    font-size: 16px;
+    font-size: var(--text-3);
     min-height: 44px;
   }
 }
@@ -1081,7 +1081,7 @@ html {
   padding: 0;
   height: auto;
   line-height: 1.25;
-  font-size: 14px;
+  font-size: var(--text-2);
 }
 :root :is(dialog) .filter-picker > summary::after,
 :root .desktop-filters > .filter-controls .filter-picker > summary::after {
@@ -1124,7 +1124,7 @@ html {
     min-height: 52px;
   }
   :root dialog .filter-picker > summary > small {
-    font-size: 16px;
+    font-size: var(--text-3);
   }
 }
 :root .filter-bar :is(.watchlists-trigger) {
@@ -1174,7 +1174,7 @@ html {
   min-height: 30px;
 }
 :root .shortcut-strip button {
-  font-size: 12px;
+  font-size: var(--text-1);
   font-weight: 400;
   line-height: 18px;
   color: var(--muted);
@@ -1207,13 +1207,13 @@ html {
   }
   :root .filter-bar .bar-search {
     height: 44px;
-    font-size: 16px;
+    font-size: var(--text-3);
   }
   :root .filter-bar button.all-filters {
     width: 112px;
     height: 44px;
     min-height: 44px;
-    font-size: 16px;
+    font-size: var(--text-3);
     padding-inline: 10px;
   }
   :root .filter-summary {
@@ -1226,8 +1226,15 @@ html {
     min-height: 38px;
   }
   :root .shortcut-strip button {
-    font-size: 13px;
+    font-size: var(--text-1);
     min-height: 36px;
     padding-block: 8px;
+  }
+}
+/* Between 800px and 1100px the seven columns share about 620px; at the 16px scale the
+   number columns need their side padding back to keep four digits inside 7%. */
+@media (min-width: 800px) and (max-width: 1099px) {
+  :root .film-row td:is(.rating-column, .year-column) {
+    padding-inline: 4px;
   }
 }
