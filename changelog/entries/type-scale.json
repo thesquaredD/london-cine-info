@@ -1,0 +1,7 @@
+{
+  "id": "type-scale",
+  "type": "improved",
+  "title": "Larger, easier-to-read text",
+  "body": "Text across the site now follows one larger scale, with nothing smaller than 13 pixels. Listings, search and filters are easiest to see on a computer screen, where most text was smallest before.",
+  "visibility": "public"
+}

@@ -3,7 +3,7 @@
 .feedback-link {
   padding: 6px 0;
   color: inherit;
-  font-size: 14px;
+  font-size: var(--text-2);
   text-align: left;
   text-decoration: underline;
   text-underline-offset: 3px;

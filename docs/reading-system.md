@@ -3,7 +3,8 @@
 How text is presented anywhere on the site that is mostly words: the Privacy, About and
 What's new pages, the sign-in and settings ledes, the feedback dialog, notices and empty
 states. One scale and a small set of blocks, so every text surface reads as the same site.
-The shared stylesheet is `src/styles/prose.css`.
+The shared stylesheet is `src/styles/prose.css`. Its sizes point at the app-wide `--text-1` to
+`--text-9` ladder in `src/styles/base.css` (rem, 13px floor); no stylesheet sets a size in pixels.
 
 Mockups of every block in use: https://claude.ai/artifact/XrtzgxorfQirUYVFPTfTnk.
 
@@ -35,12 +36,12 @@ Mockups of every block in use: https://claude.ai/artifact/XrtzgxorfQirUYVFPTfTnk
 | Token             | Value                                        | Use                                     |
 | ----------------- | -------------------------------------------- | --------------------------------------- |
 | `--prose-measure` | `62ch`                                       | max-width of any `p`, `li`, `dd`        |
-| `--prose-body`    | `15px / 1.55` (phone `16px / 1.5`)           | body copy                               |
-| `--prose-small`   | `14px`, `--muted`                            | caveats, small print, status            |
-| `--prose-lede`    | `17px / 1.5`, `--fg`                         | the opening sentence or two             |
-| `--prose-h1`      | `30px / 1.15`, weight 500                    | page title, one per page                |
-| `--prose-h2`      | `20px / 1.3`, weight 500                     | section heading                         |
-| `--prose-eyebrow` | `11px`, weight 500, `.12em`, caps, `--brass` | group label inside a section            |
+| `--prose-body`    | `--text-3` (16px) `/ 1.55` (phone `/ 1.5`)   | body copy                               |
+| `--prose-small`   | `--text-2` (14px), `--muted`                 | caveats, small print, status            |
+| `--prose-lede`    | `--text-4` (18px) `/ 1.5`, `--fg`            | the opening sentence or two             |
+| `--prose-h1`      | `--text-7` (30px) `/ 1.15`, weight 500       | page title, one per page                |
+| `--prose-h2`      | `--text-5` (20px) `/ 1.3`, weight 500        | section heading                         |
+| `--prose-eyebrow` | `--text-1` (13px), 500, `.12em`, caps, brass | group label inside a section            |
 | `--prose-gap`     | `12px`                                       | between paragraphs; between list groups |
 | `--prose-section` | `40px`                                       | between sections                        |
 
