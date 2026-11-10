@@ -1,0 +1,8 @@
+{
+  "id": "catalogue-manifest",
+  "type": "improved",
+  "title": "A public manifest of the current screening data",
+  "body": "Each deploy now publishes a small file that names the current screening data, for the phone app to read.",
+  "visibility": "internal",
+  "reason": "Publishes /catalogue.json (no-cache) beside the existing data files, checks it after every deploy, and moves the data checks into the shared core package. The website loads and validates its data exactly as before."
+}

@@ -1,5 +1,5 @@
 import { createHash, randomUUID } from "node:crypto";
-import { mkdir, writeFile, rename, rm, stat } from "node:fs/promises";
+import { mkdir, readFile, writeFile, rename, rm, stat } from "node:fs/promises";
 import { join } from "node:path";
 import { DATA_SCHEMA_VERSION, type DataManifest } from "@readograph/core/data";
 import { buildEventIndex } from "@readograph/core/events";
@@ -60,8 +60,13 @@ export async function writeDataset(dataset: Dataset, root: string): Promise<Data
   const backup = join(root, ".cache", `previous-output-${buildId}`);
   const manifestPath = join(root, "src", "generated", "manifest.json");
   const manifestTemp = `${manifestPath}.${buildId}.tmp`;
+  // The same manifest, served publicly so the app can find the current data files.
+  const cataloguePath = join(root, "public", "catalogue.json");
+  const catalogueTemp = `${cataloguePath}.${buildId}.tmp`;
   let previousMoved = false,
-    installed = false;
+    installed = false,
+    previousCatalogue: string | null = null,
+    catalogueInstalled = false;
   try {
     await mkdir(join(staging, showtimeDirectory), { recursive: true });
     await writeFile(join(staging, filmFile), filmJson);
@@ -79,20 +84,29 @@ export async function writeDataset(dataset: Dataset, root: string): Promise<Data
     await mkdir(join(root, "src", "generated"), { recursive: true });
     await mkdir(join(root, "public"), { recursive: true });
     await writeFile(manifestTemp, json(manifest));
+    await writeFile(catalogueTemp, json(manifest));
+    if (await exists(cataloguePath)) previousCatalogue = await readFile(cataloguePath, "utf8");
     if (await exists(destination)) {
       await rename(destination, backup);
       previousMoved = true;
     }
     await rename(staging, destination);
     installed = true;
+    await rename(catalogueTemp, cataloguePath);
+    catalogueInstalled = true;
     await rename(manifestTemp, manifestPath);
   } catch (error) {
+    if (catalogueInstalled) {
+      if (previousCatalogue === null) await rm(cataloguePath, { force: true });
+      else await writeFile(cataloguePath, previousCatalogue);
+    }
     if (installed) await rm(destination, { recursive: true, force: true });
     if (previousMoved) await rename(backup, destination);
     throw error;
   } finally {
     await rm(staging, { recursive: true, force: true });
     await rm(manifestTemp, { force: true });
+    await rm(catalogueTemp, { force: true });
   }
   await rm(backup, { recursive: true, force: true });
   return manifest;

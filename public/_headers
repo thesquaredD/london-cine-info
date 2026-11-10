@@ -13,6 +13,8 @@
   Cache-Control: no-cache
 /version.json
   Cache-Control: no-cache
+/catalogue.json
+  Cache-Control: no-cache
 /sitemap.xml
   Cache-Control: no-cache
 /robots.txt

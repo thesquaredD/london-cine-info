@@ -1,4 +1,4 @@
-import { mkdtemp, readFile, readdir, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { afterEach, expect, it } from "vitest";
@@ -31,6 +31,9 @@ it("publishes immutable URLs, removes obsolete outputs, and preserves the last b
   const root = await mkdtemp(join(tmpdir(), "london-cine-output-"));
   temporaryRoots.push(root);
   const first = await writeDataset(dataset, root);
+  const catalogue = () => readFile(join(root, "public", "catalogue.json"), "utf8");
+  expect(JSON.parse(await catalogue())).toEqual(first);
+  expect(await catalogue()).toBe(await readFile(join(root, "src/generated/manifest.json"), "utf8"));
   expect(JSON.parse(await readFile(join(root, "public", first.films), "utf8"))).toHaveLength(6);
   expect(
     JSON.parse(await readFile(join(root, "public", first.showtimes, "classic-a.json"), "utf8")),
@@ -50,9 +53,37 @@ it("publishes immutable URLs, removes obsolete outputs, and preserves the last b
   expect(second.showtimes).not.toBe(first.showtimes);
   expect(await readdir(join(root, "public/data"))).not.toContain(first.showtimes.split("/")[2]);
   const previousManifest = await readFile(join(root, "src/generated/manifest.json"), "utf8");
+  expect(JSON.parse(await catalogue())).toEqual(second);
   const invalid = structuredClone(dataset);
   invalid.showtimes[0]!.id = "../escape";
   await expect(writeDataset(invalid, root)).rejects.toThrow(/Unsafe output filename/);
   expect(await readFile(join(root, "src/generated/manifest.json"), "utf8")).toBe(previousManifest);
+  expect(await catalogue()).toBe(previousManifest);
   expect(await readdir(join(root, "public/data"))).toContain(second.showtimes.split("/")[2]);
+});
+
+it("restores the public catalogue when the build manifest cannot be installed", async () => {
+  const fixture = JSON.parse(
+    await readFile(new URL("../../tests/fixtures/pipeline.json", import.meta.url), "utf8"),
+  ) as {
+    now: string;
+    combined: unknown;
+    matched: unknown;
+    sources: { combined: SourceRelease; matched: SourceRelease };
+  };
+  const dataset = buildDataset(fixture.combined, fixture.matched, {
+    now: new Date(fixture.now),
+    sources: fixture.sources,
+    boroughs: await loadBoroughs(),
+  });
+  const root = await mkdtemp(join(tmpdir(), "london-cine-output-"));
+  temporaryRoots.push(root);
+  // A non-empty directory where the manifest goes makes the last rename fail.
+  await mkdir(join(root, "src/generated/manifest.json"), { recursive: true });
+  await writeFile(join(root, "src/generated/manifest.json/keep"), "");
+  await mkdir(join(root, "public"), { recursive: true });
+  await writeFile(join(root, "public/catalogue.json"), "previous\n");
+  await expect(writeDataset(dataset, root)).rejects.toThrow();
+  expect(await readFile(join(root, "public/catalogue.json"), "utf8")).toBe("previous\n");
+  expect(await readdir(join(root, "public"))).toEqual(["catalogue.json"]);
 });

@@ -18,6 +18,22 @@ the workspace as `@readograph/core` (`import { selectFilms } from "@readograph/c
   writing the domain again.
 - Tests sit next to the code they test (`packages/core/src/*.test.ts`).
 
+## Screening data schema (`DATA_SCHEMA_VERSION`)
+
+The data build publishes `/catalogue.json`, which names the current data files. The website
+is built with its data, but installed phone apps read `/catalogue.json` and the files it
+names from every deploy, so they can be older than the data they receive.
+
+- Change the data files additively wherever possible: new optional fields, no renames and no
+  removals. An additive change needs no schema bump.
+- A breaking change to `DATA_SCHEMA_VERSION` must ship in a store release of the app
+  **before** the Deploy workflow publishes data with that version.
+- The app's loader keeps accepting the previous version for 30 days after a bump (the
+  `accepted` list of `parseManifest` and `validateCatalogue` in
+  `packages/core/src/catalogue-loader.ts`).
+- `scripts/verify-deployment.ts` fails the Deploy workflow if `/catalogue.json` is cached or
+  names a file that does not return 200; do not weaken that check.
+
 ## Changelog fragment (required in every PR)
 
 The public What’s new page (`/changelog`) is built from `changelog/entries/*.json` and deployed
