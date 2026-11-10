@@ -57,3 +57,14 @@ export function letterboxdSlug(url: string | null | undefined): string | null {
     return null;
   }
 }
+
+/** An account request that failed; `status` is 0 when the request never reached the server. */
+export class AccountError extends Error {
+  constructor(
+    message: string,
+    public status = 0,
+    public retryAt: number | null = null,
+  ) {
+    super(message);
+  }
+}

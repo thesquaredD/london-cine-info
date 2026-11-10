@@ -1,5 +1,5 @@
 import { useEffect, useState } from "preact/hooks";
-import type { DataMeta } from "../shared/data";
+import type { DataMeta } from "@readograph/core/data";
 
 /**
  * Featured venues. Logos are self-hosted copies of each cinema's own published mark.

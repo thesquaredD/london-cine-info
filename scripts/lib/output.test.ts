@@ -5,7 +5,7 @@ import { afterEach, expect, it } from "vitest";
 import { buildDataset } from "./transform";
 import { loadBoroughs } from "./boroughs";
 import { writeDataset } from "./output";
-import type { SourceRelease } from "../../src/shared/data";
+import type { SourceRelease } from "@readograph/core/data";
 
 const temporaryRoots: string[] = [];
 afterEach(async () => {

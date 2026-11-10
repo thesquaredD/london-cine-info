@@ -1,7 +1,7 @@
-import { defaultSort, type ViewState } from "../lib/catalogue";
+import { defaultSort, type ViewState } from "@readograph/core/catalogue";
 import type { DisplayState } from "../lib/display";
 import { usePreferenceFocus } from "../lib/preference-focus";
-import type { DataMeta, Film } from "../shared/data";
+import type { DataMeta, Film } from "@readograph/core/data";
 import { DisplayControls, RatingOrderControls } from "./display-controls";
 import { FilmTable } from "./film-table";
 

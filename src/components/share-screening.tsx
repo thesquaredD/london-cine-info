@@ -1,6 +1,6 @@
 import { useState } from "preact/hooks";
-import type { Film, Showtime } from "../shared/data";
-import { shareUrl } from "../lib/sharing";
+import type { Film, Showtime } from "@readograph/core/data";
+import { shareUrl } from "@readograph/core/sharing";
 import { showToast } from "../lib/toast";
 import { CopyFallback } from "./copy-fallback";
 import { LinkIcon } from "./platform-marks";

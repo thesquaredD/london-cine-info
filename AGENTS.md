@@ -2,6 +2,22 @@
 
 Guidance for every coding agent and contributor. Read `README.md` and `PLAN.md` for the product.
 
+## Shared code (`packages/core`)
+
+Logic used by both the website and the phone app lives in `packages/core`, published inside
+the workspace as `@readograph/core` (`import { selectFilms } from "@readograph/core/catalogue"`).
+
+- Core compiles with `lib: ["ES2022"]` and no DOM or Node types (`npm run typecheck` runs
+  `tsc -p packages/core`). It must not use `window`, `document`, `localStorage`,
+  `navigator`, `location` or `fetch`; ESLint rejects them too. Pass storage, network and
+  location in from the caller.
+- The few web APIs core may use (`URL`, `URLSearchParams`, `TextEncoder`) are declared in
+  `packages/core/src/globals.d.ts`. Adding to that file means the app must provide the API
+  as well.
+- `SITE_HOST` and `SITE_ORIGIN` live in `packages/core/src/site.ts`; use them instead of
+  writing the domain again.
+- Tests sit next to the code they test (`packages/core/src/*.test.ts`).
+
 ## Changelog fragment (required in every PR)
 
 The public What’s new page (`/changelog`) is built from `changelog/entries/*.json` and deployed

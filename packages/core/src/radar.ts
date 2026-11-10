@@ -1,5 +1,5 @@
 import type { TitleMode } from "./display";
-import type { DataMeta, Film } from "../shared/data";
+import type { DataMeta, Film } from "./data";
 import {
   addDays,
   londonDate,

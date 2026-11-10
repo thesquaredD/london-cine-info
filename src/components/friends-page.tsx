@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "preact/hooks";
 import type { ComponentChildren } from "preact";
 import { useFriendContext } from "../lib/friends";
 import { usePreferenceFocus } from "../lib/preference-focus";
-import { normalizeUsername, type Friend } from "../shared/friends";
+import { normalizeUsername, type Friend } from "@readograph/core/friends";
 import { FriendsFeedback } from "./friends";
 import { PageLink } from "./page-link";
 

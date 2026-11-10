@@ -2,9 +2,9 @@ import { readFile, readdir, stat } from "node:fs/promises";
 import { resolve } from "node:path";
 import assert from "node:assert/strict";
 import { load } from "cheerio";
-import { PUBLIC_PAGES, OTHER_PATHS, pageMetadata } from "../src/shared/seo";
-import { filmPath } from "../src/lib/sharing";
-import type { DataManifest, Film, FilmShowtimes } from "../src/shared/data";
+import { PUBLIC_PAGES, OTHER_PATHS, pageMetadata } from "@readograph/core/seo";
+import { filmPath } from "@readograph/core/sharing";
+import type { DataManifest, Film, FilmShowtimes } from "@readograph/core/data";
 
 // Inspect the actual deployment output, without executing JavaScript or using a browser.
 const root = resolve("dist");

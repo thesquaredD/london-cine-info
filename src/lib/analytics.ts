@@ -10,7 +10,7 @@ import {
   safePath,
   type AnalyticsEvent,
   type AnalyticsProperties,
-} from "../shared/analytics";
+} from "@readograph/core/analytics";
 
 export const ANALYTICS_CHOICE_STORAGE = "london-cine.analytics-disabled.v1";
 let optedOut = (() => {

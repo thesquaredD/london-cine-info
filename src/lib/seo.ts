@@ -1,5 +1,5 @@
-import type { Film } from "../shared/data";
-import { DEFAULT_ORIGIN, metadataElements, pageMetadata } from "../shared/seo";
+import type { Film } from "@readograph/core/data";
+import { DEFAULT_ORIGIN, metadataElements, pageMetadata } from "@readograph/core/seo";
 
 export function updatePageMetadata(path: string, film?: Film) {
   const meta = pageMetadata(path, film, import.meta.env.VITE_SITE_ORIGIN || DEFAULT_ORIGIN);

@@ -1,5 +1,5 @@
-import type { ViewState } from "../lib/catalogue";
-import { shortcutItems, type ShortcutItem } from "../lib/shortcuts";
+import type { ViewState } from "@readograph/core/catalogue";
+import { shortcutItems, type ShortcutItem } from "@readograph/core/shortcuts";
 
 export function ShortcutStrip(
   props: Parameters<typeof shortcutItems>[0] & {

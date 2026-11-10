@@ -5,7 +5,7 @@ import {
   type Film,
   type FilmShowtimes,
   type EventOccurrence,
-} from "../shared/data";
+} from "@readograph/core/data";
 
 export async function fetchJson<T>(url: string, signal?: AbortSignal): Promise<T> {
   const response = await fetch(url, { signal });

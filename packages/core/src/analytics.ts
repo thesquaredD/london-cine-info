@@ -1,7 +1,9 @@
+import { SITE_HOST } from "./site";
+
 // This is a public ingestion token, not a personal/admin API key.
 export const POSTHOG_TOKEN = "phc_CzvNQdZeADVcaVpa2uH5svsvUPbNbFrwHUsHaTmjPZH3";
 export const POSTHOG_HOST = "https://works.london-cine.info";
-export const SITE_HOST = "london-cine.info";
+export { SITE_HOST };
 export const ANALYTICS_VERSION = 1;
 
 export const ANALYTICS_EVENTS = [

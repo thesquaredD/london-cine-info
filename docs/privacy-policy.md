@@ -26,9 +26,9 @@ Verify policy statements against implementation when changing data practices:
 | Friend access and removal                                   | `server/friends.ts`, `server/friend-queries.ts`                                                                 |
 | One-hour public-list cache                                  | `server/public-watchlists.ts`                                                                                   |
 | Expired record cleanup                                      | `scripts/refresh-watchlists.ts`                                                                                 |
-| Browser identifiers, measurements, privacy guards           | `src/lib/analytics.ts`, `src/shared/analytics.ts`                                                               |
+| Browser identifiers, measurements, privacy guards           | `src/lib/analytics.ts`, `packages/core/src/analytics.ts`                                                        |
 | Request analytics opt-out and independent scheduled metrics | `server/analytics.ts`, API and importer                                                                         |
-| Feedback payload, Send-only capture, opt-out fallback       | `src/shared/feedback.ts`, `src/lib/feedback.ts`                                                                 |
+| Feedback payload, Send-only capture, opt-out fallback       | `packages/core/src/feedback.ts`, `src/lib/feedback.ts`                                                          |
 
 The browser analytics switch stops new collection and sends the existing request-level opt-out
 header. It does not promise to cancel already queued delivery, delete historical analytics,

@@ -1,5 +1,5 @@
-import type { DataManifest, DataMeta, Film, FilmShowtimes } from "../../src/shared/data";
-import { filmPath } from "../../src/lib/sharing";
+import type { DataManifest, DataMeta, Film, FilmShowtimes } from "@readograph/core/data";
+import { filmPath } from "@readograph/core/sharing";
 import {
   DEFAULT_ORIGIN,
   PUBLIC_PAGES,
@@ -8,7 +8,7 @@ import {
   pageMetadata,
   type PageMetadata,
   type PreviewFilm,
-} from "../../src/shared/seo";
+} from "@readograph/core/seo";
 import { About } from "../../src/components/about";
 import { DiscoveryPage } from "../../src/components/discovery-page";
 import { h } from "preact";

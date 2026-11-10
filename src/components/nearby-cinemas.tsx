@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
-import type { DataMeta } from "../shared/data";
+import type { DataMeta } from "@readograph/core/data";
 import {
   DEFAULT_NEARBY_RANGE,
   LocationError,

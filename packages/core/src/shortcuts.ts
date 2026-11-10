@@ -1,9 +1,12 @@
-import type { AccountState } from "./account";
-import type { CinemasState } from "./cinemas";
+import type { Account, Watchlist } from "./account";
 import type { ViewState } from "./catalogue";
-import type { FacetKey } from "../shared/data";
+import type { FacetKey } from "./data";
 import { dateShortcut, eveningShortcut, isEvening } from "./filters";
 
+/** What the shortcuts read from the account; the website's and the app's hooks both provide it. */
+export type ShortcutAccount = { user: Account | null; watchlist: Watchlist | null };
+/** What the shortcuts read from the saved cinemas. */
+export type ShortcutCinemas = { venues: readonly string[]; loading: boolean };
 export type ShortcutItem = {
   id: string;
   label: string;
@@ -20,8 +23,8 @@ export function shortcutItems({
   state,
   counts,
 }: {
-  account: Pick<AccountState, "user" | "watchlist">;
-  cinemas: Pick<CinemasState, "venues" | "loading">;
+  account: ShortcutAccount;
+  cinemas: ShortcutCinemas;
   state: ViewState;
   counts: Record<FacetKey, Map<string, number>> | null;
 }): ShortcutItem[] {

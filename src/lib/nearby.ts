@@ -1,5 +1,5 @@
-import type { DataMeta, Venue } from "../shared/data";
-import { distanceMiles, validCoordinates, type Coordinates } from "./distance";
+import type { DataMeta, Venue } from "@readograph/core/data";
+import { distanceMiles, validCoordinates, type Coordinates } from "@readograph/core/distance";
 
 /** Ranges offered by the nearby finder, in miles. */
 export const NEARBY_RANGES = [1, 2, 3, 5, 10] as const;

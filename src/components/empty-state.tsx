@@ -1,11 +1,11 @@
 import type { ComponentChildren } from "preact";
 import { openFeedback } from "../lib/feedback";
-import { clearFilters, activeFacetChoices } from "../lib/filters";
-import type { DataMeta } from "../shared/data";
-import type { ViewState } from "../lib/catalogue";
-import { hasYears, yearSummary } from "../lib/years";
-import { EVENT_TYPES } from "../data/event-rules";
-import { isIndependentCinema } from "../data/independent-cinemas";
+import { clearFilters, activeFacetChoices } from "@readograph/core/filters";
+import type { DataMeta } from "@readograph/core/data";
+import type { ViewState } from "@readograph/core/catalogue";
+import { hasYears, yearSummary } from "@readograph/core/years";
+import { EVENT_TYPES } from "@readograph/core/data/event-rules";
+import { isIndependentCinema } from "@readograph/core/data/independent-cinemas";
 
 /** Uses the same facet labels as the active-filter chips; each action clears one group. */
 export function EmptyState({

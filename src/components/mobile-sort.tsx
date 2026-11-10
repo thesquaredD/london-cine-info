@@ -8,7 +8,7 @@ import {
   sortLabel,
   type SortKey,
   type ViewState,
-} from "../lib/catalogue";
+} from "@readograph/core/catalogue";
 
 export function MobileSort({
   state,

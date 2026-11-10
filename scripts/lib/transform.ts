@@ -1,5 +1,5 @@
 import { Buffer } from "node:buffer";
-import { MEMBERSHIPS, membershipsForVenue } from "../../src/data/memberships";
+import { MEMBERSHIPS, membershipsForVenue } from "@readograph/core/data/memberships";
 import {
   CLASSIC_YEARS,
   NEW_RELEASE_DAYS,
@@ -7,7 +7,7 @@ import {
   isEventScreening,
   eventLabels,
   eventTypes,
-} from "../../src/data/event-rules";
+} from "@readograph/core/data/event-rules";
 import {
   DATA_SCHEMA_VERSION,
   type DataMeta,
@@ -20,7 +20,7 @@ import {
   type ScreeningFacet,
   type SourceRelease,
   type Venue,
-} from "../../src/shared/data";
+} from "@readograph/core/data";
 import type { BoroughIndex } from "./boroughs";
 import {
   combinedSchema,

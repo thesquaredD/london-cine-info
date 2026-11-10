@@ -3,7 +3,7 @@ import { SlidersIcon } from "./control-icons";
 import { FilterIcon } from "./filter-icons";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { FilterControls, type FilterControlsProps } from "./filter-controls";
-import type { FacetKey } from "../shared/data";
+import type { FacetKey } from "@readograph/core/data";
 
 export function FilterBar(
   props: FilterControlsProps & {

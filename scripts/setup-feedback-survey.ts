@@ -3,10 +3,10 @@ import {
   FEEDBACK_CATEGORIES,
   FEEDBACK_QUESTIONS,
   type FeedbackSurvey,
-} from "../src/shared/feedback";
+} from "@readograph/core/feedback";
 
 // Creates (or finds) the API-type survey the in-app form answers. Prints the config to paste
-// into FEEDBACK_SURVEYS in src/shared/feedback.ts. Never commit the personal API key.
+// into FEEDBACK_SURVEYS in packages/core/src/feedback.ts. Never commit the personal API key.
 const host = "https://eu.posthog.com";
 const root = `${host}/api/projects/296412/`;
 const NAME = process.argv.includes("--test")

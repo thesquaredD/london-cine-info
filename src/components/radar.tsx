@@ -1,12 +1,17 @@
 import { useEffect, useMemo, useState } from "preact/hooks";
-import { screeningMatcher, isFilmFormat, isImaxFormat, directorLabel } from "../lib/filters";
-import { formatDate, viewUrl } from "../lib/catalogue";
+import {
+  screeningMatcher,
+  isFilmFormat,
+  isImaxFormat,
+  directorLabel,
+} from "@readograph/core/filters";
+import { formatDate, viewUrl } from "@readograph/core/catalogue";
 import { FilmTable } from "./film-table";
-import type { DataMeta, Film } from "../shared/data";
-import type { ViewState } from "../lib/catalogue";
+import type { DataMeta, Film } from "@readograph/core/data";
+import type { ViewState } from "@readograph/core/catalogue";
 import type { DisplayState } from "../lib/display";
-import { radarEntries, radarFilms } from "../lib/radar";
-import type { CalendarInput } from "../shared/calendar";
+import { radarEntries, radarFilms } from "@readograph/core/radar";
+import type { CalendarInput } from "@readograph/core/calendar";
 import type { CalendarState } from "../lib/calendar";
 export function Radar({
   films,

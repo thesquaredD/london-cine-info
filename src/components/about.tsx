@@ -1,4 +1,4 @@
-import type { DataMeta } from "../shared/data";
+import type { DataMeta } from "@readograph/core/data";
 import { PageLink } from "./page-link";
 
 export function About({

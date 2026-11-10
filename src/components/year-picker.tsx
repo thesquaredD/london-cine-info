@@ -9,7 +9,7 @@ import {
   yearMatches,
   yearSummary,
   type YearSelection,
-} from "../lib/years";
+} from "@readograph/core/years";
 
 type Props = {
   selection: YearSelection;

@@ -1,5 +1,5 @@
 import { hasYears } from "./years";
-import type { DataMeta, EventOccurrence, Film, FacetKey } from "../shared/data";
+import type { DataMeta, EventOccurrence, Film, FacetKey } from "./data";
 import type { ViewState } from "./catalogue";
 import { selectFilms } from "./catalogue";
 import { FILTERS, dayMatches, londonDate, filterFilms, screeningMatcher } from "./filters";

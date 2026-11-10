@@ -1,7 +1,7 @@
 import { normalizeYears, type YearSelection } from "./years";
 import { displayTitle, type TitleMode } from "./display";
-import { letterboxdSlug } from "../shared/account";
-import type { Film, RatingKey, FacetKey } from "../shared/data";
+import { letterboxdSlug } from "./account";
+import type { Film, RatingKey, FacetKey } from "./data";
 
 export const PAGE_SIZE = 200;
 export const PAGES = [

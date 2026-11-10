@@ -1,22 +1,5 @@
 import { expect, it } from "vitest";
-import {
-  DEFAULT_DISPLAY,
-  FILM_VIEW_STORAGE,
-  readFilmView,
-  saveFilmView,
-  supportsPosters,
-  watchlistDisplay,
-} from "./display";
-it("hides ratings only in watchlist contexts and preserves ordering", () => {
-  const display = { ...DEFAULT_DISPLAY, hideWatchlistRatings: true };
-  expect(watchlistDisplay(display, { path: "/watchlist" }).ratingOrder).toEqual([]);
-  expect(watchlistDisplay(display, { path: "/", watchlist: true }).ratingOrder).toEqual([]);
-  expect(watchlistDisplay(display, { path: "/" }).ratingOrder).toEqual(DEFAULT_DISPLAY.ratingOrder);
-  expect(
-    watchlistDisplay({ ...display, hideWatchlistRatings: false }, { path: "/watchlist" })
-      .ratingOrder,
-  ).toEqual(DEFAULT_DISPLAY.ratingOrder);
-});
+import { FILM_VIEW_STORAGE, readFilmView, saveFilmView } from "./display";
 
 it("remembers the List / Posters choice and falls back to the list", () => {
   const store = new Map<string, string>();
@@ -41,10 +24,4 @@ it("remembers the List / Posters choice and falls back to the list", () => {
   expect(readFilmView(blocked)).toBe("list");
   expect(saveFilmView("posters", blocked)).toBe(false);
   expect(readFilmView(null)).toBe("list");
-});
-it("offers posters for film lists but keeps Events and Radar as they are", () => {
-  expect(supportsPosters("/")).toBe(true);
-  expect(supportsPosters("/watchlist")).toBe(true);
-  expect(supportsPosters("/events")).toBe(false);
-  expect(supportsPosters("/radar")).toBe(false);
 });

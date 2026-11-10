@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { readdir, readFile, writeFile } from "node:fs/promises";
-import type { ChangelogBundle, VersionManifest } from "../src/shared/changelog";
+import type { ChangelogBundle, VersionManifest } from "@readograph/core/changelog";
 
 // Confirms a Pages deployment serves the revision and notes built in this run, then writes a
 // receipt. A failure here does not mean the upload failed: the site may already be live.

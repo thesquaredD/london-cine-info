@@ -57,7 +57,7 @@ Generated files are excluded from git:
 - `src/generated/manifest.json`: URLs of the current film, metadata, event and showtime
   assets. The UI imports this manifest at build time; generate data before typechecking.
 
-The shared contract is in `src/shared/data.ts` (schema version 2). Rebuild data before
+The shared contract is in `packages/core/src/data.ts` (schema version 2). Rebuild data before
 building the UI: version 1 assets lack the event index. The repository’s existing
 `build-data` producer generates it for both fixtures and live releases; the Deploy
 workflow already runs this producer before Vite, so no external producer or separate
@@ -304,7 +304,7 @@ calendar sorts films within each date group.
 ## Independent cinemas
 
 Independent cinemas is an additional screening filter (`?independent=1`): it intersects with
-date, cinema, membership and other choices on the same showing. `src/data/independent-cinemas.ts`
+date, cinema, membership and other choices on the same showing. `packages/core/src/data/independent-cinemas.ts`
 keeps reviewed venue IDs and source links, including independent commercial and charitable
 cinemas. Unknown venues are excluded, not inferred independent from missing chain metadata. This
 is a maintained selection, not a complete ownership register; review and add venue IDs with a
@@ -319,7 +319,7 @@ none, opens the film, and the address is then rewritten to the current title’s
 
 - **Link previews.** Each build emits a small HTML page per film (`scripts/lib/film-pages.ts`)
   with its programme, title, description, canonical URL and `og:url` (on `SITE_URL`, default the
-  production host in `src/shared/analytics.ts`) and, for an absolute https poster, `og:image`
+  production host in `packages/core/src/analytics.ts`) and, for an absolute https poster, `og:image`
   with alt text. Portrait posters use the small `summary` card. Films that have left the
   catalogue get a scoped 404 page; the app explains “This film is no longer listed” when it
   loads. Older title slugs for a known film still recover in the app. `/film/*` is

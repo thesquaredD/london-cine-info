@@ -1,4 +1,4 @@
-import type { Film } from "../shared/data";
+import type { Film } from "@readograph/core/data";
 
 // Prefer the matched provider page; fall back to that provider's search for the title.
 export function filmProviderLinks(film: Pick<Film, "ti" | "ye" | "ra">) {

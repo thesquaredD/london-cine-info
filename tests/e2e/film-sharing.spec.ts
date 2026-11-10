@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
-import { screeningId, shareUrl } from "../../src/lib/sharing";
-import type { Showtime } from "../../src/shared/data";
+import { screeningId, shareUrl } from "@readograph/core/sharing";
+import type { Showtime } from "@readograph/core/data";
 
 const film = { id: "classic-a", ti: "Fixture Classic A" };
 const cinema = "princecharlescinema.com";

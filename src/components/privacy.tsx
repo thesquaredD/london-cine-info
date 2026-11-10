@@ -2,7 +2,7 @@ import { useEffect, useState } from "preact/hooks";
 import { analyticsAllowed, browserDoNotTrack, setAnalyticsAllowed } from "../lib/analytics";
 import { usePreferenceFocus } from "../lib/preference-focus";
 import { PageLink } from "./page-link";
-import { CONTACT_EMAIL } from "../shared/feedback";
+import { CONTACT_EMAIL } from "@readograph/core/feedback";
 
 const contact = CONTACT_EMAIL;
 export function Privacy({ onNavigate }: { onNavigate: (path: string) => void }) {

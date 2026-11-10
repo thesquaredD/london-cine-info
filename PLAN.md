@@ -177,7 +177,7 @@ Budget: < 120 KB JS gzipped, first paint < 1 s on 4G, film list JSON ≈ 350–4
      `retroDirectorIds` (directors with ≥ 3 distinct films screening).
 4. Derive per venue: `name`, `group`, `borough` (point-in-polygon against London
    Datastore borough boundaries, OGL licence, vendored once as GeoJSON), `membership[]`
-   from a static mapping (`src/data/memberships.ts`):
+   from a static mapping (`packages/core/src/data/memberships.ts`):
    - Unlimited: Cineworld Unlimited (`cineworld.co.uk-*`), Odeon Limitless (`odeon.co.uk-*`)
    - Membership / discount: Curzon, Everyman, Picturehouse, BFI, Prince Charles, Genesis,
      Rio, Garden, Lexi, ICA, Barbican, Vue (Vue Pass) — maintained by hand, by venue id prefix
@@ -330,7 +330,7 @@ and replay commands.
   v1 and keep a `Watch` placeholder column hidden, to re-enable when accounts arrive.
 - **Events definition.** Default: showings whose Clusterflick category ≠ `movie`, plus
   film screenings whose notes mention Q&A, intro, panel, live score, sing-along, quiz,
-  marathon, 35mm/70mm presentation. Tunable list in `src/data/event-rules.ts`.
+  marathon, 35mm/70mm presentation. Tunable list in `packages/core/src/data/event-rules.ts`.
 - **New releases window** 8 weeks, **Classics** > 5 years: both constants.
 - **Rating columns** Letterboxd, IMDb, Metacritic (critics), Rotten Tomatoes (critics),
   replacing Paris's SensCritique and Allociné. Reorderable in Display like Paris.

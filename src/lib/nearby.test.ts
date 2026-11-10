@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import type { DataMeta, Venue } from "../shared/data";
+import type { DataMeta, Venue } from "@readograph/core/data";
 import {
   LocationError,
   createRequestGate,

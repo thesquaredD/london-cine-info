@@ -1,0 +1,8 @@
+{
+  "id": "mobile-core-package",
+  "type": "improved",
+  "title": "Shared logic moved into a core package",
+  "body": "The catalogue, filter and sharing logic moved into a package the phone app will share.",
+  "visibility": "internal",
+  "reason": "Moves the website's browser-free logic into a shared core package for the phone app to reuse. Only imports change; the website's behaviour, tests and bundle stay the same."
+}
