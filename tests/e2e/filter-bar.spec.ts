@@ -158,3 +158,21 @@ test("Filters sheet groups every filter under When, Where and What with a pinned
     expect(time.x).toBeGreaterThan(day.x + day.width);
   }
 });
+
+test("desktop Filters button keeps its caret at the right edge when filters are active", async ({
+  page,
+}, info) => {
+  test.skip(info.project.name === "mobile", "desktop control");
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/?short=1");
+  const button = page.getByRole("button", { name: "Filters, 1 active", exact: true });
+  await expect(button).toBeVisible();
+  const box = (await button.boundingBox())!;
+  const caret = (await button.locator(".control-caret").boundingBox())!;
+  const label = (await button.locator(".all-filters-label").boundingBox())!;
+  const count = (await button.locator(".shortcut-count").boundingBox())!;
+  expect(box.x + box.width - (caret.x + caret.width)).toBeLessThanOrEqual(16);
+  expect(label.x - box.x).toBeLessThanOrEqual(16);
+  expect(count.x).toBeGreaterThan(label.x + label.width);
+  expect(caret.x).toBeGreaterThan(count.x + count.width - 1);
+});

@@ -1,0 +1,7 @@
+{
+  "id": "filters-button-count",
+  "type": "fixed",
+  "title": "Filters button lines up when filters are on",
+  "body": "On a computer, the Filters button keeps its arrow at the right edge when it shows how many filters are on, instead of squeezing it against the number.",
+  "visibility": "public"
+}

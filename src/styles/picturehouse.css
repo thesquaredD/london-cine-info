@@ -1153,6 +1153,8 @@ html {
   display: flex;
 }
 :root .filter-bar button.all-filters {
+  /* Grid, not the bar's flex row: label at the left, count beside the caret at the right. */
+  display: grid;
   width: 124px;
   flex: none;
   grid-template-columns: minmax(0, 1fr) 3ch 10px;
