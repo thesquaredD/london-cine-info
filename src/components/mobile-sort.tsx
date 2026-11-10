@@ -1,5 +1,6 @@
 import { useState } from "preact/hooks";
 import { Dialog } from "./dialog";
+import { SortIcon } from "./control-icons";
 import {
   defaultSort,
   hasCustomSort,
@@ -64,11 +65,9 @@ export function MobileSort({
         aria-label={`Sort: ${sortLabel(state.sort)} · ${orderLabels[state.direction === "asc" ? 0 : 1]}`}
         onClick={() => setOpen(true)}
       >
-        <span>Sort: {sortLabel(state.sort)}</span>
+        <SortIcon />
+        <span class="mobile-sort-value">{sortLabel(state.sort)}</span>
         <span class="mobile-sort-order"> · {orderLabels[state.direction === "asc" ? 0 : 1]}</span>
-        <span class="control-caret" aria-hidden="true">
-          ▾
-        </span>
       </button>
       <Dialog
         open={open}

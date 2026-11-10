@@ -1,4 +1,5 @@
 import { WatchlistsButton } from "./friends";
+import { SlidersIcon } from "./control-icons";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { FilterControls, type FilterControlsProps } from "./filter-controls";
 import type { FacetKey } from "../shared/data";
@@ -114,13 +115,19 @@ export function FilterBar(
       </div>
       <button
         class="all-filters"
-        aria-label="Filters"
+        aria-label={moreCount ? `Filters, ${moreCount} active` : "Filters"}
         data-active={moreCount > 0}
         aria-haspopup="dialog"
         onClick={() => setCategory("all")}
       >
-        <span>Filters</span>
+        <SlidersIcon />
+        <span class="all-filters-label">Filters</span>
         {countLabel(moreCount)}
+        {moreCount > 0 && (
+          <span class="filters-badge" aria-hidden="true">
+            {moreCount}
+          </span>
+        )}
         <span class="control-caret" aria-hidden="true">
           ▾
         </span>

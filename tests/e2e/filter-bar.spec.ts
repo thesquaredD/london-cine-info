@@ -9,7 +9,7 @@ test.describe("filter bar and mobile sheet", () => {
     await expect(page.locator(".film-row")).toHaveCount(6);
     const mobile = (page.viewportSize()?.width ?? 1200) < 800;
     const cinema = mobile
-      ? page.getByRole("button", { name: /^Filters(?:\s|$)/ })
+      ? page.getByRole("button", { name: /^Filters(?:[\s,]|$)/ })
       : page.locator(".desktop-filters summary").filter({ hasText: /^Cinema/ });
     await cinema.click();
     const picker = mobile
@@ -36,7 +36,7 @@ test.describe("filter bar and mobile sheet", () => {
       await done.click();
       await expect(picker).not.toBeVisible();
       await expect(cinema).toBeFocused();
-      await page.getByRole("button", { name: /^Filters(?:\s|$)/ }).click();
+      await page.getByRole("button", { name: /^Filters(?:[\s,]|$)/ }).click();
       await page.locator('.filter-sheet [data-filter="day"] > summary').click();
       await expect(page.locator('.filter-sheet [data-filter="day"]')).toHaveAttribute("open", "");
       await page.keyboard.press("Escape");
@@ -71,7 +71,7 @@ test("filter bar and choosers fit phone, tablet and desktop widths", async ({ pa
       await expect(cinema).not.toHaveAttribute("open", "");
     }
     if (width < 1100) {
-      await page.getByRole("button", { name: /^Filters(?:\s|$)/ }).click();
+      await page.getByRole("button", { name: /^Filters(?:[\s,]|$)/ }).click();
       const sheet = page.getByRole("dialog", { name: "Filters", exact: true });
       await sheet.locator('[data-filter="venue"] > summary').click();
       await expect(sheet.getByRole("checkbox", { name: /BFI Southbank/ })).toBeVisible();

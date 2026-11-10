@@ -15,8 +15,8 @@ test("visible shortcuts toggle date and evening with fixture counts", async ({ p
   await expect(strip.getByRole("button")).toHaveText([
     "Today",
     "Tomorrow",
-    "This weekend",
-    "This week",
+    "Weekend",
+    "Week",
     "Evening",
     "Near me",
   ]);
@@ -91,6 +91,44 @@ test("strip wraps without overflow and seven guest items fit the height budget",
     ),
   ).toBe(true);
   await page.screenshot({ path: join(evidence, `guest-cinemas-${width}.png`) });
+});
+test("on the phone the strip is two centred rows: dates, then the reader's own", async ({
+  page,
+}, info) => {
+  test.skip(info.project.name !== "mobile", "phone layout");
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/");
+  await expect(page.locator(".film-row")).toHaveCount(6);
+  const strip = page.getByRole("group", { name: "Shortcuts" });
+  const rows = await strip.locator(".strip-row").evaluateAll((elements) =>
+    elements.map((row) => {
+      const strip = row.parentElement!.getBoundingClientRect();
+      const boxes = [...row.querySelectorAll("button")].map((b) => b.getBoundingClientRect());
+      const left = Math.min(...boxes.map((b) => b.left));
+      const right = Math.max(...boxes.map((b) => b.right));
+      return {
+        count: boxes.length,
+        lines: new Set(boxes.map((b) => Math.round(b.top))).size,
+        top: Math.round(boxes[0]!.top),
+        offCentre: Math.abs(left - strip.left - (strip.right - right)),
+        clearance: Math.min(left, innerWidth - right),
+      };
+    }),
+  );
+  expect(rows.map((row) => row.count)).toEqual([5, 1]);
+  for (const row of rows) {
+    expect(row.lines).toBe(1);
+    expect(row.offCentre).toBeLessThanOrEqual(2);
+    expect(row.clearance).toBeGreaterThanOrEqual(16);
+  }
+  expect(rows[1]!.top).toBeGreaterThan(rows[0]!.top);
+  await expect(strip.locator(".strip-sep")).toBeHidden();
+  for (const button of await strip.getByRole("button").all()) await expect(button).toBeVisible();
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= document.documentElement.clientWidth,
+    ),
+  ).toBe(true);
 });
 test("Independent cinemas checkbox, active chip, reload and Clear all agree", async ({ page }) => {
   await page.goto("/");

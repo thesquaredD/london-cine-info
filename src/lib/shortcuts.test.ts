@@ -26,8 +26,8 @@ describe("personalized shortcuts", () => {
     expect(labels(base)).toEqual([
       "Today",
       "Tomorrow",
-      "This weekend",
-      "This week",
+      "Weekend",
+      "Week",
       "Evening",
       "Near me",
     ]);

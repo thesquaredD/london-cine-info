@@ -14,7 +14,7 @@ test.beforeEach(async ({ page }) => {
   );
 });
 async function when(page: import("@playwright/test").Page) {
-  await page.getByRole("button", { name: /^Filters(?:\s|$)/ }).click();
+  await page.getByRole("button", { name: /^Filters(?:[\s,]|$)/ }).click();
   await page.locator('.filter-sheet [data-filter="day"] > summary').click();
   return page.locator('.filter-sheet [data-filter="day"]');
 }
@@ -202,7 +202,7 @@ test("This week and Next week choose adjacent rolling seven-day windows", async 
   });
   await page.goto("/");
   const quick = page.locator(".shortcut-strip");
-  await quick.getByRole("button", { name: /^This week(?:\s|$)/ }).click();
+  await quick.getByRole("button", { name: /^Week(?:\s|$)/ }).click();
   await expect(page.locator(".film-row")).toHaveCount(2);
   await expect(page.locator(".film-row").filter({ hasText: "Window day 0" })).toHaveCount(1);
   await expect(page.locator(".film-row").filter({ hasText: "Window day 6" })).toHaveCount(1);

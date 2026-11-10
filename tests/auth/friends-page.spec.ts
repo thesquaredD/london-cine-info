@@ -167,7 +167,7 @@ test("waiting requests reach navigation; accept and remove stay inline", async (
 
 test("Watchlists Manage friends closes the picker and navigates", async ({ page }) => {
   await page.goto("/");
-  await page.getByRole("button", { name: /^Filters(?:\s|$)/ }).click();
+  await page.getByRole("button", { name: /^Filters(?:[\s,]|$)/ }).click();
   await page
     .getByRole("button", { name: /^Watchlists/ })
     .filter({ visible: true })
