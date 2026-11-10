@@ -1,0 +1,8 @@
+{
+  "id": "sign-in-code-for-app",
+  "type": "added",
+  "title": "Sign-in emails include a code for the phone app",
+  "body": "Each sign-in email now has a six-digit code as well as the link. Enter the code in the Readograph app to sign in with the same account; the link still signs you in on the website.",
+  "visibility": "public",
+  "feature": "mobile-app"
+}

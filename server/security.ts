@@ -19,3 +19,23 @@ export function sessionCookie(value: string, seconds = SESSION_SECONDS): string 
 export function sameOrigin(request: Request): boolean {
   return request.headers.get("Origin") === new URL(request.url).origin;
 }
+export const CODE_ATTEMPTS = 5;
+/** A six-digit sign-in code, uniform over 000000–999999. */
+export function signInCode(): string {
+  const limit = 4_294_000_000; // largest multiple of 1e6 below 2^32, so no modulo bias
+  const value = new Uint32Array(1);
+  do crypto.getRandomValues(value);
+  while (value[0]! >= limit);
+  return String(value[0]! % 1_000_000).padStart(6, "0");
+}
+/** The stored form of a code, bound to its own token row. */
+export function codeHash(tokenHash: string, code: string): Promise<string> {
+  return hash(`${tokenHash}:${code}`);
+}
+/** Compares two strings without returning early on the first difference. */
+export function constantTimeEqual(a: string, b: string): boolean {
+  let difference = a.length ^ b.length;
+  for (let index = 0; index < Math.max(a.length, b.length); index++)
+    difference |= (a.charCodeAt(index) || 0) ^ (b.charCodeAt(index) || 0);
+  return difference === 0;
+}

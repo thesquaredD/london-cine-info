@@ -1,3 +1,7 @@
+// One email for both sign-in routes: the link for the website, the code for the phone app.
+export function signInEmail(link: string, code: string): string {
+  return `Use this link to sign in:\n\n${link}\n\nOr open the app and enter this code: ${code.slice(0, 3)} ${code.slice(3)}\n\nBoth expire in 15 minutes. If you did not request this, ignore this email.`;
+}
 export async function sendEmail(
   key: string,
   from: string,

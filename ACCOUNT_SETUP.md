@@ -19,6 +19,20 @@ but is not used to enforce security limits because it is eventually consistent.
 Tokens and session cookies contain 256-bit random values; only SHA-256 hashes are
 stored. Magic links require a confirmation POST, protecting them from mail scanners.
 Sessions slide for 90 days; magic links expire after 15 minutes and redeem once.
+
+The same email carries a six-digit code for the phone app (`POST /api/auth/verify-code`
+with `{ email, code }`):
+
+- Only a salted SHA-256 hash of the code is stored, on the email's own token row.
+- The code expires with the link, redeems once, and is compared in constant time.
+- Only the newest email's code works; earlier emails keep their links.
+- Five wrong attempts delete the row; the account's email also gets five tries per 15 minutes.
+- Success returns the session in the JSON body, not as a cookie. The app sends it as
+  `Authorization: Bearer <session>`; `/api/me` renews it without setting a cookie.
+
+Writes from another origin are refused unless they carry a valid bearer session, which a
+browser cannot attach cross-site because the site serves no CORS headers. Cookie writes
+still need the site's Origin, and the app sends that Origin on its signed-out sign-in calls.
 Unsubscribe links use a per-account random 256-bit bearer token and confirmation
 POST, rather than a signed token. It can only switch off emails, without login.
 
@@ -82,7 +96,7 @@ npx wrangler pages dev dist --port 4174 --binding DEV_MAGIC_LINK=1
 ```
 
 POST `/api/auth/request` with an email and matching Origin header. The JSON returns
-a test sign-in link **only on localhost**. The website never exposes test links on
+a test sign-in link and code **only on localhost**. The website never exposes test links on
 public preview or production hosts, even if the flag is accidentally set there.
 
 ## Account page and import status
