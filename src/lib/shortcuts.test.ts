@@ -23,14 +23,7 @@ const labels = (input: Parameters<typeof shortcutItems>[0]) =>
   shortcutItems(input).map((item) => item.label);
 describe("personalized shortcuts", () => {
   it("shows only dates and Nearby to a signed-out visitor", () => {
-    expect(labels(base)).toEqual([
-      "Today",
-      "Tomorrow",
-      "Weekend",
-      "Week",
-      "Evening",
-      "Near me",
-    ]);
+    expect(labels(base)).toEqual(["Today", "Tomorrow", "Weekend", "Week", "Evening", "Near me"]);
   });
   it("requires a signed-in, imported watchlist", () => {
     expect(labels({ ...base, account: { user, watchlist } })).toContain("My watchlist");

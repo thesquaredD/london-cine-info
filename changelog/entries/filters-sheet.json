@@ -1,0 +1,7 @@
+{
+  "id": "filters-sheet",
+  "type": "improved",
+  "title": "An easier Filters panel",
+  "body": "Filters are grouped under When, Where and What, each with an icon, and Reset all and Show films stay at the bottom while you scroll. On a computer the panel shows two columns, so every filter fits at once.",
+  "visibility": "public"
+}

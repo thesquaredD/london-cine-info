@@ -16,6 +16,8 @@ type Props = {
   /** Rendered above the actions and options, so it is reached before a long option list. */
   before?: ComponentChildren;
   summaryValue?: string;
+  /** A line icon before the title, used in the Filters sheet. */
+  icon?: ComponentChildren;
 };
 export function FilterPicker({
   filterKey,
@@ -29,6 +31,7 @@ export function FilterPicker({
   children,
   before,
   summaryValue,
+  icon,
 }: Props) {
   const [open, setOpen] = useState(false);
   const [excludeMode, setExcludeMode] = useState(false);
@@ -90,6 +93,7 @@ export function FilterPicker({
       class={`filter-picker ${selected.length || excluded.length || summaryValue ? "has-selection" : ""}`}
     >
       <summary>
+        {icon}
         <span>{label}</span>
         <small title={summary}>{summary} </small>
       </summary>
