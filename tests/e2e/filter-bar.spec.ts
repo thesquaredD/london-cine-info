@@ -176,3 +176,22 @@ test("desktop Filters button keeps its caret at the right edge when filters are 
   expect(count.x).toBeGreaterThan(label.x + label.width);
   expect(caret.x).toBeGreaterThan(count.x + count.width - 1);
 });
+
+test("desktop bar titles are set in capitals while search stays in sentence case", async ({
+  page,
+}, info) => {
+  test.skip(info.project.name === "mobile", "desktop control");
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/");
+  const titles = page.locator(
+    ".filter-bar .desktop-filters .filter-picker > summary > span, .filter-bar button.all-filters .all-filters-label",
+  );
+  expect(await titles.count()).toBeGreaterThanOrEqual(3);
+  for (const title of await titles.all()) {
+    await expect(title).toHaveCSS("text-transform", "uppercase");
+    await expect(title).toHaveCSS("font-size", "13px");
+    await expect(title).toHaveCSS("font-weight", "500");
+  }
+  const search = page.locator(".filter-bar input[type='search']").first();
+  if (await search.count()) await expect(search).not.toHaveCSS("text-transform", "uppercase");
+});
