@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { readdir, readFile, writeFile } from "node:fs/promises";
 import type { ChangelogBundle, VersionManifest } from "@readograph/core/changelog";
+import { parseManifest } from "@readograph/core/catalogue-loader";
 
 // Confirms a Pages deployment serves the revision and notes built in this run, then writes a
 // receipt. A failure here does not mean the upload failed: the site may already be live.
@@ -30,20 +31,48 @@ const searchAssets = await Promise.all(
   })),
 );
 
+// The public catalogue manifest: the app reads it to find the current data files, so it must
+// name this build's files, and each must be served the moment the deploy is live.
+const catalogue = parseManifest(JSON.parse(await readFile("dist/catalogue.json", "utf8")));
+const showtimeFile = (await readdir(`dist${catalogue.showtimes}`)).find((name) =>
+  name.endsWith(".json"),
+);
+if (!showtimeFile) throw new Error(`dist${catalogue.showtimes} has no showtime file to verify`);
+// Compared by content: Pages answers a missing file with the app shell and HTTP 200.
+const catalogueFiles = await Promise.all(
+  [catalogue.films, catalogue.meta, catalogue.events, `${catalogue.showtimes}${showtimeFile}`].map(
+    async (path) => ({ path, content: await readFile(`dist${path}`, "utf8") }),
+  ),
+);
+
 async function check(origin: string) {
-  const read = async (path: string) => {
+  const request = async (path: string) => {
     const response = await fetch(`${origin}${path}?revision=${expected.revision}`, {
       headers: { "Cache-Control": "no-cache" },
       signal: AbortSignal.timeout(15_000),
     });
     if (!response.ok) throw new Error(`${origin}${path} returned ${response.status}`);
-    return response.text();
+    return response;
   };
-  const [versionText, content, filmHtml] = await Promise.all([
+  const read = async (path: string) => (await request(path)).text();
+  const [versionText, content, filmHtml, catalogueResponse] = await Promise.all([
     read("/version.json"),
     read("/changelog.json"),
     read(filmPage.path),
+    request("/catalogue.json"),
   ]);
+  // The app must see a new manifest as soon as a deploy lands, so no cache may keep the old one.
+  if (!/\bno-cache\b/.test(catalogueResponse.headers.get("Cache-Control") ?? ""))
+    throw new Error(`${origin}/catalogue.json is not served with Cache-Control: no-cache`);
+  const served = parseManifest(await catalogueResponse.json());
+  if (served.generatedAt !== catalogue.generatedAt || served.films !== catalogue.films)
+    throw new Error(
+      `${origin}/catalogue.json serves data generated at ${served.generatedAt}, not ${catalogue.generatedAt}`,
+    );
+  for (const file of catalogueFiles) {
+    if ((await read(file.path)) !== file.content)
+      throw new Error(`${origin}${file.path} does not serve this build's data file`);
+  }
   // These paths used to return the generic SPA HTML with a misleading 200 status.
   for (const asset of searchAssets) {
     if ((await read(asset.path)) !== asset.content)

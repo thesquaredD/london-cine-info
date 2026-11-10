@@ -2,6 +2,7 @@ node_modules/
 dist/
 .cache/
 public/data/
+public/catalogue.json
 src/generated/
 .playwright-mcp/
 test-results/
