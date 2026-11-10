@@ -15,7 +15,8 @@ import { Miniflare, convertV4MiniflareOptions } from "miniflare";
 import { onRequest } from "../functions/api/[[path]]";
 import type { Env } from "./types";
 import { IMPORT_ERRORS, IMPORT_TIMEOUT, type Account, type Watchlist } from "../src/shared/account";
-import { hash } from "./security";
+import { hash, codeHash } from "./security";
+import { signInEmail } from "./email";
 let runtime: Miniflare, env: Env;
 beforeAll(async () => {
   runtime = new Miniflare(
@@ -957,4 +958,334 @@ it("counts successful social transitions once without sending friend identities"
   } finally {
     fetcher.mockRestore();
   }
+});
+
+// Sign-in by code and bearer sessions (the phone app). Requests here set their own headers:
+// the app sends `Origin` only on the unauthenticated sign-in calls.
+async function call(
+  path: string,
+  method = "GET",
+  body?: unknown,
+  headers: Record<string, string> = {},
+) {
+  return onRequest({
+    request: new Request(`http://localhost${path}`, {
+      method,
+      headers,
+      ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+    }),
+    env,
+  } as Parameters<typeof onRequest>[0]);
+}
+const site = { Origin: "http://localhost" };
+async function requestCode(email: string) {
+  const sent = await request("/api/auth/request", "POST", { email });
+  expect(sent.status).toBe(200);
+  const { link, code } = (await sent.json()) as { link: string; code: string };
+  return { code, token: new URL(link).searchParams.get("token")! };
+}
+const verifyCode = (email: string, code: string) =>
+  call("/api/auth/verify-code", "POST", { email, code }, site);
+const codeRow = (tokenHash: string) =>
+  env.DB.prepare("SELECT code,code_attempts FROM auth_tokens WHERE hash=?")
+    .bind(tokenHash)
+    .first<{ code: string | null; code_attempts: number }>();
+const wrong = (code: string) => String((Number(code) + 1) % 1_000_000).padStart(6, "0");
+async function codeSession(email: string) {
+  const { code } = await requestCode(email);
+  const response = await verifyCode(email, code);
+  expect(response.status).toBe(200);
+  return ((await response.json()) as { session: string }).session;
+}
+
+it("puts the link and the spaced six-digit code in one sign-in email", () => {
+  const text = signInEmail("https://public.example/auth/verify?token=abc", "012345");
+  expect(text.indexOf("https://public.example/auth/verify?token=abc")).toBeLessThan(
+    text.indexOf("012 345"),
+  );
+  expect(text).toContain("Both expire in 15 minutes.");
+});
+
+it("emails a code and stores only its hash, bound to the token row", async () => {
+  await env.DB.prepare("DELETE FROM rate_limits").run();
+  let text = "";
+  const fetcher = vi.spyOn(globalThis, "fetch").mockImplementation(async (input, options) => {
+    if (String(input) !== "https://api.resend.com/emails") throw new Error("Unexpected request");
+    text = JSON.parse(String(options?.body)).text;
+    return new Response("{}", { status: 200 });
+  });
+  try {
+    const sent = await onRequest({
+      request: new Request("https://public.example/api/auth/request", {
+        method: "POST",
+        headers: { Origin: "https://public.example" },
+        body: JSON.stringify({ email: "code-email@example.com" }),
+      }),
+      env: { ...env, RESEND_API_KEY: "synthetic" },
+    } as unknown as Parameters<typeof onRequest>[0]);
+    expect(sent.status).toBe(200);
+    expect(await sent.json()).toEqual({ ok: true });
+  } finally {
+    fetcher.mockRestore();
+  }
+  const token = new URL(text.match(/https:\/\/\S+/)![0]).searchParams.get("token")!;
+  const code = text
+    .match(/code: (\d{3}) (\d{3})/)!
+    .slice(1)
+    .join("");
+  const tokenHash = await hash(token);
+  const row = await codeRow(tokenHash);
+  expect(row).toEqual({ code: await codeHash(tokenHash, code), code_attempts: 0 });
+  expect(row!.code).not.toContain(code);
+  expect(row!.code).not.toBe(await hash(code));
+  // The code is uniform six digits; the website's link still works from the same email.
+  expect(code).toMatch(/^\d{6}$/);
+  expect((await request("/api/auth/verify", "POST", { token })).status).toBe(200);
+});
+
+it("exchanges a code for a bearer session once, without a cookie", async () => {
+  await env.DB.prepare("DELETE FROM rate_limits").run();
+  const email = "code-success@example.com";
+  const first = await requestCode(email);
+  const second = await requestCode(email);
+  // Only the newest email's code is live; the earlier link keeps working.
+  expect((await codeRow(await hash(first.token)))!.code).toBeNull();
+  expect((await verifyCode(email, first.code)).status).toBe(400);
+  const response = await verifyCode(
+    ` ${email.toUpperCase()} `,
+    second.code.replace(/^(...)/, "$1 "),
+  );
+  expect(response.status).toBe(200);
+  expect(response.headers.get("Set-Cookie")).toBeNull();
+  const body = (await response.json()) as {
+    ok: true;
+    userId: string;
+    session: string;
+    expiresAt: number;
+  };
+  expect(body.session).toMatch(/^[a-f0-9]{64}$/);
+  expect(body.expiresAt).toBeGreaterThan(Date.now() / 1000 + 89 * 86400);
+  expect(
+    await env.DB.prepare("SELECT user_id FROM sessions WHERE hash=?")
+      .bind(await hash(body.session))
+      .first("user_id"),
+  ).toBe(body.userId);
+  // Single use: the code and every other email for the account are spent.
+  expect((await verifyCode(email, second.code)).status).toBe(400);
+  expect((await request("/api/auth/verify", "POST", { token: first.token })).status).toBe(400);
+  expect(
+    await env.DB.prepare("SELECT COUNT(*) AS count FROM auth_tokens WHERE user_id=?")
+      .bind(body.userId)
+      .first("count"),
+  ).toBe(0);
+});
+
+it("binds a code to its email address and rejects malformed input", async () => {
+  await env.DB.prepare("DELETE FROM rate_limits").run();
+  const { code } = await requestCode("code-owner@example.com");
+  await requestCode("code-other@example.com");
+  const rejected = await verifyCode("code-other@example.com", code);
+  expect(rejected.status).toBe(400);
+  expect(await rejected.json()).toEqual({
+    error: "That code is wrong or has expired. Request a new email.",
+  });
+  expect((await verifyCode("code-nobody@example.com", code)).status).toBe(400);
+  expect((await verifyCode("invalid", code)).status).toBe(400);
+  for (const value of ["12345", "1234567", "abcdef", 123456])
+    expect(
+      (
+        await call(
+          "/api/auth/verify-code",
+          "POST",
+          { email: "code-owner@example.com", code: value },
+          site,
+        )
+      ).status,
+    ).toBe(400);
+  // Without a site origin and without a bearer session the request is refused outright.
+  expect(
+    (await call("/api/auth/verify-code", "POST", { email: "code-owner@example.com", code })).status,
+  ).toBe(403);
+});
+
+it("rejects an expired code", async () => {
+  await env.DB.prepare("DELETE FROM rate_limits").run();
+  const email = "code-expired@example.com";
+  const { code, token } = await requestCode(email);
+  await env.DB.prepare("UPDATE auth_tokens SET expires_at=? WHERE hash=?")
+    .bind(Math.floor(Date.now() / 1000) - 1, await hash(token))
+    .run();
+  expect((await verifyCode(email, code)).status).toBe(400);
+});
+
+it("invalidates a code after five wrong attempts, counting parallel guesses", async () => {
+  await env.DB.prepare("DELETE FROM rate_limits").run();
+  const email = "code-wrong@example.com";
+  const { code, token } = await requestCode(email);
+  const tokenHash = await hash(token);
+  for (let attempt = 1; attempt <= 4; attempt++) {
+    expect((await verifyCode(email, wrong(code))).status).toBe(400);
+    expect((await codeRow(tokenHash))!.code_attempts).toBe(attempt);
+  }
+  expect((await verifyCode(email, wrong(code))).status).toBe(400);
+  expect(await codeRow(tokenHash)).toBeNull();
+  // Clear the quota to show the row itself is gone, not just rate limited.
+  await env.DB.prepare("DELETE FROM rate_limits").run();
+  expect((await verifyCode(email, code)).status).toBe(400);
+
+  const parallel = await requestCode("code-parallel@example.com");
+  const parallelHash = await hash(parallel.token);
+  await env.DB.prepare("UPDATE auth_tokens SET code_attempts=4 WHERE hash=?")
+    .bind(parallelHash)
+    .run();
+  const results = await Promise.all(
+    [0, 1, 2].map(() => verifyCode("code-parallel@example.com", wrong(parallel.code))),
+  );
+  expect(results.map((result) => result.status)).toEqual([400, 400, 400]);
+  expect(await codeRow(parallelHash)).toBeNull();
+
+  // A spent budget refuses even the right code, whether or not the row was deleted yet.
+  const spent = await requestCode("code-spent@example.com");
+  await env.DB.prepare("UPDATE auth_tokens SET code_attempts=5 WHERE hash=?")
+    .bind(await hash(spent.token))
+    .run();
+  expect((await verifyCode("code-spent@example.com", spent.code)).status).toBe(400);
+
+  // Four wrong attempts still leave the right code usable.
+  await env.DB.prepare("DELETE FROM rate_limits").run();
+  const last = await requestCode("code-fifth@example.com");
+  for (let attempt = 0; attempt < 4; attempt++)
+    await verifyCode("code-fifth@example.com", wrong(last.code));
+  expect((await verifyCode("code-fifth@example.com", last.code)).status).toBe(200);
+});
+
+it("redeems a code once under concurrent requests", async () => {
+  await env.DB.prepare("DELETE FROM rate_limits").run();
+  const email = "code-concurrent@example.com";
+  const { code } = await requestCode(email);
+  const results = await Promise.all([verifyCode(email, code), verifyCode(email, code)]);
+  expect(results.map((result) => result.status).sort()).toEqual([200, 400]);
+});
+
+it("limits code attempts per email to five in fifteen minutes", async () => {
+  await env.DB.prepare("DELETE FROM rate_limits").run();
+  const email = "code-quota@example.com";
+  const { code } = await requestCode(email);
+  // Malformed codes count too, so the budget cannot be probed for free.
+  for (let attempt = 0; attempt < 5; attempt++)
+    expect((await verifyCode(email, "x")).status).toBe(400);
+  const limited = await verifyCode(email, code);
+  expect(limited.status).toBe(429);
+  expect(Number(limited.headers.get("Retry-After"))).toBeGreaterThan(0);
+  const expires = await env.DB.prepare("SELECT expires_at FROM rate_limits WHERE key=?")
+    .bind(await hash(`auth-code:${email}`))
+    .first<number>("expires_at");
+  expect(expires! - Date.now() / 1000).toBeGreaterThan(890);
+});
+
+it("accepts bearer sessions without an Origin header for reads and writes", async () => {
+  await env.DB.prepare("DELETE FROM rate_limits").run();
+  const session = await codeSession("bearer@example.com");
+  const bearer = { Authorization: `Bearer ${session}` };
+  await env.DB.prepare("UPDATE sessions SET expires_at=? WHERE hash=?")
+    .bind(Math.floor(Date.now() / 1000) + 60, await hash(session))
+    .run();
+  const me = await call("/api/me", "GET", undefined, bearer);
+  expect(((await me.json()) as { user: { email: string } }).user.email).toBe("bearer@example.com");
+  expect(me.headers.get("Set-Cookie")).toBeNull();
+  // Reading the profile extends the session as it does for cookies.
+  expect(
+    await env.DB.prepare("SELECT expires_at FROM sessions WHERE hash=?")
+      .bind(await hash(session))
+      .first<number>("expires_at"),
+  ).toBeGreaterThan(Date.now() / 1000 + 89 * 86400);
+  expect(
+    (
+      await call(
+        "/api/cinemas",
+        "POST",
+        { venues: ["bfi.org.uk"], browserId: "00000000-0000-4000-8000-000000000009" },
+        bearer,
+      )
+    ).status,
+  ).toBe(200);
+  const cinemas = (await (await call("/api/cinemas", "GET", undefined, bearer)).json()) as {
+    venues: string[];
+  };
+  expect(cinemas.venues).toEqual(["bfi.org.uk"]);
+  const screening = {
+    filmId: "fixture",
+    title: "Fixture film",
+    venueId: "bfi.org.uk",
+    venueName: "BFI Southbank",
+    address: "London",
+    start: Date.parse("2026-10-25T00:30:00Z"),
+    end: null,
+    bookingUrl: "https://cinema.example/booking",
+    screen: null,
+    notes: null,
+    formats: [],
+  };
+  expect((await call("/api/calendar", "POST", { screening }, bearer)).status).toBe(200);
+  expect((await call("/api/calendar", "GET", undefined, bearer)).status).toBe(200);
+  expect((await call("/api/me", "PUT", { digestWeekday: null }, bearer)).status).toBe(200);
+  expect((await call("/api/auth/logout", "POST", {}, bearer)).status).toBe(200);
+  expect((await call("/api/cinemas", "GET", undefined, bearer)).status).toBe(401);
+  // A revoked or invented bearer token cannot write from another origin.
+  expect((await call("/api/cinemas", "POST", { venues: [] }, bearer)).status).toBe(403);
+  expect(
+    (await call("/api/cinemas", "POST", { venues: [] }, { Authorization: "Bearer nonsense" }))
+      .status,
+  ).toBe(403);
+});
+
+it("keeps the cookie path unchanged: writes need the site origin, /api/me renews the cookie", async () => {
+  await env.DB.prepare("DELETE FROM rate_limits").run();
+  const { cookie } = await signIn("cookie-unchanged@example.com");
+  const verified = await request("/api/auth/request", "POST", { email: "cookie-link@example.com" });
+  const token = new URL(((await verified.json()) as { link: string }).link).searchParams.get(
+    "token",
+  )!;
+  const link = await request("/api/auth/verify", "POST", { token });
+  expect(link.headers.get("Set-Cookie")).toMatch(
+    /^__Host-session=[a-f0-9]{64}; Path=\/; Secure; HttpOnly/,
+  );
+  expect(Object.keys((await link.json()) as object).sort()).toEqual(["ok", "userId"]);
+  const me = await call("/api/me", "GET", undefined, { Cookie: cookie });
+  expect(me.headers.get("Set-Cookie")).toContain(cookie);
+  for (const origin of [{}, { Origin: "https://evil.example" }] as Record<string, string>[])
+    expect(
+      (await call("/api/cinemas", "POST", { venues: [] }, { Cookie: cookie, ...origin })).status,
+    ).toBe(403);
+  // A cross-origin write never falls back to the ambient cookie, even beside a bearer header.
+  const other = await codeSession("cookie-attacker@example.com");
+  const mixed = await call(
+    "/api/me",
+    "PUT",
+    { digestWeekday: null },
+    {
+      Cookie: cookie,
+      Authorization: `Bearer ${other}`,
+      Origin: "https://evil.example",
+    },
+  );
+  expect(mixed.status).toBe(200);
+  const victim = await env.DB.prepare("SELECT id FROM users WHERE email=?")
+    .bind("cookie-unchanged@example.com")
+    .first<string>("id");
+  expect(
+    await env.DB.prepare("SELECT COUNT(*) AS count FROM sessions WHERE user_id=?")
+      .bind(victim)
+      .first("count"),
+  ).toBe(1);
+  expect(
+    (
+      await call(
+        "/api/cinemas",
+        "POST",
+        { venues: [], browserId: "00000000-0000-4000-8000-00000000000a" },
+        { Cookie: cookie, ...site },
+      )
+    ).status,
+  ).toBe(200);
 });

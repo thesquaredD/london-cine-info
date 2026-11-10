@@ -17,12 +17,16 @@ import type { Env, User } from "../../server/types";
 import {
   hash,
   token,
+  signInCode,
+  codeHash,
+  constantTimeEqual,
+  CODE_ATTEMPTS,
   localDevelopment,
   sameOrigin,
   sessionCookie,
   SESSION_SECONDS,
 } from "../../server/security";
-import { sendEmail } from "../../server/email";
+import { sendEmail, signInEmail } from "../../server/email";
 import {
   IMPORT_TIMEOUT,
   safeImportError,
@@ -100,23 +104,38 @@ async function quota(env: Env, key: string, limit: number, seconds: number) {
     throw new RateLimit(Math.max(1, (row?.expires_at ?? now() + seconds) - now()));
   return true;
 }
-async function userFor(
-  request: Request,
-  env: Env,
-): Promise<{ user: User; sessionHash: string; rawSession: string } | null> {
-  const value = /(?:^|;\s*)__Host-session=([a-f0-9]{64})(?:;|$)/.exec(
-    request.headers.get("Cookie") ?? "",
-  )?.[1];
-  if (!value) return null;
-  const sessionHash = await hash(value);
-  const user = await env.DB.prepare(
-    `SELECT u.*,w.fetched_at,w.count_parsed,w.error,w.requested_at,w.completed_at,w.started_at,w.attempt_id
+type Auth = {
+  user: User;
+  sessionHash: string;
+  rawSession: string;
+  transport: "cookie" | "bearer";
+};
+// The website authenticates with the session cookie; the phone app sends the same session
+// as `Authorization: Bearer`. A bearer header is only tried when no cookie session matches,
+// and `bearerOnly` ignores the cookie entirely for requests that failed the origin check.
+async function userFor(request: Request, env: Env, bearerOnly = false): Promise<Auth | null> {
+  const cookie = bearerOnly
+    ? undefined
+    : /(?:^|;\s*)__Host-session=([a-f0-9]{64})(?:;|$)/.exec(
+        request.headers.get("Cookie") ?? "",
+      )?.[1];
+  const bearer = /^Bearer ([a-f0-9]{64})$/.exec(request.headers.get("Authorization") ?? "")?.[1];
+  for (const [value, transport] of [
+    [cookie, "cookie"],
+    [bearer, "bearer"],
+  ] as const) {
+    if (!value) continue;
+    const sessionHash = await hash(value);
+    const user = await env.DB.prepare(
+      `SELECT u.*,w.fetched_at,w.count_parsed,w.error,w.requested_at,w.completed_at,w.started_at,w.attempt_id
  FROM sessions s JOIN users u ON s.user_id=u.id LEFT JOIN watchlist_sync w ON w.user_id=u.id
  WHERE s.hash=? AND s.expires_at>?`,
-  )
-    .bind(sessionHash, now())
-    .first<User>();
-  return user ? { user, sessionHash, rawSession: value } : null;
+    )
+      .bind(sessionHash, now())
+      .first<User>();
+    if (user) return { user, sessionHash, rawSession: value, transport };
+  }
+  return null;
 }
 async function dispatch(env: Env, user: User) {
   const response = await fetch(
@@ -152,7 +171,11 @@ const handleRequest: PagesFunction<Env> = async ({ request, env, waitUntil }) =>
       method = request.method;
     if (!["GET", "POST", "PUT", "DELETE"].includes(method))
       return json({ error: "Method not allowed" }, 405);
-    if (method !== "GET" && !sameOrigin(request))
+    // Cookies are ambient, so a write from another origin is refused. A valid bearer session
+    // is not ambient (browsers cannot attach it cross-site without CORS, which is not served),
+    // so the phone app's writes are accepted without an `Origin` header.
+    const crossOrigin = method !== "GET" && !sameOrigin(request);
+    if (crossOrigin && !/^Bearer [a-f0-9]{64}$/.test(request.headers.get("Authorization") ?? ""))
       return json({ error: "Request origin rejected" }, 403);
     const bodyLimit =
       path === "/api/friends/matches"
@@ -176,6 +199,8 @@ const handleRequest: PagesFunction<Env> = async ({ request, env, waitUntil }) =>
         return json({ error: "Invalid request" }, 400);
       }
     }
+    const bearerAuth = crossOrigin ? await userFor(request, env, true) : null;
+    if (crossOrigin && !bearerAuth) return json({ error: "Request origin rejected" }, 403);
     if (path === "/api/auth/request" && method === "POST") {
       const dev = localDevelopment(request, env.DEV_MAGIC_LINK);
       if (!dev && !env.RESEND_API_KEY)
@@ -199,9 +224,10 @@ const handleRequest: PagesFunction<Env> = async ({ request, env, waitUntil }) =>
         .bind(email)
         .first<{ id: string }>();
       const rawToken = token(),
-        tokenHash = await hash(rawToken);
-      await env.DB.prepare("INSERT INTO auth_tokens(hash,user_id,expires_at) VALUES (?,?,?)")
-        .bind(tokenHash, user!.id, now() + 900)
+        tokenHash = await hash(rawToken),
+        code = signInCode();
+      await env.DB.prepare("INSERT INTO auth_tokens(hash,user_id,expires_at,code) VALUES (?,?,?,?)")
+        .bind(tokenHash, user!.id, now() + 900, await codeHash(tokenHash, code))
         .run();
       const base = dev ? new URL(request.url).origin : env.SITE_URL;
       const link = `${base}/auth/verify?token=${rawToken}`;
@@ -212,15 +238,19 @@ const handleRequest: PagesFunction<Env> = async ({ request, env, waitUntil }) =>
             env.RESEND_FROM,
             email,
             "Sign in to Readograph",
-            `Use this link to sign in (expires in 15 minutes):\n\n${link}\n\nIf you did not request this, ignore this email.`,
+            signInEmail(link, code),
             tokenHash,
           );
       } catch {
         await env.DB.prepare("DELETE FROM auth_tokens WHERE hash=?").bind(tokenHash).run();
         return json({ error: "Email could not be sent. Please try later." }, 503);
       }
+      // Only the newest email's code works; earlier links still do.
+      await env.DB.prepare("UPDATE auth_tokens SET code=NULL WHERE user_id=? AND hash<>?")
+        .bind(user!.id, tokenHash)
+        .run();
       track("sign_in_requested", requestAnalyticsId(request) ?? `account:${user!.id}`);
-      return json({ ok: true, ...(dev ? { link } : {}) });
+      return json({ ok: true, ...(dev ? { link, code } : {}) });
     }
     // Confirmation POST keeps email scanners from consuming single-use links.
     if (path === "/api/auth/verify" && method === "POST") {
@@ -248,6 +278,51 @@ const handleRequest: PagesFunction<Env> = async ({ request, env, waitUntil }) =>
       if (result[1]?.meta.changes) track("signup_completed", `account:${userId}`);
       return json({ ok: true, userId }, 200, { "Set-Cookie": sessionCookie(rawSession) });
     }
+    // The phone app's sign-in: the code from the same email, exchanged for a bearer session.
+    if (path === "/api/auth/verify-code" && method === "POST") {
+      const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
+      const code = typeof body.code === "string" ? body.code.replace(/\s/g, "") : "";
+      const rejected = () =>
+        json({ error: "That code is wrong or has expired. Request a new email." }, 400);
+      if (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+        return json({ error: "Enter a valid email address" }, 400);
+      await quota(env, `auth-code:${email}`, 5, 900);
+      if (!/^\d{6}$/.test(code)) return rejected();
+      // Count the attempt before comparing, atomically, so parallel guesses share one budget.
+      const row = await env.DB.prepare(
+        `UPDATE auth_tokens SET code_attempts=code_attempts+1
+ WHERE hash=(SELECT a.hash FROM auth_tokens a JOIN users u ON u.id=a.user_id
+  WHERE u.email=? AND a.expires_at>? AND a.code IS NOT NULL ORDER BY a.rowid DESC LIMIT 1)
+ AND code_attempts<? RETURNING hash,code,code_attempts`,
+      )
+        .bind(email, now(), CODE_ATTEMPTS)
+        .first<{ hash: string; code: string; code_attempts: number }>();
+      if (!row) return rejected();
+      if (!constantTimeEqual(await codeHash(row.hash, code), row.code)) {
+        if (row.code_attempts >= CODE_ATTEMPTS)
+          await env.DB.prepare("DELETE FROM auth_tokens WHERE hash=?").bind(row.hash).run();
+        return rejected();
+      }
+      const rawSession = token(),
+        sessionHash = await hash(rawSession),
+        expiresAt = now() + SESSION_SECONDS;
+      const result = await env.DB.batch([
+        env.DB.prepare(
+          "INSERT INTO sessions(hash,user_id,expires_at) SELECT ?,user_id,? FROM auth_tokens WHERE hash=? AND expires_at>? RETURNING user_id",
+        ).bind(sessionHash, expiresAt, row.hash, now()),
+        env.DB.prepare(
+          "UPDATE users SET analytics_signup_completed=1 WHERE analytics_signup_completed=0 AND id=(SELECT user_id FROM sessions WHERE hash=?)",
+        ).bind(sessionHash),
+        env.DB.prepare(
+          "DELETE FROM auth_tokens WHERE user_id=(SELECT user_id FROM sessions WHERE hash=?)",
+        ).bind(sessionHash),
+      ]);
+      if (!result[0]?.meta.changes) return rejected();
+      const userId = (result[0]!.results[0] as { user_id: string }).user_id;
+      track("sign_in_verified", `account:${userId}`);
+      if (result[1]?.meta.changes) track("signup_completed", `account:${userId}`);
+      return json({ ok: true, userId, session: rawSession, expiresAt });
+    }
     if (path === "/api/unsubscribe" && method === "POST") {
       if (typeof body.token !== "string" || !/^[a-f0-9]{64}$/.test(body.token))
         return json({ error: "Invalid unsubscribe link" }, 400);
@@ -262,15 +337,17 @@ const handleRequest: PagesFunction<Env> = async ({ request, env, waitUntil }) =>
     }
     if (path === "/api/watchlists/public" && method === "POST")
       return publicWatchlistApi(body, env, request.headers.get("CF-Connecting-IP") ?? "local");
-    const auth = await userFor(request, env);
+    const auth = bearerAuth ?? (await userFor(request, env));
     if (path === "/api/me" && method === "GET") {
       if (!auth) return json({ user: null });
       await env.DB.prepare("UPDATE sessions SET expires_at=? WHERE hash=?")
         .bind(now() + SESSION_SECONDS, auth.sessionHash)
         .run();
-      return json({ user: account(auth.user) }, 200, {
-        "Set-Cookie": sessionCookie(auth.rawSession),
-      });
+      return json(
+        { user: account(auth.user) },
+        200,
+        auth.transport === "cookie" ? { "Set-Cookie": sessionCookie(auth.rawSession) } : {},
+      );
     }
     if (!auth) return json({ error: "Please sign in" }, 401);
     const { user, sessionHash } = auth;
@@ -542,6 +619,7 @@ export const onRequest: PagesFunction<Env> = async (context) => {
   const trackedEndpoints = [
     "/api/auth/request",
     "/api/auth/verify",
+    "/api/auth/verify-code",
     "/api/me",
     "/api/watchlist",
     "/api/watchlist/refresh",
