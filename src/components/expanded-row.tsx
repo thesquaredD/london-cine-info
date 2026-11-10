@@ -1,26 +1,26 @@
 import { ExternalLinkIcon } from "./external-link-icon";
 import { ImdbMark, LetterboxdMark, LinkIcon, YouTubeMark } from "./platform-marks";
 import { filmProviderLinks } from "../lib/film-links";
-import { findSharedScreening, shareUrl } from "../lib/sharing";
+import { findSharedScreening, shareUrl } from "@readograph/core/sharing";
 import { CopyFallback } from "./copy-fallback";
 import { Notice } from "./notice";
 import { ShareScreening } from "./share-screening";
 import { capture } from "../lib/analytics";
-import { screeningMatcher } from "../lib/filters";
-import type { ViewState } from "../lib/catalogue";
+import { screeningMatcher } from "@readograph/core/filters";
+import type { ViewState } from "@readograph/core/catalogue";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
-import type { DataMeta, Film, FilmShowtimes, RatingKey, Showtime } from "../shared/data";
-import { RATINGS, formatDate, runtime } from "../lib/catalogue";
+import type { DataMeta, Film, FilmShowtimes, RatingKey, Showtime } from "@readograph/core/data";
+import { RATINGS, formatDate, runtime } from "@readograph/core/catalogue";
 import { loadShowtimes } from "../lib/data";
 import { openFeedback } from "../lib/feedback";
-import { londonDate } from "../lib/filters";
+import { londonDate } from "@readograph/core/filters";
 import { showToast } from "../lib/toast";
 import { ChoicePicker } from "./choice-picker";
 import { CinemaChoices, DateChoices, dateChoiceName, inDateChoice } from "./programme-choices";
 import { CalendarActionLabel, ScreeningRow } from "./screening-row";
 import { ProgrammePager } from "./programme-pager";
 
-import type { CalendarInput } from "../shared/calendar";
+import type { CalendarInput } from "@readograph/core/calendar";
 import type { CalendarState } from "../lib/calendar";
 
 const WIDE = "(min-width: 800px)";

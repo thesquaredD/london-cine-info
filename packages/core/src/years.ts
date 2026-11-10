@@ -1,4 +1,4 @@
-import type { Film } from "../shared/data";
+import type { Film } from "./data";
 
 export type YearSelection = { decades?: number[]; years?: number[] };
 export const decadeOf = (year: number) => Math.floor(year / 10) * 10;

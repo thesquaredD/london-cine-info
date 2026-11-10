@@ -2,9 +2,9 @@ import { EmptyState } from "./empty-state";
 import { capture } from "../lib/analytics";
 import { FilmFriends } from "./friends";
 import { displayTitle, type DisplayState } from "../lib/display";
-import { letterboxdSlug } from "../shared/account";
+import { letterboxdSlug } from "@readograph/core/account";
 import { Fragment } from "preact";
-import type { DataMeta, Film } from "../shared/data";
+import type { DataMeta, Film } from "@readograph/core/data";
 import {
   hasCustomSort,
   sortLabel,
@@ -13,11 +13,11 @@ import {
   nextSort,
   type SortKey,
   type ViewState,
-} from "../lib/catalogue";
+} from "@readograph/core/catalogue";
 import { ExpandedRow } from "./expanded-row";
 import { Pagination } from "./pagination";
 
-import type { CalendarInput } from "../shared/calendar";
+import type { CalendarInput } from "@readograph/core/calendar";
 import type { CalendarState } from "../lib/calendar";
 type Props = {
   calendar?: CalendarState;

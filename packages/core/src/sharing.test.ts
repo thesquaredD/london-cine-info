@@ -9,8 +9,8 @@ import {
 } from "./sharing";
 import { readView, viewUrl } from "./catalogue";
 import { clearFilters } from "./filters";
-import type { Film } from "../shared/data";
-import { filmPage } from "../../scripts/lib/film-pages";
+import type { Film } from "./data";
+import { filmPage } from "../../../scripts/lib/film-pages";
 
 describe("film links", () => {
   it("names the film in a filter-free URL that reads back as the open film", () => {

@@ -21,4 +21,17 @@ export default tseslint.config(
       "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
     },
   },
+  {
+    // Core runs in the browser and in the app; it must not reach for browser-only globals.
+    files: ["packages/core/**/*.ts"],
+    rules: {
+      "no-restricted-globals": [
+        "error",
+        ...["window", "document", "localStorage", "navigator", "location", "fetch"].map((name) => ({
+          name,
+          message: "Core is shared with the app; pass this in instead.",
+        })),
+      ],
+    },
+  },
 );

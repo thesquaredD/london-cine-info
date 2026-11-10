@@ -1,7 +1,7 @@
 import type { ComponentChildren } from "preact";
 import { useRef, useState } from "preact/hooks";
-import type { DataMeta } from "../shared/data";
-import { addDays, DATE_SHORTCUTS, filterLabel, londonDate } from "../lib/filters";
+import type { DataMeta } from "@readograph/core/data";
+import { addDays, DATE_SHORTCUTS, filterLabel, londonDate } from "@readograph/core/filters";
 
 const fullDate = new Intl.DateTimeFormat("en-GB", {
   dateStyle: "full",

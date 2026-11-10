@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 import { loadBoroughs } from "../../scripts/lib/boroughs";
 import { buildDataset } from "../../scripts/lib/transform";
 import type { Combined, Matched } from "../../scripts/lib/schemas";
-import type { DataMeta, Film, ScreeningFacet, SourceRelease } from "../shared/data";
+import type { DataMeta, Film, ScreeningFacet, SourceRelease } from "@readograph/core/data";
 import {
   addDays,
   dateShortcut,
@@ -13,13 +13,13 @@ import {
   filterFilms,
   screeningMatcher,
   facetCounts,
-} from "./filters";
-import { readView, viewUrl } from "./catalogue";
-import { radarEntries, radarFilms } from "./radar";
-import { recoverySuggestions } from "./recovery";
-import { clearFilters } from "./filters";
+} from "@readograph/core/filters";
+import { readView, viewUrl } from "@readograph/core/catalogue";
+import { radarEntries, radarFilms } from "@readograph/core/radar";
+import { recoverySuggestions } from "@readograph/core/recovery";
+import { clearFilters } from "@readograph/core/filters";
 import { discoveryProperties } from "./discovery-analytics";
-import { missingIndependentCinemas } from "../data/independent-cinemas";
+import { missingIndependentCinemas } from "@readograph/core/data/independent-cinemas";
 let meta: DataMeta, prototype: Film;
 beforeAll(async () => {
   const fixture = JSON.parse(

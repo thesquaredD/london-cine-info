@@ -8,8 +8,8 @@ import { loadBoroughs } from "./boroughs";
 import { filmPage, metadataPage, robots, sitemap } from "./film-pages";
 import { DiscoveryPage } from "../../src/components/discovery-page";
 import { About } from "../../src/components/about";
-import { OTHER_PATHS, PUBLIC_PAGES, pageMetadata } from "../../src/shared/seo";
-import { filmPath } from "../../src/lib/sharing";
+import { OTHER_PATHS, PUBLIC_PAGES, pageMetadata } from "@readograph/core/seo";
+import { filmPath } from "@readograph/core/sharing";
 
 const template =
   '<html><head><title>Original</title><meta name="description" content="original"></head><body></body></html>';

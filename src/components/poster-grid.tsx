@@ -1,10 +1,16 @@
 import { useRef, useState } from "preact/hooks";
 import { capture } from "../lib/analytics";
 import { displayTitle, type DisplayState, type FilmView } from "../lib/display";
-import { pageRows, RATINGS, runtime, type TableRow, type ViewState } from "../lib/catalogue";
-import { letterboxdSlug } from "../shared/account";
-import type { DataMeta, Film } from "../shared/data";
-import type { CalendarInput } from "../shared/calendar";
+import {
+  pageRows,
+  RATINGS,
+  runtime,
+  type TableRow,
+  type ViewState,
+} from "@readograph/core/catalogue";
+import { letterboxdSlug } from "@readograph/core/account";
+import type { DataMeta, Film } from "@readograph/core/data";
+import type { CalendarInput } from "@readograph/core/calendar";
 import type { CalendarState } from "../lib/calendar";
 import { Dialog } from "./dialog";
 import { EmptyState } from "./empty-state";

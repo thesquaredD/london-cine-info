@@ -2,8 +2,8 @@ import { useEffect, useState } from "preact/hooks";
 import type { ComponentChildren } from "preact";
 import { Dialog } from "./dialog";
 import { useFriendContext } from "../lib/friends";
-import { letterboxdSlug } from "../shared/account";
-import type { Film } from "../shared/data";
+import { letterboxdSlug } from "@readograph/core/account";
+import type { Film } from "@readograph/core/data";
 const PAGE_SIZE = 6;
 export function WatchlistsButton({ icon }: { icon?: ComponentChildren } = {}) {
   const m = useFriendContext();

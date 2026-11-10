@@ -1,4 +1,4 @@
-import type { Film, Showtime } from "../shared/data";
+import type { Film, Showtime } from "./data";
 
 // Letters that Unicode does not decompose into a base letter plus accent.
 const LETTERS: Record<string, string> = {

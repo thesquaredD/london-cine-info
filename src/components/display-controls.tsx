@@ -1,7 +1,7 @@
 import { useState } from "preact/hooks";
-import { RATINGS } from "../lib/catalogue";
+import { RATINGS } from "@readograph/core/catalogue";
 import { moveRating, type DisplayState, type TitleMode } from "../lib/display";
-import type { RatingKey } from "../shared/data";
+import type { RatingKey } from "@readograph/core/data";
 type Props = {
   value: DisplayState;
   onChange: (value: DisplayState) => void;

@@ -5,7 +5,7 @@ Plan and reasoning: [changelog-plan.md](changelog-plan.md).
 
 ## Fragments
 
-Each PR adds `changelog/entries/<id>.json` (schema: `src/shared/changelog.ts`). Rules for
+Each PR adds `changelog/entries/<id>.json` (schema: `packages/core/src/changelog.ts`). Rules for
 writing one live in `AGENTS.md`.
 
 | Command                              | Purpose                                                  |

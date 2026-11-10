@@ -1,4 +1,4 @@
-import type { FacetKey } from "../shared/data";
+import type { FacetKey } from "@readograph/core/data";
 
 // One line icon per Filters sheet row: 20px, 1.6 stroke, round caps, drawn on a 24 box like
 // the feedback and sliders icons. Decorative; the row title names the filter.

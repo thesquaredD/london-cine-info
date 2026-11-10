@@ -4,15 +4,15 @@ import {
   requestAnalyticsId,
   requestAnalyticsContext,
 } from "../../server/analytics";
-import type { AnalyticsEvent, AnalyticsProperties } from "../../src/shared/analytics";
+import type { AnalyticsEvent, AnalyticsProperties } from "@readograph/core/analytics";
 import { friendsApi } from "../../server/friends";
 import { publicWatchlistApi } from "../../server/public-watchlists";
 import {
   validCalendarInput,
   screeningKey,
   type CalendarScreening,
-} from "../../src/shared/calendar";
-import { calendarFile } from "../../src/shared/ical";
+} from "@readograph/core/calendar";
+import { calendarFile } from "@readograph/core/ical";
 import type { Env, User } from "../../server/types";
 import {
   hash,
@@ -32,7 +32,7 @@ import {
   safeImportError,
   type Account,
   type SyncStatus,
-} from "../../src/shared/account";
+} from "@readograph/core/account";
 const now = () => Math.floor(Date.now() / 1000);
 const json = (body: unknown, status = 200, headers: Record<string, string> = {}) =>
   new Response(JSON.stringify(body), {

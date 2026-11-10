@@ -4,8 +4,8 @@ import type {
   FriendsResponse,
   FriendMatch,
   PublicWatchlistPage,
-} from "../shared/friends";
-import { MAX_FRIENDS, MAX_SELECTED_WATCHLISTS } from "../shared/friends";
+} from "./friends";
+import { MAX_FRIENDS, MAX_SELECTED_WATCHLISTS } from "./friends";
 import { AccountError } from "./account";
 
 const record = (value: unknown): value is Record<string, unknown> =>

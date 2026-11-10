@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { Film } from "../shared/data";
+import type { Film } from "./data";
 import {
   PAGE_SIZE,
   pageRows,
@@ -158,7 +158,7 @@ it("sorts original titles using the displayed title and falls back when one is m
 it("filters years for films without screenings and constrains other facet counts", async () => {
   const { filterFilms, facetCounts, clearFilters } = await import("./filters");
   const { countYears } = await import("./years");
-  const meta: import("../shared/data").DataMeta = {
+  const meta: import("./data").DataMeta = {
     schemaVersion: 1,
     generatedAt: "",
     upstreamGeneratedAt: "",

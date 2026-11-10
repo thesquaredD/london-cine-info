@@ -1,5 +1,5 @@
-import type { Film } from "../shared/data";
-import { pageRows, PAGE_SIZE, type ViewState } from "../lib/catalogue";
+import type { Film } from "@readograph/core/data";
+import { pageRows, PAGE_SIZE, type ViewState } from "@readograph/core/catalogue";
 
 /** Shared page footer for the list and poster views. */
 export function Pagination({

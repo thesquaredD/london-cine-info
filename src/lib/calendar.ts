@@ -5,8 +5,8 @@ import {
   validCalendarInput,
   type CalendarInput,
   type CalendarScreening,
-} from "../shared/calendar";
-import { calendarFile } from "../shared/ical";
+} from "@readograph/core/calendar";
+import { calendarFile } from "@readograph/core/ical";
 export function downloadEvents(events: CalendarScreening[]) {
   const url = URL.createObjectURL(
     new Blob([calendarFile(events)], { type: "text/calendar;charset=utf-8" }),

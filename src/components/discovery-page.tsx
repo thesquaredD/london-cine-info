@@ -1,8 +1,8 @@
-import type { DataMeta, Film, FilmShowtimes } from "../shared/data";
-import { PUBLIC_PAGES, pageMetadata } from "../shared/seo";
-import { filmPath } from "../lib/sharing";
-import { readView, selectFilms, sortFilms } from "../lib/catalogue";
-import { radarEntries, radarFilms } from "../lib/radar";
+import type { DataMeta, Film, FilmShowtimes } from "@readograph/core/data";
+import { PUBLIC_PAGES, pageMetadata } from "@readograph/core/seo";
+import { filmPath } from "@readograph/core/sharing";
+import { readView, selectFilms, sortFilms } from "@readograph/core/catalogue";
+import { radarEntries, radarFilms } from "@readograph/core/radar";
 
 const londonTime = (time: string | number) =>
   new Intl.DateTimeFormat("en-GB", {

@@ -1,4 +1,4 @@
-import { eventLabels, eventTypes } from "../data/event-rules";
+import { eventLabels, eventTypes } from "./data/event-rules";
 import type { EventOccurrence, Film, FilmShowtimes } from "./data";
 export function buildEventIndex(films: Film[], showtimes: FilmShowtimes[]): EventOccurrence[] {
   const byId = new Map(films.map((film) => [film.id, film]));

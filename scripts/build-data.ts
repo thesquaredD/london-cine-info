@@ -7,7 +7,7 @@ import { loadBoroughs } from "./lib/boroughs";
 import { loadLiveData } from "./lib/releases";
 import { buildDataset } from "./lib/transform";
 import { writeDataset } from "./lib/output";
-import { missingIndependentCinemas } from "../src/data/independent-cinemas";
+import { missingIndependentCinemas } from "@readograph/core/data/independent-cinemas";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
 const { values } = parseArgs({
@@ -35,7 +35,7 @@ try {
   const missingIndependent = values.fixture ? [] : missingIndependentCinemas(dataset.meta.venues);
   if (missingIndependent.length)
     console.warn(
-      `Independent cinema IDs not in the dataset (review src/data/independent-cinemas.ts): ${missingIndependent.join(", ")}`,
+      `Independent cinema IDs not in the dataset (review packages/core/src/data/independent-cinemas.ts): ${missingIndependent.join(", ")}`,
     );
   console.log(
     JSON.stringify(

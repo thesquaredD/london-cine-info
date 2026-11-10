@@ -1,4 +1,4 @@
-import type { Venue } from "../shared/data";
+import type { Venue } from "../data";
 
 /** Reviewed venues that are independently run, charities, or run by a public or educational
  * body (BFI, Barbican, a university, a national cultural institute). Never inferred from

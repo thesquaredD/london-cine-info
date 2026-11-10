@@ -1,0 +1,13 @@
+{
+  "name": "@readograph/core",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Logic shared by the Readograph website and app: catalogue, filters, shortcuts, events, sharing and the data schema. TypeScript source only, no build step.",
+  "type": "module",
+  "exports": {
+    "./*": "./src/*.ts"
+  },
+  "dependencies": {
+    "zod": "^4.6.5"
+  }
+}

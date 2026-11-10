@@ -1,8 +1,8 @@
 import { createHash, randomUUID } from "node:crypto";
 import { mkdir, writeFile, rename, rm, stat } from "node:fs/promises";
 import { join } from "node:path";
-import { DATA_SCHEMA_VERSION, type DataManifest } from "../../src/shared/data";
-import { buildEventIndex } from "../../src/shared/events";
+import { DATA_SCHEMA_VERSION, type DataManifest } from "@readograph/core/data";
+import { buildEventIndex } from "@readograph/core/events";
 import type { Dataset } from "./transform";
 
 const hash = (content: string) => createHash("sha256").update(content).digest("hex").slice(0, 16);

@@ -1,6 +1,6 @@
 import type { AccountState } from "../lib/account";
 import { downloadScreening, downloadEvents, type CalendarState } from "../lib/calendar";
-import type { CalendarInput } from "../shared/calendar";
+import type { CalendarInput } from "@readograph/core/calendar";
 import { Dialog } from "./dialog";
 import { ExternalLinkIcon } from "./external-link-icon";
 export const calendarDate = (time: number) =>

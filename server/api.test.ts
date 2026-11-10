@@ -14,7 +14,12 @@ import { readdir, readFile } from "node:fs/promises";
 import { Miniflare, convertV4MiniflareOptions } from "miniflare";
 import { onRequest } from "../functions/api/[[path]]";
 import type { Env } from "./types";
-import { IMPORT_ERRORS, IMPORT_TIMEOUT, type Account, type Watchlist } from "../src/shared/account";
+import {
+  IMPORT_ERRORS,
+  IMPORT_TIMEOUT,
+  type Account,
+  type Watchlist,
+} from "@readograph/core/account";
 import { hash, codeHash } from "./security";
 import { signInEmail } from "./email";
 let runtime: Miniflare, env: Env;

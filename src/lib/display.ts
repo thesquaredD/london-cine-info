@@ -1,27 +1,5 @@
-import type { Film, RatingKey } from "../shared/data";
-export type TitleMode = "both" | "title" | "original";
-export type DisplayState = {
-  titleMode: TitleMode;
-  hideWatchlistRatings?: boolean;
-  ratingOrder: RatingKey[];
-};
-export const DEFAULT_DISPLAY: DisplayState = {
-  titleMode: "both",
-  hideWatchlistRatings: false,
-  ratingOrder: ["lb", "im", "mc", "rt"],
-};
-export function displayTitle(film: Film, mode: TitleMode): string {
-  return mode === "original" ? film.o_ti || film.ti : film.ti;
-}
-export function moveRating(
-  order: RatingKey[],
-  source: RatingKey,
-  destination: number,
-): RatingKey[] {
-  const result = order.filter((key) => key !== source);
-  result.splice(Math.max(0, Math.min(result.length, destination)), 0, source);
-  return result;
-}
+import { FILM_VIEW_STORAGE, type FilmView } from "@readograph/core/display";
+export * from "@readograph/core/display";
 
 export const HIDE_RATINGS_STORAGE = "london-cine.hide-watchlist-ratings.v1";
 export function readHideRatings(): boolean {
@@ -30,29 +8,6 @@ export function readHideRatings(): boolean {
   } catch {
     return false;
   }
-}
-export function watchlistDisplay(
-  display: DisplayState,
-  state: { path: string; watchlist?: boolean },
-): DisplayState {
-  return display.hideWatchlistRatings && (state.path === "/watchlist" || state.watchlist)
-    ? { ...display, ratingOrder: [] }
-    : display;
-}
-
-/** List or poster browsing for film results. Events and Radar keep their own layouts. */
-export type FilmView = "list" | "posters";
-export const FILM_VIEW_STORAGE = "london-cine.film-view.v1";
-export const POSTER_VIEW_PATHS = [
-  "/",
-  "/new",
-  "/classics",
-  "/retrospectives",
-  "/calendar",
-  "/watchlist",
-];
-export function supportsPosters(path: string): boolean {
-  return POSTER_VIEW_PATHS.includes(path);
 }
 export function readFilmView(storage: Pick<Storage, "getItem"> | null = safeStorage()): FilmView {
   try {

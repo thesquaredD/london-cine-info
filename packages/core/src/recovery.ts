@@ -1,4 +1,4 @@
-import type { DataMeta, Film } from "../shared/data";
+import type { DataMeta, Film } from "./data";
 import { selectFilms, type ViewState } from "./catalogue";
 import { addDays, dayMatches, filterFilms, londonDate } from "./filters";
 export type Suggestion = { label: string; count: number; changes: Partial<ViewState> };

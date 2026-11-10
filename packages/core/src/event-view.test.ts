@@ -1,17 +1,17 @@
 import { beforeAll, expect, it } from "vitest";
 import { readFile } from "node:fs/promises";
-import { buildDataset, type Dataset } from "../../scripts/lib/transform";
-import { loadBoroughs } from "../../scripts/lib/boroughs";
-import { eventLabels, isEventScreening } from "../data/event-rules";
-import { buildEventIndex } from "../shared/events";
-import { matchingEvents, groupEvents, eventFacetCounts } from "./events";
+import { buildDataset, type Dataset } from "../../../scripts/lib/transform";
+import { loadBoroughs } from "../../../scripts/lib/boroughs";
+import { eventLabels, isEventScreening } from "./data/event-rules";
+import { buildEventIndex } from "./events";
+import { matchingEvents, groupEvents, eventFacetCounts } from "./event-view";
 import { readView, viewUrl } from "./catalogue";
-import type { EventOccurrence, SourceRelease } from "../shared/data";
+import type { EventOccurrence, SourceRelease } from "./data";
 let dataset: Dataset;
 const now = new Date("2026-10-03T09:00:00Z");
 beforeAll(async () => {
   const fixture = JSON.parse(
-    await readFile(new URL("../../tests/fixtures/pipeline.json", import.meta.url), "utf8"),
+    await readFile(new URL("../../../tests/fixtures/pipeline.json", import.meta.url), "utf8"),
   ) as {
     combined: unknown;
     matched: unknown;
@@ -129,7 +129,7 @@ it("year selections exclude events whose film year is unknown or unavailable", (
   ).toHaveLength(0);
 });
 it("Independent cinemas limits events and their counts to listed venues", async () => {
-  const { isIndependentCinema } = await import("../data/independent-cinemas");
+  const { isIndependentCinema } = await import("./data/independent-cinemas");
   const entries = buildEventIndex(dataset.films, dataset.showtimes);
   const all = readView(new URL("https://test.local/events"));
   const on = readView(new URL("https://test.local/events?independent=1"));

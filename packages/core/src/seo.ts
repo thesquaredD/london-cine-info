@@ -1,9 +1,9 @@
 import type { Film } from "./data";
-import { SITE_HOST } from "./analytics";
-import { filmPath } from "../lib/sharing";
+import { SITE_ORIGIN } from "./site";
+import { filmPath } from "./sharing";
 
 export const SITE_NAME = "Readograph";
-export const DEFAULT_ORIGIN = `https://${SITE_HOST}`;
+export const DEFAULT_ORIGIN = SITE_ORIGIN;
 export const PUBLIC_PAGES = [
   {
     path: "/",

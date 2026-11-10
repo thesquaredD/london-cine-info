@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { shortcutItems } from "./shortcuts";
 import { readView } from "./catalogue";
-import type { Account } from "../shared/account";
+import type { Account } from "./account";
 const user: Account = {
   id: "test",
   email: "test@example.com",

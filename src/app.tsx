@@ -1,7 +1,7 @@
 import { About } from "./components/about";
 import { updatePageMetadata } from "./lib/seo";
 import { Notice } from "./components/notice";
-import { filmSlug } from "./lib/sharing";
+import { filmSlug } from "@readograph/core/sharing";
 import { CinemaLanding } from "./components/cinema-landing";
 import { HowToUse } from "./components/how-to-use";
 import { rememberWelcomeDismissed, showsWelcomeOnArrival, welcomeDismissed } from "./lib/welcome";
@@ -25,17 +25,17 @@ import { ToastHost } from "./components/toast";
 import { openFeedback } from "./lib/feedback";
 import { useCalendar } from "./lib/calendar";
 import { MyCalendar, ScreeningCalendarDialog } from "./components/screening-calendar";
-import type { CalendarInput } from "./shared/calendar";
+import type { CalendarInput } from "@readograph/core/calendar";
 import { useCinemas } from "./lib/cinemas";
 import { ShortcutStrip } from "./components/shortcut-strip";
 import { MyCinemas } from "./components/my-cinemas";
 import { NearbyCinemas } from "./components/nearby-cinemas";
 import { Events, EventTypeFilter } from "./components/events";
-import { matchingEvents, eventFacetCounts } from "./lib/events";
-import { EVENT_TYPES } from "./data/event-rules";
+import { matchingEvents, eventFacetCounts } from "@readograph/core/event-view";
+import { EVENT_TYPES } from "@readograph/core/data/event-rules";
 import { Radar } from "./components/radar";
-import { recoverySuggestions } from "./lib/recovery";
-import { catalogueDecades, countYears, hasYears, yearSummary } from "./lib/years";
+import { recoverySuggestions } from "@readograph/core/recovery";
+import { catalogueDecades, countYears, hasYears, yearSummary } from "@readograph/core/years";
 import {
   DEFAULT_DISPLAY,
   readHideRatings,
@@ -57,7 +57,7 @@ import {
   RefreshButton,
   TokenPage,
 } from "./components/account";
-import { letterboxdSlug } from "./shared/account";
+import { letterboxdSlug } from "@readograph/core/account";
 import { PageLink } from "./components/page-link";
 import { Sidebar } from "./components/sidebar";
 import { FilterBar } from "./components/filter-bar";
@@ -70,7 +70,7 @@ import {
   directorLabel,
   FILTERS,
   dateShortcut,
-} from "./lib/filters";
+} from "@readograph/core/filters";
 import { loadCatalogue } from "./lib/data";
 import {
   PAGE_SIZE,
@@ -85,8 +85,8 @@ import {
   tableRows,
   viewUrl,
   type ViewState,
-} from "./lib/catalogue";
-import type { DataMeta, Film, EventOccurrence } from "./shared/data";
+} from "@readograph/core/catalogue";
+import type { DataMeta, Film, EventOccurrence } from "@readograph/core/data";
 
 const EMPTY_FILMS: Film[] = [];
 export function App() {

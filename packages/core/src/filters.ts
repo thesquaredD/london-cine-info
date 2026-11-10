@@ -1,7 +1,7 @@
-import { isIndependentCinema } from "../data/independent-cinemas";
+import { isIndependentCinema } from "./data/independent-cinemas";
 import { yearMatches } from "./years";
-import { isEventScreening, eventTypes } from "../data/event-rules";
-import type { DataMeta, FacetKey, Film, Showtime, Venue } from "../shared/data";
+import { isEventScreening, eventTypes } from "./data/event-rules";
+import type { DataMeta, FacetKey, Film, Showtime, Venue } from "./data";
 import { defaultSort, type ViewState } from "./catalogue";
 export const FILTERS: { key: FacetKey; label: string }[] = [
   { key: "day", label: "Day" },

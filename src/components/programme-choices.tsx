@@ -1,5 +1,5 @@
 import { useRef, useState } from "preact/hooks";
-import { dayMatches } from "../lib/filters";
+import { dayMatches } from "@readograph/core/filters";
 import { dayLabel, MonthGrid } from "./date-calendar";
 
 const count = (value: number) => value.toLocaleString("en-GB");

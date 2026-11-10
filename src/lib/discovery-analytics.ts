@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "preact/hooks";
-import type { ViewState } from "./catalogue";
+import type { ViewState } from "@readograph/core/catalogue";
 import { capture } from "./analytics";
-import { analyticsText, type AnalyticsProperties } from "../shared/analytics";
+import { analyticsText, type AnalyticsProperties } from "@readograph/core/analytics";
 
 export function discoveryProperties(state: ViewState): AnalyticsProperties {
   const keys = Object.keys({ ...state.filters, ...state.excluded }).sort();

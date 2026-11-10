@@ -6,7 +6,7 @@ import {
   type ChangelogBundle,
   type ChangelogFragment,
   type VersionManifest,
-} from "../../src/shared/changelog";
+} from "@readograph/core/changelog";
 
 export const ENTRIES_DIR = "changelog/entries";
 export const FEATURES_FILE = "changelog/features.json";

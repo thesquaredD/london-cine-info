@@ -3,10 +3,10 @@ import { YearPicker } from "./year-picker";
 import { FilterIcon } from "./filter-icons";
 import type { AccountState } from "../lib/account";
 import { FilterPicker } from "./filter-picker";
-import { clearFilters, FILTERS } from "../lib/filters";
-import type { FacetKey } from "../shared/data";
-import type { DataMeta } from "../shared/data";
-import type { ViewState } from "../lib/catalogue";
+import { clearFilters, FILTERS } from "@readograph/core/filters";
+import type { FacetKey } from "@readograph/core/data";
+import type { DataMeta } from "@readograph/core/data";
+import type { ViewState } from "@readograph/core/catalogue";
 
 export type FilterControlsProps = {
   account: AccountState;
