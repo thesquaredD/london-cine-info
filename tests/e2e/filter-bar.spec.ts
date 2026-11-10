@@ -108,3 +108,53 @@ test("page navigation keeps filters and marks the active page", async ({ page },
   ).toHaveAttribute("aria-current", "page");
   await page.screenshot({ path: testInfo.outputPath("page-navigation.png") });
 });
+
+test("Filters sheet groups every filter under When, Where and What with a pinned footer", async ({
+  page,
+}, info) => {
+  await page.goto("/");
+  await expect(page.locator(".film-row")).toHaveCount(6);
+  await page.getByRole("button", { name: /^Filters(?:[\s,]|$)/ }).click();
+  const sheet = page.getByRole("dialog", { name: "Filters", exact: true });
+  for (const [group, filters] of [
+    ["When", ["day", "time"]],
+    ["Where", ["venue", "borough", "membership"]],
+    ["What", ["genre", "format", "language", "year", "accessibility"]],
+  ] as const) {
+    const section = sheet.getByRole("region", { name: group, exact: true });
+    await expect(section).toBeVisible();
+    for (const key of filters)
+      await expect(section.locator(`[data-filter="${key}"]`)).toHaveCount(1);
+  }
+  await expect(
+    sheet.getByRole("region", { name: "What" }).getByRole("button", { name: /^Watchlists/ }),
+  ).toBeVisible();
+  await expect(sheet.getByRole("group", { name: "Only show" })).toBeVisible();
+  await expect(sheet.getByRole("searchbox", { name: "Search", exact: true })).toBeVisible();
+  for (const name of ["Hide sold-out screenings", "Under 2 hours"])
+    await expect(sheet.getByRole("checkbox", { name, exact: true })).toBeVisible();
+  const footer = sheet.locator(".sheet-footer");
+  await expect(footer.getByRole("button", { name: "Reset all", exact: true })).toBeVisible();
+  await expect(footer.getByRole("button", { name: /^Show 6 films$/ })).toBeVisible();
+  if (info.project.name === "mobile") {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await sheet.locator('[data-filter="venue"] > summary').click();
+    const body = sheet.locator(".sheet-body");
+    const before = (await footer.boundingBox())!;
+    await body.evaluate((element) => element.scrollTo(0, element.scrollHeight));
+    expect(await body.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
+    const after = (await footer.boundingBox())!;
+    expect(after.y).toBe(before.y);
+    expect(after.y + after.height).toBeLessThanOrEqual(844);
+  } else {
+    await page.setViewportSize({ width: 1280, height: 900 });
+    const body = sheet.locator(".sheet-body");
+    expect(await body.evaluate((element) => element.scrollHeight <= element.clientHeight)).toBe(
+      true,
+    );
+    const day = (await sheet.locator('[data-filter="day"]').boundingBox())!;
+    const time = (await sheet.locator('[data-filter="time"]').boundingBox())!;
+    expect(time.y).toBe(day.y);
+    expect(time.x).toBeGreaterThan(day.x + day.width);
+  }
+});

@@ -1,10 +1,11 @@
 import { useEffect, useState } from "preact/hooks";
+import type { ComponentChildren } from "preact";
 import { Dialog } from "./dialog";
 import { useFriendContext } from "../lib/friends";
 import { letterboxdSlug } from "../shared/account";
 import type { Film } from "../shared/data";
 const PAGE_SIZE = 6;
-export function WatchlistsButton() {
+export function WatchlistsButton({ icon }: { icon?: ComponentChildren } = {}) {
   const m = useFriendContext();
   if (!m) return null;
   return (
@@ -14,6 +15,7 @@ export function WatchlistsButton() {
       aria-haspopup="dialog"
       onClick={() => m.setPanel("watchlists")}
     >
+      {icon}
       <span>Watchlists</span>
       <span class="shortcut-count" style={{ visibility: m.active.length ? "visible" : "hidden" }}>
         {" "}

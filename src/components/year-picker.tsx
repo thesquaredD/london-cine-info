@@ -1,3 +1,4 @@
+import type { ComponentChildren } from "preact";
 import { useMemo, useRef, useState } from "preact/hooks";
 import {
   decadeOf,
@@ -16,8 +17,9 @@ type Props = {
   counts: Map<number, number>;
   idPrefix: string;
   onChange: (selection: Required<YearSelection>) => void;
+  icon?: ComponentChildren;
 };
-export function YearPicker({ selection, decades, counts, idPrefix, onChange }: Props) {
+export function YearPicker({ selection, decades, counts, idPrefix, onChange, icon }: Props) {
   const [expanded, setExpanded] = useState<number | null>(null);
   const picker = useRef<HTMLDetailsElement>(null);
   const options = useMemo(
@@ -40,6 +42,7 @@ export function YearPicker({ selection, decades, counts, idPrefix, onChange }: P
       class={`filter-picker year-picker ${hasYears(selection) ? "has-selection" : ""}`}
     >
       <summary>
+        {icon}
         <span>Year</span>
         <small title={summary}>{summary}</small>
       </summary>

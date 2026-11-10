@@ -1,5 +1,6 @@
 import { WatchlistsButton } from "./friends";
 import { SlidersIcon } from "./control-icons";
+import { FilterIcon } from "./filter-icons";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { FilterControls, type FilterControlsProps } from "./filter-controls";
 import type { FacetKey } from "../shared/data";
@@ -155,10 +156,16 @@ export function FilterBar(
             ×
           </button>
         </div>
-        <div class="sheet-watchlists" onClickCapture={() => setCategory(null)}>
-          <WatchlistsButton />
-        </div>
-        <FilterControls {...props} idPrefix="sheet" onDone={() => setCategory(null)} />
+        <FilterControls
+          {...props}
+          idPrefix="sheet"
+          onDone={() => setCategory(null)}
+          watchlists={
+            <div class="sheet-watchlists" onClickCapture={() => setCategory(null)}>
+              <WatchlistsButton icon={<FilterIcon name="watchlists" />} />
+            </div>
+          }
+        />
       </dialog>
     </div>
   );

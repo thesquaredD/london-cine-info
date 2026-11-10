@@ -245,7 +245,7 @@ test("multiple choices, correlated screening filters, chips and reset", async ({
   await page.getByRole("button", { name: "Remove day filter: Sun 4 Oct", exact: true }).click();
   await expect(page.getByRole("button", { name: "Fixture Classic A", exact: true })).toHaveCount(0);
   const menu2 = await openFilters(page);
-  await menu2.getByRole("button", { name: "Reset all filters" }).click();
+  await menu2.getByRole("button", { name: "Reset all", exact: true }).click();
   await closeFilters(page);
   await expect(page.locator(".film-row")).toHaveCount(6);
   await expect(page.locator(".active-filters button")).toHaveCount(0);

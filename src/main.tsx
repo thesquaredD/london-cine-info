@@ -11,6 +11,7 @@ import "./styles/feedback.css";
 import "./styles/nearby.css";
 import "./styles/posters.css";
 import "./styles/welcome.css";
+import "./styles/filter-sheet.css";
 
 document.documentElement.dataset.theme = "dark";
 initAnalytics();

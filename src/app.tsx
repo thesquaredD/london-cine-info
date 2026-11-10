@@ -461,12 +461,8 @@ export function App() {
   useEffect(() => {
     // Keep the build-time film metadata while its catalogue is loading.
     if (state.filmSlug !== undefined && !catalogue) return;
-    updatePageMetadata(
-      metadataPath,
-      state.filmSlug !== undefined ? openFilm : undefined,
-    );
-    if (openFilm && state.filmSlug === undefined)
-      document.title = `${openFilm.ti} — Readograph`;
+    updatePageMetadata(metadataPath, state.filmSlug !== undefined ? openFilm : undefined);
+    if (openFilm && state.filmSlug === undefined) document.title = `${openFilm.ti} — Readograph`;
   }, [metadataPath, state.filmSlug, openFilm, catalogue]);
   useEffect(() => {
     if (drawerOpen && !drawer.current?.open) drawer.current?.showModal();
