@@ -1,6 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 async function openFilters(page: Page) {
-  await page.getByRole("button", { name: /^Filters(?:\s|$)/ }).click();
+  await page.getByRole("button", { name: /^Filters(?:[\s,]|$)/ }).click();
   return page.getByRole("dialog", { name: "Filters", exact: true });
 }
 async function closeFilters(page: Page) {
@@ -157,7 +157,7 @@ test("load retries, system theme, sheet keyboard and no persistent storage", asy
   const menu = await openFilters(page);
   await expect(menu).toBeVisible();
   await closeFilters(page);
-  await expect(page.getByRole("button", { name: /^Filters(?:\s|$)/ })).toBeFocused();
+  await expect(page.getByRole("button", { name: /^Filters(?:[\s,]|$)/ })).toBeFocused();
   if ((page.viewportSize()?.width ?? 1200) < 800)
     await page.getByRole("button", { name: "Toggle pages" }).click();
   await expect(page.getByRole("button", { name: /Light mode/ })).toHaveCount(0);

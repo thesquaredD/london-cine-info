@@ -85,9 +85,7 @@ test("film share names the film, drops filters and opens the film", async ({ pag
 test("built film pages carry crawler-readable preview metadata", async ({ request }) => {
   const html = await (await request.get("/film/classic-a/fixture-classic-a/")).text();
   expect(html).toContain("<title>Fixture Classic A (1977) — Readograph</title>");
-  expect(html).toContain(
-    'property="og:title" content="Fixture Classic A (1977) — Readograph"',
-  );
+  expect(html).toContain('property="og:title" content="Fixture Classic A (1977) — Readograph"');
   expect(html).toMatch(/property="og:image" content="https:\/\/[^"]+"/);
   // Portrait posters: the small card, which does not crop them.
   expect(html).toContain('name="twitter:card" content="summary"');

@@ -28,8 +28,8 @@ export function shortcutItems({
   const items: ShortcutItem[] = [
     { id: "today", label: "Today" },
     { id: "tomorrow", label: "Tomorrow" },
-    { id: "weekend", label: "This weekend" },
-    { id: "this-week", label: "This week" },
+    { id: "weekend", label: "Weekend" },
+    { id: "this-week", label: "Week" },
     { id: "evening", label: "Evening" },
   ].map(({ id, label }) => ({
     id,

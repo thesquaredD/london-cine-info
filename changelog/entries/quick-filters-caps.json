@@ -1,0 +1,7 @@
+{
+  "id": "quick-filters-caps",
+  "type": "improved",
+  "title": "Clearer quick filters and a tidier phone toolbar",
+  "body": "Quick filters are set in capitals, with This weekend and This week shortened to Weekend and Week. On a phone they sit on two centred rows, Filters is an icon that shows how many filters are on, and the sort control is lighter.",
+  "visibility": "public"
+}

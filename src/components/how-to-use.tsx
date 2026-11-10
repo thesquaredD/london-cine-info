@@ -215,7 +215,7 @@ export function HowToUse({
                   Today
                 </button>
                 <button aria-pressed={false} disabled>
-                  This weekend
+                  Weekend
                 </button>
                 <span class="strip-sep" aria-hidden="true" />
                 <button

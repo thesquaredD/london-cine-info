@@ -113,7 +113,7 @@ test("real Functions sign-in, account settings, watchlist, shared filter and acc
   )
     .getByRole("link", { name: "All movies", exact: true })
     .click();
-  await page.getByRole("button", { name: /^Filters(?:\s|$)/ }).click();
+  await page.getByRole("button", { name: /^Filters(?:[\s,]|$)/ }).click();
   const filters = page.getByRole("dialog", { name: "Filters", exact: true });
   await filters.getByRole("checkbox", { name: "Only my watchlist" }).check();
   await filters.getByRole("button", { name: /^Show/ }).click();

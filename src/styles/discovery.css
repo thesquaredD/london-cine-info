@@ -1145,3 +1145,35 @@
   outline: 2px solid var(--brass);
   outline-offset: -2px;
 }
+
+/* After the phone rules above, which give the trigger a grid and a fill. */
+@media (max-width: 799px) {
+  /* Sort and the film count read as secondary: muted, regular, no fill. */
+  :root .results-heading .mobile-sort-trigger {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: none;
+    max-width: 60vw;
+    height: 44px;
+    padding: 0 4px;
+    background: transparent;
+    border: 0;
+    color: var(--muted);
+    font-weight: 400;
+  }
+  :root .results-heading .mobile-sort-trigger .sort-icon {
+    flex: none;
+  }
+  :root .results-heading .mobile-sort-value {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  :root .results-heading .result-status,
+  :root .results-heading .result-status strong {
+    color: var(--muted);
+    font-weight: 400;
+  }
+}

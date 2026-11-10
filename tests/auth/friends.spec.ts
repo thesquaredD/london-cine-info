@@ -29,7 +29,7 @@ async function openFriends(page: Page) {
   return friends;
 }
 async function watchlistsButton(page: Page) {
-  await page.getByRole("button", { name: /^Filters(?:\s|$)/ }).click();
+  await page.getByRole("button", { name: /^Filters(?:[\s,]|$)/ }).click();
   return page.getByRole("button", { name: /^Watchlists/ }).filter({ visible: true });
 }
 const sqlQuote = (v: string) => `'${v.replaceAll("'", "''")}'`;
