@@ -1,4 +1,4 @@
-# London Ciné Info
+# Readograph
 
 A static London cinema listings site powered by Clusterflick, using Vite,
 TypeScript and Preact. [PLAN.md](PLAN.md) records the implementation and source limits.

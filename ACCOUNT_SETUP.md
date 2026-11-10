@@ -31,7 +31,7 @@ POST, rather than a signed token. It can only switch off emails, without login.
    `cameron.ns.cloudflare.com`.
 2. Add `mail.london-cine.info` in Resend. Install its SPF/DKIM records and a DMARC
    record in Cloudflare, then confirm the sender domain is verified. The configured
-   sender is `London Ciné Info <hello@mail.london-cine.info>`.
+   sender is `Readograph <hello@mail.london-cine.info>`.
 3. Install `RESEND_API_KEY` as a Pages **production** secret and a GitHub Actions
    secret. `GITHUB_DISPATCH_TOKEN` is installed as a Pages production secret and was
    verified by dispatching CI. For replacement, use a

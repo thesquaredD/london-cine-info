@@ -211,7 +211,7 @@ const handleRequest: PagesFunction<Env> = async ({ request, env, waitUntil }) =>
             env.RESEND_API_KEY!,
             env.RESEND_FROM,
             email,
-            "Sign in to London Ciné Info",
+            "Sign in to Readograph",
             `Use this link to sign in (expires in 15 minutes):\n\n${link}\n\nIf you did not request this, ignore this email.`,
             tokenHash,
           );

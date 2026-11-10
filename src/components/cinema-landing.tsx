@@ -110,7 +110,7 @@ export function CinemaLanding({
       aria-labelledby="welcome-title"
     >
       <div class="cinema-welcome-heading">
-        <p class="prose-eyebrow">London Ciné Info</p>
+        <p class="prose-eyebrow">Readograph</p>
         <h2 id="welcome-title" tabIndex={-1}>
           London’s cinemas. <span class="welcome-line">One programme.</span>
         </h2>
@@ -172,7 +172,7 @@ export function CinemaLanding({
         </div>
       </div>
       <p class="prose-small welcome-disclaimer">
-        London Ciné Info is independent and not affiliated with any cinema, Letterboxd, IMDb or
+        Readograph is independent and not affiliated with any cinema, Letterboxd, IMDb or
         YouTube. Names and logos belong to their owners.
       </p>
       <div class="cinema-welcome-foot welcome-foot">

@@ -51,7 +51,7 @@ export function ChangelogPage({ onNavigate }: { onNavigate: (path: string) => vo
         </button>
       </header>
       <p class="prose-lede">
-        Improvements and fixes to London Ciné Info, newest first. Screening updates are not listed.
+        Improvements and fixes to Readograph, newest first. Screening updates are not listed.
       </p>
       {location.hostname !== "london-cine.info" && (
         <p class="changelog-preview">Preview · these notes are not necessarily live.</p>

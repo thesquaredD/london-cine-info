@@ -69,7 +69,7 @@ export function DiscoveryPage({
         <h1 id="discovery-title">
           {film
             ? `${film.ti}${film.ye ? ` (${film.ye})` : ""}`
-            : info.title.replace(" — London Ciné Info", "")}
+            : info.title.replace(" — Readograph", "")}
         </h1>
       </header>
       <p class="prose-lede">{info.description}</p>

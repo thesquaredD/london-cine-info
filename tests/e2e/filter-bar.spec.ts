@@ -67,7 +67,7 @@ test("filter bar and choosers fit phone, tablet and desktop widths", async ({ pa
       const cinemaBox = await cinema.locator(".picker-content").boundingBox();
       expect(cinemaBox!.x).toBeGreaterThanOrEqual(0);
       expect(cinemaBox!.x + cinemaBox!.width).toBeLessThanOrEqual(width);
-      await page.getByRole("heading", { name: "LONDON CINÉ INFO" }).click();
+      await page.getByRole("heading", { name: "READOGRAPH LONDON" }).click();
       await expect(cinema).not.toHaveAttribute("open", "");
     }
     if (width < 1100) {

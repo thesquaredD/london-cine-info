@@ -131,7 +131,7 @@ export function FeedbackDialog({
   const fallback = (
     <div class="feedback-fallback">
       <a
-        href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent("London Ciné Info feedback")}&body=${encodeURIComponent(text)}`}
+        href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent("Readograph feedback")}&body=${encodeURIComponent(text)}`}
       >
         Email feedback
       </a>

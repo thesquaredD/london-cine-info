@@ -113,7 +113,7 @@ for (const user of users!) {
         day,
         randomUUID(),
         {
-          from: process.env.RESEND_FROM ?? "London Ciné Info <hello@mail.london-cine.info>",
+          from: process.env.RESEND_FROM ?? "Readograph <hello@mail.london-cine.info>",
           to: [user.email],
           subject: digestSubject(digest),
           text: digestText(digest, meta.venues, base, unsubscribe),

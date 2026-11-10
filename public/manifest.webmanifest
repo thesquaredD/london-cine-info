@@ -1,6 +1,6 @@
 {
-  "name": "London Ciné Info",
-  "short_name": "London Ciné",
+  "name": "Readograph",
+  "short_name": "Readograph",
   "description": "Every cinema screening in London, one table.",
   "start_url": "/",
   "display": "standalone",

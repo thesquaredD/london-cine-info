@@ -68,7 +68,7 @@ test("film share names the film, drops filters and opens the film", async ({ pag
   expect(url.search).toBe("");
   await page.goto(url.pathname);
   await expect(page.locator(".film-expanded")).toBeVisible();
-  await expect(page).toHaveTitle("Fixture Classic A (1977) — London Ciné Info");
+  await expect(page).toHaveTitle("Fixture Classic A (1977) — Readograph");
   await expect(
     page.getByRole("button", { name: "Fixture Classic A", exact: true }),
   ).toBeInViewport();
@@ -84,9 +84,9 @@ test("film share names the film, drops filters and opens the film", async ({ pag
 
 test("built film pages carry crawler-readable preview metadata", async ({ request }) => {
   const html = await (await request.get("/film/classic-a/fixture-classic-a/")).text();
-  expect(html).toContain("<title>Fixture Classic A (1977) — London Ciné Info</title>");
+  expect(html).toContain("<title>Fixture Classic A (1977) — Readograph</title>");
   expect(html).toContain(
-    'property="og:title" content="Fixture Classic A (1977) — London Ciné Info"',
+    'property="og:title" content="Fixture Classic A (1977) — Readograph"',
   );
   expect(html).toMatch(/property="og:image" content="https:\/\/[^"]+"/);
   // Portrait posters: the small card, which does not crop them.
@@ -107,7 +107,7 @@ test("built film pages carry crawler-readable preview metadata", async ({ reques
   // The shell now has site-wide previews, but must never claim to be this film.
   const missing = await (await request.get("/film/gone/old-film/")).text();
   expect(missing).toContain(
-    'property="og:title" content="London cinema listings and showtimes — London Ciné Info"',
+    'property="og:title" content="London cinema listings and showtimes — Readograph"',
   );
   expect(missing).not.toContain('"@type":"Movie"');
   expect(missing).toContain('<div id="app">');

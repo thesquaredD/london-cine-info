@@ -466,7 +466,7 @@ export function App() {
       state.filmSlug !== undefined ? openFilm : undefined,
     );
     if (openFilm && state.filmSlug === undefined)
-      document.title = `${openFilm.ti} — London Ciné Info`;
+      document.title = `${openFilm.ti} — Readograph`;
   }, [metadataPath, state.filmSlug, openFilm, catalogue]);
   useEffect(() => {
     if (drawerOpen && !drawer.current?.open) drawer.current?.showModal();
@@ -657,7 +657,7 @@ export function App() {
                   change({ ...clearFilters("/"), path: "/" }, true);
                 }}
               >
-                <span class="brand-name">LONDON CINÉ</span> <span class="brand-info">INFO</span>
+                <span class="brand-name">READOGRAPH</span> <span class="brand-info">LONDON</span>
               </a>
             </h1>
             <span class="design-view-label">{pageTitle}</span>

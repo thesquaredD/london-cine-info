@@ -29,7 +29,7 @@ export function calendarFile(events: CalendarScreening[], now = Date.now()): str
   const lines = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//London Cine Info//Saved Screenings//EN",
+    "PRODID:-//Readograph//Saved Screenings//EN",
     "CALSCALE:GREGORIAN",
     "X-WR-CALNAME:London cinema screenings",
   ];
