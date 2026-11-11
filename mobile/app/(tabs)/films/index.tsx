@@ -11,6 +11,7 @@ import { detailHref } from "@/films/detail-link";
 import { ResultsBar, ViewSwitch } from "@/films/discovery-bar";
 import { FilmRow } from "@/films/film-row";
 import { saveFilmView, useFilmView } from "@/films/film-view";
+import { releaseGridRowHeights } from "@/films/grid-heights";
 import { gridPoster } from "@/films/morph";
 import { MorphOverlay } from "@/films/morph-overlay";
 import { PosterCell } from "@/films/poster-cell";
@@ -53,7 +54,15 @@ export default function FilmsScreen() {
   const stored = useFilmView();
   const allowed = supportsPosters(state.path);
   const wanted: FilmView = allowed ? stored : "list";
-  const [layout, setLayout] = useState<FilmView>(wanted);
+  const [layout, setLayoutState] = useState<FilmView>(wanted);
+  const itemCount = items.length;
+  const setLayout = useCallback(
+    (next: FilmView) => {
+      if (next === "list") releaseGridRowHeights(listRef.current, itemCount);
+      setLayoutState(next);
+    },
+    [itemCount],
+  );
   const morph = useMorph({
     listRef,
     items,
@@ -64,7 +73,7 @@ export default function FilmsScreen() {
   // Outside a morph (a collection without posters, the stored choice loading) follow `wanted`.
   useEffect(() => {
     if (!morph.busy()) setLayout(wanted);
-  }, [wanted, morph]);
+  }, [wanted, morph, setLayout]);
 
   const posterWidth = gridPoster(width).width;
   const renderText = useCallback(

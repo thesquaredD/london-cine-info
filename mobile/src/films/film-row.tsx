@@ -1,8 +1,9 @@
 import { memo } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { displayTitle, type TitleMode } from "@readograph/core/display";
 import type { Film } from "@readograph/core/data";
 import type { Href } from "expo-router";
+import { LinkPressable } from "@/ui/link-pressable";
 import { Poster } from "@/ui/poster";
 import { Text } from "@/ui/text";
 import { colors, space, thumbnail } from "@/ui/tokens";
@@ -59,12 +60,13 @@ export const FilmRow = memo(function FilmRow({
     .filter(Boolean)
     .join(". ");
   const body = (
-    <Pressable
+    <LinkPressable
       accessibilityRole="button"
       accessibilityLabel={label}
       accessibilityHint="Opens the film's screenings"
       disabled={posterHidden}
-      style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+      style={styles.row}
+      pressedStyle={styles.pressed}
     >
       {posterHidden ? (
         <View style={thumbnail} />
@@ -104,7 +106,7 @@ export const FilmRow = memo(function FilmRow({
       <Text tone="muted" style={styles.rating}>
         {rating.short} <Text weight="medium">{rating.value}</Text>
       </Text>
-    </Pressable>
+    </LinkPressable>
   );
   return posterHidden ? (
     body
