@@ -1,0 +1,8 @@
+{
+  "id": "mobile-visual-fixes",
+  "type": "fixed",
+  "title": "Phone app layout and Filters sheet speed",
+  "body": "List rows, fonts, the tab bar and the Filters sheet in the phone app now look as designed, and the Filters sheet opens much faster.",
+  "visibility": "internal",
+  "reason": "Fixes in the unreleased Expo app under mobile/ (the mobile-app flag stays false). The only shared change is an optional facet list on core's facetCounts and eventFacetCounts; the website calls them without it, so its behaviour is unchanged."
+}
