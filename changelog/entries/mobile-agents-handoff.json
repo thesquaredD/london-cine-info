@@ -1,0 +1,8 @@
+{
+  "id": "mobile-agents-handoff",
+  "type": "improved",
+  "title": "Phone app working notes",
+  "body": "Adds the phone app's working rules and its next work to the contributor guides.",
+  "visibility": "internal",
+  "reason": "Documentation only: AGENTS.md gains a Phone app section and docs/mobile.md a Next work queue from the first phone test, so the next contributor can continue the app. No code changes."
+}

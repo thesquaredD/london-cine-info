@@ -18,6 +18,43 @@ the workspace as `@readograph/core` (`import { selectFilms } from "@readograph/c
   writing the domain again.
 - Tests sit next to the code they test (`packages/core/src/*.test.ts`).
 
+## Phone app (`mobile/`)
+
+The Readograph phone app is an Expo SDK 58 app in `mobile/`, built on `@readograph/core`. It is
+unreleased: the `mobile-app` flag in `changelog/features.json` stays `false` until the store
+release. Read these before changing it:
+
+- `docs/mobile.md`: how the app is built, how to run it (Expo Go, the Android emulator loop, a
+  local release build), the known pitfalls, and **"Next work"**, the queue of open problems in
+  the order to tackle them.
+- `docs/mobile-app-plan.md`: the original plan. Its dated "Revision" and "Mock-up 1 outcome"
+  sections override the text below them, and "Next work" in `docs/mobile.md` overrides the plan
+  where they disagree.
+
+Rules:
+
+- **See it before you claim it.** Check every visual or interaction change on the Android
+  emulator (`docs/mobile.md`, "The emulator loop"), with a screenshot before and after, and
+  describe what changed per screen in the pull request. iOS cannot run on the development Mac;
+  list iOS-only checks for the maintainer instead of claiming them.
+- **Expo Go is not an excuse.** Fix a problem in the app unless Expo Go or the emulator is the
+  only possible explanation. Prove that first: reproduce the problem in Expo Go, then show it is
+  gone in a local release build on the emulator (`npx expo run:android --variant release`).
+  Only then stop and ask the maintainer to check on a phone build, with that evidence.
+- **Measure speed in a release build.** Expo Go runs a development bundle. Time the JavaScript
+  work (a timestamp on the tap and in the target screen's first layout effect, read from
+  `adb logcat`); emulator frame times are not meaningful (`docs/mobile.md`, "Measuring").
+- **Native first.** The app must feel like a phone app, not the website in a frame: platform
+  sheets and transitions, one thing open at a time, touch targets of at least 44 points on iOS
+  and 48 dp on Android, and text sizes from `mobile/src/ui/tokens.ts` only.
+- App pull requests must not change the website's behaviour. Changes to `packages/core` keep the
+  website's tests passing.
+- Before pushing, run `npm run typecheck`, `npm run lint`, `npm test` and `npm run build`, and
+  in `mobile/` `npx expo-doctor` and `npx expo export --platform ios` and `--platform android`.
+  Run `npm run e2e` when `packages/core` or the website changed.
+- Starting Expo must leave the working tree clean. Keep screenshots, recordings and build output
+  out of git.
+
 ## Screening data schema (`DATA_SCHEMA_VERSION`)
 
 The data build publishes `/catalogue.json`, which names the current data files. The website
