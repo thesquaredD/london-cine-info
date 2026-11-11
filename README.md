@@ -37,6 +37,14 @@ npx playwright install chromium
 npm run e2e
 ```
 
+## Phone apps
+
+The iPhone and Android app lives in `mobile/` (Expo, an npm workspace) and shares its
+catalogue, filter and sharing logic with the website through `packages/core`. It reads
+`/catalogue.json` from the website, so its listings update with every website deploy and need
+no app update. It is not released yet. Setup, the loading rules and the device checks:
+[docs/mobile.md](docs/mobile.md).
+
 ## Data output
 
 Generated files are excluded from git:

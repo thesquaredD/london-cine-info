@@ -3,3 +3,7 @@ public/data
 src/generated
 .cache
 src/data/london-boroughs.geojson
+mobile/.expo
+mobile/dist
+mobile/ios
+mobile/android

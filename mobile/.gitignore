@@ -1,0 +1,18 @@
+# Expo
+.expo/
+dist/
+expo-env.d.ts
+.metro-health-check*
+*.tsbuildinfo
+
+# Continuous native generation: ios/ and android/ are generated, never committed.
+/ios
+/android
+
+# Signing material
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.pem
