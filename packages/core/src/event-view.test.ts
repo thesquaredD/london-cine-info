@@ -6,6 +6,7 @@ import { eventLabels, isEventScreening } from "./data/event-rules";
 import { buildEventIndex } from "./events";
 import { matchingEvents, groupEvents, eventFacetCounts } from "./event-view";
 import { readView, viewUrl } from "./catalogue";
+import { facetCounts } from "./filters";
 import type { EventOccurrence, SourceRelease } from "./data";
 let dataset: Dataset;
 const now = new Date("2026-10-03T09:00:00Z");
@@ -145,4 +146,22 @@ it("Independent cinemas limits events and their counts to listed venues", async 
   expect(independent.map((event) => event.id)).toEqual(listed.map((event) => event.id));
   const venues = eventFacetCounts(entries, dataset.films, dataset.meta, on, now).venue;
   for (const [id, count] of venues) if (count) expect(isIndependentCinema({ id })).toBe(true);
+});
+
+it("counts only the facets asked for, with the same numbers as counting them all", () => {
+  const films = readView(new URL("https://test.local/"));
+  const allFilms = facetCounts(dataset.films, dataset.meta, films, now);
+  const venueOnly = facetCounts(dataset.films, dataset.meta, films, now, ["venue"]);
+  expect(allFilms.venue.size).toBeGreaterThan(0);
+  expect(venueOnly.venue).toEqual(allFilms.venue);
+  expect(venueOnly.day).toEqual(new Map());
+  expect(venueOnly.genre).toEqual(new Map());
+
+  const entries = buildEventIndex(dataset.films, dataset.showtimes);
+  const events = readView(new URL("https://test.local/events"));
+  const allEvents = eventFacetCounts(entries, dataset.films, dataset.meta, events, now);
+  const dayOnly = eventFacetCounts(entries, dataset.films, dataset.meta, events, now, ["day"]);
+  expect(allEvents.day.size).toBeGreaterThan(0);
+  expect(dayOnly.day).toEqual(allEvents.day);
+  expect(dayOnly.venue).toEqual(new Map());
 });

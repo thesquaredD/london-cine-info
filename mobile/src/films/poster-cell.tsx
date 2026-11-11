@@ -1,8 +1,9 @@
 import { memo } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import type { Href } from "expo-router";
 import { displayTitle, type TitleMode } from "@readograph/core/display";
 import type { Film } from "@readograph/core/data";
+import { LinkPressable } from "@/ui/link-pressable";
 import { Poster } from "@/ui/poster";
 import { Text } from "@/ui/text";
 import { colors, space } from "@/ui/tokens";
@@ -34,11 +35,12 @@ export const PosterCell = memo(function PosterCell({
   return (
     <View style={[styles.cell, { paddingLeft: gridInset(column) }]}>
       <DetailLink href={href} canOpen={canOpen}>
-        <Pressable
+        <LinkPressable
           accessibilityRole="button"
           accessibilityLabel={[title, film.ye].filter(Boolean).join(", ")}
           accessibilityHint="Opens the film's screenings"
-          style={({ pressed }) => [{ width: posterWidth, height }, pressed && styles.pressed]}
+          style={{ width: posterWidth, height }}
+          pressedStyle={styles.pressed}
         >
           <ZoomSource>
             <Poster film={film} width={posterWidth} height={height} />
@@ -55,7 +57,7 @@ export const PosterCell = memo(function PosterCell({
               ) : null}
             </View>
           )}
-        </Pressable>
+        </LinkPressable>
       </DetailLink>
     </View>
   );

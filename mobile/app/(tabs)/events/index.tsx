@@ -9,6 +9,7 @@ import type { DataMeta, EventOccurrence, Film } from "@readograph/core/data";
 import { useCatalogue, useCatalogueStore } from "@/catalogue/provider";
 import { CatalogueStatus } from "@/catalogue/status";
 import { DetailLink, detailHref } from "@/films/detail-link";
+import { LinkPressable } from "@/ui/link-pressable";
 import { ResultsBar } from "@/films/discovery-bar";
 import { bookingLabel } from "@/films/present";
 import { useNow } from "@/films/use-now";
@@ -190,13 +191,14 @@ const EventRow = memo(function EventRow({
           </Pressable>
           {film ? (
             <DetailLink href={detailHref("events", film)}>
-              <Pressable
+              <LinkPressable
                 accessibilityRole="button"
                 accessibilityLabel={`Film details: ${title}`}
-                style={({ pressed }) => [styles.action, pressed && styles.pressed]}
+                style={styles.action}
+                pressedStyle={styles.pressed}
               >
                 <Text size={2}>Film details</Text>
-              </Pressable>
+              </LinkPressable>
             </DetailLink>
           ) : null}
         </View>

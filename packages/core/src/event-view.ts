@@ -54,11 +54,17 @@ export function eventFacetCounts(
   meta: DataMeta,
   state: ViewState,
   now = new Date(),
+  /** Count only these facets; the others come back empty. Every facet when left out. */
+  only?: readonly FacetKey[],
 ): Record<FacetKey, Map<string, number>> {
   const result = {} as Record<FacetKey, Map<string, number>>;
   const byId = new Map(films.map((film) => [film.id, film]));
   const venues = new Map(meta.venues.map((venue) => [venue.id, venue]));
   for (const { key } of FILTERS) {
+    if (only && !only.includes(key)) {
+      result[key] = new Map();
+      continue;
+    }
     const without = {
       ...state,
       filters: { ...state.filters, [key]: [] },
