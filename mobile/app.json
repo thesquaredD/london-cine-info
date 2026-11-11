@@ -1,0 +1,35 @@
+{
+  "expo": {
+    "name": "Readograph",
+    "slug": "readograph",
+    "scheme": "readograph",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#171310",
+    "ios": {
+      "bundleIdentifier": "com.readograph.app",
+      "supportsTablet": false
+    },
+    "android": {
+      "package": "com.readograph.app",
+      "predictiveBackGestureEnabled": true
+    },
+    "plugins": [
+      "expo-router",
+      "expo-web-browser",
+      [
+        "expo-font",
+        {
+          "fonts": [
+            "./assets/fonts/LeagueSpartan-Regular.ttf",
+            "./assets/fonts/LeagueSpartan-Medium.ttf"
+          ]
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": false
+    }
+  }
+}

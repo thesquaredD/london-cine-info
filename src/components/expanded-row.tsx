@@ -1,6 +1,6 @@
 import { ExternalLinkIcon } from "./external-link-icon";
 import { ImdbMark, LetterboxdMark, LinkIcon, YouTubeMark } from "./platform-marks";
-import { filmProviderLinks } from "../lib/film-links";
+import { filmProviderLinks } from "@readograph/core/film-links";
 import { findSharedScreening, shareUrl } from "@readograph/core/sharing";
 import { CopyFallback } from "./copy-fallback";
 import { Notice } from "./notice";

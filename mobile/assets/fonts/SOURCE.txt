@@ -1,0 +1,9 @@
+League Spartan — The League of Moveable Type.
+https://github.com/theleagueof/league-spartan
+Upstream commit 27341b9bf93a2c7faa140538a64ce342486c5fb5 (the same commit as the website's
+webfonts), unmodified static TTFs fonts/ttf/LeagueSpartan-Regular.ttf and
+LeagueSpartan-Medium.ttf. SIL Open Font License included (OFL.txt).
+
+Clash Display is not embedded: its Fontshare licence covers website self-hosting, not
+redistribution, so the app uses a pre-rendered image of the website's masthead wordmark
+(assets/images/wordmark*.png, see docs/mobile.md).

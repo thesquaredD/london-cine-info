@@ -1,0 +1,8 @@
+{
+  "id": "mobile-app-skeleton",
+  "type": "added",
+  "title": "First version of the phone app",
+  "body": "Adds the first version of the phone app: browse the film collections, search and sort, and open a film's screenings and booking links.",
+  "visibility": "internal",
+  "reason": "Adds the unreleased Expo app under mobile/ and moves the film provider links into the shared core package. The app is not distributed yet and the website is unchanged."
+}

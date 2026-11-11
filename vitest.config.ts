@@ -6,6 +6,7 @@ export default defineConfig({
       "packages/core/src/**/*.test.ts",
       "scripts/**/*.test.ts",
       "server/**/*.test.ts",
+      "mobile/src/**/*.test.ts",
     ],
   },
 });
