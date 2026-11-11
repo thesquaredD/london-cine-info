@@ -21,14 +21,53 @@ export function radarSection(state: ViewState): RadarSection {
   return state.radarSection ?? "limited";
 }
 
+/**
+ * The last list each tab computed, so the Filters sheet's count reuses the list's work instead
+ * of filtering the whole catalogue a second time (about 300 ms for the Films tab in a release
+ * build on the emulator). A remembered list counts when the catalogue and the `ViewState` are
+ * the same objects and it is less than a minute old, the interval at which the list itself
+ * moves on (`useNow`).
+ */
+type Remembered<T> = { catalogue: Catalogue; state: ViewState; time: number; value: T };
+const remembered: {
+  films?: Remembered<Film[]>;
+  events?: Remembered<EventOccurrence[]>;
+  radar?: Remembered<Film[]>;
+} = {};
+const FRESH_MS = 60_000;
+
+function recall<T>(
+  entry: Remembered<T> | undefined,
+  catalogue: Catalogue,
+  state: ViewState,
+  now: Date,
+): T | undefined {
+  return entry &&
+    entry.catalogue === catalogue &&
+    entry.state === state &&
+    Math.abs(now.getTime() - entry.time) < FRESH_MS
+    ? entry.value
+    : undefined;
+}
+
 /** The Films list: `sortFilms(filterFilms(selectFilms(films, state)))`. */
 export function filmResults(catalogue: Catalogue, state: ViewState, now: Date): Film[] {
   const selected = filterFilms(selectFilms(catalogue.films, state), catalogue.meta, state, now);
-  return sortFilms(selected, state.sort, state.direction, undefined, DEFAULT_DISPLAY.titleMode);
+  const value = sortFilms(
+    selected,
+    state.sort,
+    state.direction,
+    undefined,
+    DEFAULT_DISPLAY.titleMode,
+  );
+  remembered.films = { catalogue, state, time: now.getTime(), value };
+  return value;
 }
 
 export function eventResults(catalogue: Catalogue, state: ViewState, now: Date): EventOccurrence[] {
-  return matchingEvents(catalogue.events, catalogue.films, catalogue.meta, state, now);
+  const value = matchingEvents(catalogue.events, catalogue.films, catalogue.meta, state, now);
+  remembered.events = { catalogue, state, time: now.getTime(), value };
+  return value;
 }
 
 export function radarResults(
@@ -38,7 +77,7 @@ export function radarResults(
   now: Date,
 ): Film[] {
   const section = radarSection(state);
-  return radarFilms(
+  const value = radarFilms(
     entries,
     catalogue.meta,
     {
@@ -51,6 +90,8 @@ export function radarResults(
     undefined,
     DEFAULT_DISPLAY.titleMode,
   );
+  remembered.radar = { catalogue, state, time: now.getTime(), value };
+  return value;
 }
 
 /** Radar's per-film screening lists, computed once per catalogue and minute. */
@@ -65,6 +106,8 @@ export function resultCount(
   state: ViewState,
   now: Date,
 ): number {
+  const known = recall<readonly unknown[]>(remembered[kind], catalogue, state, now);
+  if (known) return known.length;
   if (kind === "events") return eventResults(catalogue, state, now).length;
   if (kind === "radar")
     return radarResults(catalogue, radarIndex(catalogue, now), state, now).length;
@@ -77,21 +120,29 @@ export function resultLabel(kind: ScopeKind, count: number): string {
   return `${count.toLocaleString("en-GB")} ${noun}${count === 1 ? "" : "s"}`;
 }
 
-/** The option counts beside every facet choice, as the website computes them. */
+/**
+ * The option counts beside one facet's choices, as the website computes them. One facet at a
+ * time: all nine together take about 2.6 seconds in a release build on the emulator, and the
+ * sheet only shows the counts of a facet the reader has opened.
+ */
 export function optionCounts(
   kind: ScopeKind,
   catalogue: Catalogue,
   state: ViewState,
   now: Date,
-): Record<FacetKey, Map<string, number>> {
+  facet: FacetKey,
+): Map<string, number> {
   if (kind === "events")
-    return eventFacetCounts(catalogue.events, catalogue.films, catalogue.meta, state, now);
+    return eventFacetCounts(catalogue.events, catalogue.films, catalogue.meta, state, now, [facet])[
+      facet
+    ];
   return facetCounts(
     selectFilms(catalogue.films, { ...state, filters: {} }),
     catalogue.meta,
     { ...state, radarSection: undefined },
     now,
-  );
+    [facet],
+  )[facet];
 }
 
 /** The decades offered in the Year row, with how many films each would show. */

@@ -1,4 +1,4 @@
-import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import {
   AccessibilityInfo,
   BackHandler,
@@ -73,14 +73,16 @@ export function FiltersSheet({ kind }: { kind: ScopeKind }) {
     () => (catalogue ? resultCount(kind, catalogue, state, now) : 0),
     [kind, catalogue, state, now],
   );
-  // The option counts are the heaviest work in the sheet; React may finish them after the tap
-  // has already updated the list and the heading count.
+  // The option counts are the heaviest work in the sheet, so each facet counts its options only
+  // while it is open (FacetSection), and React may finish them after the tap has already
+  // updated the list and the heading count.
   const deferred = useDeferredValue(state);
-  const counts = useMemo(
-    () => (catalogue ? optionCounts(kind, catalogue, deferred, now) : null),
+  const countsFor = useCallback(
+    (key: FacetKey) =>
+      catalogue ? optionCounts(kind, catalogue, deferred, now, key) : new Map<string, number>(),
     [kind, catalogue, deferred, now],
   );
-  const decades = useMemo(
+  const decadesFor = useCallback(
     () => (catalogue ? decadeCounts(kind, catalogue, deferred, now) : []),
     [kind, catalogue, deferred, now],
   );
@@ -92,9 +94,10 @@ export function FiltersSheet({ kind }: { kind: ScopeKind }) {
         account: { user: null, watchlist: null },
         cinemas: { venues: [], loading: false },
         state,
-        counts,
+        // The counts only feed each item's `title`, which the app does not show.
+        counts: null,
       }),
-    [state, counts],
+    [state],
   );
 
   if (panel === "nearby" && catalogue)
@@ -126,7 +129,7 @@ export function FiltersSheet({ kind }: { kind: ScopeKind }) {
         meta={catalogue.meta}
         selected={state.filters[key] ?? []}
         excluded={state.excluded[key] ?? []}
-        counts={counts?.[key] ?? new Map()}
+        countsFor={countsFor}
         onChange={(selected, excluded) =>
           change({
             filters: { ...state.filters, [key]: selected },
@@ -220,7 +223,7 @@ export function FiltersSheet({ kind }: { kind: ScopeKind }) {
           {facet("format", "format")}
           {facet("language", "language")}
           <DecadeSection
-            decades={decades}
+            decadesFor={decadesFor}
             selected={state.decades ?? []}
             years={state.years ?? []}
             onToggle={(decade) => change(toggleDecade(state, decade))}
@@ -295,7 +298,6 @@ function QuickFilters({
                 : { checked: !!item.active, disabled: item.disabled }
             }
             accessibilityLabel={item.label}
-            accessibilityHint={item.title}
             style={({ pressed }) => [
               styles.quickItem,
               personal && styles.quickPersonal,
@@ -340,17 +342,19 @@ function Group({ title, children }: { title: string; children: React.ReactNode }
  * the app keeps to decades for now and shows a single-year choice made elsewhere as a chip.
  */
 function DecadeSection({
-  decades,
+  decadesFor,
   selected,
   years,
   onToggle,
 }: {
-  decades: { decade: number; count: number }[];
+  /** The decades with their counts; called only while the section is open. */
+  decadesFor: () => { decade: number; count: number }[];
   selected: number[];
   years: number[];
   onToggle: (decade: number) => void;
 }) {
   const [open, setOpen] = useState(false);
+  const decades = useMemo(() => (open ? decadesFor() : []), [open, decadesFor]);
   const chosen = selected.length + years.length;
   const summary = chosen
     ? chosen === 1 && selected.length === 1

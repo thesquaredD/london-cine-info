@@ -6,6 +6,8 @@ import { Text } from "@/ui/text";
 import { colors, fonts, radius, space, textSize, touchTarget } from "@/ui/tokens";
 import { facetOptions, facetSummary, toggleOption, type FacetOption } from "./facets";
 
+const NO_COUNTS = new Map<string, number>();
+
 /**
  * One row of the Filters sheet (the website's FilterPicker): a line icon, the facet's name and
  * a summary of its choice. Tapping it opens the options: "Exclude options" and "Clear", a find
@@ -19,7 +21,7 @@ export function FacetSection({
   meta,
   selected,
   excluded,
-  counts,
+  countsFor,
   summaryValue,
   before,
   after,
@@ -31,7 +33,8 @@ export function FacetSection({
   meta: DataMeta;
   selected: string[];
   excluded: string[];
-  counts: Map<string, number>;
+  /** The option counts for a facet; called only while this section is open. */
+  countsFor: (facet: FacetKey) => Map<string, number>;
   summaryValue?: string;
   before?: ReactNode;
   after?: ReactNode;
@@ -43,6 +46,7 @@ export function FacetSection({
   const options = useMemo(() => facetOptions(facet, meta), [facet, meta]);
   const searchable = facet !== "day" && options.length > 8;
   const groups = useMemo(() => (open ? facetGroups(options, find) : []), [open, options, find]);
+  const counts = useMemo(() => (open ? countsFor(facet) : NO_COUNTS), [open, countsFor, facet]);
   const summary = facetSummary(facet, label, selected, excluded, meta, summaryValue);
   const active = selected.length > 0 || excluded.length > 0 || !!summaryValue;
   return (
