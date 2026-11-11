@@ -2,9 +2,11 @@ import { memo } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { displayTitle, type TitleMode } from "@readograph/core/display";
 import type { Film } from "@readograph/core/data";
+import type { Href } from "expo-router";
 import { Poster } from "@/ui/poster";
 import { Text } from "@/ui/text";
 import { colors, space, thumbnail } from "@/ui/tokens";
+import { DetailLink, ZoomSource } from "./detail-link";
 import type { NextScreening } from "./present";
 
 /** One row's height: 14 + 72 (thumbnail) + 14, the mock-up's 100-point rows. */
@@ -16,7 +18,12 @@ export type FilmRowProps = {
   director: string;
   next: NextScreening | null;
   rating: { short: string; value: string };
-  onOpen: (film: Film) => void;
+  /** Radar's line under the title: "Only 2 screenings listed · 14 November 2026". */
+  note?: string;
+  href: Href;
+  canOpen?: () => boolean;
+  /** The morph overlay draws the row's text without its poster. */
+  posterHidden?: boolean;
 };
 
 /**
@@ -24,8 +31,9 @@ export type FilmRowProps = {
  * layout: title and original title, director and year, the next screening, and the rating at
  * the right edge.
  *
- * PR 5's List ⇄ Posters morph measures the thumbnail: it is a `Poster` with the film ID as its
- * `recyclingKey`, the same component the grid will render, at a fixed 16-point left inset.
+ * The List ⇄ Posters morph places its overlay poster on the thumbnail: a `Poster` with the
+ * film ID as its `recyclingKey`, the component the grid renders, at a fixed 16-point left inset
+ * and 14 points from the row's top (`rowThumbnailRect` in morph.ts).
  */
 export const FilmRow = memo(function FilmRow({
   film,
@@ -33,7 +41,10 @@ export const FilmRow = memo(function FilmRow({
   director,
   next,
   rating,
-  onOpen,
+  note,
+  href,
+  canOpen,
+  posterHidden,
 }: FilmRowProps) {
   const title = displayTitle(film, titleMode);
   const original = titleMode === "both" && film.o_ti && film.o_ti !== film.ti ? film.o_ti : null;
@@ -41,20 +52,27 @@ export const FilmRow = memo(function FilmRow({
     title,
     original,
     director,
+    note,
     next ? `Next: ${next.when}, ${next.where}` : null,
     `${rating.short} ${rating.value}`,
   ]
     .filter(Boolean)
     .join(". ");
-  return (
+  const body = (
     <Pressable
-      onPress={() => onOpen(film)}
       accessibilityRole="button"
       accessibilityLabel={label}
       accessibilityHint="Opens the film's screenings"
+      disabled={posterHidden}
       style={({ pressed }) => [styles.row, pressed && styles.pressed]}
     >
-      <Poster film={film} width={thumbnail.width} height={thumbnail.height} />
+      {posterHidden ? (
+        <View style={thumbnail} />
+      ) : (
+        <ZoomSource>
+          <Poster film={film} width={thumbnail.width} height={thumbnail.height} />
+        </ZoomSource>
+      )}
       <View style={styles.text}>
         <Text size={5} numberOfLines={2}>
           {title}
@@ -67,6 +85,11 @@ export const FilmRow = memo(function FilmRow({
         {director ? (
           <Text tone="muted" numberOfLines={1} style={styles.director}>
             {director}
+          </Text>
+        ) : null}
+        {note ? (
+          <Text size={2} tone="brass" numberOfLines={2} style={styles.next}>
+            {note}
           </Text>
         ) : null}
         {next ? (
@@ -82,6 +105,13 @@ export const FilmRow = memo(function FilmRow({
         {rating.short} <Text weight="medium">{rating.value}</Text>
       </Text>
     </Pressable>
+  );
+  return posterHidden ? (
+    body
+  ) : (
+    <DetailLink href={href} canOpen={canOpen}>
+      {body}
+    </DetailLink>
   );
 });
 

@@ -4,16 +4,18 @@ import { Text } from "@/ui/text";
 import { colors, fonts, radius, space, textSize } from "@/ui/tokens";
 
 /**
- * The search field under the collection switcher, as in mock-up 1 (beside it, PR 5 adds the
- * icon-only Filters button). Typing updates the list after a short pause so a 1,500-film
+ * The search field under the collection switcher, as in mock-up 1, with the icon-only Filters
+ * button beside it; the Filters sheet reuses it with its own placeholder. Typing updates the list after a short pause so a 1,500-film
  * catalogue is not re-filtered on every keystroke.
  */
 export function SearchField({
   value,
   onChange,
+  placeholder = "What do you want to see?",
 }: {
   value: string;
   onChange: (value: string) => void;
+  placeholder?: string;
 }) {
   const [text, setText] = useState(value);
   useEffect(() => setText(value), [value]);
@@ -30,7 +32,7 @@ export function SearchField({
       <TextInput
         value={text}
         onChangeText={setText}
-        placeholder="What do you want to see?"
+        placeholder={placeholder}
         placeholderTextColor={colors.muted}
         accessibilityLabel="Search films, original titles and directors"
         returnKeyType="search"
