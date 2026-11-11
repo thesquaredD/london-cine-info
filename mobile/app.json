@@ -34,7 +34,8 @@
         }
       ],
       "expo-image",
-      "expo-status-bar"
+      "expo-status-bar",
+      "./plugins/with-android-back.cjs"
     ],
     "experiments": {
       "typedRoutes": false

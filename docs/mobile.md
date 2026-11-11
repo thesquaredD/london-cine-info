@@ -18,15 +18,6 @@ wrong, the likely cause and the target. Check every item on the emulator before 
 (`AGENTS.md`, "Phone app"). Do not blame Expo Go unless it is the only explanation, and prove it
 with a release build first.
 
-2. **Filters: one group at a time, drill-in instead of accordion.** Today the groups expand in
-   place, so several can be open at once, which the phone has no room for. Target: the sheet's
-   root is a list of the groups (When, Where and What items), each row showing its current value
-   ("Cinema · Any", "Day · Today"). Tapping a row replaces the sheet's content with that one group,
-   full height, with a back control and the group's name as the heading; back returns to the
-   list. Only one group is ever open. The quick filters (TODAY to EVENING, MY WATCHLIST, MY
-   CINEMAS, NEAR ME), the live film count, Reset all and the Show films footer stay as they are
-   now. This is the iOS Settings or Apple Maps filters pattern; follow each platform's back
-   gesture (Android back and predictive back go up one level before closing the sheet).
 3. **Filters: a slide-up sheet again, on both platforms, in Expo Go too.** #76 opened Filters as a
    full-screen page with a sideways transition in Expo Go on Android, because Expo Go 58 draws the
    native `formSheet` off screen there. The maintainer tests in Expo Go, so the sheet must slide
@@ -234,7 +225,9 @@ typed routes are off).
   hides them for a signed-out reader without saved cinemas; NEAR ME opens Near me), search,
   When (day, time), Where (cinema with the independent toggle, borough, membership), What
   (genre, format, language, year by decade, accessibility), Only show (sold out, under two
-  hours), and a footer bar with Reset all and Show N films.
+  hours), and a footer bar with Reset all and Show N films. A row opens its options in a dedicated
+  view with a back control; only that facet mounts. Back (including Android native back) returns
+  to the group list before closing Filters. The live count and footer stay visible.
 - **Keeping the sheet fast.** Counting the options of all nine facets takes about 2.6 seconds in
   a release build, so a facet builds and counts its options only while it is open
   (core's `facetCounts` and `eventFacetCounts` take an optional list of facets), the Year row counts its decades when it
@@ -276,6 +269,15 @@ typed routes are off).
   shows one section at a time (few screenings soon, 35mm and 70mm, IMAX) with the website's line
   explaining why each film is listed. The Release calendar and Retrospectives keep the
   website's group headings in the list and the grid.
+
+### Android Back bridge
+
+`plugins/with-android-back.cjs` keeps predictive Back enabled on Android 13–15. React Native
+0.88 registers its AndroidX dispatcher bridge only on Android 16 and newer; on the older
+versions, the system otherwise bypasses `BackHandler` and leaves the app. The config plugin
+registers the same bridge for API 33–35 and disables it around an unhandled default exit to
+avoid recursion. Remove it when React Native covers those API levels. Verify the group → root
+→ Films → home sequence and reopening the app whenever upgrading React Native.
 
 ## Theme and motion
 
