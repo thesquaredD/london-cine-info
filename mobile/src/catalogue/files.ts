@@ -24,7 +24,7 @@ export function expoCacheFiles(folder = "catalogue"): CacheFiles {
       const file = new File(directory, name);
       if (file.exists) file.delete();
       file.create();
-      file.write(text);
+      await file.write(text);
     },
     async remove(name) {
       const file = new File(directory, name);

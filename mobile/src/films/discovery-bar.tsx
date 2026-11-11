@@ -1,11 +1,11 @@
 import { useCallback, useRef } from "react";
 import {
   AccessibilityInfo,
-  findNodeHandle,
   Pressable,
   ScrollView,
   StyleSheet,
   View,
+  type HostInstance,
 } from "react-native";
 import { router, useFocusEffect, type Href } from "expo-router";
 import type { FilmView } from "@readograph/core/display";
@@ -26,14 +26,13 @@ import type { FilterChip } from "./chips";
  * sheet closes the screen reader's focus comes back to it.
  */
 export function FiltersButton({ count, href }: { count: number; href: Href }) {
-  const ref = useRef<View>(null);
+  const ref = useRef<HostInstance>(null);
   const opened = useRef(false);
   useFocusEffect(
     useCallback(() => {
       if (!opened.current) return;
       opened.current = false;
-      const node = findNodeHandle(ref.current);
-      if (node) AccessibilityInfo.setAccessibilityFocus(node);
+      if (ref.current) AccessibilityInfo.sendAccessibilityEvent(ref.current, "focus");
     }, []),
   );
   const active = count > 0;

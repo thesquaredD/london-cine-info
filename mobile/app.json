@@ -32,7 +32,9 @@
             "./assets/fonts/LeagueSpartan-Medium.ttf"
           ]
         }
-      ]
+      ],
+      "expo-image",
+      "expo-status-bar"
     ],
     "experiments": {
       "typedRoutes": false

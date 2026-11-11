@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from "react";
-import { Linking, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { Linking, Pressable, ScrollView, StyleSheet, View, type HostInstance } from "react-native";
 import * as Location from "expo-location";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { ViewState } from "@readograph/core/catalogue";
@@ -43,7 +43,7 @@ export function NearMePanel({
   onBack,
   onApply,
 }: {
-  headingRef: RefObject<View | null>;
+  headingRef: RefObject<HostInstance | null>;
   meta: DataMeta;
   events: boolean;
   onBack: () => void;
