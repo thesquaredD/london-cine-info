@@ -1,10 +1,10 @@
-import { NativeTabs } from "expo-router/unstable-native-tabs";
+import { NativeTabs } from "expo-router/native-tabs";
 import { colors, fonts, textSize } from "@/ui/tokens";
 import { TABS } from "./tabs";
 
 /**
  * The system tab bar (UITabBarController on iOS, Material bottom navigation on Android), from
- * `expo-router/unstable-native-tabs`, the SDK 57 import path.
+ * `expo-router/native-tabs`, the stable import path since SDK 58.
  */
 export function NativeTabsLayout() {
   return (

@@ -2,11 +2,11 @@ import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import {
   AccessibilityInfo,
   BackHandler,
-  findNodeHandle,
   Pressable,
   ScrollView,
   StyleSheet,
   View,
+  type HostInstance,
 } from "react-native";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -42,15 +42,14 @@ export function FiltersSheet({ kind }: { kind: ScopeKind }) {
   const state = useView();
   const now = useNow();
   const insets = useSafeAreaInsets();
-  const heading = useRef<View>(null);
+  const heading = useRef<HostInstance>(null);
   const [panel, setPanel] = useState<"filters" | "nearby">("filters");
 
   // VoiceOver and TalkBack start on the heading; the native sheet already hides the content
   // behind it from them.
   useEffect(() => {
     const frame = requestAnimationFrame(() => {
-      const node = findNodeHandle(heading.current);
-      if (node) AccessibilityInfo.setAccessibilityFocus(node);
+      if (heading.current) AccessibilityInfo.sendAccessibilityEvent(heading.current, "focus");
     });
     return () => cancelAnimationFrame(frame);
   }, [panel]);

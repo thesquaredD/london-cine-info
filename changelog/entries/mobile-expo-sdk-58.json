@@ -1,0 +1,8 @@
+{
+  "id": "mobile-expo-sdk-58",
+  "type": "improved",
+  "title": "Phone app moves to Expo SDK 58",
+  "body": "The phone app now runs on Expo SDK 58, so it opens in the current Expo Go.",
+  "visibility": "internal",
+  "reason": "Upgrades the unreleased Expo app under mobile/ from SDK 57 to SDK 58. The app is not distributed yet and the website is unchanged."
+}
