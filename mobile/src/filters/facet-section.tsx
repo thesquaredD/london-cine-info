@@ -43,7 +43,9 @@ export function FacetSection({
   const [open, setOpen] = useState(false);
   const [excludeMode, setExcludeMode] = useState(false);
   const [find, setFind] = useState("");
-  const options = useMemo(() => facetOptions(facet, meta), [facet, meta]);
+  // Building Day formats every future date. Closed rows need only their summary, so do not
+  // construct any option list (or its cinema/borough maps) until this facet is opened.
+  const options = useMemo(() => (open ? facetOptions(facet, meta) : []), [open, facet, meta]);
   const searchable = facet !== "day" && options.length > 8;
   const groups = useMemo(() => (open ? facetGroups(options, find) : []), [open, options, find]);
   const counts = useMemo(() => (open ? countsFor(facet) : NO_COUNTS), [open, countsFor, facet]);

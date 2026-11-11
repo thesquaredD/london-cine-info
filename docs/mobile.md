@@ -18,12 +18,6 @@ wrong, the likely cause and the target. Check every item on the emulator before 
 (`AGENTS.md`, "Phone app"). Do not blame Expo Go unless it is the only explanation, and prove it
 with a release build first.
 
-1. **The Filters sheet opens slowly**, about a second on the phone. #76 measured about 0.2 s in a
-   release build, but the sheet still mounts every group's content at once: the When group
-   lists one row per future screening day (months of rows), and Where lists every cinema. Target:
-   the sheet's first frame draws only the list of groups (item 2), and a group's content mounts
-   when it is opened. Measure the tap-to-first-layout time in Expo Go and in a release build,
-   before and after, and put the numbers in the pull request.
 2. **Filters: one group at a time, drill-in instead of accordion.** Today the groups expand in
    place, so several can be open at once, which the phone has no room for. Target: the sheet's
    root is a list of the groups (When, Where and What items), each row showing its current value
@@ -242,8 +236,8 @@ typed routes are off).
   (genre, format, language, year by decade, accessibility), Only show (sold out, under two
   hours), and a footer bar with Reset all and Show N films.
 - **Keeping the sheet fast.** Counting the options of all nine facets takes about 2.6 seconds in
-  a release build, so a facet counts its options only while it is open (core's `facetCounts` and
-  `eventFacetCounts` take an optional list of facets), the Year row counts its decades when it
+  a release build, so a facet builds and counts its options only while it is open
+  (core's `facetCounts` and `eventFacetCounts` take an optional list of facets), the Year row counts its decades when it
   opens, and the heading's count reuses the list's last result (`src/filters/results.ts`). Do not
   compute counts for closed rows when the sheet mounts.
 - Differences from the website's sheet: the year row offers decades only, the time row has no

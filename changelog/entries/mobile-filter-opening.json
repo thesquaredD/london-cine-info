@@ -1,0 +1,8 @@
+{
+  "id": "mobile-filter-opening",
+  "type": "improved",
+  "title": "Defer phone filter options until opened",
+  "body": "Phone filter rows build their option lists only when opened.",
+  "visibility": "internal",
+  "reason": "Performance improvement in the unreleased phone app; the website is unchanged."
+}
