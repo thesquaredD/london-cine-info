@@ -5,8 +5,61 @@ The app lives in `mobile/`, an npm workspace next to the website. It is an Expo 
 sort and sharing logic comes from `@readograph/core` (`packages/core`), the same code the website
 runs. The plan is `docs/mobile-app-plan.md`; this file describes what is built.
 
-Status: PRs 4 and 5 of the plan. Films, Events and Radar work; My films and Account are
-placeholders. The device checks are still open (see "Device checks").
+Status (11 November 2026): PRs 1–5 of the plan are merged (#70–#74), plus the SDK 58 upgrade
+(#75) and the first layout and speed fixes (#76). Films, Events and Radar work; My films and
+Account are placeholders. The maintainer's first test on an Android phone in Expo Go found the
+problems in "Next work" below. The device checks are still open (see "Device checks").
+
+## Next work
+
+The maintainer tested the app on an Android phone in Expo Go after #76. Work through this list
+in order, one pull request per item unless two are trivially small. Each item says what is
+wrong, the likely cause and the target. Check every item on the emulator before and after
+(`AGENTS.md`, "Phone app"). Do not blame Expo Go unless it is the only explanation, and prove it
+with a release build first.
+
+1. **The Filters sheet opens slowly**, about a second on the phone. #76 measured about 0.2 s in a
+   release build, but the sheet still mounts every group's content at once: the When group
+   lists one row per future screening day (months of rows), and Where lists every cinema. Target:
+   the sheet's first frame draws only the list of groups (item 2), and a group's content mounts
+   when it is opened. Measure the tap-to-first-layout time in Expo Go and in a release build,
+   before and after, and put the numbers in the pull request.
+2. **Filters: one group at a time, drill-in instead of accordion.** Today the groups expand in
+   place, so several can be open at once, which the phone has no room for. Target: the sheet's
+   root is a list of the groups (When, Where and What items), each row showing its current value
+   ("Cinema · Any", "Day · Today"). Tapping a row replaces the sheet's content with that one group,
+   full height, with a back control and the group's name as the heading; back returns to the
+   list. Only one group is ever open. The quick filters (TODAY to EVENING, MY WATCHLIST, MY
+   CINEMAS, NEAR ME), the live film count, Reset all and the Show films footer stay as they are
+   now. This is the iOS Settings or Apple Maps filters pattern; follow each platform's back
+   gesture (Android back and predictive back go up one level before closing the sheet).
+3. **Filters: a slide-up sheet again, on both platforms, in Expo Go too.** #76 opened Filters as a
+   full-screen page with a sideways transition in Expo Go on Android, because Expo Go 58 draws the
+   native `formSheet` off screen there. The maintainer tests in Expo Go, so the sheet must slide
+   up there as well. Target: on Android use the plan's fallback, `@gorhom/bottom-sheet`
+   (`BottomSheetModal`, one tall snap point, pan down to close, a 45% black backdrop, Android back
+   closes it), which works the same in Expo Go and in a build; keep the native `formSheet` on
+   iOS unless it shows the same problem. Remove the `isRunningInExpoGo()` workaround in
+   `src/navigation/list-stack.tsx`. The plan's eight Filters drawer checks still apply.
+4. **Dates: no list of every future day.** Opening the date group lists every day that has a
+   screening. Default target until the maintainer chooses otherwise: the quick ranges (Today,
+   Tomorrow, Weekend, Week) at the top, then a month calendar where only days with screenings can
+   be tapped, with a week's worth visible without scrolling. Keep the same `ViewState` filter
+   values the website uses.
+5. **Everything is too small.** `tokens.ts` copies the website's pixel sizes as points (body 16,
+   floor 13). Target: native sizes. Body 17 on iOS and 16 sp on Android at minimum, titles and
+   row text scaled up to match, touch targets of at least 44 points on iOS and 48 dp on Android,
+   and text that follows the phone's font size setting (`allowFontScaling`, with a sensible
+   maximum so rows do not break). Change the scale in `tokens.ts` once and check every screen;
+   no screen sets its own font size.
+6. **List ⇄ Posters flashes before the morph.** For a frame the list re-lays itself out before
+   the overlay covers it, then the animation runs. Target: mount the overlay at the start
+   rectangles and hide the list in the same frame (a Reanimated shared value, not React state),
+   then switch the layout and measure the targets. Record the switch on the emulator
+   (`adb shell screenrecord`) and step through it frame by frame to prove the flash is gone.
+
+When an item is merged, delete it from this list in the same pull request and add anything new
+the maintainer reports.
 
 ## Setup
 
