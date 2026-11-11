@@ -5,7 +5,7 @@ type Props = TextProps & {
   /** A step of the shared scale; 3 (16) is body text. */
   size?: TextStep;
   weight?: "regular" | "medium";
-  tone?: "fg" | "muted" | "brass" | "onRed" | "soldOut";
+  tone?: "fg" | "muted" | "brass" | "onRed" | "onBrass" | "soldOut";
 };
 
 const tones = {
@@ -13,6 +13,7 @@ const tones = {
   muted: colors.muted,
   brass: colors.brass,
   onRed: colors.onRed,
+  onBrass: colors.onBrass,
   soldOut: colors.soldOut,
 } as const;
 

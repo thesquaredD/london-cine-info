@@ -67,12 +67,64 @@ not launched. Options, best first:
 ## Navigation
 
 - `app/(tabs)/_layout.tsx` renders the five tabs: Films, Events, Radar, My films, Account.
-  Each tab folder has its own native stack, so the film detail is pushed inside the Films tab.
+  Each tab folder has its own native stack, so the film detail is pushed inside its tab.
+- Films, Events and Radar share `src/navigation/list-stack.tsx`: the list, the film detail
+  (`[id].tsx`; Events and Radar re-export the Films screen) and the Filters sheet
+  (`filters.tsx`). Each of the three tabs has its own `ViewState` store
+  (`src/films/view-context.tsx`); the stack layout picks it with `ViewScope`, so the list, the
+  detail and the sheet of a tab read and write the same state.
 - **Tabs fallback.** Native tabs (`expo-router/unstable-native-tabs`) are beta in SDK 57. If the
   device checks find them unreliable, set `USE_NATIVE_TABS = false` in
   `mobile/src/navigation/tabs.ts`; the same route files then render in Expo Router's JavaScript
   `Tabs`, with the same labels and symbols. Nothing else changes.
 - Headers are the native stack's, in the masthead red, with the wordmark as the Films title.
+
+## Discovery (PR 5)
+
+- **Filters sheet.** A `formSheet` route per list tab, configured as the plan says:
+  `sheetAllowedDetents: [1]`, `sheetGrabberVisible: true`, `sheetCornerRadius: 12`, the
+  scroll-to-edge expansion left at its default. `@gorhom/bottom-sheet` is not used: nothing
+  found in SDK 57 shows the Android form sheet failing the checks, and they need a phone. If the
+  device checks fail on Android, the plan's fallback (a `BottomSheetModal`) replaces the route's
+  presentation only; `src/filters/filters-sheet.tsx` is the content either way.
+- The sheet owns no state. Every change writes straight to the tab's store, so the list behind
+  updates live. Top to bottom: the quick filters from core's `shortcutItems` in capitals (MY
+  WATCHLIST and MY CINEMAS are hidden until PR 6 adds accounts, exactly as `shortcutItems`
+  hides them for a signed-out reader without saved cinemas; NEAR ME opens Near me), search,
+  When (day, time), Where (cinema with the independent toggle, borough, membership), What
+  (genre, format, language, year by decade, accessibility), Only show (sold out, under two
+  hours), and a footer bar with Reset all and Show N films.
+- Differences from the website's sheet: the year row offers decades only, the time row has no
+  From and Until fields (no time picker dependency; a time range set elsewhere still shows and
+  clears as a chip), and the day row is a list rather than the website's calendar.
+- **Active-filter chips** (`src/films/chips.ts`) list one chip per choice and end with Clear
+  all, which keeps the search text and the sort. The Filters button's badge uses the website's
+  count.
+- **Near me** runs inside the sheet: foreground permission (explained before the system
+  prompt), one position at balanced accuracy, the cinemas within 1 to 10 miles through core's
+  `nearbyVenues` (which tests each distance with `withinRadius`). Refused for good, it explains
+  and offers Settings. Applying it sets a temporary cinema filter, as on the website.
+- **List ⇄ Posters.** The choice is stored in AsyncStorage as `london-cine.film-view.v1`
+  ("list" or "posters") and offered only where core's `supportsPosters` is true. The morph is a
+  FLIP overlay (`src/films/use-morph.ts`, maths in `morph.ts`): it reads the visible cells from
+  FlashList's own layouts (`getLayout`) instead of a native `measure`, hides the cells, switches
+  `numColumns` (FlashList 2 swaps its layout manager without remounting), restores the anchor
+  film's offset, then flies every visible poster from one shared progress value with the plan's
+  timings. A second tap reverses it; poster taps wait until it settles.
+- **Switches**, one constant each in `src/ui/motion.ts`:
+  - `MORPH_STYLE = "flip"`. Set `"crossFade"` for the plan's fallback, a 160 ms fade with the
+    scroll anchor kept. Reduced motion always uses a 120 ms fade.
+  - `IOS_POSTER_TRANSITION = "zoom"`: Expo Router 57's `Link.AppleZoom` and
+    `Link.AppleZoomTarget` (iOS 18 and later; earlier iOS gets the push by itself, because the
+    component falls back to a plain wrapper). `"push"` turns it off.
+  - `ANDROID_POSTER_TRANSITION = "fade"`: the container transform needs Reanimated's
+    shared-element transitions, which 4.5.1 keeps behind the experimental static flag
+    `ENABLE_SHARED_ELEMENT_TRANSITIONS`. Android therefore uses the plan's fallback: the
+    standard push with the detail poster fading in over 160 ms. `"push"` turns the fade off.
+- **Events** groups by London date with the website's two views and event types; **Radar**
+  shows one section at a time (few screenings soon, 35mm and 70mm, IMAX) with the website's line
+  explaining why each film is listed. The Release calendar and Retrospectives keep the
+  website's group headings in the list and the grid.
 
 ## Theme and motion
 
@@ -80,8 +132,9 @@ not launched. Options, best first:
   `--text-1` to `--text-9` scale (13 to 42 points, body 16). Screens use no other colours or
   font sizes. The app is dark only (`userInterfaceStyle: "dark"`); a light set would be a second
   palette in the same file.
-- `mobile/src/ui/motion.ts` holds the easing (`Easing.bezier(0.2, 0.8, 0.2, 1)`), the durations
-  of the List ⇄ Posters morph and the reduced-motion cross-fade, for PR 5.
+- `mobile/src/ui/motion.ts` holds the easing (`Easing.bezier(0.2, 0.8, 0.2, 1)`) and the
+  transition switches; the durations live in `motion-values.ts` so the morph maths can be
+  unit-tested without React Native.
 - **Fonts.** League Spartan (SIL Open Font License) is embedded from the upstream TTFs
   (`mobile/assets/fonts/SOURCE.txt`). Clash Display is not embedded: Fontshare's licence, as
   recorded in `public/fonts/fontshare/SOURCE.txt`, covers self-hosting on the website and not
@@ -104,6 +157,7 @@ could not run on this machine, so its eight items are folded in here.
 5. League Spartan renders on both platforms; the wordmark image is sharp in the header.
 6. The Filters drawer's eight checks (PR 5).
 7. The List ⇄ Posters morph (PR 5).
-8. The iOS zoom transition and the Android container transform (PR 5).
+8. The iOS zoom transition and the Android poster fade that stands in for the container
+   transform (PR 5).
 
-PR 4's own device checks are listed in its pull request.
+PR 4's and PR 5's own device checks are listed in their pull requests.

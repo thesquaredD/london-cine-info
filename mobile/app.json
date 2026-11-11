@@ -19,6 +19,12 @@
       "expo-router",
       "expo-web-browser",
       [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Readograph uses your location to list the cinemas near you. It is not stored or sent anywhere."
+        }
+      ],
+      [
         "expo-font",
         {
           "fonts": [

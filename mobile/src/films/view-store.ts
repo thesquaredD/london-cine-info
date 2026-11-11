@@ -38,6 +38,24 @@ export function initialView(path = "/"): ViewState {
   return readView(new URL(path, SITE_ORIGIN));
 }
 
+const same = (a: string[] | undefined, b: string[] | undefined) =>
+  (a ?? []).join("\n") === (b ?? []).join("\n");
+
+/** What a change implies on top of itself, by the website's rules. */
+export function impliedChanges(state: ViewState, changes: Partial<ViewState>): Partial<ViewState> {
+  const touched = (key: "venue" | "day" | "time") =>
+    (changes.filters && !same(changes.filters[key], state.filters[key])) ||
+    (changes.excluded && !same(changes.excluded[key], state.excluded[key]));
+  return {
+    ...(state.myCinemas && !("myCinemas" in changes) && touched("venue")
+      ? { myCinemas: false }
+      : {}),
+    ...(state.tonight && !("tonight" in changes) && (touched("day") || touched("time"))
+      ? { tonight: false, from: "", to: "" }
+      : {}),
+  };
+}
+
 export type ViewStore = ReturnType<typeof createViewStore>;
 
 export function createViewStore(initial: ViewState = initialView()) {
@@ -53,8 +71,13 @@ export function createViewStore(initial: ViewState = initialView()) {
       listeners.add(listener);
       return () => listeners.delete(listener);
     },
+    /**
+     * Applies changes with the website's two rules (app.tsx `change`): a new cinema choice turns
+     * My cinemas off, and a new day or time choice turns Tonight off, unless the change itself
+     * sets them.
+     */
     update(changes: Partial<ViewState>) {
-      set({ ...state, ...changes });
+      set({ ...state, ...impliedChanges(state, changes), ...changes });
     },
     /** A new collection keeps the search and filters and takes that collection's default sort. */
     setCollection(path: string) {

@@ -1,4 +1,5 @@
 import { Easing, ReduceMotion, type WithTimingConfig } from "react-native-reanimated";
+import { duration } from "./motion-values";
 
 /**
  * The app's motion rules (plan: "Shared motion rules").
@@ -14,20 +15,6 @@ import { Easing, ReduceMotion, type WithTimingConfig } from "react-native-reanim
 /** The website's easing curve, for every custom animation. */
 export const easing = Easing.bezier(0.2, 0.8, 0.2, 1);
 
-/** Durations in milliseconds. */
-export const duration = {
-  /** One poster's flight in the List ⇄ Posters morph (PR 5). */
-  morph: 320,
-  /** Delay between posters in reading order during the morph (PR 5). */
-  morphStagger: 14,
-  /** Row text fading out (to posters) or in (back to the list) during the morph (PR 5). */
-  morphText: 160,
-  /** Android poster fade when the container transform falls back to a push (PR 5). */
-  posterFade: 160,
-  /** The reduced-motion replacement for any transition that must stay visible. */
-  crossFade: 120,
-} as const;
-
 /** Timing config for custom motion. */
 export function timing(ms: number): WithTimingConfig {
   return { duration: ms, easing, reduceMotion: ReduceMotion.System };
@@ -40,8 +27,21 @@ export const crossFade: WithTimingConfig = {
   reduceMotion: ReduceMotion.Never,
 };
 
-/** The delay for the poster at `index` (reading order) in a morph of `count` posters. */
-export function morphDelay(index: number, count: number, toPosters: boolean): number {
-  const position = toPosters ? index : count - 1 - index;
-  return Math.max(0, position) * duration.morphStagger;
-}
+export { duration, morphDelay } from "./motion-values";
+
+/**
+ * The switches for PR 5's transitions, one constant each (recorded in docs/mobile.md).
+ *
+ * - `MORPH_STYLE`: "flip" is the List ⇄ Posters FLIP overlay; "crossFade" is the plan's
+ *   fallback if the device checks find dropped frames: a 160 ms fade between the two layouts
+ *   with the scroll anchor kept. Reduced motion always uses the 120 ms cross-fade.
+ * - `IOS_POSTER_TRANSITION`: "zoom" uses Expo Router's `Link.AppleZoom` (iOS 18 and later;
+ *   earlier iOS gets the push by itself); "push" turns it off.
+ * - `ANDROID_POSTER_TRANSITION`: the container transform needs Reanimated shared-element
+ *   transitions, which 4.5.1 still keeps behind the experimental static flag
+ *   `ENABLE_SHARED_ELEMENT_TRANSITIONS`. So Android uses the plan's fallback, "fade": the
+ *   standard push with the detail poster fading in over 160 ms. "push" turns the fade off.
+ */
+export const MORPH_STYLE: "flip" | "crossFade" = "flip";
+export const IOS_POSTER_TRANSITION: "zoom" | "push" = "zoom";
+export const ANDROID_POSTER_TRANSITION: "fade" | "push" = "fade";

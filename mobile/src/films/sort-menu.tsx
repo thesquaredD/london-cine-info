@@ -23,7 +23,15 @@ const directionLabel = (state: Pick<ViewState, "sort" | "direction">) => {
  * 390px), opening a list of keys. Choosing the current key again flips its direction, a third
  * time returns to the collection's default, the website's `nextSort` rule.
  */
-export function SortMenu({ state, onSort }: { state: ViewState; onSort: (key: SortKey) => void }) {
+export function SortMenu({
+  state,
+  onSort,
+  keys = SORT_KEYS,
+}: {
+  state: ViewState;
+  onSort: (key: SortKey) => void;
+  keys?: readonly SortKey[];
+}) {
   const [open, setOpen] = useState(false);
   const insets = useSafeAreaInsets();
   const current = sortLabel(state.sort);
@@ -54,7 +62,7 @@ export function SortMenu({ state, onSort }: { state: ViewState; onSort: (key: So
           <Text size={4} weight="medium" accessibilityRole="header" style={styles.heading}>
             Sort
           </Text>
-          {SORT_KEYS.map((key) => {
+          {keys.map((key) => {
             const selected = key === state.sort;
             return (
               <Pressable

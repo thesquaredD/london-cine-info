@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import { Pressable, ScrollView, Share, StyleSheet, View } from "react-native";
+import { Platform, Pressable, ScrollView, Share, StyleSheet, View } from "react-native";
+import Animated, { FadeIn, ReduceMotion } from "react-native-reanimated";
 import { Stack, useLocalSearchParams } from "expo-router";
-import * as WebBrowser from "expo-web-browser";
 import { DEFAULT_DISPLAY } from "@readograph/core/display";
 import { filmProviderLinks } from "@readograph/core/film-links";
 import { shareUrl } from "@readograph/core/sharing";
@@ -18,22 +18,24 @@ import {
   screeningDays,
   screeningTags,
 } from "@/films/present";
-import { useFilmsView } from "@/films/view-context";
+import { ZoomTarget } from "@/films/detail-link";
+import { useView } from "@/films/view-context";
 import { useNow } from "@/films/use-now";
 import { Notice } from "@/ui/notice";
+import { openLink } from "@/ui/open-link";
 import { Poster } from "@/ui/poster";
 import { Text } from "@/ui/text";
+import { ANDROID_POSTER_TRANSITION, duration } from "@/ui/motion";
 import { colors, detailPoster, radius, space, touchTarget } from "@/ui/tokens";
 
-/** Links open in the in-app browser, tinted to match the app. */
-function openLink(url: string) {
-  return WebBrowser.openBrowserAsync(url, {
-    controlsColor: colors.fg,
-    toolbarColor: colors.bg,
-    dismissButtonStyle: "close",
-    presentationStyle: WebBrowser.WebBrowserPresentationStyle.PAGE_SHEET,
-  }).catch(() => undefined);
-}
+/**
+ * Android has no container transform yet (see `ANDROID_POSTER_TRANSITION`): the push carries the
+ * screen and the poster fades in over 160 ms. With reduced motion it simply appears.
+ */
+const posterEntering =
+  Platform.OS === "android" && ANDROID_POSTER_TRANSITION === "fade"
+    ? FadeIn.duration(duration.posterFade).reduceMotion(ReduceMotion.System)
+    : undefined;
 
 /**
  * The film detail screen, pushed over the list: poster and facts, ratings with links, the
@@ -63,7 +65,7 @@ export default function FilmScreen() {
 
 function FilmDetail({ film, meta }: { film: Film; meta: DataMeta }) {
   const store = useCatalogueStore();
-  const state = useFilmsView();
+  const state = useView();
   const now = useNow();
   const [data, setData] = useState<FilmShowtimes | null>(null);
   const [failed, setFailed] = useState(false);
@@ -99,7 +101,11 @@ function FilmDetail({ film, meta }: { film: Film; meta: DataMeta }) {
     >
       <Stack.Screen options={{ title: film.ti }} />
       <View style={styles.top}>
-        <Poster film={film} width={detailPoster.width} height={detailPoster.height} />
+        <ZoomTarget>
+          <Animated.View entering={posterEntering}>
+            <Poster film={film} width={detailPoster.width} height={detailPoster.height} />
+          </Animated.View>
+        </ZoomTarget>
         <View style={styles.facts}>
           <Text size={6} weight="medium" accessibilityRole="header">
             {film.ti}

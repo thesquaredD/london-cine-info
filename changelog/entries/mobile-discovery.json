@@ -1,0 +1,8 @@
+{
+  "id": "mobile-discovery",
+  "type": "added",
+  "title": "Filters, posters, Events and Radar in the phone app",
+  "body": "The phone app gains the Filters sheet with quick filters and Near me, active-filter chips, a poster view, and the Events and Radar tabs.",
+  "visibility": "internal",
+  "reason": "Adds discovery screens to the unreleased Expo app under mobile/ and moves the nearby finder's pure functions into the shared core package. The app is not distributed yet and the website behaves the same."
+}
