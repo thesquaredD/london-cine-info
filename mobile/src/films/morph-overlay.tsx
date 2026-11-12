@@ -25,6 +25,9 @@ export type TextGhost = { key: string; film: Film; rect: Rect };
  */
 export const MorphOverlay = memo(function MorphOverlay({
   plan,
+  mountId,
+  onReady,
+  cellsOpacity,
   films,
   texts,
   progress,
@@ -32,16 +35,23 @@ export const MorphOverlay = memo(function MorphOverlay({
   renderText,
 }: {
   plan: MorphPlan | null;
+  mountId: number;
+  onReady: (id: number) => void;
+  cellsOpacity: SharedValue<number>;
   films: ReadonlyMap<string, Film>;
   texts: TextGhost[];
   progress: SharedValue<number>;
   opacity: SharedValue<number>;
   renderText: (film: Film) => ReactNode;
 }) {
-  const style = useAnimatedStyle(() => ({ opacity: opacity.value }));
+  const style = useAnimatedStyle(() => ({ opacity: opacity.value * (1 - cellsOpacity.value) }));
   if (!plan) return null;
   return (
     <Animated.View
+      key={mountId}
+      onLayout={({ nativeEvent: { layout } }) => {
+        if (layout.width > 0 && layout.height > 0) onReady(mountId);
+      }}
       style={[StyleSheet.absoluteFill, style]}
       pointerEvents="none"
       accessibilityElementsHidden
