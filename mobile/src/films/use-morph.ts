@@ -1,9 +1,10 @@
-import { useCallback, useRef, useState, type RefObject } from "react";
+import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
 import {
   Easing,
   ReduceMotion,
   cancelAnimation,
   runOnJS,
+  runOnUI,
   useReducedMotion,
   useSharedValue,
   withTiming,
@@ -27,6 +28,8 @@ import type { ListItem } from "./rows";
 
 const nextFrame = () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
 
+type PendingMount = { id: number; resolve: (ready: boolean) => void };
+
 type Run = {
   source: FilmView;
   target: FilmView;
@@ -44,8 +47,8 @@ type Run = {
  * 1. Read the visible cells' layouts and the scroll offset, and pick the film at the top of the
  *    viewport as the anchor. (FlashList's `getLayout` gives each cell's rectangle from its own
  *    layout pass, so no native `measure` round trip is needed.)
- * 2. Hide the cells (one shared opacity), draw the overlay at the start rectangles, and switch
- *    the list to the target layout.
+ * 2. Mount the hidden overlay at the start rectangles. Its native layout event swaps the
+ *    overlay and cells through one shared opacity, then the list can switch layouts.
  * 3. Two frames later, scroll so the anchor film is where it was, and read the target cells.
  * 4. Fly every poster from one shared progress value; when it reaches the end, show the cells
  *    and hide the overlay in the same UI-thread frame, then unmount the overlay.
@@ -74,8 +77,42 @@ export function useMorph({
   const progress = useSharedValue(0);
   const overlayOpacity = useSharedValue(1);
   const cellsOpacity = useSharedValue(1);
-  const [overlay, setOverlay] = useState<{ plan: MorphPlan; texts: TextGhost[] } | null>(null);
+  const [overlay, setOverlay] = useState<{
+    mountId: number;
+    plan: MorphPlan;
+    texts: TextGhost[];
+  } | null>(null);
+  const mountId = useRef(0);
+  const pendingMount = useRef<PendingMount | null>(null);
+  const alive = useRef(true);
   const run = useRef<Run | null>(null);
+  useEffect(() => {
+    alive.current = true;
+    return () => {
+      alive.current = false;
+      run.current = null;
+      pendingMount.current?.resolve(false);
+      pendingMount.current = null;
+      cancelAnimation(progress);
+    };
+  }, [progress]);
+
+  const overlayReady = useCallback(
+    (id: number) => {
+      const pending = pendingMount.current;
+      if (!pending || pending.id !== id) return;
+      pendingMount.current = null;
+      runOnUI((resolve: (ready: boolean) => void) => {
+        "worklet";
+        // The overlay uses the complement of this opacity: both swap in the same UI frame.
+        cellsOpacity.value = 0;
+        // Give that UI frame its commit before asking React to re-lay out the cells.
+        requestAnimationFrame(() => runOnJS(resolve)(true));
+      })(pending.resolve);
+    },
+    [cellsOpacity],
+  );
+
   const itemsRef = useRef(items);
   itemsRef.current = items;
   const widthRef = useRef(width);
@@ -131,6 +168,7 @@ export function useMorph({
 
   const settle = useCallback(
     (view: FilmView) => {
+      if (!alive.current) return;
       run.current = null;
       // The overlay stays at opacity 0 until it unmounts; the next morph sets it back to 1.
       setOverlay(null);
@@ -269,9 +307,14 @@ export function useMorph({
       };
       progress.value = 0;
       overlayOpacity.value = 1;
-      // Step 2: the overlay holds the start picture while the cells hide and re-lay.
-      setOverlay({ plan: planMorph(start, start, target === "posters"), texts });
-      cellsOpacity.value = 0;
+      // React state alone does not mean the overlay exists on the native screen yet.
+      const current = run.current;
+      const id = ++mountId.current;
+      const ready = await new Promise<boolean>((resolve) => {
+        pendingMount.current = { id, resolve };
+        setOverlay({ mountId: id, plan: planMorph(start, start, target === "posters"), texts });
+      });
+      if (!ready || !alive.current || run.current !== current) return;
       onLayoutChange(target);
       await nextFrame();
       await nextFrame();
@@ -297,7 +340,7 @@ export function useMorph({
               rect: { ...cell.layout, y: cell.layout.y - after!.offset },
             }))
           : texts;
-      setOverlay({ plan, texts: textsFor });
+      setOverlay({ mountId: id, plan, texts: textsFor });
       // Step 4.
       await nextFrame();
       if (!run.current) return;
@@ -305,16 +348,7 @@ export function useMorph({
       run.current.total = plan.total;
       animateTo(1, plan.total);
     },
-    [
-      animateTo,
-      cellsOpacity,
-      onLayoutChange,
-      onSettled,
-      overlayOpacity,
-      progress,
-      restoreAnchor,
-      visibleCells,
-    ],
+    [animateTo, onLayoutChange, onSettled, overlayOpacity, progress, restoreAnchor, visibleCells],
   );
 
   const toggle = useCallback(
@@ -345,6 +379,8 @@ export function useMorph({
   );
 
   return {
+    mountId: overlay?.mountId ?? 0,
+    overlayReady,
     plan: overlay?.plan ?? null,
     texts: overlay?.texts ?? [],
     progress,

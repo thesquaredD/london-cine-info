@@ -99,19 +99,23 @@ export default function FilmsScreen() {
       </View>
     );
 
-  // While a morph runs the controls above the list wait, so the items cannot change mid-flight.
+  // Catalogue controls wait during a morph; List/Posters remains available to reverse it.
   const header = (
-    <View pointerEvents={morph.plan ? "none" : "auto"}>
-      <CollectionSwitcher path={state.path} onChange={view.setCollection} />
-      <SearchAndFilters scope="films" />
-      {updateRequired ? (
-        <Banner>New listings need the latest version of the app. Update it to see them.</Banner>
-      ) : null}
-      {error ? (
-        <Banner>Showing saved listings. They will update when you are back online.</Banner>
-      ) : null}
+    <View>
+      <View pointerEvents={morph.plan ? "none" : "auto"}>
+        <CollectionSwitcher path={state.path} onChange={view.setCollection} />
+        <SearchAndFilters scope="films" />
+        {updateRequired ? (
+          <Banner>New listings need the latest version of the app. Update it to see them.</Banner>
+        ) : null}
+        {error ? (
+          <Banner>Showing saved listings. They will update when you are back online.</Banner>
+        ) : null}
+      </View>
       <ResultsBar label={resultLabel("films", films.length)}>
-        <SortMenu state={state} onSort={view.sortBy} />
+        <View pointerEvents={morph.plan ? "none" : "auto"}>
+          <SortMenu state={state} onSort={view.sortBy} />
+        </View>
         {allowed ? (
           <ViewSwitch view={layout} onChange={(next) => void morph.toggle(layout, next)} />
         ) : null}
@@ -182,6 +186,9 @@ export default function FilmsScreen() {
         )}
       />
       <MorphOverlay
+        mountId={morph.mountId}
+        onReady={morph.overlayReady}
+        cellsOpacity={morph.cellsOpacity}
         plan={morph.plan}
         films={
           new Map(items.flatMap((item) => (item.type === "film" ? [[item.key, item.film]] : [])))

@@ -1,0 +1,8 @@
+{
+  "id": "mobile-morph-handoff",
+  "type": "fixed",
+  "title": "Cover list layout changes during the poster morph",
+  "body": "The phone app mounts its poster overlay before changing the list layout and keeps the layout switch available for reversal.",
+  "visibility": "internal",
+  "reason": "Animation handoff fix in the unreleased phone app; the website is unchanged."
+}

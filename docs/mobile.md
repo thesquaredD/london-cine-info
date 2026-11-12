@@ -12,20 +12,10 @@ problems in "Next work" below. The device checks are still open (see "Device che
 
 ## Next work
 
-The maintainer tested the app on an Android phone in Expo Go after #76. Work through this list
-in order, one pull request per item unless two are trivially small. Each item says what is
-wrong, the likely cause and the target. Check every item on the emulator before and after
-(`AGENTS.md`, "Phone app"). Do not blame Expo Go unless it is the only explanation, and prove it
-with a release build first.
-
-6. **List ⇄ Posters flashes before the morph.** For a frame the list re-lays itself out before
-   the overlay covers it, then the animation runs. Target: mount the overlay at the start
-   rectangles and hide the list in the same frame (a Reanimated shared value, not React state),
-   then switch the layout and measure the targets. Record the switch on the emulator
-   (`adb shell screenrecord`) and step through it frame by frame to prove the flash is gone.
-
-When an item is merged, delete it from this list in the same pull request and add anything new
-the maintainer reports.
+The six findings from the maintainer’s 11 November Android phone pass are implemented in the
+phone polish pull requests. Add new maintainer reports here in priority order, with one pull
+request per item unless two are trivially small. Each pull request removes its completed item.
+The physical-phone checks under “Device checks” remain open, including all iOS checks.
 
 ## Setup
 
@@ -242,10 +232,14 @@ text when changing these shared components.
 - **List ⇄ Posters.** The choice is stored in AsyncStorage as `london-cine.film-view.v1`
   ("list" or "posters") and offered only where core's `supportsPosters` is true. The morph is a
   FLIP overlay (`src/films/use-morph.ts`, maths in `morph.ts`): it reads the visible cells from
-  FlashList's own layouts (`getLayout`) instead of a native `measure`, hides the cells, switches
-  `numColumns` (FlashList 2 swaps its layout manager without remounting), restores the anchor
-  film's offset, then flies every visible poster from one shared progress value with the plan's
-  timings. A second tap reverses it; poster taps wait until it settles.
+  FlashList's own layouts (`getLayout`) instead of a native `measure`. It mounts the overlay at
+  the start rectangles and waits for its native layout event. One shared opacity swaps cells
+  and overlay in the same UI frame before React switches `numColumns` (FlashList 2 swaps its
+  layout manager without remounting). It restores the anchor film's offset, then flies every
+  visible poster from one shared progress value with the plan's timings. Catalogue controls
+  wait during the morph, but List/Posters stays available for a second tap to reverse it; poster
+  taps wait until it settles. Each overlay mount has an ID so
+  late layout events cannot release another morph, and unmount cancels a pending handoff.
 - FlashList 2's grid gives the shorter cells of each row a `minHeight`, and its linear layout
   keeps that value after `numColumns` goes back to 1, which left 187-point rows after Posters →
   List. `src/films/grid-heights.ts` clears it before every switch to the list; remove it once
