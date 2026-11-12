@@ -27,7 +27,11 @@ export function SearchAndFilters({ scope }: { scope: ViewScopeName }) {
     <>
       <View style={styles.row}>
         <SearchField value={state.search} onChange={setSearch} />
-        <FiltersButton count={activeFilterCount(state)} href={`/${scope}/filters` as Href} />
+        <FiltersButton
+          scope={scope}
+          count={activeFilterCount(state)}
+          href={`/${scope}/filters` as Href}
+        />
       </View>
       <FilterChips
         chips={chips}

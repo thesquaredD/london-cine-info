@@ -1,6 +1,5 @@
-import { FiltersSheet } from "@/filters/filters-sheet";
+import { FiltersRoute } from "@/filters/filters-route";
 
-/** The radar tab's Filters sheet, presented as a form sheet by the tab's stack. */
-export default function FiltersRoute() {
-  return <FiltersSheet kind="radar" />;
+export default function Filters() {
+  return <FiltersRoute kind="radar" />;
 }

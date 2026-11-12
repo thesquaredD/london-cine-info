@@ -1,5 +1,6 @@
+import { SheetTextInput } from "@/ui/sheet-components";
 import { useEffect, useState } from "react";
-import { StyleSheet, TextInput, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { Text } from "@/ui/text";
 import { colors, fonts, radius, space, textSize } from "@/ui/tokens";
 
@@ -29,7 +30,7 @@ export function SearchField({
       <Text tone="muted" accessibilityElementsHidden importantForAccessibility="no">
         ⌕
       </Text>
-      <TextInput
+      <SheetTextInput
         value={text}
         onChangeText={setText}
         placeholder={placeholder}

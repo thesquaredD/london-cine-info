@@ -18,14 +18,6 @@ wrong, the likely cause and the target. Check every item on the emulator before 
 (`AGENTS.md`, "Phone app"). Do not blame Expo Go unless it is the only explanation, and prove it
 with a release build first.
 
-3. **Filters: a slide-up sheet again, on both platforms, in Expo Go too.** #76 opened Filters as a
-   full-screen page with a sideways transition in Expo Go on Android, because Expo Go 58 draws the
-   native `formSheet` off screen there. The maintainer tests in Expo Go, so the sheet must slide
-   up there as well. Target: on Android use the plan's fallback, `@gorhom/bottom-sheet`
-   (`BottomSheetModal`, one tall snap point, pan down to close, a 45% black backdrop, Android back
-   closes it), which works the same in Expo Go and in a build; keep the native `formSheet` on
-   iOS unless it shows the same problem. Remove the `isRunningInExpoGo()` workaround in
-   `src/navigation/list-stack.tsx`. The plan's eight Filters drawer checks still apply.
 4. **Dates: no list of every future day.** Opening the date group lists every day that has a
    screening. Default target until the maintainer chooses otherwise: the quick ranges (Today,
    Tomorrow, Weekend, Week) at the top, then a month calendar where only days with screenings can
@@ -96,9 +88,9 @@ locally and iOS cannot. Three ways to run the app:
    Differences from a build:
    - Config plugins do not run there, so `app/_layout.tsx` also loads League Spartan with
      `useFonts`; in a build the fonts are already embedded and the call resolves at once.
-   - On Android, Expo Go draws the Filters `formSheet` off screen and shifts the window under it
-     (seen with Expo Go 58.0.5). `src/navigation/list-stack.tsx` opens the sheet there as a
-     full-screen modal instead (`isRunningInExpoGo()`); builds keep the native sheet.
+   - Android Filters uses `@gorhom/bottom-sheet` in Expo Go and builds. Gesture Handler is
+     pinned to SDK 58's 3.3.0 across the workspace: a newer transitive copy calls native APIs
+     that Expo Go 58.0.5 does not contain.
    - The app's own icon, name and Android package are Expo Go's.
 2. **The Android emulator on the development Mac**, with Expo Go or a local release build (below).
 3. **A development or preview build through EAS.** EAS profiles arrive with PR 7; until then
@@ -135,8 +127,7 @@ adb shell input keyevent 4                    # Android back
 - `adb shell uiautomator dump` hangs while animations run; use it only on a still screen.
 - Keep screenshots and recordings outside the repository.
 
-**A local release build** is the fair measure of performance and the only way to see the native
-Filters sheet on Android:
+**A local release build** is the fair measure of performance:
 
 ```sh
 cd mobile && npx expo run:android --variant release --no-bundler
@@ -212,13 +203,16 @@ typed routes are off).
 
 ## Discovery (PR 5)
 
-- **Filters sheet.** A `formSheet` route per list tab, configured as the plan says:
-  `sheetAllowedDetents: [1]`, `sheetGrabberVisible: true`, `sheetCornerRadius: 12`, the
-  scroll-to-edge expansion left at its default (the options are unchanged in
-  react-native-screens 4.30). `@gorhom/bottom-sheet` is not used: nothing found in SDK 58
-  shows the Android form sheet failing the checks, and they need a phone. If the
-  device checks fail on Android, the plan's fallback (a `BottomSheetModal`) replaces the route's
-  presentation only; `src/filters/filters-sheet.tsx` is the content either way.
+- **Filters sheet.** iOS keeps the native `formSheet` route with one tall detent, a grabber
+  and 12-point corners. Android uses `AndroidFiltersProvider` above the native tabs: a
+  transparent native modal window containing a `BottomSheetModal` with one 92% snap point, 45% black backdrop, pan down to close and keyboard
+  resize handling. The toolbar opens the modal directly; the route forwards Android deep
+  links to it. `SheetScrollView` and `SheetTextInput` select the library's gesture/keyboard-aware
+  controls inside that modal and ordinary React Native controls in the iOS sheet. The modal
+  wraps its content in the selected tab's `ViewScope`, so counts and filters stay scoped.
+  The native window isolates TalkBack from the background and measures its own safe areas. Its
+  Back callback goes from a facet to the group list, then dismisses the modal. All exits use the same
+  dismissal and restore accessibility focus after the list is made accessible again.
 - The sheet owns no state. Every change writes straight to the tab's store, so the list behind
   updates live. Top to bottom: the quick filters from core's `shortcutItems` in capitals (MY
   WATCHLIST and MY CINEMAS are hidden until PR 6 adds accounts, exactly as `shortcutItems`
