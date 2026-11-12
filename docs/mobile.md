@@ -18,12 +18,6 @@ wrong, the likely cause and the target. Check every item on the emulator before 
 (`AGENTS.md`, "Phone app"). Do not blame Expo Go unless it is the only explanation, and prove it
 with a release build first.
 
-5. **Everything is too small.** `tokens.ts` copies the website's pixel sizes as points (body 16,
-   floor 13). Target: native sizes. Body 17 on iOS and 16 sp on Android at minimum, titles and
-   row text scaled up to match, touch targets of at least 44 points on iOS and 48 dp on Android,
-   and text that follows the phone's font size setting (`allowFontScaling`, with a sensible
-   maximum so rows do not break). Change the scale in `tokens.ts` once and check every screen;
-   no screen sets its own font size.
 6. **List ⇄ Posters flashes before the morph.** For a frame the list re-lays itself out before
    the overlay covers it, then the animation runs. Target: mount the overlay at the start
    rectangles and hide the list in the same frame (a Reanimated shared value, not React state),
@@ -195,6 +189,15 @@ typed routes are off).
   `enableLegacyHeaderAppearance()` to keep the opaque red header of the approved design. Expo
   marks that function deprecated and plans to remove it, so the header needs a redesign for the
   system appearance before a later SDK; Android headers are unaffected.
+
+## Text and touch sizes
+
+`src/ui/tokens.ts` owns the phone scale: body 18 pt/sp, floor 14 pt/sp, and larger title
+steps. `Text` and `SheetTextInput` explicitly allow system font scaling with the shared 1.6×
+maximum. Native navigation bars retain their platform defaults. Touch targets use a 48-point/dp
+minimum on both platforms. Controls and text rows grow or wrap rather than using fixed text
+heights; active-filter badges grow with their text. Check both ordinary and enlarged system
+text when changing these shared components.
 
 ## Discovery (PR 5)
 

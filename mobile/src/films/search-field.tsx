@@ -2,7 +2,7 @@ import { SheetTextInput } from "@/ui/sheet-components";
 import { useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { Text } from "@/ui/text";
-import { colors, fonts, radius, space, textSize } from "@/ui/tokens";
+import { colors, fonts, radius, space, textSize, touchTarget } from "@/ui/tokens";
 
 /**
  * The search field under the collection switcher, as in mock-up 1, with the icon-only Filters
@@ -53,7 +53,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: space.s,
-    height: 48,
+    minHeight: touchTarget,
     paddingHorizontal: 14,
     borderRadius: radius,
     backgroundColor: colors.shade,
@@ -61,7 +61,8 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     minWidth: 0,
-    height: 48,
+    paddingVertical: space.s,
+    minHeight: touchTarget,
     color: colors.fg,
     fontFamily: fonts.regular,
     fontSize: textSize[3],

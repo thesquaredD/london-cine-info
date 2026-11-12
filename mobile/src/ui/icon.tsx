@@ -1,4 +1,5 @@
 import { SymbolView, type AndroidSymbol, type SFSymbol } from "expo-symbols";
+import { Platform, useWindowDimensions } from "react-native";
 import { colors } from "./tokens";
 
 /**
@@ -38,6 +39,10 @@ export function Icon({
   size?: number;
   color?: string;
 }) {
+  const { fontScale } = useWindowDimensions();
+  // Android SymbolView draws a font glyph in a fixed box; keep that box large enough
+  // for system text scaling so the decorative symbol is not clipped. iOS uses SF Symbols.
+  const box = size * (Platform.OS === "android" ? fontScale : 1);
   return (
     <SymbolView
       name={ICONS[name]}
@@ -46,7 +51,7 @@ export function Icon({
       weight="regular"
       accessibilityElementsHidden
       importantForAccessibility="no-hide-descendants"
-      style={{ width: size, height: size }}
+      style={{ width: box, height: box }}
     />
   );
 }

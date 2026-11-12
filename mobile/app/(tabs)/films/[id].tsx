@@ -1,5 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
-import { Platform, Pressable, ScrollView, Share, StyleSheet, View } from "react-native";
+import {
+  Platform,
+  Pressable,
+  ScrollView,
+  Share,
+  StyleSheet,
+  View,
+  useWindowDimensions,
+} from "react-native";
 import Animated, { FadeIn, ReduceMotion } from "react-native-reanimated";
 import { Stack, useLocalSearchParams } from "expo-router";
 import { DEFAULT_DISPLAY } from "@readograph/core/display";
@@ -64,6 +72,7 @@ export default function FilmScreen() {
 }
 
 function FilmDetail({ film, meta }: { film: Film; meta: DataMeta }) {
+  const { fontScale } = useWindowDimensions();
   const store = useCatalogueStore();
   const state = useView();
   const now = useNow();
@@ -127,7 +136,7 @@ function FilmDetail({ film, meta }: { film: Film; meta: DataMeta }) {
             onPress={() => rating.url && void openLink(rating.url)}
             accessibilityRole={rating.url ? "link" : "text"}
             accessibilityLabel={`${rating.name}: ${rating.value === "–" ? "not rated" : `${rating.value}${rating.scale}`}`}
-            style={styles.rating}
+            style={[styles.rating, fontScale > 1.2 && styles.ratingWide]}
           >
             <Text size={1} tone="muted">
               {rating.short}
@@ -251,7 +260,7 @@ const styles = StyleSheet.create({
   top: { flexDirection: "row", gap: space.l },
   facts: { flex: 1, minWidth: 0, gap: space.xs },
   gap: { marginTop: space.xs },
-  ratings: { flexDirection: "row", gap: space.s, marginTop: space.xl },
+  ratings: { flexDirection: "row", flexWrap: "wrap", gap: space.s, marginTop: space.xl },
   rating: {
     flex: 1,
     backgroundColor: colors.panel,
@@ -259,11 +268,13 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: space.s,
   },
+  ratingWide: { flexBasis: "45%" },
   actions: { flexDirection: "row", flexWrap: "wrap", gap: space.s, marginTop: space.m },
   action: {
     flexBasis: "48%",
     flexGrow: 1,
-    height: 48,
+    minHeight: touchTarget,
+    paddingVertical: space.s,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius,

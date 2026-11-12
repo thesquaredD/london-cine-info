@@ -77,7 +77,7 @@ export function FiltersButton({
       <Icon name="filters" color={active ? colors.onRed : colors.fg} />
       {active ? (
         <View style={styles.badge} accessibilityElementsHidden importantForAccessibility="no">
-          <Text size={1} weight="medium" tone="onBrass" style={styles.badgeText}>
+          <Text size={1} weight="medium" tone="onBrass">
             {count}
           </Text>
         </View>
@@ -183,7 +183,7 @@ export function ResultsBar({ label, children }: { label: string; children?: Reac
 const styles = StyleSheet.create({
   filters: {
     width: 48,
-    height: 48,
+    minHeight: touchTarget,
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius,
@@ -195,15 +195,15 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: -6,
     right: -6,
-    minWidth: 20,
-    height: 20,
+    minWidth: 24,
+    minHeight: 24,
+    paddingVertical: 2,
     paddingHorizontal: 5,
     borderRadius: 10,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: colors.brass,
   },
-  badgeText: { lineHeight: 16 },
   chips: {
     gap: space.s,
     paddingHorizontal: space.l,
@@ -214,14 +214,16 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    minHeight: 32,
+    minHeight: touchTarget,
     paddingHorizontal: space.m,
     borderRadius: radius,
     backgroundColor: colors.shade,
   },
-  clearAll: { minHeight: 32, justifyContent: "center", paddingHorizontal: space.s },
+  clearAll: { minHeight: touchTarget, justifyContent: "center", paddingHorizontal: space.s },
   results: {
     flexDirection: "row",
+    flexWrap: "wrap",
+    paddingVertical: space.xs,
     alignItems: "center",
     gap: space.m,
     marginTop: space.s,
@@ -230,7 +232,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: colors.line,
   },
-  count: { flex: 1 },
+  count: { flexGrow: 1, flexShrink: 1, flexBasis: 96 },
   switch: {
     flexDirection: "row",
     borderRadius: radius,
@@ -240,7 +242,7 @@ const styles = StyleSheet.create({
   },
   switchButton: {
     width: touchTarget,
-    height: 36,
+    minHeight: touchTarget,
     alignItems: "center",
     justifyContent: "center",
   },
