@@ -1,0 +1,8 @@
+{
+  "id": "mobile-date-calendar",
+  "type": "improved",
+  "title": "Choose screening dates in a month calendar",
+  "body": "The phone app offers quick date ranges and a month calendar with available screening dates.",
+  "visibility": "internal",
+  "reason": "Date picker improvement in the unreleased phone app; the website and shared filter values are unchanged."
+}

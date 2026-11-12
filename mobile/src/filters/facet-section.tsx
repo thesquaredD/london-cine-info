@@ -1,3 +1,4 @@
+import { DateCalendar } from "./date-calendar";
 import { SheetTextInput } from "@/ui/sheet-components";
 import { useMemo, useState, type ReactNode } from "react";
 import { Pressable, StyleSheet, Switch, View } from "react-native";
@@ -47,9 +48,11 @@ export function FacetSection({
 }) {
   const [excludeMode, setExcludeMode] = useState(false);
   const [find, setFind] = useState("");
-  // Building Day formats every future date. Closed rows need only their summary, so do not
-  // construct any option list (or its cinema/borough maps) until this facet is opened.
-  const options = useMemo(() => (open ? facetOptions(facet, meta) : []), [open, facet, meta]);
+  // Closed rows need only summaries. Day mounts one month instead of formatting every date.
+  const options = useMemo(
+    () => (open && facet !== "day" ? facetOptions(facet, meta) : []),
+    [open, facet, meta],
+  );
   const searchable = facet !== "day" && options.length > 8;
   const groups = useMemo(() => (open ? facetGroups(options, find) : []), [open, options, find]);
   const counts = useMemo(() => (open ? countsFor(facet) : NO_COUNTS), [open, countsFor, facet]);
@@ -110,35 +113,46 @@ export function FacetSection({
               <Text size={2}>Clear {label.toLowerCase()}</Text>
             </Pressable>
           </View>
-          {groups.map(([group, items]) => (
-            <View key={group || "all"}>
-              {group ? (
-                <Text size={1} tone="muted" style={styles.group}>
-                  {group.toUpperCase()}
-                </Text>
-              ) : null}
-              {items.map((option) => (
-                <OptionRow
-                  key={option.id}
-                  option={option}
-                  count={counts.get(option.id) ?? 0}
-                  showCount={!option.quick}
-                  state={
-                    excluded.includes(option.id)
-                      ? "excluded"
-                      : selected.includes(option.id)
-                        ? "selected"
-                        : "off"
-                  }
-                  onPress={() => {
-                    const next = toggleOption(selected, excluded, option.id, excludeMode);
-                    onChange(next.selected, next.excluded);
-                  }}
-                />
-              ))}
-            </View>
-          ))}
-          {!groups.length ? (
+          {facet === "day" ? (
+            <DateCalendar
+              selected={selected}
+              excluded={excluded}
+              counts={counts}
+              excludeMode={excludeMode}
+              meta={meta}
+              onChange={onChange}
+            />
+          ) : (
+            groups.map(([group, items]) => (
+              <View key={group || "all"}>
+                {group ? (
+                  <Text size={1} tone="muted" style={styles.group}>
+                    {group.toUpperCase()}
+                  </Text>
+                ) : null}
+                {items.map((option) => (
+                  <OptionRow
+                    key={option.id}
+                    option={option}
+                    count={counts.get(option.id) ?? 0}
+                    showCount={!option.quick}
+                    state={
+                      excluded.includes(option.id)
+                        ? "excluded"
+                        : selected.includes(option.id)
+                          ? "selected"
+                          : "off"
+                    }
+                    onPress={() => {
+                      const next = toggleOption(selected, excluded, option.id, excludeMode);
+                      onChange(next.selected, next.excluded);
+                    }}
+                  />
+                ))}
+              </View>
+            ))
+          )}
+          {facet !== "day" && !groups.length ? (
             <Text tone="muted" style={styles.none}>
               No options match “{find}”.
             </Text>
