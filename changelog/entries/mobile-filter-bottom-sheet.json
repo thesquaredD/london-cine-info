@@ -1,0 +1,8 @@
+{
+  "id": "mobile-filter-bottom-sheet",
+  "type": "improved",
+  "title": "Use a sliding Android Filters sheet",
+  "body": "Android Filters uses the same bottom sheet in Expo Go and installed builds.",
+  "visibility": "internal",
+  "reason": "Presentation change in the unreleased phone app; iOS keeps its native sheet and the website is unchanged."
+}

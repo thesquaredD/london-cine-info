@@ -1,3 +1,5 @@
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { AndroidFiltersProvider } from "@/filters/android-filters";
 import { useFonts } from "expo-font";
 import { enableLegacyHeaderAppearance, Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
@@ -28,17 +30,21 @@ export default function RootLayout() {
   // the system font rather than blocking the app.
   if (!fontsLoaded && !fontError) return null;
   return (
-    <SafeAreaProvider>
-      <CatalogueProvider>
-        <ViewStoresProvider>
-          <StatusBar style="light" />
-          <Stack
-            screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }}
-          >
-            <Stack.Screen name="(tabs)" />
-          </Stack>
-        </ViewStoresProvider>
-      </CatalogueProvider>
-    </SafeAreaProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <CatalogueProvider>
+          <ViewStoresProvider>
+            <AndroidFiltersProvider>
+              <StatusBar style="light" />
+              <Stack
+                screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }}
+              >
+                <Stack.Screen name="(tabs)" />
+              </Stack>
+            </AndroidFiltersProvider>
+          </ViewStoresProvider>
+        </CatalogueProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }

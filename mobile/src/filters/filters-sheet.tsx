@@ -4,12 +4,11 @@ import {
   BackHandler,
   Platform,
   Pressable,
-  ScrollView,
   StyleSheet,
   View,
   type HostInstance,
 } from "react-native";
-import { router, usePreventRemove } from "expo-router";
+import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { ViewState } from "@readograph/core/catalogue";
 import type { FacetKey } from "@readograph/core/data";
@@ -21,14 +20,15 @@ import { SearchField } from "@/films/search-field";
 import { useNow } from "@/films/use-now";
 import { useView, useViewStore } from "@/films/view-context";
 import { NearMePanel } from "@/nearby/near-me-panel";
+import { SheetScrollView } from "@/ui/sheet-components";
 import { Text } from "@/ui/text";
 import { colors, radius, space, touchTarget } from "@/ui/tokens";
 import { FacetSection, Hint, ToggleRow } from "./facet-section";
 import { decadeCounts, optionCounts, resultCount, resultLabel, type ScopeKind } from "./results";
 
 /**
- * The Filters sheet (plan: "The Filters drawer"), the content of each list tab's `filters`
- * form-sheet route. It owns no filter state: every change writes straight to the tab's
+ * The Filters sheet (plan: "The Filters drawer"), shared by the iOS formSheet route and
+ * Android BottomSheetModal. It owns no filter state: every change writes straight to the tab's
  * `ViewState` store, so the list behind updates while the sheet is open and the count in the
  * heading is the list's live count. Closing commits nothing.
  *
@@ -36,7 +36,17 @@ import { decadeCounts, optionCounts, resultCount, resultLabel, type ScopeKind } 
  * capitals, search, the When, Where and What groups with every facet, counts and exclusions,
  * the Only show toggles, then a footer bar with Reset all and Show N films.
  */
-export function FiltersSheet({ kind }: { kind: ScopeKind }) {
+export function FiltersSheet({
+  kind,
+  onClose,
+  focusReady = true,
+  registerBack,
+}: {
+  kind: ScopeKind;
+  onClose?: () => void;
+  focusReady?: boolean;
+  registerBack?: (handler: () => void) => () => void;
+}) {
   const { catalogue } = useCatalogue();
   const store = useViewStore();
   const state = useView();
@@ -46,34 +56,37 @@ export function FiltersSheet({ kind }: { kind: ScopeKind }) {
   const rootOffset = useRef(0);
   const [panel, setPanel] = useState<"filters" | "nearby" | FacetKey | "year">("filters");
   const inGroup = panel !== "filters";
-  // iOS's downward sheet dismissal is an exit, rather than a back gesture within the filters.
-  const disablePrevention = usePreventRemove(Platform.OS === "android" && inGroup, () =>
-    setPanel("filters"),
-  );
 
   // VoiceOver and TalkBack start on the heading; the native sheet already hides the content
   // behind it from them.
   useEffect(() => {
+    if (!focusReady) return;
     const frame = requestAnimationFrame(() => {
       if (heading.current) AccessibilityInfo.sendAccessibilityEvent(heading.current, "focus");
     });
     return () => cancelAnimationFrame(frame);
-  }, [panel]);
+  }, [panel, focusReady]);
 
   // Both the hardware button and native/predictive navigation go up one level first.
   useEffect(() => {
-    if (!inGroup) return;
+    if (Platform.OS !== "android") return;
+    const goBack = () => {
+      if (inGroup) setPanel("filters");
+      else onClose?.();
+    };
+    // A native Modal owns Android Back events; its onRequestClose delegates here.
+    if (registerBack) return registerBack(goBack);
     const subscription = BackHandler.addEventListener("hardwareBackPress", () => {
-      setPanel("filters");
+      goBack();
       return true;
     });
     return () => subscription.remove();
-  }, [inGroup]);
+  }, [inGroup, onClose, registerBack]);
 
   const change = (changes: Partial<ViewState>) => store.update({ ...changes, page: 1 });
   const close = () => {
-    disablePrevention();
-    if (router.canGoBack()) router.back();
+    if (onClose) onClose();
+    else if (router.canGoBack()) router.back();
   };
 
   const count = useMemo(
@@ -185,7 +198,7 @@ export function FiltersSheet({ kind }: { kind: ScopeKind }) {
   );
 
   return (
-    <View style={styles.sheet}>
+    <View style={styles.sheet} accessibilityViewIsModal>
       <View style={styles.heading}>
         {inGroup ? (
           <Pressable
@@ -225,7 +238,7 @@ export function FiltersSheet({ kind }: { kind: ScopeKind }) {
           </Text>
         </Pressable>
       </View>
-      <ScrollView
+      <SheetScrollView
         key={panel}
         style={styles.body}
         contentOffset={{ x: 0, y: panel === "filters" ? rootOffset.current : 0 }}
@@ -296,7 +309,7 @@ export function FiltersSheet({ kind }: { kind: ScopeKind }) {
             {panel === "year" ? year() : panel !== "nearby" ? facet(panel) : null}
           </View>
         )}
-      </ScrollView>
+      </SheetScrollView>
       <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, space.m) }]}>
         <Pressable
           onPress={() => store.update(clearFilters(state.path))}

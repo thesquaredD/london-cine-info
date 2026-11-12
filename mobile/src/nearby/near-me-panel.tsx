@@ -1,5 +1,6 @@
+import { SheetScrollView } from "@/ui/sheet-components";
 import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from "react";
-import { Linking, Pressable, ScrollView, StyleSheet, View, type HostInstance } from "react-native";
+import { Linking, Pressable, StyleSheet, View, type HostInstance } from "react-native";
 import * as Location from "expo-location";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { ViewState } from "@readograph/core/catalogue";
@@ -127,7 +128,7 @@ export function NearMePanel({
           </Text>
         </View>
       </View>
-      <ScrollView style={styles.body} contentContainerStyle={styles.content}>
+      <SheetScrollView style={styles.body} contentContainerStyle={styles.content}>
         {status.kind === "checking" || status.kind === "locating" ? (
           <Text tone="muted" accessibilityLiveRegion="polite">
             {status.kind === "locating" ? "Finding your location…" : " "}
@@ -226,7 +227,7 @@ export function NearMePanel({
             })}
           </>
         ) : null}
-      </ScrollView>
+      </SheetScrollView>
       {status.kind === "found" ? (
         <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, space.m) }]}>
           <Button

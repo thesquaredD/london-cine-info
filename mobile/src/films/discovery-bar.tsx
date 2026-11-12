@@ -9,6 +9,8 @@ import {
 } from "react-native";
 import { router, useFocusEffect, type Href } from "expo-router";
 import type { FilmView } from "@readograph/core/display";
+import { useAndroidFilters } from "@/filters/android-filters";
+import type { ViewScopeName } from "./view-context";
 import { Icon } from "@/ui/icon";
 import { Text } from "@/ui/text";
 import { colors, radius, space, touchTarget } from "@/ui/tokens";
@@ -25,7 +27,16 @@ import type { FilterChip } from "./chips";
  * otherwise, as on the website at 390px. It opens the tab's Filters sheet route, and when the
  * sheet closes the screen reader's focus comes back to it.
  */
-export function FiltersButton({ count, href }: { count: number; href: Href }) {
+export function FiltersButton({
+  count,
+  href,
+  scope,
+}: {
+  count: number;
+  href: Href;
+  scope: ViewScopeName;
+}) {
+  const androidFilters = useAndroidFilters();
   const ref = useRef<HostInstance>(null);
   const opened = useRef(false);
   useFocusEffect(
@@ -40,8 +51,20 @@ export function FiltersButton({ count, href }: { count: number; href: Href }) {
     <Pressable
       ref={ref}
       onPress={() => {
-        opened.current = true;
-        router.push(href);
+        if (androidFilters) {
+          androidFilters.open(scope, () => {
+            if (ref.current) {
+              // Wait for the trigger in the activity, then move TalkBack to it.
+              ref.current.measure(() => {
+                if (ref.current)
+                  AccessibilityInfo.sendAccessibilityEvent(ref.current, "viewHoverEnter");
+              });
+            }
+          });
+        } else {
+          opened.current = true;
+          router.push(href);
+        }
       }}
       accessibilityRole="button"
       accessibilityLabel={active ? `Filters, ${count} active` : "Filters"}

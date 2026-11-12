@@ -1,5 +1,6 @@
+import { SheetTextInput } from "@/ui/sheet-components";
 import { useMemo, useState, type ReactNode } from "react";
-import { Pressable, StyleSheet, Switch, TextInput, View } from "react-native";
+import { Pressable, StyleSheet, Switch, View } from "react-native";
 import type { DataMeta, FacetKey } from "@readograph/core/data";
 import { Icon, type IconName } from "@/ui/icon";
 import { Text } from "@/ui/text";
@@ -77,7 +78,7 @@ export function FacetSection({
         <View style={styles.body}>
           {before}
           {searchable ? (
-            <TextInput
+            <SheetTextInput
               value={find}
               onChangeText={setFind}
               placeholder={`Find ${label.toLowerCase()}…`}
