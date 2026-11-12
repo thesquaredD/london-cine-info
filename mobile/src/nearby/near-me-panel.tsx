@@ -293,7 +293,8 @@ const styles = StyleSheet.create({
   label: { letterSpacing: 0.8, marginBottom: space.s },
   ranges: { flexDirection: "row", flexWrap: "wrap", gap: space.s },
   range: {
-    minHeight: 36,
+    minHeight: touchTarget,
+    minWidth: touchTarget,
     justifyContent: "center",
     paddingHorizontal: space.m,
     borderRadius: radius,

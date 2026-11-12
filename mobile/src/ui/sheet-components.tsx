@@ -1,5 +1,6 @@
 import { createContext, useContext, type ComponentPropsWithoutRef, type ReactNode } from "react";
 import { ScrollView, TextInput } from "react-native";
+import { maxFontSizeMultiplier } from "./tokens";
 import { BottomSheetScrollView, BottomSheetTextInput } from "@gorhom/bottom-sheet";
 
 /** Native formSheet content uses RN controls; the Android modal needs gesture/keyboard-aware ones. */
@@ -14,5 +15,13 @@ export function SheetScrollView(
 
 export function SheetTextInput(props: ComponentPropsWithoutRef<typeof TextInput>) {
   const inBottomSheet = useContext(SheetComponentsContext);
-  return inBottomSheet ? <BottomSheetTextInput {...props} /> : <TextInput {...props} />;
+  return inBottomSheet ? (
+    <BottomSheetTextInput
+      {...props}
+      allowFontScaling
+      maxFontSizeMultiplier={maxFontSizeMultiplier}
+    />
+  ) : (
+    <TextInput {...props} allowFontScaling maxFontSizeMultiplier={maxFontSizeMultiplier} />
+  );
 }

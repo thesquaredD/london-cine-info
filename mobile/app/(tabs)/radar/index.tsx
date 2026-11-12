@@ -26,7 +26,7 @@ import { SearchAndFilters } from "@/filters/search-and-filters";
 import { Banner, Notice } from "@/ui/notice";
 import { Segmented } from "@/ui/segmented";
 import { Text } from "@/ui/text";
-import { colors, space } from "@/ui/tokens";
+import { colors, space, touchTarget } from "@/ui/tokens";
 
 const SECTIONS = [
   { value: "limited", label: "Few screenings soon" },
@@ -209,7 +209,7 @@ export default function RadarScreen() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg },
   intro: { paddingHorizontal: space.l, paddingTop: space.l },
-  aboutToggle: { minHeight: 44, justifyContent: "center", paddingHorizontal: space.l },
+  aboutToggle: { minHeight: touchTarget, justifyContent: "center", paddingHorizontal: space.l },
   about: { gap: space.s, paddingHorizontal: space.l },
   note: { paddingHorizontal: space.l, paddingTop: space.m },
 });

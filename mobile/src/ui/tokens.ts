@@ -1,12 +1,11 @@
 /**
- * The app's design tokens, transcribed from the website so both read as one product.
+ * The app's design tokens: the website's palette with native type and touch sizes.
  *
  * - Colours: the Picturehouse theme's final `:root` block in `src/styles/picturehouse.css`
  *   (the website is dark only, `data-theme="dark"` in `index.html`). Hex values only live in
  *   this file; screens use `colors.*`.
- * - Type: the `--text-1` to `--text-9` ladder in `src/styles/base.css` (13, 14, 16, 18, 20, 25,
- *   30, 34 and 42px), in points. Body text is step 3 (16), nothing is smaller than step 1 (13),
- *   and no other font size is used in the app.
+ * - Type: a native phone scale, with an 18-point/sp body and a 14-point/sp floor.
+ *   Every screen uses these steps; text follows the system size up to 1.6×.
  *
  * The app is dark only for now (`userInterfaceStyle: "dark"` in app.json). A light set, if dio
  * asks for one, is a second object with the same keys chosen by `useColorScheme`; keep every
@@ -55,19 +54,22 @@ export const palettes: { dark: Palette } = { dark };
 /** The palette in use. Dark only until a light set is approved. */
 export const colors: Palette = palettes.dark;
 
-/** `--text-1` … `--text-9`, in points. */
+/** The shared native text scale, in points on iOS and sp on Android. */
 export const textSize = {
-  1: 13,
-  2: 14,
-  3: 16,
-  4: 18,
-  5: 20,
-  6: 25,
-  7: 30,
-  8: 34,
-  9: 42,
+  1: 14,
+  2: 16,
+  3: 18,
+  4: 20,
+  5: 24,
+  6: 28,
+  7: 34,
+  8: 40,
+  9: 48,
 } as const;
 export type TextStep = keyof typeof textSize;
+
+/** Shared cap for text and inputs; native bars retain the platform’s own scaling. */
+export const maxFontSizeMultiplier = 1.6;
 
 /** League Spartan, embedded through the expo-font config plugin (assets/fonts). */
 export const fonts = {
@@ -90,7 +92,7 @@ export const space = {
 export const radius = 4;
 
 /** Minimum touch target on both platforms. */
-export const touchTarget = 44;
+export const touchTarget = 48;
 
 /** The list row's poster thumbnail (mock-up 1): 48×72, a 2:3 poster. */
 export const thumbnail = { width: 48, height: 72 } as const;

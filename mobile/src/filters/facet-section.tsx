@@ -253,6 +253,7 @@ export function ToggleRow({
         ) : null}
       </View>
       <Switch
+        style={styles.switchTarget}
         value={value}
         onValueChange={onChange}
         accessibilityLabel={label}
@@ -296,7 +297,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.regular,
     fontSize: textSize[3],
   },
-  actions: { flexDirection: "row", gap: space.s, marginBottom: space.s },
+  actions: { flexDirection: "row", flexWrap: "wrap", gap: space.s, marginBottom: space.s },
   action: {
     minHeight: 48,
     justifyContent: "center",
@@ -336,6 +337,7 @@ const styles = StyleSheet.create({
     paddingVertical: space.s,
   },
   toggleText: { flex: 1 },
+  switchTarget: { minWidth: touchTarget, minHeight: touchTarget },
   hint: { marginTop: 2 },
   hintBlock: { marginBottom: space.s },
 });

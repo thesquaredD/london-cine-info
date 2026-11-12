@@ -1,5 +1,5 @@
 import { memo, useMemo } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, View, useWindowDimensions } from "react-native";
 import { FlashList } from "@shopify/flash-list";
 import { formatDate } from "@readograph/core/catalogue";
 import { EVENT_TYPES } from "@readograph/core/data/event-rules";
@@ -20,7 +20,7 @@ import { Banner, Notice } from "@/ui/notice";
 import { openLink } from "@/ui/open-link";
 import { Segmented } from "@/ui/segmented";
 import { Text } from "@/ui/text";
-import { colors, radius, space, touchTarget } from "@/ui/tokens";
+import { colors, maxFontSizeMultiplier, radius, space, touchTarget } from "@/ui/tokens";
 
 type Item =
   | { type: "day"; key: string; date: string; count: number }
@@ -143,6 +143,7 @@ const EventRow = memo(function EventRow({
   film: Film | undefined;
   meta: DataMeta;
 }) {
+  const { fontScale } = useWindowDimensions();
   const venue = meta.venues.find((item) => item.id === event.venue);
   const venueName = venue?.name ?? event.venue;
   const title = film ? displayTitle(film, DEFAULT_DISPLAY.titleMode) : event.title;
@@ -152,7 +153,11 @@ const EventRow = memo(function EventRow({
   const label = bookingLabel(event);
   return (
     <View style={styles.event}>
-      <Text size={6} weight="medium" style={styles.time}>
+      <Text
+        size={6}
+        weight="medium"
+        style={[styles.time, { width: 72 * Math.min(fontScale, maxFontSizeMultiplier) }]}
+      >
         {event.localTime}
       </Text>
       <View style={styles.eventText}>

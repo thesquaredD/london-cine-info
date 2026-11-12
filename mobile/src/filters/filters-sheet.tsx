@@ -486,7 +486,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: colors.line,
   },
-  title: { flex: 1, flexDirection: "row", alignItems: "baseline", gap: space.s },
+  title: { flex: 1, flexDirection: "row", flexWrap: "wrap", alignItems: "baseline", gap: space.s },
   close: {
     width: Math.max(48, touchTarget),
     height: Math.max(48, touchTarget),
