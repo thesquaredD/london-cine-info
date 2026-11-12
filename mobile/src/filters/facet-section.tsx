@@ -26,7 +26,11 @@ export function FacetSection({
   before,
   after,
   onChange,
+  open,
+  onOpen,
 }: {
+  open: boolean;
+  onOpen: () => void;
   facet: FacetKey;
   label: string;
   icon: IconName;
@@ -40,7 +44,6 @@ export function FacetSection({
   after?: ReactNode;
   onChange: (selected: string[], excluded: string[]) => void;
 }) {
-  const [open, setOpen] = useState(false);
   const [excludeMode, setExcludeMode] = useState(false);
   const [find, setFind] = useState("");
   // Building Day formats every future date. Closed rows need only their summary, so do not
@@ -53,22 +56,23 @@ export function FacetSection({
   const active = selected.length > 0 || excluded.length > 0 || !!summaryValue;
   return (
     <View style={styles.section}>
-      <Pressable
-        onPress={() => setOpen(!open)}
-        accessibilityRole="button"
-        accessibilityState={{ expanded: open }}
-        accessibilityLabel={`${label}: ${summary}`}
-        style={({ pressed }) => [styles.header, pressed && styles.pressed]}
-      >
-        <Icon name={icon} color={active ? colors.brass : colors.muted} />
-        <Text style={styles.label}>{label}</Text>
-        <Text size={2} tone={active ? "brass" : "muted"} numberOfLines={1} style={styles.summary}>
-          {summary}
-        </Text>
-        <Text tone="muted" accessibilityElementsHidden importantForAccessibility="no">
-          {open ? "▴" : "▾"}
-        </Text>
-      </Pressable>
+      {!open ? (
+        <Pressable
+          onPress={onOpen}
+          accessibilityRole="button"
+          accessibilityLabel={`${label}: ${summary}`}
+          style={({ pressed }) => [styles.header, pressed && styles.pressed]}
+        >
+          <Icon name={icon} color={active ? colors.brass : colors.muted} />
+          <Text style={styles.label}>{label}</Text>
+          <Text size={2} tone={active ? "brass" : "muted"} numberOfLines={1} style={styles.summary}>
+            {summary}
+          </Text>
+          <Text tone="muted" accessibilityElementsHidden importantForAccessibility="no">
+            ›
+          </Text>
+        </Pressable>
+      ) : null}
       {open ? (
         <View style={styles.body}>
           {before}
@@ -268,7 +272,7 @@ const styles = StyleSheet.create({
   summary: { flex: 1, textAlign: "right" },
   body: { paddingHorizontal: space.l, paddingBottom: space.m },
   find: {
-    height: 44,
+    minHeight: 48,
     marginBottom: space.s,
     paddingHorizontal: space.m,
     borderRadius: radius,
@@ -279,7 +283,7 @@ const styles = StyleSheet.create({
   },
   actions: { flexDirection: "row", gap: space.s, marginBottom: space.s },
   action: {
-    minHeight: 36,
+    minHeight: 48,
     justifyContent: "center",
     paddingHorizontal: space.m,
     borderRadius: radius,
@@ -293,7 +297,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: space.m,
-    minHeight: touchTarget,
+    minHeight: Math.max(48, touchTarget),
   },
   box: {
     width: 22,

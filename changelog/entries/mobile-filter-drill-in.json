@@ -1,0 +1,8 @@
+{
+  "id": "mobile-filter-drill-in",
+  "type": "improved",
+  "title": "Open one phone filter group at a time",
+  "body": "Filter rows open a dedicated view with a back control and the current film count.",
+  "visibility": "internal",
+  "reason": "Navigation improvement in the unreleased phone app; no website changes."
+}

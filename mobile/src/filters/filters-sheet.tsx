@@ -2,13 +2,14 @@ import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } f
 import {
   AccessibilityInfo,
   BackHandler,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   View,
   type HostInstance,
 } from "react-native";
-import { router } from "expo-router";
+import { router, usePreventRemove } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { ViewState } from "@readograph/core/catalogue";
 import type { FacetKey } from "@readograph/core/data";
@@ -20,7 +21,6 @@ import { SearchField } from "@/films/search-field";
 import { useNow } from "@/films/use-now";
 import { useView, useViewStore } from "@/films/view-context";
 import { NearMePanel } from "@/nearby/near-me-panel";
-import type { IconName } from "@/ui/icon";
 import { Text } from "@/ui/text";
 import { colors, radius, space, touchTarget } from "@/ui/tokens";
 import { FacetSection, Hint, ToggleRow } from "./facet-section";
@@ -43,7 +43,13 @@ export function FiltersSheet({ kind }: { kind: ScopeKind }) {
   const now = useNow();
   const insets = useSafeAreaInsets();
   const heading = useRef<HostInstance>(null);
-  const [panel, setPanel] = useState<"filters" | "nearby">("filters");
+  const rootOffset = useRef(0);
+  const [panel, setPanel] = useState<"filters" | "nearby" | FacetKey | "year">("filters");
+  const inGroup = panel !== "filters";
+  // iOS's downward sheet dismissal is an exit, rather than a back gesture within the filters.
+  const disablePrevention = usePreventRemove(Platform.OS === "android" && inGroup, () =>
+    setPanel("filters"),
+  );
 
   // VoiceOver and TalkBack start on the heading; the native sheet already hides the content
   // behind it from them.
@@ -54,18 +60,19 @@ export function FiltersSheet({ kind }: { kind: ScopeKind }) {
     return () => cancelAnimationFrame(frame);
   }, [panel]);
 
-  // Android back inside Near me returns to the filters; otherwise the stack pops the sheet.
+  // Both the hardware button and native/predictive navigation go up one level first.
   useEffect(() => {
-    if (panel !== "nearby") return;
+    if (!inGroup) return;
     const subscription = BackHandler.addEventListener("hardwareBackPress", () => {
       setPanel("filters");
       return true;
     });
     return () => subscription.remove();
-  }, [panel]);
+  }, [inGroup]);
 
   const change = (changes: Partial<ViewState>) => store.update({ ...changes, page: 1 });
   const close = () => {
+    disablePrevention();
     if (router.canGoBack()) router.back();
   };
 
@@ -115,17 +122,43 @@ export function FiltersSheet({ kind }: { kind: ScopeKind }) {
     );
 
   const label = (key: FacetKey) => FILTERS.find((item) => item.key === key)!.label;
-  const facet = (
-    key: FacetKey,
-    icon: IconName,
-    extra?: Partial<Parameters<typeof FacetSection>[0]>,
-  ) =>
+  const details: Partial<Record<FacetKey, Partial<Parameters<typeof FacetSection>[0]>>> = {
+    time: {
+      summaryValue:
+        state.from || state.to
+          ? `Starts ${state.from || "00:00"}–${state.to || "23:59"}`
+          : undefined,
+      before: <Hint>Morning: before 12:00. Afternoon: 12:00–16:59. Evening: from 17:00.</Hint>,
+    },
+    venue: {
+      summaryValue:
+        state.independent && !state.excluded.venue?.length
+          ? state.filters.venue?.length
+            ? `${state.filters.venue.length} selected · independent only`
+            : "Independent only"
+          : undefined,
+      before: (
+        <ToggleRow
+          label="Independent cinemas only"
+          hint="Shows cinemas we’ve checked that are independent, charities or run by a public or educational body. Chains, and cinemas we haven’t checked yet, are left out."
+          value={!!state.independent}
+          onChange={(independent) => change({ independent })}
+        />
+      ),
+    },
+    membership: {
+      after: <Hint>Memberships show eligible venues. Check exclusions with the cinema.</Hint>,
+    },
+  };
+  const facet = (key: FacetKey) =>
     catalogue ? (
       <FacetSection
         key={key}
+        open={panel === key}
+        onOpen={() => setPanel(key)}
         facet={key}
         label={label(key)}
-        icon={icon}
+        icon={key}
         meta={catalogue.meta}
         selected={state.filters[key] ?? []}
         excluded={state.excluded[key] ?? []}
@@ -137,16 +170,44 @@ export function FiltersSheet({ kind }: { kind: ScopeKind }) {
             ...(key === "venue" ? { myCinemas: false } : {}),
           })
         }
-        {...extra}
+        {...details[key]}
       />
     ) : null;
+  const year = () => (
+    <DecadeSection
+      open={panel === "year"}
+      onOpen={() => setPanel("year")}
+      decadesFor={decadesFor}
+      selected={state.decades ?? []}
+      years={state.years ?? []}
+      onToggle={(decade) => change(toggleDecade(state, decade))}
+    />
+  );
 
   return (
     <View style={styles.sheet}>
       <View style={styles.heading}>
+        {inGroup ? (
+          <Pressable
+            onPress={() => setPanel("filters")}
+            accessibilityRole="button"
+            accessibilityLabel="Back to filters"
+            style={styles.back}
+          >
+            <Text size={6} accessibilityElementsHidden importantForAccessibility="no">
+              ‹
+            </Text>
+          </Pressable>
+        ) : null}
         <View ref={heading} accessible accessibilityRole="header" style={styles.title}>
           <Text size={5} weight="medium">
-            Filters
+            {panel === "filters"
+              ? "Filters"
+              : panel === "year"
+                ? "Year"
+                : panel === "nearby"
+                  ? "Near me"
+                  : label(panel)}
           </Text>
           <Text size={2} tone="muted" accessibilityLiveRegion="polite">
             {resultLabel(kind, count)}
@@ -165,85 +226,76 @@ export function FiltersSheet({ kind }: { kind: ScopeKind }) {
         </Pressable>
       </View>
       <ScrollView
+        key={panel}
         style={styles.body}
+        contentOffset={{ x: 0, y: panel === "filters" ? rootOffset.current : 0 }}
+        onScroll={
+          panel === "filters"
+            ? (event) => {
+                rootOffset.current = event.nativeEvent.contentOffset.y;
+              }
+            : undefined
+        }
         contentContainerStyle={styles.content}
         keyboardDismissMode="on-drag"
         keyboardShouldPersistTaps="handled"
         automaticallyAdjustKeyboardInsets
       >
-        <QuickFilters
-          items={shortcuts}
-          onToggle={(item) => item.changes && change(item.changes)}
-          onNearby={() => setPanel("nearby")}
-        />
-        <View style={styles.search}>
-          <SearchField
-            value={state.search}
-            onChange={(search) => change({ search })}
-            placeholder="Film or director"
-          />
-        </View>
-
-        <Group title="When">
-          {facet("day", "day")}
-          {facet("time", "time", {
-            summaryValue:
-              state.from || state.to
-                ? `Starts ${state.from || "00:00"}–${state.to || "23:59"}`
-                : undefined,
-            before: (
-              <Hint>Morning: before 12:00. Afternoon: 12:00–16:59. Evening: from 17:00.</Hint>
-            ),
-          })}
-        </Group>
-        <Group title="Where">
-          {facet("venue", "venue", {
-            summaryValue:
-              state.independent && !state.excluded.venue?.length
-                ? state.filters.venue?.length
-                  ? `${state.filters.venue.length} selected · independent only`
-                  : "Independent only"
-                : undefined,
-            before: (
-              <ToggleRow
-                label="Independent cinemas only"
-                hint="Shows cinemas we’ve checked that are independent, charities or run by a public or educational body. Chains, and cinemas we haven’t checked yet, are left out."
-                value={!!state.independent}
-                onChange={(independent) => change({ independent })}
+        {panel === "filters" ? (
+          <>
+            <QuickFilters
+              items={shortcuts}
+              onToggle={(item) => item.changes && change(item.changes)}
+              onNearby={() => setPanel("nearby")}
+            />
+            <View style={styles.search}>
+              <SearchField
+                value={state.search}
+                onChange={(search) => change({ search })}
+                placeholder="Film or director"
               />
-            ),
-          })}
-          {facet("borough", "borough")}
-          {facet("membership", "membership", {
-            after: <Hint>Memberships show eligible venues. Check exclusions with the cinema.</Hint>,
-          })}
-        </Group>
-        <Group title="What">
-          {facet("genre", "genre")}
-          {facet("format", "format")}
-          {facet("language", "language")}
-          <DecadeSection
-            decadesFor={decadesFor}
-            selected={state.decades ?? []}
-            years={state.years ?? []}
-            onToggle={(decade) => change(toggleDecade(state, decade))}
-          />
-          {facet("accessibility", "accessibility")}
-        </Group>
-        <Group title="Only show">
-          <View style={styles.toggles}>
-            <ToggleRow
-              label="Hide sold-out screenings"
-              value={state.available}
-              onChange={(available) => change({ available })}
-            />
-            <ToggleRow
-              label="Under 2 hours"
-              value={!!state.short}
-              onChange={(short) => change({ short })}
-            />
+            </View>
+          </>
+        ) : null}
+
+        {panel === "filters" ? (
+          <>
+            <Group title="When">
+              {facet("day")}
+              {facet("time")}
+            </Group>
+            <Group title="Where">
+              {facet("venue")}
+              {facet("borough")}
+              {facet("membership")}
+            </Group>
+            <Group title="What">
+              {facet("genre")}
+              {facet("format")}
+              {facet("language")}
+              {year()}
+              {facet("accessibility")}
+            </Group>
+            <Group title="Only show">
+              <View style={styles.toggles}>
+                <ToggleRow
+                  label="Hide sold-out screenings"
+                  value={state.available}
+                  onChange={(available) => change({ available })}
+                />
+                <ToggleRow
+                  label="Under 2 hours"
+                  value={!!state.short}
+                  onChange={(short) => change({ short })}
+                />
+              </View>
+            </Group>
+          </>
+        ) : (
+          <View style={styles.detail}>
+            {panel === "year" ? year() : panel !== "nearby" ? facet(panel) : null}
           </View>
-        </Group>
+        )}
       </ScrollView>
       <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, space.m) }]}>
         <Pressable
@@ -342,18 +394,21 @@ function Group({ title, children }: { title: string; children: React.ReactNode }
  * the app keeps to decades for now and shows a single-year choice made elsewhere as a chip.
  */
 function DecadeSection({
+  open,
+  onOpen,
   decadesFor,
   selected,
   years,
   onToggle,
 }: {
+  open: boolean;
+  onOpen: () => void;
   /** The decades with their counts; called only while the section is open. */
   decadesFor: () => { decade: number; count: number }[];
   selected: number[];
   years: number[];
   onToggle: (decade: number) => void;
 }) {
-  const [open, setOpen] = useState(false);
   const decades = useMemo(() => (open ? decadesFor() : []), [open, decadesFor]);
   const chosen = selected.length + years.length;
   const summary = chosen
@@ -363,21 +418,22 @@ function DecadeSection({
     : "Any year";
   return (
     <View style={styles.decadeSection}>
-      <Pressable
-        onPress={() => setOpen(!open)}
-        accessibilityRole="button"
-        accessibilityState={{ expanded: open }}
-        accessibilityLabel={`Year: ${summary}`}
-        style={({ pressed }) => [styles.decadeHeader, pressed && styles.pressed]}
-      >
-        <Text style={styles.decadeLabel}>Year</Text>
-        <Text size={2} tone={chosen ? "brass" : "muted"}>
-          {summary}
-        </Text>
-        <Text tone="muted" accessibilityElementsHidden importantForAccessibility="no">
-          {open ? "▴" : "▾"}
-        </Text>
-      </Pressable>
+      {!open ? (
+        <Pressable
+          onPress={onOpen}
+          accessibilityRole="button"
+          accessibilityLabel={`Year: ${summary}`}
+          style={({ pressed }) => [styles.decadeHeader, pressed && styles.pressed]}
+        >
+          <Text style={styles.decadeLabel}>Year</Text>
+          <Text size={2} tone={chosen ? "brass" : "muted"}>
+            {summary}
+          </Text>
+          <Text tone="muted" accessibilityElementsHidden importantForAccessibility="no">
+            ›
+          </Text>
+        </Pressable>
+      ) : null}
       {open ? (
         <View style={styles.decades}>
           {decades.map(({ decade, count }) => {
@@ -419,12 +475,20 @@ const styles = StyleSheet.create({
   },
   title: { flex: 1, flexDirection: "row", alignItems: "baseline", gap: space.s },
   close: {
-    width: touchTarget,
-    height: touchTarget,
+    width: Math.max(48, touchTarget),
+    height: Math.max(48, touchTarget),
     alignItems: "center",
     justifyContent: "center",
     marginRight: -space.s,
   },
+  back: {
+    minWidth: 48,
+    minHeight: 48,
+    alignItems: "center",
+    justifyContent: "center",
+    marginLeft: -space.s,
+  },
+  detail: { paddingTop: space.l },
   body: { flex: 1 },
   content: { paddingBottom: space.xl },
   quick: {
@@ -436,7 +500,7 @@ const styles = StyleSheet.create({
     paddingTop: space.l,
   },
   quickItem: {
-    minHeight: 36,
+    minHeight: 48,
     justifyContent: "center",
     paddingHorizontal: space.m,
     borderRadius: radius,
@@ -469,7 +533,7 @@ const styles = StyleSheet.create({
   },
   decade: {
     minWidth: 72,
-    minHeight: touchTarget,
+    minHeight: Math.max(48, touchTarget),
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius,
