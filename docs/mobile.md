@@ -18,11 +18,6 @@ wrong, the likely cause and the target. Check every item on the emulator before 
 (`AGENTS.md`, "Phone app"). Do not blame Expo Go unless it is the only explanation, and prove it
 with a release build first.
 
-4. **Dates: no list of every future day.** Opening the date group lists every day that has a
-   screening. Default target until the maintainer chooses otherwise: the quick ranges (Today,
-   Tomorrow, Weekend, Week) at the top, then a month calendar where only days with screenings can
-   be tapped, with a week's worth visible without scrolling. Keep the same `ViewState` filter
-   values the website uses.
 5. **Everything is too small.** `tokens.ts` copies the website's pixel sizes as points (body 16,
    floor 13). Target: native sizes. Body 17 on iOS and 16 sp on Android at minimum, titles and
    row text scaled up to match, touch targets of at least 44 points on iOS and 48 dp on Android,
@@ -213,6 +208,10 @@ typed routes are off).
   The native window isolates TalkBack from the background and measures its own safe areas. Its
   Back callback goes from a facet to the group list, then dismisses the modal. All exits use the same
   dismissal and restore accessibility focus after the list is made accessible again.
+- **Screening dates.** Day offers Today, Tomorrow, Weekend and Week above a Monday-first
+  month calendar. Only dates with matching listings can be newly selected; existing choices
+  can always be cleared. Exact dates support multiple choices and exclusions, using the
+  website’s IDs and selection rules. Counts still come from each tab’s screening matcher.
 - The sheet owns no state. Every change writes straight to the tab's store, so the list behind
   updates live. Top to bottom: the quick filters from core's `shortcutItems` in capitals (MY
   WATCHLIST and MY CINEMAS are hidden until PR 6 adds accounts, exactly as `shortcutItems`
